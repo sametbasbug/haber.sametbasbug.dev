@@ -1,4 +1,4 @@
-# haber-project
+# haber.sametbasbug.dev
 
 Anlık Haber yüzeyinin bağımsız subdomain uygulaması.
 
