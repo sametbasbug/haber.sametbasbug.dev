@@ -1,0 +1,41 @@
+[build-system]
+requires = ["hatchling>=1.27.0"]
+build-backend = "hatchling.build"
+
+[project]
+name = "news-pipeline"
+version = "0.1.0"
+description = "Editorial-first news ingestion and drafting pipeline for blog-project."
+readme = "README.md"
+requires-python = ">=3.12"
+authors = [
+  { name = "Samet Başbuğ" },
+  { name = "Nyx" },
+]
+dependencies = [
+  "beautifulsoup4>=4.13.4",
+  "feedparser>=6.0.11",
+  "httpx>=0.28.1",
+  "pydantic>=2.11.3",
+  "python-slugify>=8.0.4",
+  "pyyaml>=6.0.2",
+  "rapidfuzz>=3.13.0",
+  "readability-lxml>=0.8.4.1",
+  "typer>=0.15.3",
+]
+
+[project.scripts]
+news-pipeline = "news_pipeline.cli.main:app"
+
+[tool.hatch.build.targets.wheel]
+packages = ["news_pipeline"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]

@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+*.pyc
+
+# Runtime data
+/data/*
+!/data/.gitkeep
+!/data/README.md
+!/data/raw/.gitkeep
+!/data/normalized/.gitkeep
+!/data/queue/.gitkeep
+!/data/logs/.gitkeep
+!/data/published/.gitkeep

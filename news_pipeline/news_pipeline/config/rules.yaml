@@ -1,0 +1,12 @@
+dedupe:
+  title_similarity_threshold: 0.92
+  summary_similarity_threshold: 0.9
+  time_window_hours: 18
+
+editorial:
+  default_author: Asteria AI
+  default_status: new
+  max_summary_length: 240
+
+publish:
+  content_dir: src/content/anlikHaber

@@ -1,0 +1,112 @@
+sources:
+  - id: techcrunch
+    name: TechCrunch
+    kind: rss
+    url: https://techcrunch.com/feed/
+    category_hints: [Teknoloji]
+    enabled: true
+
+  - id: the-verge
+    name: The Verge
+    kind: rss
+    url: https://www.theverge.com/rss/index.xml
+    category_hints: [Teknoloji]
+    enabled: true
+
+  - id: ars-technica
+    name: Ars Technica
+    kind: rss
+    url: https://feeds.arstechnica.com/arstechnica/index
+    category_hints: [Teknoloji]
+    enabled: true
+
+  - id: engadget
+    name: Engadget
+    kind: rss
+    url: https://www.engadget.com/rss.xml
+    category_hints: [Teknoloji]
+    enabled: true
+
+  - id: mit-tech-review
+    name: MIT Technology Review
+    kind: rss
+    url: https://www.technologyreview.com/feed/
+    category_hints: [Teknoloji]
+    enabled: true
+
+  - id: zdnet
+    name: ZDNET
+    kind: rss
+    url: https://www.zdnet.com/topic/innovation/rss.xml
+    category_hints: [Teknoloji]
+    enabled: true
+
+  - id: fast-company-tech
+    name: Fast Company Tech
+    kind: rss
+    url: https://www.fastcompany.com/technology/rss
+    category_hints: [Teknoloji]
+    enabled: true
+
+  - id: reuters-tech
+    name: Reuters Technology
+    kind: rss
+    url: https://feeds.reuters.com/reuters/technologyNews
+    category_hints: [Teknoloji]
+    enabled: true
+
+  - id: politico-eu
+    name: Politico Europe
+    kind: rss
+    url: https://www.politico.eu/feed/
+    category_hints: [Dünya, Siyaset]
+    enabled: true
+
+  - id: bbc-world
+    name: BBC World
+    kind: rss
+    url: http://feeds.bbci.co.uk/news/world/rss.xml
+    category_hints: [Dünya]
+    enabled: true
+
+  - id: reuters-world
+    name: Reuters World
+    kind: rss
+    url: https://feeds.reuters.com/Reuters/worldNews
+    category_hints: [Dünya, Siyaset]
+    enabled: true
+
+  - id: associated-press-top-news
+    name: Associated Press Top News
+    kind: rss
+    url: https://apnews.com/hub/ap-top-news?output=rss
+    category_hints: [Dünya, Siyaset]
+    enabled: true
+
+  - id: guardian-world
+    name: The Guardian World
+    kind: rss
+    url: https://www.theguardian.com/world/rss
+    category_hints: [Dünya, Siyaset]
+    enabled: true
+
+  - id: wired
+    name: WIRED
+    kind: rss
+    url: https://www.wired.com/feed/rss
+    category_hints: [Teknoloji]
+    enabled: true
+
+  - id: cnbc-tech
+    name: CNBC Technology
+    kind: rss
+    url: https://www.cnbc.com/id/19854910/device/rss/rss.html
+    category_hints: [Teknoloji, Ekonomi]
+    enabled: true
+
+  - id: marketwatch-top-stories
+    name: MarketWatch Top Stories
+    kind: rss
+    url: https://feeds.content.dowjones.io/public/rss/mw_topstories
+    category_hints: [Ekonomi, Dünya]
+    enabled: true
