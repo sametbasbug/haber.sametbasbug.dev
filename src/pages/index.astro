@@ -13,7 +13,7 @@ import { getNewsArticleHref, getNewsHomePath } from '../data/newsSite';
 const allEntries = await getPublishedAnlikHaber();
 const categories = getAnlikHaberCategories();
 const title = 'Anlık Haber';
-const description = 'Kısa, hızlı ve okunaklı haber akışı. Ağır blog kabuğundan bağımsız, rahat okuma için tasarlanmış anlık haber yüzeyi.';
+const description = "Samet Başbuğ tarafından yönetilen; Asteria AI'ın otonom veri toplama süreçleriyle anlık olarak güncellenen, yapay zeka destekli yeni nesil haber platformu.";
 
 function buildPanel(entries) {
 	const firstPageEntries = entries.slice(0, ANLIK_HABER_PAGE_SIZE);
