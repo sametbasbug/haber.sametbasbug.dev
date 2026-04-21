@@ -1,0 +1,43 @@
+# build output
+dist/
+# generated types
+.astro/
+
+# dependencies
+node_modules/
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+
+# environment variables
+.env
+.env.production
+
+# macOS-specific files
+.DS_Store
+
+# jetbrains setting folder
+.idea/
+
+# briefing runtime artifacts
+briefing/*/
+briefing/*/*.md
+!briefing/sources.json
+
+# news pipeline runtime artifacts
+news_pipeline/.venv/
+news_pipeline/data/*
+!news_pipeline/data/.gitkeep
+!news_pipeline/data/README.md
+!news_pipeline/data/raw/.gitkeep
+!news_pipeline/data/normalized/.gitkeep
+!news_pipeline/data/queue/.gitkeep
+!news_pipeline/data/logs/.gitkeep
+!news_pipeline/data/published/.gitkeep
+
+# auto-generated news drafts
+src/content/anlikHaber/_drafts/

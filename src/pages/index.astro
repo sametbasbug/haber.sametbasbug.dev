@@ -1,0 +1,784 @@
+---
+import NewsLayout from '../layouts/NewsLayout.astro';
+import {
+	ANLIK_HABER_PAGE_SIZE,
+	formatNewsDate,
+	getAnlikHaberCategories,
+	getNewsCategoryToken,
+	getPublishedAnlikHaber,
+	slugifyNewsCategory,
+} from '../data/anlikHaber';
+import { getNewsArticleHref, getNewsHomePath } from '../data/newsSite';
+
+const allEntries = await getPublishedAnlikHaber();
+const categories = getAnlikHaberCategories();
+const title = 'Anlık Haber';
+const description = 'Kısa, hızlı ve okunaklı haber akışı. Ağır blog kabuğundan bağımsız, rahat okuma için tasarlanmış anlık haber yüzeyi.';
+
+function buildPanel(entries) {
+	const firstPageEntries = entries.slice(0, ANLIK_HABER_PAGE_SIZE);
+	const featuredLeadEntries = firstPageEntries.slice(0, Math.min(10, firstPageEntries.length));
+	const leadEntry = featuredLeadEntries[0];
+	const nonFeaturedEntries = entries.filter((entry) => !featuredLeadEntries.some((featured) => featured.id === entry.id));
+	const editorPickEntries = nonFeaturedEntries.filter((entry) => entry.data.editorPick);
+	const sideEntries = (editorPickEntries.length > 0 ? editorPickEntries : nonFeaturedEntries).slice(0, 3);
+	return { firstPageEntries, featuredLeadEntries, leadEntry, sideEntries };
+}
+
+const allPanel = buildPanel(allEntries);
+
+const panels = {
+	'Tümü': {
+		featuredLeadEntries: allPanel.featuredLeadEntries.map((entry) => ({
+			id: entry.id,
+			href: getNewsArticleHref(entry.id),
+			title: entry.data.title,
+			description: entry.data.description,
+			heroImage: entry.data.heroImage ?? '',
+			category: entry.data.category ?? '',
+			categoryToken: getNewsCategoryToken(entry.data.category),
+			breaking: Boolean(entry.data.breaking),
+			pubDateIso: entry.data.pubDate.toISOString(),
+			pubDateLabel: formatNewsDate(entry.data.pubDate),
+			author: entry.data.author ?? 'Nyx AI',
+		})),
+		sideEntries: allPanel.sideEntries.map((entry) => ({
+			id: entry.id,
+			href: getNewsArticleHref(entry.id),
+			title: entry.data.title,
+			description: entry.data.description,
+			category: entry.data.category ?? '',
+			categoryToken: getNewsCategoryToken(entry.data.category),
+			pubDateIso: entry.data.pubDate.toISOString(),
+			pubDateLabel: formatNewsDate(entry.data.pubDate),
+		})),
+	},
+};
+
+for (const category of categories) {
+	const categoryEntries = allEntries.filter((entry) => entry.data.category === category);
+	const panel = buildPanel(categoryEntries);
+	panels[category] = {
+		featuredLeadEntries: panel.featuredLeadEntries.map((entry) => ({
+			id: entry.id,
+			href: getNewsArticleHref(entry.id),
+			title: entry.data.title,
+			description: entry.data.description,
+			heroImage: entry.data.heroImage ?? '',
+			category: entry.data.category ?? '',
+			categoryToken: getNewsCategoryToken(entry.data.category),
+			breaking: Boolean(entry.data.breaking),
+			pubDateIso: entry.data.pubDate.toISOString(),
+			pubDateLabel: formatNewsDate(entry.data.pubDate),
+			author: entry.data.author ?? 'Nyx AI',
+		})),
+		sideEntries: panel.sideEntries.map((entry) => ({
+			id: entry.id,
+			href: getNewsArticleHref(entry.id),
+			title: entry.data.title,
+			description: entry.data.description,
+			category: entry.data.category ?? '',
+			categoryToken: getNewsCategoryToken(entry.data.category),
+			pubDateIso: entry.data.pubDate.toISOString(),
+			pubDateLabel: formatNewsDate(entry.data.pubDate),
+		})),
+	};
+}
+
+const categorySlugMap = Object.fromEntries(categories.map((category) => [slugifyNewsCategory(category), category]));
+const newsHomePath = getNewsHomePath().replace(/\/+$/, '') || '/';
+const SIDE_SLOT_COUNT = 3;
+---
+
+<NewsLayout
+	title={title}
+	description={description}
+	pageTitle="Anlık Haber"
+	pageDescription="Günün gelişmelerini kısa, net ve rahat okunur bir akışta toplayan ayrı haber yüzeyi."
+	topMeta={`${allEntries.length} haber kaydı`}
+	categories={categories}
+	activeCategory="Tümü"
+>
+	<div data-news-home-root>
+		{allPanel.leadEntry ? (
+			<section class="featured-news-grid">
+				<div class="featured-lead-card" data-featured-lead>
+					{allPanel.featuredLeadEntries.map((entry, index) => {
+						const entryCategoryToken = getNewsCategoryToken(entry.data.category);
+						const isActive = index === 0;
+						return (
+							<a
+								href={getNewsArticleHref(entry.id)}
+								class={`featured-lead-slide ${isActive ? 'is-active' : ''}`}
+								data-featured-slide
+								data-index={index}
+								aria-hidden={isActive ? 'false' : 'true'}
+								tabindex={isActive ? undefined : -1}
+							>
+								{entry.data.heroImage && <img src={entry.data.heroImage} alt="" loading={index === 0 ? 'eager' : 'lazy'} decoding="async" />}
+								<div class="featured-overlay lead"></div>
+								<div class="featured-lead-content">
+									<div class="featured-lead-topline">
+										{entry.data.category && <span class="featured-badge" data-category={entryCategoryToken}>{entry.data.category}</span>}
+										{entry.data.breaking && <span class="featured-badge breaking">Son Dakika</span>}
+									</div>
+									<h2>{entry.data.title}</h2>
+									<p>{entry.data.description}</p>
+									<div class="featured-meta-row">
+										<time datetime={entry.data.pubDate.toISOString()}>{formatNewsDate(entry.data.pubDate)}</time>
+										<span>{entry.data.author ?? 'Nyx AI'}</span>
+									</div>
+								</div>
+							</a>
+						);
+					})}
+
+					{allPanel.featuredLeadEntries.length > 1 && (
+						<div class="featured-lead-nav" aria-label="Öne çıkan haberler">
+							{allPanel.featuredLeadEntries.map((entry, index) => (
+								<button
+									type="button"
+									class={`featured-lead-trigger ${index === 0 ? 'is-active' : ''}`}
+									data-featured-trigger
+									data-index={index}
+									aria-label={`${index + 1}. haber: ${entry.data.title}`}
+								>
+									{index + 1}
+								</button>
+							))}
+						</div>
+					)}
+				</div>
+
+				{allPanel.sideEntries.length > 0 && (
+					<section class="featured-side-stack" aria-label="Editörün seçtikleri">
+						<div class="featured-side-header">
+							<p>Öne çıkanlar</p>
+							<h2>Editörün seçtikleri</h2>
+						</div>
+						<div class="featured-side-list" role="list">
+							{allPanel.sideEntries.map((entry) => (
+								<a href={getNewsArticleHref(entry.id)} class="featured-side-card" role="listitem">
+									<div class="featured-side-content text-only">
+										{entry.data.category && <span class="featured-badge side" data-category={getNewsCategoryToken(entry.data.category)}>{entry.data.category}</span>}
+										<h2>{entry.data.title}</h2>
+										<p>{entry.data.description}</p>
+										<time datetime={entry.data.pubDate.toISOString()}>{formatNewsDate(entry.data.pubDate)}</time>
+									</div>
+								</a>
+							))}
+							{Array.from({ length: Math.max(0, SIDE_SLOT_COUNT - allPanel.sideEntries.length) }).map(() => (
+								<div class="featured-side-card featured-side-card-placeholder" aria-hidden="true"></div>
+							))}
+						</div>
+					</section>
+				)}
+			</section>
+		) : (
+			<div class="news-empty-state">
+				<h2>Henüz yayınlanmış anlık haber yok.</h2>
+				<p>İskelet hazır. İlk haber girildiğinde bu akış canlı çalışmaya başlayacak.</p>
+			</div>
+		)}
+	</div>
+</NewsLayout>
+
+<script define:vars={{ panels, categorySlugMap, SIDE_SLOT_COUNT }}>
+	function initFeaturedLeadCards(scope = document) {
+		scope.querySelectorAll('[data-featured-lead]').forEach((root) => {
+			if (!(root instanceof HTMLElement) || root.dataset.bound === '1') return;
+			root.dataset.bound = '1';
+
+			const slides = Array.from(root.querySelectorAll('[data-featured-slide]'));
+			const triggers = Array.from(root.querySelectorAll('[data-featured-trigger]'));
+			if (slides.length === 0 || triggers.length === 0) return;
+
+			const setActive = (index) => {
+				slides.forEach((slide, slideIndex) => {
+					if (!(slide instanceof HTMLElement)) return;
+					const active = slideIndex === index;
+					slide.classList.toggle('is-active', active);
+					slide.setAttribute('aria-hidden', active ? 'false' : 'true');
+					if (active) slide.removeAttribute('tabindex');
+					else slide.setAttribute('tabindex', '-1');
+				});
+				triggers.forEach((trigger, triggerIndex) => {
+					if (!(trigger instanceof HTMLElement)) return;
+					trigger.classList.toggle('is-active', triggerIndex === index);
+				});
+			};
+
+			triggers.forEach((trigger, index) => {
+				if (!(trigger instanceof HTMLButtonElement)) return;
+				trigger.addEventListener('mouseenter', () => setActive(index));
+				trigger.addEventListener('focus', () => setActive(index));
+				trigger.addEventListener('click', () => setActive(index));
+			});
+		});
+	}
+
+	function escapeHtml(value = '') {
+		return String(value)
+			.replace(/&/g, '&amp;')
+			.replace(/</g, '&lt;')
+			.replace(/>/g, '&gt;')
+			.replace(/"/g, '&quot;')
+			.replace(/'/g, '&#39;');
+	}
+
+	function renderLeadSlides(items) {
+		return items
+			.map((item, index) => {
+				const active = index === 0;
+				return `
+					<a href="${escapeHtml(item.href)}" class="featured-lead-slide ${active ? 'is-active' : ''}" data-featured-slide data-index="${index}" aria-hidden="${active ? 'false' : 'true'}" ${active ? '' : 'tabindex="-1"'}>
+						${item.heroImage ? `<img src="${escapeHtml(item.heroImage)}" alt="" loading="${index === 0 ? 'eager' : 'lazy'}" decoding="async">` : ''}
+						<div class="featured-overlay lead"></div>
+						<div class="featured-lead-content">
+							<div class="featured-lead-topline">
+								${item.category ? `<span class="featured-badge" data-category="${escapeHtml(item.categoryToken)}">${escapeHtml(item.category)}</span>` : ''}
+								${item.breaking ? '<span class="featured-badge breaking">Son Dakika</span>' : ''}
+							</div>
+							<h2>${escapeHtml(item.title)}</h2>
+							<p>${escapeHtml(item.description)}</p>
+							<div class="featured-meta-row">
+								<time datetime="${escapeHtml(item.pubDateIso)}">${escapeHtml(item.pubDateLabel)}</time>
+								<span>${escapeHtml(item.author)}</span>
+							</div>
+						</div>
+					</a>
+				`;
+			})
+			.join('');
+	}
+
+	function renderLeadNav(items) {
+		if (items.length <= 1) return '';
+		return `
+			<div class="featured-lead-nav" aria-label="Öne çıkan haberler">
+				${items
+					.map(
+						(item, index) => `
+							<button type="button" class="featured-lead-trigger ${index === 0 ? 'is-active' : ''}" data-featured-trigger data-index="${index}" aria-label="${index + 1}. haber: ${escapeHtml(item.title)}">${index + 1}</button>
+						`,
+					)
+					.join('')}
+			</div>
+		`;
+	}
+
+	function renderSideEntries(items) {
+		if (items.length === 0) return '';
+		const placeholders = Math.max(0, SIDE_SLOT_COUNT - items.length);
+		return `
+			<section class="featured-side-stack" aria-label="Editörün seçtikleri">
+				<div class="featured-side-header">
+					<p>Öne çıkanlar</p>
+					<h2>Editörün seçtikleri</h2>
+				</div>
+				<div class="featured-side-list" role="list">
+					${items
+						.map(
+							(item) => `
+								<a href="${escapeHtml(item.href)}" class="featured-side-card" role="listitem">
+									<div class="featured-side-content text-only">
+										${item.category ? `<span class="featured-badge side" data-category="${escapeHtml(item.categoryToken)}">${escapeHtml(item.category)}</span>` : ''}
+										<h2>${escapeHtml(item.title)}</h2>
+										<p>${escapeHtml(item.description)}</p>
+										<time datetime="${escapeHtml(item.pubDateIso)}">${escapeHtml(item.pubDateLabel)}</time>
+									</div>
+								</a>
+							`,
+						)
+						.join('')}
+					${Array.from({ length: placeholders }).map(() => `<div class="featured-side-card featured-side-card-placeholder" aria-hidden="true"></div>`).join('')}
+				</div>
+			</section>
+		`;
+	}
+
+	function renderPanel(name) {
+		const root = document.querySelector('[data-news-home-root]');
+		if (!(root instanceof HTMLElement)) return;
+		const panel = panels[name] ?? panels['Tümü'];
+		if (!panel || panel.featuredLeadEntries.length === 0) {
+			root.innerHTML = `
+				<div class="news-empty-state">
+					<h2>Bu kategoride henüz yayınlanmış haber yok.</h2>
+					<p>İlk kayıt geldiğinde akış burada görünecek.</p>
+				</div>
+			`;
+			return;
+		}
+
+		root.innerHTML = `
+			<section class="featured-news-grid">
+				<div class="featured-lead-card" data-featured-lead>
+					${renderLeadSlides(panel.featuredLeadEntries)}
+					${renderLeadNav(panel.featuredLeadEntries)}
+				</div>
+				${renderSideEntries(panel.sideEntries)}
+			</section>
+		`;
+
+		initFeaturedLeadCards(root);
+	}
+
+	function syncNav(activeCategory) {
+		document.querySelectorAll('[data-news-nav] a').forEach((link) => {
+			if (!(link instanceof HTMLAnchorElement)) return;
+			const label = link.textContent?.trim() || '';
+			if (label === activeCategory) link.setAttribute('aria-current', 'page');
+			else link.removeAttribute('aria-current');
+		});
+	}
+
+	function categoryFromUrl(url) {
+		const slug = url.searchParams.get('kategori');
+		if (!slug) return 'Tümü';
+		return categorySlugMap[slug] ?? 'Tümü';
+	}
+
+	function applyCategory(category, updateUrl = true) {
+		renderPanel(category);
+		syncNav(category);
+		if (updateUrl) {
+			const nextUrl = new URL(window.location.href);
+			if (category === 'Tümü') nextUrl.searchParams.delete('kategori');
+			else {
+				const slug = Object.entries(categorySlugMap).find(([, value]) => value === category)?.[0];
+				if (slug) nextUrl.searchParams.set('kategori', slug);
+			}
+			window.history.replaceState({}, '', `${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}`);
+		}
+	}
+
+	function initNewsCategoryFilters() {
+		const homeRoot = document.querySelector('[data-news-home-root]');
+		if (!(homeRoot instanceof HTMLElement)) return;
+		if (document.body.dataset.newsCategoryBound === '1') return;
+		document.body.dataset.newsCategoryBound = '1';
+
+		initFeaturedLeadCards();
+		applyCategory(categoryFromUrl(new URL(window.location.href)), false);
+
+		document.querySelectorAll('[data-news-nav] a').forEach((link) => {
+			if (!(link instanceof HTMLAnchorElement)) return;
+			link.addEventListener('click', (event) => {
+				const currentPath = window.location.pathname.replace(/\/+$/, '') || '/';
+				if (currentPath !== newsHomePath) return;
+				const url = new URL(link.href, window.location.origin);
+				const targetPath = url.pathname.replace(/\/+$/, '') || '/';
+				if (targetPath !== newsHomePath) return;
+				event.preventDefault();
+				applyCategory(categoryFromUrl(url));
+			});
+		});
+
+		window.addEventListener('popstate', () => {
+			if (!document.querySelector('[data-news-home-root]')) return;
+			applyCategory(categoryFromUrl(new URL(window.location.href)), false);
+		});
+	}
+
+	initNewsCategoryFilters();
+	document.addEventListener('astro:page-load', () => {
+		document.body.dataset.newsCategoryBound = '0';
+		initNewsCategoryFilters();
+	});
+</script>
+
+<style is:global>
+	.featured-news-grid {
+		display: grid;
+		grid-template-columns: minmax(0, 2fr) 280px;
+		gap: 0.85rem;
+		padding-top: 0.24rem;
+	}
+	.featured-side-stack {
+		position: relative;
+		display: grid;
+		gap: 0.8rem;
+		align-content: start;
+	}
+	.featured-side-header {
+		position: absolute;
+		top: -3.2rem;
+		left: 0;
+		right: 0;
+		display: grid;
+		gap: 0.18rem;
+		padding: 0 0.1rem;
+	}
+	.featured-side-header p {
+		margin: 0;
+		font-size: 0.68rem;
+		font-weight: 800;
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
+		color: var(--news-accent-soft);
+	}
+	.featured-side-header h2 {
+		margin: 0;
+		font-size: 1rem;
+		line-height: 1.2;
+		color: var(--news-text);
+	}
+	.featured-side-list {
+		display: grid;
+		grid-template-rows: repeat(3, minmax(0, 1fr));
+		auto-rows: minmax(0, 1fr);
+		gap: 0.8rem;
+		height: 100%;
+	}
+	.featured-side-card,
+	.featured-lead-card {
+		position: relative;
+		display: block;
+		overflow: hidden;
+		border-radius: 1.15rem;
+		border: 1px solid color-mix(in srgb, var(--news-border) 80%, rgba(255,255,255,0.08));
+		background: #0b0b0b;
+		text-decoration: none;
+		box-shadow: var(--news-shadow);
+		transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+	}
+	.featured-lead-card {
+		min-height: 400px;
+	}
+	.featured-side-card {
+		overflow: visible;
+		min-height: 0;
+		height: 100%;
+		background: color-mix(in srgb, var(--news-panel) 96%, transparent);
+		box-shadow: none;
+	}
+	.featured-side-card-placeholder {
+		pointer-events: none;
+		opacity: 0;
+	}
+	.featured-side-card:hover,
+	.featured-lead-card:hover {
+		transform: translateY(-2px);
+		border-color: color-mix(in srgb, var(--news-accent) 35%, var(--news-border));
+		box-shadow: 0 22px 60px rgba(0,0,0,0.26);
+	}
+	.featured-side-card:hover {
+		box-shadow: 0 12px 26px rgba(0,0,0,0.12);
+	}
+	:global(html[data-theme='light']) .featured-side-card,
+	:global(html[data-theme='light']) .featured-lead-card {
+		box-shadow: 0 14px 32px rgba(37, 28, 18, 0.08);
+	}
+	:global(html[data-theme='light']) .featured-side-card {
+		background: rgba(255,255,255,0.82);
+		box-shadow: 0 8px 18px rgba(37, 28, 18, 0.05);
+	}
+	:global(html[data-theme='light']) .featured-side-card:hover,
+	:global(html[data-theme='light']) .featured-lead-card:hover {
+		box-shadow: 0 18px 40px rgba(37, 28, 18, 0.12);
+	}
+	.featured-side-card img,
+	.featured-lead-card img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		display: block;
+		filter: saturate(0.92) brightness(0.78);
+		transform: scale(1.01);
+	}
+	.featured-lead-slide {
+		position: absolute;
+		inset: 0;
+		display: block;
+		opacity: 0;
+		pointer-events: none;
+		transition: opacity 220ms ease;
+	}
+	.featured-lead-slide.is-active {
+		opacity: 1;
+		pointer-events: auto;
+		z-index: 1;
+	}
+	.featured-overlay {
+		position: absolute;
+		inset: 0;
+		background: linear-gradient(180deg, rgba(0,0,0,0.03) 0%, rgba(0,0,0,0.82) 100%);
+	}
+	.featured-overlay.lead {
+		background: linear-gradient(180deg, rgba(0,0,0,0.02) 0%, rgba(0,0,0,0.2) 28%, rgba(0,0,0,0.88) 100%);
+	}
+	.featured-side-content,
+	.featured-lead-content {
+		position: absolute;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		z-index: 2;
+		padding: 0.9rem;
+	}
+	.featured-side-content.text-only {
+		position: relative;
+		inset: auto;
+		display: grid;
+		align-content: start;
+		gap: 0.45rem;
+		height: 100%;
+		padding: 1rem 1rem 0.95rem;
+	}
+	.featured-lead-content {
+		padding: 1rem 0.9rem 3.4rem 1.05rem;
+	}
+	.featured-badge {
+		display: inline-flex;
+		align-items: center;
+		padding: 0.22rem 0.48rem;
+		border-radius: 999px;
+		background: rgba(255,255,255,0.12);
+		border: 1px solid rgba(255,255,255,0.1);
+		backdrop-filter: blur(8px);
+		color: #fff;
+		font-size: 0.64rem;
+		font-weight: 800;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+	}
+	.featured-badge.breaking {
+		background: rgba(185, 28, 28, 0.95);
+	}
+	.featured-badge[data-category='siyaset'] {
+		background: rgba(249, 115, 96, 0.16);
+		border-color: rgba(249, 115, 96, 0.28);
+		color: #fff2ef;
+	}
+	.featured-badge[data-category='ekonomi'] {
+		background: rgba(242, 185, 75, 0.18);
+		border-color: rgba(242, 185, 75, 0.28);
+		color: #fff8ea;
+	}
+	.featured-badge[data-category='turkiye'] {
+		background: rgba(251, 113, 133, 0.18);
+		border-color: rgba(251, 113, 133, 0.28);
+		color: #fff1f4;
+	}
+	.featured-badge[data-category='dunya'] {
+		background: rgba(96, 165, 250, 0.18);
+		border-color: rgba(96, 165, 250, 0.28);
+		color: #eef6ff;
+	}
+	.featured-badge[data-category='teknoloji'] {
+		background: rgba(52, 211, 153, 0.18);
+		border-color: rgba(52, 211, 153, 0.28);
+		color: #ecfff8;
+	}
+	:global(html[data-theme='light']) .featured-badge[data-category='siyaset'] {
+		color: #7a241c;
+	}
+	:global(html[data-theme='light']) .featured-badge[data-category='ekonomi'] {
+		color: #6d4a00;
+	}
+	:global(html[data-theme='light']) .featured-badge[data-category='turkiye'] {
+		color: #7f1d35;
+	}
+	:global(html[data-theme='light']) .featured-badge[data-category='dunya'] {
+		color: #163b73;
+	}
+	:global(html[data-theme='light']) .featured-badge[data-category='teknoloji'] {
+		color: #0f5136;
+	}
+	.featured-side-content h2,
+	.featured-lead-content h2 {
+		margin: 0.45rem 0 0;
+		color: #fff;
+		text-wrap: balance;
+	}
+	.featured-side-content.text-only h2 {
+		margin-top: 0.15rem;
+		color: var(--news-text);
+	}
+	.featured-side-content h2 {
+		font-size: 1.02rem;
+		line-height: 1.12;
+		letter-spacing: -0.02em;
+	}
+	.featured-side-content.text-only p {
+		margin: 0;
+		color: var(--news-muted-strong);
+		font-size: 0.94rem;
+		line-height: 1.52;
+		display: -webkit-box;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 3;
+		overflow: hidden;
+	}
+	.featured-side-content.text-only h2 {
+		display: -webkit-box;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 3;
+		overflow: hidden;
+	}
+	.featured-lead-content h2 {
+		font-size: clamp(1.48rem, 2.45vw, 2rem);
+		line-height: 1.06;
+		letter-spacing: -0.05em;
+		max-width: 22ch;
+		text-wrap: balance;
+	}
+	.featured-lead-topline {
+		display: flex;
+		gap: 0.45rem;
+		flex-wrap: wrap;
+	}
+	.featured-lead-content p {
+		margin-top: 0.5rem;
+		max-width: 50ch;
+		color: rgba(255,255,255,0.82);
+		font-size: 0.9rem;
+		line-height: 1.6;
+	}
+	.featured-side-content time,
+	.featured-meta-row {
+		display: flex;
+		gap: 0.5rem;
+		flex-wrap: wrap;
+		margin-top: 0.48rem;
+		color: rgba(255,255,255,0.7);
+		font-size: 0.74rem;
+	}
+	.featured-side-content.text-only time {
+		margin-top: auto;
+		padding-top: 0.35rem;
+		color: var(--news-muted);
+		font-size: 0.78rem;
+	}
+	.featured-badge.side {
+		width: fit-content;
+		backdrop-filter: none;
+	}
+	.featured-badge.side[data-category='siyaset'] {
+		color: #f97360;
+		background: rgba(249, 115, 96, 0.12);
+		border-color: rgba(249, 115, 96, 0.2);
+	}
+	.featured-badge.side[data-category='ekonomi'] {
+		color: #f2b94b;
+		background: rgba(242, 185, 75, 0.12);
+		border-color: rgba(242, 185, 75, 0.22);
+	}
+	.featured-badge.side[data-category='turkiye'] {
+		color: #fb7185;
+		background: rgba(251, 113, 133, 0.12);
+		border-color: rgba(251, 113, 133, 0.2);
+	}
+	.featured-badge.side[data-category='dunya'] {
+		color: #60a5fa;
+		background: rgba(96, 165, 250, 0.12);
+		border-color: rgba(96, 165, 250, 0.2);
+	}
+	.featured-badge.side[data-category='teknoloji'] {
+		color: #34d399;
+		background: rgba(52, 211, 153, 0.12);
+		border-color: rgba(52, 211, 153, 0.2);
+	}
+	.featured-lead-nav {
+		position: absolute;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		z-index: 3;
+		display: flex;
+		gap: 0.35rem;
+		padding: 0.9rem 0.95rem;
+		justify-content: flex-start;
+		pointer-events: none;
+	}
+	.featured-lead-trigger {
+		pointer-events: auto;
+		appearance: none;
+		border: 0;
+		min-width: 2rem;
+		height: 2rem;
+		padding: 0 0.55rem;
+		border-radius: 0.42rem;
+		background: rgba(18, 18, 20, 0.82);
+		color: rgba(255,255,255,0.82);
+		font-size: 0.9rem;
+		font-weight: 800;
+		cursor: pointer;
+		transition: background-color 160ms ease, color 160ms ease, transform 160ms ease;
+	}
+	.featured-lead-trigger:hover,
+	.featured-lead-trigger:focus-visible,
+	.featured-lead-trigger.is-active {
+		background: #1f5ca8;
+		color: #fff;
+		transform: translateY(-1px);
+	}
+	:global(html[data-theme='light']) .featured-lead-trigger {
+		background: rgba(32, 34, 40, 0.78);
+		color: rgba(255,255,255,0.92);
+	}
+	:global(html[data-theme='light']) .featured-lead-trigger:hover,
+	:global(html[data-theme='light']) .featured-lead-trigger:focus-visible,
+	:global(html[data-theme='light']) .featured-lead-trigger.is-active {
+		background: #2f6fbe;
+	}
+	.news-empty-state {
+		padding: 1rem 0;
+	}
+	.news-empty-state h2 {
+		font-size: 1.5rem;
+		margin-bottom: 0.45rem;
+	}
+	.news-empty-state p {
+		color: var(--news-muted-strong);
+		max-width: 56ch;
+	}
+	@media (max-width: 1080px) {
+		.featured-news-grid {
+			grid-template-columns: 1fr;
+		}
+		.featured-side-stack {
+			margin-top: 0.75rem;
+		}
+		.featured-side-header {
+			position: static;
+			padding: 0;
+		}
+	}
+	@media (max-width: 700px) {
+		.featured-lead-card {
+			min-height: 300px;
+		}
+		.featured-news-grid {
+			grid-template-columns: 1fr;
+		}
+		.featured-lead-content,
+		.featured-side-content {
+			padding: 0.85rem;
+		}
+		.featured-side-content.text-only {
+			padding: 0.9rem;
+		}
+		.featured-lead-content {
+			padding-bottom: 3.1rem;
+		}
+		.featured-lead-nav {
+			padding: 0.8rem 0.85rem;
+			gap: 0.3rem;
+		}
+		.featured-lead-trigger {
+			min-width: 1.8rem;
+			height: 1.8rem;
+			font-size: 0.82rem;
+		}
+		.featured-lead-content h2 {
+			font-size: 1.36rem;
+			max-width: none;
+		}
+		.featured-lead-content p {
+			font-size: 0.86rem;
+			line-height: 1.5;
+		}
+	}
+</style>

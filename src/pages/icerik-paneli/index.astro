@@ -1,0 +1,118 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import AdminNewsPanelStream from '../../components/news/AdminNewsPanelStream.astro';
+import { getPublishedAnlikHaber } from '../../data/anlikHaber';
+import { getNewsPanelHref } from '../../data/newsSite';
+
+const PAGE_SIZE = 10;
+const entries = await getPublishedAnlikHaber();
+const initialEntries = entries.slice(0, PAGE_SIZE);
+const totalPages = Math.max(1, Math.ceil(entries.length / PAGE_SIZE));
+const nextPageHref = totalPages > 1 ? getNewsPanelHref(2) : '';
+const title = 'Anlık Haber İçerik Paneli';
+const description = 'Anlık Haber içeriklerini hızlıca gözden geçirmek için gizli iç panel.';
+---
+
+<BaseLayout shellLayout={true} title={title} description={description} noindex={true}>
+  <section class="news-admin-panel">
+    <div class="panel-head">
+      <div>
+        <p class="panel-kicker">Gizli iç panel</p>
+        <h1>Anlık Haber İçerik Paneli</h1>
+        <p class="panel-summary">Tüm haberleri başlık, açıklama, görsel ve tarih ile tek yerde görmen için sade iç ekran.</p>
+      </div>
+      <div class="panel-meta">
+        <strong>{entries.length}</strong>
+        <span>toplam haber</span>
+      </div>
+    </div>
+
+    <AdminNewsPanelStream entries={initialEntries} currentPage={1} totalPages={totalPages} nextPageHref={nextPageHref} />
+  </section>
+</BaseLayout>
+
+<style>
+  :global(body) {
+    background: #0b0b0c;
+  }
+  :global(html[data-theme='light'] body) {
+    background: #f3efe8;
+  }
+  .news-admin-panel {
+    width: min(100%, 1240px);
+    margin: 0 auto;
+    padding: 1.2rem 1rem 2rem;
+    color: #f5f5f3;
+  }
+  .panel-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: end;
+    gap: 1rem;
+    margin-bottom: 1.15rem;
+  }
+  .panel-kicker {
+    margin: 0 0 0.4rem;
+    color: #ff9a86;
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+  }
+  .panel-head h1 {
+    margin: 0;
+    font-size: clamp(1.7rem, 3.2vw, 2.6rem);
+    line-height: 1.05;
+    letter-spacing: -0.04em;
+  }
+  .panel-summary {
+    margin: 0.45rem 0 0;
+    color: rgba(255,255,255,0.72);
+    max-width: 62ch;
+    line-height: 1.6;
+  }
+  .panel-meta {
+    flex-shrink: 0;
+    display: grid;
+    gap: 0.12rem;
+    min-width: 110px;
+    padding: 0.85rem 0.95rem;
+    border-radius: 1rem;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.04);
+    text-align: right;
+  }
+  .panel-meta strong {
+    font-size: 1.35rem;
+    line-height: 1;
+  }
+  .panel-meta span {
+    color: rgba(255,255,255,0.65);
+    font-size: 0.78rem;
+  }
+  :global(html[data-theme='light']) .news-admin-panel {
+    color: #141210;
+  }
+  :global(html[data-theme='light']) .panel-summary,
+  :global(html[data-theme='light']) .panel-meta span {
+    color: rgba(20,18,16,0.68);
+  }
+  :global(html[data-theme='light']) .panel-meta {
+    border-color: rgba(95,76,55,0.14);
+    background: rgba(255,255,255,0.72);
+  }
+  @media (max-width: 760px) {
+    .news-admin-panel {
+      padding-left: 0.8rem;
+      padding-right: 0.8rem;
+    }
+    .panel-head {
+      grid-template-columns: 1fr;
+      align-items: start;
+    }
+    .panel-meta {
+      text-align: left;
+      min-width: 0;
+    }
+  }
+</style>

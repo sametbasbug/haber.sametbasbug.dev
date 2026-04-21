@@ -1,0 +1,43 @@
+---
+import NewsLayout from '../../../layouts/NewsLayout.astro';
+import NewsStream from '../../../components/news/NewsStream.astro';
+import { ANLIK_HABER_PAGE_SIZE, getAnlikHaberCategories, getPublishedAnlikHaber } from '../../../data/anlikHaber';
+
+export async function getStaticPaths({ paginate }) {
+	const entries = await getPublishedAnlikHaber();
+	return paginate(entries, { pageSize: ANLIK_HABER_PAGE_SIZE }).filter((page) => page.params.page !== '1');
+}
+
+const { page } = Astro.props;
+const categories = getAnlikHaberCategories();
+const currentPage = page.currentPage;
+const totalPages = page.lastPage;
+
+const title = `Anlık Haber | Sayfa ${currentPage}`;
+const description = `Anlık haber arşivi, sayfa ${currentPage}. Kısa ve okunaklı haber akışının devamı.`;
+---
+
+<NewsLayout
+	title={title}
+	description={description}
+	pageTitle={`Anlık Haber · Sayfa ${currentPage}`}
+	pageDescription="Bu sayfa, ana akışın devam paketidir. Infinite scroll altında gerçek sayfalama çalışır."
+	topMeta={`${page.data.length} haber · Sayfa ${currentPage}/${totalPages}`}
+	categories={categories}
+	activeCategory="Tümü"
+>
+	<section class="news-page-wrap">
+		<div class="news-page-main">
+			<NewsStream entries={page.data} currentPage={currentPage} totalPages={totalPages} />
+		</div>
+	</section>
+</NewsLayout>
+
+<style>
+	.news-page-wrap {
+		padding-top: 1rem;
+	}
+	.news-page-main {
+		max-width: 100%;
+	}
+</style>

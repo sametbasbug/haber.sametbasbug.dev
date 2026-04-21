@@ -1,0 +1,244 @@
+---
+import { formatNewsDate, type AnlikHaberEntry } from '../../data/anlikHaber';
+import { getNewsArticleHref } from '../../data/newsSite';
+
+interface Props {
+  entries: AnlikHaberEntry[];
+  currentPage: number;
+  totalPages: number;
+  nextPageHref?: string;
+}
+
+const { entries, currentPage, totalPages, nextPageHref = '' } = Astro.props;
+---
+
+<section class="admin-news-stream" data-admin-news-stream data-current-page={currentPage} data-total-pages={totalPages} data-next-page={nextPageHref}>
+  <div class="panel-list" data-admin-news-list>
+    {entries.map((entry) => (
+      <a class="panel-card" href={getNewsArticleHref(entry.id)}>
+        {entry.data.heroImage && (
+          <div class="panel-image-wrap">
+            <img src={entry.data.heroImage} alt="" loading="lazy" decoding="async" />
+          </div>
+        )}
+
+        <div class="panel-copy">
+          <div class="panel-card-meta">
+            {entry.data.category && <span class="panel-category">{entry.data.category}</span>}
+            <time datetime={entry.data.pubDate.toISOString()}>{formatNewsDate(entry.data.pubDate)}</time>
+          </div>
+          <h2>{entry.data.title}</h2>
+          <p>{entry.data.description}</p>
+        </div>
+      </a>
+    ))}
+  </div>
+
+  <div class="admin-news-footer">
+    {nextPageHref ? (
+      <>
+        <a class="admin-news-load-more" data-admin-news-next-link href={nextPageHref}>Sonraki 10 haberi yükle</a>
+        <div class="admin-news-sentinel" data-admin-news-sentinel aria-hidden="true"></div>
+      </>
+    ) : null}
+  </div>
+</section>
+
+<script>
+  function initAdminNewsStream() {
+    document.querySelectorAll('[data-admin-news-stream]').forEach((root) => {
+      if (!(root instanceof HTMLElement) || root.dataset.bound === '1') return;
+      root.dataset.bound = '1';
+
+      const list = root.querySelector('[data-admin-news-list]');
+      const link = root.querySelector('[data-admin-news-next-link]');
+      const sentinel = root.querySelector('[data-admin-news-sentinel]');
+      if (!(list instanceof HTMLElement) || !(link instanceof HTMLAnchorElement)) return;
+
+      let loading = false;
+
+      const stop = () => {
+        root.dataset.nextPage = '';
+        link.remove();
+        if (sentinel instanceof HTMLElement) sentinel.remove();
+      };
+
+      const setLoadingState = (value) => {
+        loading = value;
+        link.textContent = value ? 'Yeni haberler yükleniyor…' : 'Sonraki 10 haberi yükle';
+      };
+
+      const loadNextPage = async () => {
+        const nextHref = root.dataset.nextPage || link.getAttribute('href') || '';
+        if (!nextHref || loading) return;
+        setLoadingState(true);
+
+        try {
+          const response = await fetch(nextHref);
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          const html = await response.text();
+          const parsed = new DOMParser().parseFromString(html, 'text/html');
+          const parsedRoot = parsed.querySelector('[data-admin-news-stream]');
+          const parsedList = parsedRoot?.querySelector('[data-admin-news-list]');
+          if (!(parsedRoot instanceof HTMLElement) || !(parsedList instanceof HTMLElement)) throw new Error('Panel stream not found');
+
+          Array.from(parsedList.children).forEach((child) => list.appendChild(child));
+
+          const upcomingHref = parsedRoot.dataset.nextPage || '';
+          if (upcomingHref) {
+            root.dataset.nextPage = upcomingHref;
+            link.href = upcomingHref;
+            link.textContent = 'Sonraki 10 haberi yükle';
+          } else {
+            stop();
+          }
+        } catch (error) {
+          console.error('İç panel haberleri yüklenemedi:', error);
+          link.textContent = 'Yükleme başarısız, yeniden dene';
+        } finally {
+          setLoadingState(false);
+        }
+      };
+
+      link.addEventListener('click', (event) => {
+        event.preventDefault();
+        loadNextPage();
+      });
+
+      if (sentinel instanceof HTMLElement) {
+        sentinel.remove();
+      }
+    });
+  }
+
+  initAdminNewsStream();
+  document.addEventListener('astro:page-load', initAdminNewsStream);
+</script>
+
+<style>
+  .admin-news-stream {
+    display: grid;
+    gap: 0.9rem;
+  }
+  .panel-list {
+    display: grid;
+    gap: 0.9rem;
+  }
+  .admin-news-footer {
+    display: grid;
+    justify-items: center;
+    gap: 0.75rem;
+    padding: 0.25rem 0 0.5rem;
+  }
+  .admin-news-load-more {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.85rem 1rem;
+    border-radius: 999px;
+    text-decoration: none;
+    border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.04);
+    color: inherit;
+    font-weight: 700;
+  }
+  .admin-news-sentinel {
+    width: 100%;
+    height: 1px;
+  }
+  .panel-card {
+    display: grid;
+    grid-template-columns: 240px minmax(0, 1fr);
+    gap: 0.95rem;
+    align-items: stretch;
+    text-decoration: none;
+    color: inherit;
+    padding: 0.9rem;
+    border-radius: 1rem;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.015));
+    transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
+  }
+  .panel-card:hover {
+    transform: translateY(-1px);
+    border-color: rgba(244, 106, 90, 0.3);
+    background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+  }
+  .panel-image-wrap {
+    border-radius: 0.9rem;
+    overflow: hidden;
+    background: rgba(255,255,255,0.04);
+  }
+  .panel-image-wrap img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    min-height: 148px;
+    object-fit: cover;
+  }
+  .panel-copy {
+    display: grid;
+    align-content: start;
+    gap: 0.5rem;
+    min-width: 0;
+  }
+  .panel-card-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+    align-items: center;
+    color: rgba(255,255,255,0.64);
+    font-size: 0.78rem;
+  }
+  .panel-category {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.18rem 0.46rem;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.08);
+    color: #ffb4a5;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+  }
+  .panel-copy h2 {
+    margin: 0;
+    font-size: clamp(1.08rem, 1.8vw, 1.38rem);
+    line-height: 1.14;
+    letter-spacing: -0.03em;
+  }
+  .panel-copy p {
+    margin: 0;
+    color: rgba(255,255,255,0.76);
+    line-height: 1.6;
+  }
+  :global(html[data-theme='light']) .panel-card-meta,
+  :global(html[data-theme='light']) .panel-copy p {
+    color: rgba(20,18,16,0.68);
+  }
+  :global(html[data-theme='light']) .panel-card {
+    border-color: rgba(95,76,55,0.14);
+    background: rgba(255,255,255,0.72);
+  }
+  :global(html[data-theme='light']) .panel-card:hover {
+    border-color: rgba(191,74,59,0.28);
+    background: rgba(255,255,255,0.88);
+  }
+  :global(html[data-theme='light']) .panel-category {
+    background: rgba(191,74,59,0.09);
+    color: #9e3f33;
+  }
+  :global(html[data-theme='light']) .admin-news-load-more {
+    border-color: rgba(95,76,55,0.16);
+    background: rgba(255,255,255,0.78);
+  }
+  @media (max-width: 760px) {
+    .panel-card {
+      grid-template-columns: 1fr;
+    }
+    .panel-image-wrap img {
+      min-height: 190px;
+      aspect-ratio: 16 / 9;
+    }
+  }
+</style>

@@ -1,0 +1,24 @@
+{
+  "name": "blog-project",
+  "type": "module",
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro",
+    "ozet:new": "node scripts/new-gunluk-ozet.mjs",
+    "briefing:v1": "node scripts/briefing-v1-prepare.mjs",
+    "briefing:v1:draft": "node scripts/briefing-v1-draft.mjs",
+    "briefing:v1:validate": "node scripts/briefing-v1-validate.mjs",
+    "briefing:v1:report": "node scripts/briefing-v1-report.mjs",
+    "briefing:v1:run": "node scripts/briefing-v1-run.mjs",
+    "briefing:v1:run:ci": "node scripts/briefing-v1-run-ci.mjs"
+  },
+  "dependencies": {
+    "@astrojs/rss": "^4.0.18",
+    "@astrojs/sitemap": "^3.7.2",
+    "astro": "^6.1.5",
+    "firebase": "^12.10.0"
+  }
+}

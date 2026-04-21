@@ -1,0 +1,214 @@
+---
+import { findAuthorByName } from '../../data/authors';
+import { formatNewsDate, getNewsCategoryToken, type AnlikHaberEntry } from '../../data/anlikHaber';
+import { getNewsArticleHref } from '../../data/newsSite';
+
+interface Props {
+	entry: AnlikHaberEntry;
+	compact?: boolean;
+}
+
+const { entry, compact = false } = Astro.props;
+const authorProfile = findAuthorByName(entry.data.author);
+const href = getNewsArticleHref(entry.id);
+const categoryToken = getNewsCategoryToken(entry.data.category);
+---
+
+<article class={`news-card ${compact ? 'compact' : ''}`.trim()} data-news-card data-category={categoryToken}>
+	<div class="news-card-copy">
+		{entry.data.breaking && <span class="breaking-pill">SON DAKİKA</span>}
+		<div class="news-card-head">
+			{entry.data.category && <span class="news-category" data-category={categoryToken}>{entry.data.category}</span>}
+			<time datetime={entry.data.pubDate.toISOString()}>{formatNewsDate(entry.data.pubDate)}</time>
+		</div>
+
+		<a class="news-card-title" href={href}>{entry.data.title}</a>
+		<p class="news-card-desc">{entry.data.description}</p>
+
+		<div class="news-card-meta">
+			<span class="news-author">{entry.data.author ?? 'Nyx AI'}</span>
+			{authorProfile?.role && <span class="news-author-role">{authorProfile.role}</span>}
+			<a class="news-read-link" href={href}>Devamını oku</a>
+		</div>
+	</div>
+
+	{entry.data.heroImage && (
+		<a class="news-card-image-link" href={href} aria-hidden="true" tabindex="-1">
+			<img class="news-card-image" src={entry.data.heroImage} alt="" loading="lazy" decoding="async" />
+		</a>
+	)}
+</article>
+
+<style>
+	.news-card {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) 220px;
+		gap: 0.95rem;
+		padding: 1rem;
+		border: 1px solid color-mix(in srgb, var(--news-border) 80%, rgba(255,255,255,0.06));
+		border-radius: 1rem;
+		background: linear-gradient(180deg, rgba(255,255,255,0.025), rgba(255,255,255,0.01));
+		box-shadow: inset 0 1px 0 rgba(255,255,255,0.02);
+		transition: border-color 160ms ease, transform 160ms ease, background-color 160ms ease;
+	}
+	.news-card.compact {
+		grid-template-columns: 1fr;
+		gap: 0.65rem;
+		padding: 0.85rem;
+	}
+	.news-card:hover {
+		transform: translateY(-1px);
+		border-color: color-mix(in srgb, var(--news-accent) 24%, var(--news-border));
+		background: linear-gradient(180deg, rgba(255,255,255,0.032), rgba(255,255,255,0.015));
+	}
+	:global(html[data-theme='light']) .news-card {
+		background: linear-gradient(180deg, rgba(255,255,255,0.76), rgba(255,255,255,0.45));
+		box-shadow: 0 8px 18px rgba(37, 28, 18, 0.04), inset 0 1px 0 rgba(255,255,255,0.55);
+	}
+	:global(html[data-theme='light']) .news-card:hover {
+		background: linear-gradient(180deg, rgba(255,255,255,0.88), rgba(255,255,255,0.58));
+		box-shadow: 0 10px 24px rgba(37, 28, 18, 0.06), inset 0 1px 0 rgba(255,255,255,0.65);
+	}
+	.news-card-copy {
+		display: grid;
+		gap: 0.55rem;
+		min-width: 0;
+	}
+	.breaking-pill {
+		display: inline-flex;
+		align-items: center;
+		width: fit-content;
+		padding: 0.28rem 0.58rem;
+		border-radius: 999px;
+		background: #b91c1c;
+		color: white;
+		font-size: 0.72rem;
+		font-weight: 800;
+		letter-spacing: 0.08em;
+	}
+	.news-card-head {
+		display: flex;
+		align-items: center;
+		gap: 0.55rem;
+		flex-wrap: wrap;
+		color: var(--news-muted);
+		font-size: 0.76rem;
+	}
+	.news-category {
+		display: inline-flex;
+		align-items: center;
+		padding: 0.16rem 0.42rem;
+		border-radius: 999px;
+		background: rgba(255,255,255,0.05);
+		border: 1px solid rgba(255,255,255,0.06);
+		font-weight: 800;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		color: var(--news-accent);
+	}
+	.news-category[data-category='siyaset'] {
+		color: #f97360;
+		background: rgba(249, 115, 96, 0.12);
+		border-color: rgba(249, 115, 96, 0.2);
+	}
+	.news-category[data-category='ekonomi'] {
+		color: #f2b94b;
+		background: rgba(242, 185, 75, 0.12);
+		border-color: rgba(242, 185, 75, 0.22);
+	}
+	.news-category[data-category='turkiye'] {
+		color: #fb7185;
+		background: rgba(251, 113, 133, 0.12);
+		border-color: rgba(251, 113, 133, 0.2);
+	}
+	.news-category[data-category='dunya'] {
+		color: #60a5fa;
+		background: rgba(96, 165, 250, 0.12);
+		border-color: rgba(96, 165, 250, 0.2);
+	}
+	.news-category[data-category='teknoloji'] {
+		color: #34d399;
+		background: rgba(52, 211, 153, 0.12);
+		border-color: rgba(52, 211, 153, 0.2);
+	}
+	.news-card-title {
+		color: var(--news-text);
+		text-decoration: none;
+		font-size: clamp(1.08rem, 1.6vw, 1.45rem);
+		line-height: 1.12;
+		font-weight: 820;
+		letter-spacing: -0.03em;
+		text-wrap: balance;
+	}
+	.news-card.compact .news-card-title {
+		font-size: 1.08rem;
+		line-height: 1.24;
+	}
+	.news-card-title:hover {
+		color: var(--news-accent);
+	}
+	.news-card-desc {
+		color: var(--news-muted-strong);
+		font-size: 0.9rem;
+		line-height: 1.58;
+		max-width: 62ch;
+	}
+	.news-card.compact .news-card-desc {
+		font-size: 0.92rem;
+		line-height: 1.62;
+	}
+	.news-card-image-link {
+		align-self: start;
+		border-radius: 0.85rem;
+		overflow: hidden;
+		border: 1px solid color-mix(in srgb, var(--news-border) 82%, transparent);
+		background: color-mix(in srgb, var(--news-panel) 88%, transparent);
+	}
+	.news-card.compact .news-card-image-link {
+		display: none;
+	}
+	.news-card-image {
+		display: block;
+		width: 100%;
+		height: 148px;
+		object-fit: cover;
+		filter: saturate(0.92) brightness(0.86);
+	}
+	.news-card-meta {
+		display: flex;
+		align-items: center;
+		gap: 0.55rem;
+		flex-wrap: wrap;
+		color: var(--news-muted);
+		font-size: 0.8rem;
+	}
+	.news-author {
+		font-weight: 700;
+		color: var(--news-text);
+	}
+	.news-author-role::before {
+		content: '•';
+		margin-right: 0.45rem;
+		color: var(--news-border);
+	}
+	.news-read-link {
+		margin-left: auto;
+		color: var(--news-accent);
+		font-weight: 800;
+		text-decoration: none;
+	}
+	@media (max-width: 760px) {
+		.news-card {
+			grid-template-columns: 1fr;
+			gap: 0.75rem;
+			padding: 0.9rem;
+		}
+		.news-card-image {
+			height: auto;
+			aspect-ratio: 16 / 9;
+		}
+		.news-read-link {
+			margin-left: 0;
+		}
+	}
+</style>

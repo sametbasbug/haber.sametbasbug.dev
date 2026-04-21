@@ -1,0 +1,482 @@
+---
+import { render } from 'astro:content';
+import NewsLayout from '../layouts/NewsLayout.astro';
+import NewsCard from '../components/news/NewsCard.astro';
+import { findAuthorByName } from '../data/authors';
+import { formatNewsDate, getAnlikHaberCategories, getNewsCategoryToken, getPublishedAnlikHaber, normalizeNewsCategory } from '../data/anlikHaber';
+import { getNewsArticleHref, getNewsCanonicalUrl, getNewsHomeHref } from '../data/newsSite';
+
+export async function getStaticPaths() {
+	const entries = await getPublishedAnlikHaber();
+	return entries.map((entry) => ({ params: { slug: entry.id } }));
+}
+
+const routeSlug = Astro.params.slug;
+const allEntries = await getPublishedAnlikHaber();
+const entry = allEntries.find((item) => item.id === routeSlug);
+
+if (!entry) {
+	throw new Error(`Anlık haber bulunamadı: ${routeSlug}`);
+}
+
+const { Content } = await render(entry);
+const currentIndex = allEntries.findIndex((item) => item.id === entry.id);
+const nextEntry = allEntries[currentIndex - 1];
+const prevEntry = allEntries[currentIndex + 1];
+const latestEntries = allEntries.filter((item) => item.id !== entry.id).slice(0, 3);
+const authorProfile = findAuthorByName(entry.data.author);
+const categories = getAnlikHaberCategories();
+const categoryToken = getNewsCategoryToken(entry.data.category);
+const hasInlineSourcesSection = /^##\s+Kaynaklar\b/m.test(entry.body);
+
+const title = entry.data.title;
+const description = entry.data.description;
+const siteUrl = Astro.site ?? new URL(Astro.url.origin);
+const canonicalUrl = getNewsCanonicalUrl(`/${routeSlug}/`) ?? new URL(Astro.url.pathname, siteUrl).toString();
+const heroImageUrl = entry.data.heroImage ? new URL(entry.data.heroImage, siteUrl).toString() : undefined;
+const newsArticleSchema = {
+	'@context': 'https://schema.org',
+	'@type': 'NewsArticle',
+	headline: entry.data.title,
+	description: entry.data.description,
+	datePublished: entry.data.pubDate.toISOString(),
+	dateModified: (entry.data.updatedDate ?? entry.data.pubDate).toISOString(),
+	mainEntityOfPage: {
+		'@type': 'WebPage',
+		'@id': canonicalUrl,
+	},
+	isAccessibleForFree: true,
+	author: {
+		'@type': 'Person',
+		name: entry.data.author ?? 'Nyx AI',
+	},
+	publisher: {
+		'@type': 'Organization',
+		name: 'Samet Başbuğ',
+		logo: {
+			'@type': 'ImageObject',
+			url: new URL('/favicon-96x96.png', siteUrl).toString(),
+		},
+	},
+	image: heroImageUrl ? [heroImageUrl] : undefined,
+	articleSection: entry.data.category,
+	keywords: entry.data.tags?.join(', '),
+};
+const breadcrumbSchema = {
+	'@context': 'https://schema.org',
+	'@type': 'BreadcrumbList',
+	itemListElement: [
+		{
+			'@type': 'ListItem',
+			position: 1,
+			name: 'Ana Sayfa',
+			item: new URL('/', siteUrl).toString(),
+		},
+		{
+			'@type': 'ListItem',
+			position: 2,
+			name: 'Anlık Haber',
+			item: getNewsHomeHref(),
+		},
+		{
+			'@type': 'ListItem',
+			position: 3,
+			name: entry.data.title,
+			item: canonicalUrl,
+		},
+	],
+};
+const newsStructuredData = [newsArticleSchema, breadcrumbSchema];
+---
+
+<script type="application/ld+json" set:html={JSON.stringify(newsStructuredData)} />
+
+<NewsLayout
+	title={title}
+	description={description}
+	pageTitle={entry.data.breaking ? 'Son Dakika' : 'Anlık Haber'}
+	pageDescription={entry.data.description}
+	topMeta={formatNewsDate(entry.data.pubDate)}
+	categories={categories}
+	activeCategory={normalizeNewsCategory(entry.data.category) ?? 'Tümü'}
+	hidePageHero={true}
+	categoryNavForceReload={true}
+>
+	<article class="news-article">
+		<div class="article-main">
+			<div class="article-hero-shell">
+				<div class="article-head-meta centered">
+					{entry.data.breaking && <span class="breaking-pill">SON DAKİKA</span>}
+					{entry.data.category && <span class="article-category" data-category={categoryToken}>{entry.data.category}</span>}
+				</div>
+
+				<h1>{entry.data.title}</h1>
+				<div class="article-byline-row centered">
+					<div class="article-byline article-meta-line">
+						<time datetime={entry.data.pubDate.toISOString()}>{formatNewsDate(entry.data.pubDate)}</time>
+						<strong>{entry.data.author ?? 'Nyx AI'}</strong>
+						{authorProfile?.role && <span>{authorProfile.role}</span>}
+					</div>
+				</div>
+			</div>
+
+			<div class="article-prose">
+				<Content />
+			</div>
+
+			{!hasInlineSourcesSection && entry.data.sources && entry.data.sources.length > 0 && (
+				<section class="article-sources">
+					<h2>Kaynaklar</h2>
+					<ul>
+						{entry.data.sources.map((source) => (
+							<li><a href={source.url} target="_blank" rel="noopener noreferrer">{source.name}</a></li>
+						))}
+					</ul>
+				</section>
+			)}
+
+			<nav class="article-nav">
+				{prevEntry ? <a href={getNewsArticleHref(prevEntry.id)} class="article-nav-link">← Önceki haber</a> : <span></span>}
+				{nextEntry ? <a href={getNewsArticleHref(nextEntry.id)} class="article-nav-link next">Sonraki haber →</a> : <span></span>}
+			</nav>
+		</div>
+
+		<aside class="article-side">
+			<section class="article-panel article-panel-emphasis">
+				<h2>Dosya bilgisi</h2>
+				<dl>
+					<div><dt>Tarih</dt><dd>{formatNewsDate(entry.data.pubDate)}</dd></div>
+					{entry.data.category && <div><dt>Kategori</dt><dd>{entry.data.category}</dd></div>}
+					<div><dt>Yazar</dt><dd>{entry.data.author ?? 'Nyx AI'}</dd></div>
+				</dl>
+			</section>
+
+			{entry.data.tags && entry.data.tags.length > 0 && (
+				<section class="article-panel">
+					<h2>Etiketler</h2>
+					<div class="article-tags">
+						{entry.data.tags.map((tag) => <span>#{tag}</span>)}
+					</div>
+				</section>
+			)}
+
+			{latestEntries.length > 0 && (
+				<section class="article-panel latest-panel">
+					<h2>Diğer gelişmeler</h2>
+					<div class="article-latest-list">
+						{latestEntries.map((item) => <NewsCard entry={item} compact={true} />)}
+					</div>
+				</section>
+			)}
+		</aside>
+	</article>
+</NewsLayout>
+
+<style>
+	.breaking-pill {
+		display: inline-flex;
+		align-items: center;
+		padding: 0.3rem 0.62rem;
+		border-radius: 999px;
+		background: #b91c1c;
+		color: white;
+		font-size: 0.72rem;
+		font-weight: 800;
+		letter-spacing: 0.08em;
+	}
+	.news-article {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) 280px;
+		gap: 1.6rem;
+		padding-top: 1rem;
+	}
+	.article-main {
+		min-width: 0;
+	}
+	.article-hero-shell {
+		display: block;
+		padding-bottom: 1rem;
+		border-bottom: 1px solid color-mix(in srgb, var(--news-border) 82%, transparent);
+		margin-bottom: 1.15rem;
+	}
+	.article-head-meta {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.55rem;
+		align-items: center;
+		color: var(--news-muted);
+		font-size: 0.76rem;
+		margin-bottom: 0.8rem;
+	}
+	.article-head-meta.centered {
+		justify-content: center;
+	}
+	.article-category {
+		display: inline-flex;
+		align-items: center;
+		padding: 0.18rem 0.48rem;
+		border-radius: 999px;
+		font-weight: 800;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		color: var(--news-accent);
+		background: rgba(255,255,255,0.05);
+		border: 1px solid rgba(255,255,255,0.06);
+	}
+	.article-category[data-category='siyaset'] {
+		color: #f97360;
+		background: rgba(249, 115, 96, 0.12);
+		border-color: rgba(249, 115, 96, 0.2);
+	}
+	.article-category[data-category='ekonomi'] {
+		color: #f2b94b;
+		background: rgba(242, 185, 75, 0.12);
+		border-color: rgba(242, 185, 75, 0.22);
+	}
+	.article-category[data-category='turkiye'] {
+		color: #fb7185;
+		background: rgba(251, 113, 133, 0.12);
+		border-color: rgba(251, 113, 133, 0.2);
+	}
+	.article-category[data-category='dunya'] {
+		color: #60a5fa;
+		background: rgba(96, 165, 250, 0.12);
+		border-color: rgba(96, 165, 250, 0.2);
+	}
+	.article-category[data-category='teknoloji'] {
+		color: #34d399;
+		background: rgba(52, 211, 153, 0.12);
+		border-color: rgba(52, 211, 153, 0.2);
+	}
+	.article-main h1 {
+		font-size: clamp(2.15rem, 4vw, 3.35rem);
+		line-height: 1.02;
+		margin: 0 auto 0.8rem;
+		font-weight: 900;
+		letter-spacing: -0.05em;
+		max-width: 24ch;
+		text-align: center;
+		display: -webkit-box;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 3;
+		overflow: hidden;
+	}
+	.article-byline-row {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		gap: 0.8rem;
+		flex-wrap: wrap;
+		margin-bottom: 0.85rem;
+	}
+	.article-byline-row.centered {
+		justify-content: center;
+		flex-direction: column;
+		gap: 0.65rem;
+	}
+	.article-byline {
+		display: flex;
+		gap: 0.5rem;
+		flex-wrap: wrap;
+		color: var(--news-muted);
+		font-size: 0.82rem;
+	}
+	.article-meta-line {
+		justify-content: center;
+		gap: 0.7rem;
+	}
+	.article-meta-line span::before,
+	.article-meta-line strong::before {
+		content: '•';
+		margin-right: 0.7rem;
+		color: var(--news-border);
+	}
+	.article-meta-line strong {
+		font-weight: 800;
+	}
+	.article-byline strong {
+		color: var(--news-text);
+	}
+	.article-prose {
+		font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+		font-size: 1.06rem;
+		line-height: 1.82;
+		letter-spacing: -0.01em;
+		color: var(--news-text);
+		max-width: none;
+		width: 100%;
+		font-feature-settings: 'liga' 1, 'calt' 1;
+		text-rendering: optimizeLegibility;
+	}
+	.article-prose :global(h2) {
+		font-family: Inter, sans-serif;
+		font-size: 1.32rem;
+		margin-top: 1.9rem;
+		margin-bottom: 0.7rem;
+		letter-spacing: -0.03em;
+	}
+	.article-prose :global(h3) {
+		font-family: Inter, sans-serif;
+		font-size: 1.12rem;
+		margin-top: 1.55rem;
+		margin-bottom: 0.6rem;
+		letter-spacing: -0.02em;
+	}
+	.article-prose :global(p) {
+		margin-bottom: 1rem;
+	}
+	.article-prose :global(blockquote) {
+		margin: 1.7rem 0;
+		padding: 1.05rem 1.2rem;
+		border-left: 4px solid var(--news-accent);
+		background: color-mix(in srgb, var(--news-panel) 92%, transparent);
+		border-radius: 0.85rem;
+		color: var(--news-muted-strong);
+		font-size: 1.08rem;
+	}
+	.article-prose :global(a) {
+		color: var(--news-accent-soft);
+		text-decoration: underline;
+		text-decoration-color: color-mix(in srgb, var(--news-accent) 55%, transparent);
+	}
+	.article-prose :global(ul),
+	.article-prose :global(ol) {
+		margin: 0 0 1.3rem 1.25rem;
+		display: grid;
+		gap: 0.45rem;
+	}
+	.article-sources {
+		margin-top: 1.4rem;
+		padding-top: 0.9rem;
+		border-top: 1px solid color-mix(in srgb, var(--news-border) 82%, transparent);
+	}
+	.article-sources h2,
+	.article-panel h2 {
+		font-size: 0.9rem;
+		margin-bottom: 0.55rem;
+		font-weight: 850;
+	}
+	.article-sources ul {
+		padding-left: 1rem;
+		display: grid;
+		gap: 0.5rem;
+	}
+	.article-sources a {
+		color: var(--news-accent-soft);
+	}
+	.article-nav {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 0.7rem;
+		align-items: center;
+		margin-top: 1.5rem;
+		padding-top: 0.95rem;
+		border-top: 1px solid color-mix(in srgb, var(--news-border) 82%, transparent);
+	}
+	.article-nav-link {
+		color: var(--news-accent-soft);
+		text-decoration: none;
+		font-weight: 800;
+	}
+	.article-nav-link.next {
+		justify-self: end;
+		text-align: right;
+	}
+	.article-side {
+		display: grid;
+		align-content: start;
+		gap: 0.9rem;
+		position: sticky;
+		top: 4.8rem;
+		height: fit-content;
+		min-width: 0;
+	}
+	.article-panel {
+		padding: 0.9rem;
+		border: 1px solid color-mix(in srgb, var(--news-border) 80%, rgba(255,255,255,0.06));
+		border-radius: 1rem;
+		background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.012));
+		box-shadow: inset 0 1px 0 rgba(255,255,255,0.02);
+	}
+	.article-panel-emphasis {
+		background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+	}
+	.article-panel dl {
+		display: grid;
+		gap: 0.65rem;
+	}
+	.article-panel dt {
+		font-size: 0.68rem;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		color: var(--news-muted);
+		margin-bottom: 0.18rem;
+	}
+	.article-panel dd {
+		color: var(--news-text);
+		font-weight: 600;
+	}
+	.article-tags {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.45rem;
+	}
+	.article-tags span {
+		padding: 0.32rem 0.58rem;
+		border-radius: 999px;
+		background: color-mix(in srgb, var(--news-panel-strong) 92%, transparent);
+		color: var(--news-muted-strong);
+		font-size: 0.78rem;
+		font-weight: 700;
+	}
+	.article-latest-list {
+		display: grid;
+	}
+	.latest-panel :global(.news-card:last-child) {
+		border-bottom: 0;
+		padding-bottom: 0;
+	}
+	@media (max-width: 1320px) {
+		.news-article {
+			grid-template-columns: 1fr;
+		}
+		.article-side {
+			position: static;
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+			gap: 0.85rem;
+		}
+	}
+	@media (max-width: 900px) {
+		.article-side {
+			grid-template-columns: 1fr;
+		}
+	}
+	@media (max-width: 700px) {
+		.article-main h1 {
+			font-size: 1.95rem;
+			max-width: 100%;
+		}
+		.article-meta-line {
+			gap: 0.45rem;
+		}
+		.article-meta-line span::before,
+		.article-meta-line strong::before {
+			margin-right: 0.45rem;
+		}
+		.article-standfirst {
+			font-size: 0.92rem;
+			line-height: 1.56;
+		}
+		.article-prose {
+			font-size: 1.04rem;
+			line-height: 1.78;
+		}
+		.article-nav {
+			grid-template-columns: 1fr 1fr;
+			gap: 0.6rem;
+		}
+		.article-nav-link.next {
+			justify-self: end;
+		}
+	}
+</style>
