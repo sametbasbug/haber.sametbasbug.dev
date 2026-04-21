@@ -51,6 +51,13 @@ const blogHomeHref = isNewsSubdomainEnabled() ? getMainSiteUrl() : '/';
 							<button class="news-theme-pill" type="button" aria-label="Temayı Değiştir" data-news-theme-toggle>
 								<span data-news-theme-icon>🌙</span>
 							</button>
+							<a href="/rss.xml" class="news-action-pill news-icon-pill" aria-label="RSS akışını aç" title="RSS akışını aç">
+								<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+									<circle cx="6" cy="18" r="2.2" fill="currentColor"></circle>
+									<path d="M4 10a10 10 0 0 1 10 10" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"></path>
+									<path d="M4 4a16 16 0 0 1 16 16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"></path>
+								</svg>
+							</a>
 							<a href={blogHomeHref} class="news-action-pill">Blog'a dön</a>
 						</div>
 					</div>
@@ -76,6 +83,13 @@ const blogHomeHref = isNewsSubdomainEnabled() ? getMainSiteUrl() : '/';
 					<button class="news-theme-pill" type="button" aria-label="Temayı Değiştir" data-news-theme-toggle>
 						<span data-news-theme-icon>🌙</span>
 					</button>
+					<a href="/rss.xml" class="news-action-pill news-icon-pill" aria-label="RSS akışını aç" title="RSS akışını aç">
+						<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+							<circle cx="6" cy="18" r="2.2" fill="currentColor"></circle>
+							<path d="M4 10a10 10 0 0 1 10 10" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"></path>
+							<path d="M4 4a16 16 0 0 1 16 16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"></path>
+						</svg>
+					</a>
 					<a href={blogHomeHref} class="news-action-pill">Blog'a dön</a>
 				</div>
 			</div>
@@ -347,6 +361,16 @@ const blogHomeHref = isNewsSubdomainEnabled() ? getMainSiteUrl() : '/';
 		color: var(--news-muted-strong);
 		background: color-mix(in srgb, var(--news-panel) 85%, transparent);
 		text-decoration: none;
+	}
+	.news-icon-pill {
+		padding: 0.28rem;
+		width: 2rem;
+		height: 2rem;
+	}
+	.news-icon-pill svg {
+		width: 1rem;
+		height: 1rem;
+		display: block;
 	}
 	.news-theme-pill {
 		cursor: pointer;

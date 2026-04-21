@@ -26,6 +26,7 @@ const finalOgImage = ogImage && typeof ogImage === 'string' && ogImage.trim() !=
 
 const canonicalURL = new URL(Astro.url.pathname, Astro.site).toString();
 const ogImageURL = new URL(finalOgImage, Astro.site).toString();
+const rssFeedURL = new URL('/rss.xml', Astro.site).toString();
 const newsHomeHref = getNewsHomeHref();
 ---
 
@@ -51,6 +52,7 @@ const newsHomeHref = getNewsHomeHref();
 		<title>Samet Başbuğ | {title}</title>
 		<meta name="description" content={description} />
 		<link rel="canonical" href={canonicalURL} />
+		<link rel="alternate" type="application/rss+xml" title="Anlık Haber RSS" href={rssFeedURL} />
 		<meta name="robots" content={noindex ? 'noindex, nofollow' : 'index, follow, max-image-preview:large'} />
 
 		<!-- Open Graph / Facebook -->
