@@ -117,3 +117,17 @@ sources:
     url: https://medyascope.tv/feed/
     category_hints: []
     enabled: true
+
+  - id: diken
+    name: Diken
+    kind: rss
+    url: https://www.diken.com.tr/feed/
+    category_hints: []
+    enabled: true
+
+  - id: kisa-dalga
+    name: Kısa Dalga
+    kind: rss
+    url: https://kisadalga.net/feed
+    category_hints: []
+    enabled: true
