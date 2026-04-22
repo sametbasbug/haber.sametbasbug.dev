@@ -345,15 +345,9 @@ def build_tags(article: NormalizedArticle) -> list[str]:
 
 def choose_category(article: NormalizedArticle) -> str:
     text = f"{article.title} {article.summary}".lower()
-    turkey_terms = [
+    local_turkey_terms = [
         "türkiye",
         "turkiye",
-        "turkey",
-        "turkish",
-        "ankara",
-        "istanbul",
-        "izmir",
-        "adana",
         "erdoğan",
         "erdogan",
         "imamoğlu",
@@ -368,8 +362,48 @@ def choose_category(article: NormalizedArticle) -> str:
         "silivri",
         "belediye başkanı",
         "belediye baskani",
+        "kayyım",
+        "kayyim",
+        "rtük",
+        "rtuk",
+        "merkez bankası",
+        "merkez bankasi",
+        "adalet bakanı",
+        "adalet bakani",
+        "valilik",
     ]
-    if any(_contains_term(text, term) for term in turkey_terms):
+    foreign_turkey_terms = ["turkey", "turkish"]
+    foreign_turkey_context_terms = [
+        "police",
+        "mayor",
+        "court",
+        "governor",
+        "municipality",
+        "detain",
+        "detains",
+        "detained",
+        "school shooting",
+        "school shootings",
+        "high school",
+        "nation mourns",
+        "mourns",
+        "erdogan",
+        "imamoglu",
+        "ozgur ozel",
+        "chp",
+        "akp",
+    ]
+    local_source_ids = {"medyascope", "diken", "kisa-dalga"}
+
+    has_local_turkey_signal = any(_contains_term(text, term) for term in local_turkey_terms)
+    has_foreign_turkey_signal = any(_contains_term(text, term) for term in foreign_turkey_terms)
+    has_foreign_turkey_context = any(_contains_term(text, term) for term in foreign_turkey_context_terms)
+
+    if article.source_id in local_source_ids and (has_local_turkey_signal or has_foreign_turkey_signal):
+        return "Türkiye"
+    if has_local_turkey_signal:
+        return "Türkiye"
+    if has_foreign_turkey_signal and has_foreign_turkey_context:
         return "Türkiye"
     if any(_contains_term(text, term) for term in ["openai", "chatgpt", "anthropic", "google", "meta", "nvidia", "ai", "chip"]):
         return "Teknoloji"
