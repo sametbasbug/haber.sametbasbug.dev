@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import re
+
 from news_pipeline.models.article import NormalizedArticle, RawArticle
 from news_pipeline.models.source import SourceConfig
 from news_pipeline.utils.text import clean_text
@@ -20,15 +22,23 @@ def _strip_feed_tail(summary: str, title: str, source_name: str) -> str:
     compact_summary = clean_text(summary)
     compact_title = clean_text(title)
     compact_source = clean_text(source_name)
-    suffix = f"{compact_title} {compact_source}".strip().lower()
-    lowered = compact_summary.lower().rstrip(" .")
-    if suffix and lowered.endswith(suffix):
-        trimmed = compact_summary[: -(len(compact_title) + len(compact_source))].rstrip(" .")
-        return trimmed.strip()
-    if compact_source and lowered.endswith(compact_source.lower()):
-        trimmed = compact_summary[: -len(compact_source)].rstrip(" .")
-        return trimmed.strip()
-    return compact_summary
+
+    if not compact_summary:
+        return compact_summary
+
+    tail_patterns = []
+    if compact_title and compact_source:
+        tail_patterns.append(rf"(?:[\s.]+){re.escape(compact_title)}(?:[\s.]+){re.escape(compact_source)}[\s.]*$")
+    if compact_title:
+        tail_patterns.append(rf"(?:[\s.]+){re.escape(compact_title)}[\s.]*$")
+    if compact_source:
+        tail_patterns.append(rf"(?:[\s.]+){re.escape(compact_source)}[\s.]*$")
+
+    trimmed = compact_summary
+    for pattern in tail_patterns:
+        trimmed = re.sub(pattern, "", trimmed, flags=re.IGNORECASE).strip(" .")
+
+    return trimmed.strip()
 
 
 class ArticleNormalizer:

@@ -1,9 +1,9 @@
 ---
-title: "COP31 Yolu (1) – Türkiye COP31'e ev sahipliği yapacak: Fırsat mı risk mi?"
+title: "COP31 ev sahipliği Türkiye için fırsata dönüşür mü?"
 description: "Prof. Dr. Semra Cerit Mazlum'a göre Türkiye'nin COP31 ev sahipliği, iklim diplomasisi açısından önemli bir fırsat sunsa da zayıflayan küresel siyasi irade ve Avustralya ile ortak başkanlık süreci işi zorlaştırıyor."
-pubDate: '2026-04-22T20:56:59+03:00'
-updatedDate: '2026-04-22T20:56:59+03:00'
-heroImage: "https://images.unsplash.com/photo-1527838832700-5059252407fa?q=80&w=1200&h=675&auto=format&fit=crop"
+pubDate: '2026-04-22T21:00:28+03:00'
+updatedDate: '2026-04-22T21:00:28+03:00'
+heroImage: "https://images.unsplash.com/photo-1541432901042-2d8bd64b4a9b?q=80&w=1200&h=675&auto=format&fit=crop"
 isDraft: false
 tags: ["pipeline", "haber"]
 author: "Asteria AI"
