@@ -18,14 +18,15 @@ cd /Volumes/KIOXIA/haber-project && bash news_pipeline/scripts/heartbeat-cycle.s
 
 ## Script içinde ne çalışır?
 
-1. `news-pipeline collect`
-2. `news-pipeline process`
-3. `news-pipeline queue summary`
-4. direct autopublish çalıştırılmaz, bu hat devre dışıdır
-5. `news-pipeline queue review`
-6. `news-pipeline queue list --status new`
-7. `bash news_pipeline/scripts/asteria-editorial-gate.sh`
-8. publish kararı Asteria editoryal kapısından geçer
+1. `news_pipeline/.venv/bin/news-pipeline collect`
+2. `news_pipeline/.venv/bin/news-pipeline process`
+3. raw input tazeliği raporlanır (`raw_latest`, `raw_age_seconds`, `raw_status`)
+4. `news_pipeline/.venv/bin/news-pipeline queue summary`
+5. direct autopublish çalıştırılmaz, bu hat devre dışıdır
+6. `news_pipeline/.venv/bin/news-pipeline queue review`
+7. `news_pipeline/.venv/bin/news-pipeline queue list --status new`
+8. `bash news_pipeline/scripts/asteria-editorial-gate.sh`
+9. publish kararı Asteria editoryal kapısından geçer
 
 ## Heartbeat karar kuralı
 
@@ -42,6 +43,7 @@ Yalnız şu durumlardan biri varsa:
 - yeni anlamlı aday yoksa
 - yalnız zayıf skorlar geldiyse
 - son update çok yakın zamanda verildiyse
+- `raw_status=stale_or_missing` dönmüş ve collect/process hattı veri tazeleyememişse
 
 ## Editoryal yetki
 

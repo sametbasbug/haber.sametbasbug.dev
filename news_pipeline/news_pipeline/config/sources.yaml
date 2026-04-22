@@ -110,3 +110,10 @@ sources:
     url: https://feeds.content.dowjones.io/public/rss/mw_topstories
     category_hints: [Ekonomi, Dünya]
     enabled: true
+
+  - id: medyascope
+    name: Medyascope
+    kind: rss
+    url: https://medyascope.tv/feed/
+    category_hints: []
+    enabled: true

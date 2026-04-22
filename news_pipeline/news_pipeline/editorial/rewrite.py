@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+import unicodedata
 
 from news_pipeline.models.article import NormalizedArticle
 from news_pipeline.utils.text import clean_text
@@ -317,10 +318,20 @@ def build_facts(article: NormalizedArticle) -> list[str]:
     return facts
 
 
+def _normalize_search_text(value: str) -> str:
+    value = value.lower().replace("ı", "i")
+    value = unicodedata.normalize("NFKD", value)
+    value = "".join(ch for ch in value if not unicodedata.combining(ch))
+    value = re.sub(r"[^a-z0-9]+", " ", value)
+    return " ".join(value.split())
+
+
 def _contains_term(text: str, term: str) -> bool:
-    if " " in term:
-        return term in text
-    return re.search(rf"\b{re.escape(term)}\b", text) is not None
+    normalized_text = _normalize_search_text(text)
+    normalized_term = _normalize_search_text(term)
+    if not normalized_term:
+        return False
+    return f" {normalized_term} " in f" {normalized_text} "
 
 
 def build_tags(article: NormalizedArticle) -> list[str]:
@@ -334,7 +345,31 @@ def build_tags(article: NormalizedArticle) -> list[str]:
 
 def choose_category(article: NormalizedArticle) -> str:
     text = f"{article.title} {article.summary}".lower()
-    if any(_contains_term(text, term) for term in ["türkiye", "turkey", "ankara", "istanbul"]):
+    turkey_terms = [
+        "türkiye",
+        "turkiye",
+        "turkey",
+        "turkish",
+        "ankara",
+        "istanbul",
+        "izmir",
+        "adana",
+        "erdoğan",
+        "erdogan",
+        "imamoğlu",
+        "imamoglu",
+        "özgür özel",
+        "ozgur ozel",
+        "chp",
+        "akp",
+        "dem parti",
+        "ibb",
+        "tbmm",
+        "silivri",
+        "belediye başkanı",
+        "belediye baskani",
+    ]
+    if any(_contains_term(text, term) for term in turkey_terms):
         return "Türkiye"
     if any(_contains_term(text, term) for term in ["openai", "chatgpt", "anthropic", "google", "meta", "nvidia", "ai", "chip"]):
         return "Teknoloji"
