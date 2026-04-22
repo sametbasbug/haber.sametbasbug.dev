@@ -6,6 +6,9 @@ from news_pipeline.models.queue import QueueItem
 from news_pipeline.publish.body_template import PLACEHOLDER_BODY_MARKERS, build_body
 
 SAFE_AUTOPUBLISH_CATEGORIES = {"Teknoloji", "Dünya", "Siyaset", "Türkiye"}
+CATEGORY_MIN_SCORES = {
+    "Türkiye": 0.45,
+}
 HIGH_RISK_AUTOPUBLISH_TERMS = {
     "dava",
     "soruşturma",
@@ -68,6 +71,13 @@ TURKISH_MARKERS = {
     " kutlamak ",
     " kaybetti ",
     " ediliyor ",
+    " türkiye ",
+    " çağrısı ",
+    " çağrisı ",
+    " seçimi ",
+    " secimi ",
+    " ev sahipliği ",
+    " ev sahipligi ",
 }
 
 
@@ -129,6 +139,7 @@ def has_publishable_body_depth(item: QueueItem) -> bool:
 
 
 def is_autopublish_candidate(item: QueueItem, min_score: float = 0.68) -> tuple[bool, str | None]:
+    min_score = CATEGORY_MIN_SCORES.get(item.draft_category, min_score)
     if item.status != "new":
         return False, "status is not new"
     if has_manual_review(item):
