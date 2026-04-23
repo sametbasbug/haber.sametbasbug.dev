@@ -79,11 +79,52 @@ print('\n'.join(out))
 PY
 )
 
+TURKIYE_CANDIDATE_CONTEXT=$(news_pipeline/.venv/bin/python - <<'PY'
+from pathlib import Path
+import json
+
+root = Path('/Volumes/KIOXIA/haber-project/news_pipeline/data/queue')
+items = []
+for path in root.glob('*.json'):
+    try:
+        data = json.loads(path.read_text(encoding='utf-8'))
+    except Exception:
+        continue
+    if data.get('status') != 'new' or data.get('draft_category') != 'Türkiye':
+        continue
+    sources = data.get('draft_sources') or []
+    source_name = sources[0].get('name') if sources else '-'
+    notes = data.get('notes') or []
+    note_text = f" | not: {'; '.join(notes[:2])}" if notes else ''
+    items.append((
+        float(data.get('editorial_priority') or 0),
+        data.get('queue_id') or path.stem,
+        source_name,
+        data.get('draft_title') or '-',
+        data.get('draft_description') or '-',
+        note_text,
+    ))
+items.sort(reverse=True)
+out = ['En güçlü Türkiye adayları (ayrı shortlist, global top listede kaybolmasın diye özellikle bak):']
+if not items:
+    out.append('- yeni Türkiye adayı yok')
+else:
+    for score, qid, source_name, title, desc, note_text in items[:6]:
+        short_desc = ' '.join(desc.split())[:220]
+        out.append(f'- {qid} | skor={score:.3f} | kaynak={source_name} | başlık={title}')
+        if short_desc and short_desc != '-':
+            out.append(f'  özet: {short_desc}{note_text}')
+print('\n'.join(out))
+PY
+)
+
 PROMPT_TEMPLATE=$(cat <<'EOF'
 `news_pipeline` için /Volumes/KIOXIA/haber-project içinde çalış; canlı yayın yüzeyi de /Volumes/KIOXIA/haber-project/src/content/anlikHaber klasörüdür ve kanonik adres https://haber.sametbasbug.dev alanıdır.
 
 Son 8 canlı yayının kaynak dağılımı:
 __RECENT_SOURCE_CONTEXT__
+
+__TURKIYE_CANDIDATE_CONTEXT__
 
 Görevin:
 1. yeni ve güçlü adayları değerlendir,
@@ -131,6 +172,7 @@ EOF
 )
 
 PROMPT=${PROMPT_TEMPLATE/__RECENT_SOURCE_CONTEXT__/$RECENT_SOURCE_CONTEXT}
+PROMPT=${PROMPT/__TURKIYE_CANDIDATE_CONTEXT__/$TURKIYE_CANDIDATE_CONTEXT}
 
 SESSION_ID="asteria-editorial-gate-$(date +%s)"
 
