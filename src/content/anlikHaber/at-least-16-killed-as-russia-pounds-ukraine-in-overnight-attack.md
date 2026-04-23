@@ -1,13 +1,13 @@
 ---
-title: "Rusya’nın gece saldırısında Ukrayna’da en az 16 kişi öldü"
-description: "Kiev, son altı ayda yüz binlerce hava saldırısını püskürttüğünü söylerken Batı yapımı savunma sistemlerindeki açıklar yine gündeme geldi."
-pubDate: '2026-04-18T12:01:24+03:00'
-updatedDate: '2026-04-18T12:01:24+03:00'
-heroImage: "https://images.unsplash.com/photo-1504711434969-e33886168f5c?q=80&w=1200&h=675&auto=format&fit=crop"
+title: "Rusya'nın gece saldırısında Ukrayna'da en az 16 kişi öldü"
+description: "Politico'ya göre Kyiv, artan füze ve İHA saldırıları karşısında hâlâ Batı yapımı hava savunmasına bağımlı durumda."
+pubDate: '2026-04-23T15:03:00+03:00'
+updatedDate: '2026-04-23T15:03:00+03:00'
+heroImage: "https://images.unsplash.com/photo-1521951523232-9ae61f6b9f0d?q=80&w=1200&h=675&auto=format&fit=crop"
 isDraft: false
-tags: ["pipeline", "haber", "ukraine", "russia"]
+tags: ["pipeline", "haber", "ukrayna", "rusya", "savas"]
 author: "Asteria AI"
-category: "Dünya"
+category: "Siyaset"
 breaking: false
 sources:
   - name: "Politico Europe"
@@ -15,15 +15,15 @@ sources:
 autoGlossaryLinks: true
 ---
 
-Rusya’nın gece boyunca düzenlediği saldırıda Ukrayna’da en az 16 kişi öldü. Politico Europe’un aktardığı haber, saldırının ardından Kiev’in hava savunma kapasitesine dair süren baskıyı yeniden öne çıkardı.
+Rusya'nın gece boyunca düzenlediği saldırılar Ukrayna'da en az 16 kişinin ölümüne yol açtı.
 
-Ukrayna tarafı, son altı ayda Rusya’nın 462 balistik füze, yaklaşık 600 seyir füzesi ve 27 bin Shahed tipi dron fırlattığını söylüyor. Buna karşın, savunma sistemlerinin önemli bir bölümünün bu saldırıları karşılamayı başardığı ve dronların yüzde 90’ının, seyir füzelerinin ise yaklaşık yüzde 80’inin düşürüldüğü belirtiliyor.
+Politico'nun aktardığına göre Ukrayna Savunma Bakanı Mykhailo Fedorov, son altı ayda Rusya'nın ülkeye yüzlerce balistik ve seyir füzesi ile on binlerce Shahed tipi İHA fırlattığını söyledi. Kyiv ise bu saldırıların büyük kısmını engellediğini savunuyor.
 
-Sorun ise balistik füze savunmasında yoğunlaşıyor. Kiev, PAC-2 ve PAC-3 önleyicilerinde ciddi eksik bulunduğunu, bu yüzden hâlâ büyük ölçüde Batı’dan gelen sevkiyata yaslandığını söylüyor.
+Buna rağmen ülkenin özellikle balistik füzelere karşı savunmasında açık kaldığı, PAC-2 ve PAC-3 önleyici füzelerde ciddi kıtlık yaşandığı belirtiliyor. Bu eksiklik, Batı kaynaklı tedarike bağımlılığı daha da görünür hale getiriyor.
 
-Volodimir Zelenskiy de ortaklardan daha önce verilen sözlerin hâlâ tam olarak hayata geçmediğini dile getirdi. Ukrayna lideri, hava kuvvetleri komutanına daha önce Patriot ve diğer sistemler için taahhütte bulunan ülkelerle temasa geçme talimatı verdiğini söyledi.
+Volodymyr Zelenskyy, müttefik ülkelerden daha önce verilen sözlerin yerine getirilmesini isterken, hava savunma sistemleri için yeni alternatif arayışının da sürdüğünü söyledi. Savaşın uzamasıyla birlikte savunma mühimmatına erişim başlı başına bir diplomasi dosyasına dönüşmüş durumda.
 
-Sahadaki tablo, Ukrayna’nın hem yeni sevkiyat beklediğini hem de Avrupa’daki alternatifleri değerlendirdiğini gösteriyor. Ancak mevcut açıklamalara göre, kritik savunma açığını kapatacak teslimatlar için diplomatik baskı sürüyor.
+Berlin'deki Ukrayna Savunma Temas Grubu toplantısında yapılan bu açıklamalar, cephedeki baskının hava savunma hattına da nasıl yansıdığını gösteriyor. Şimdi gözler, müttefiklerin yeni sevkiyat takviminde.
 
 ## Kaynaklar
 
