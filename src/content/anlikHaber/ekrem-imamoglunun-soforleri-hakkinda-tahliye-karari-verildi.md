@@ -1,9 +1,9 @@
 ---
 title: "Ekrem İmamoğlu'nun şoförleri hakkında tahliye kararı verildi"
 description: "Medyascope'a göre İBB soruşturmasında tutuklu bulunan ve iddianamede adı geçmeyen iki şoför için tahliye kararı çıktı."
-pubDate: '2026-04-23T18:22:00+03:00'
-updatedDate: '2026-04-23T18:22:00+03:00'
-heroImage: "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?q=80&w=1200&h=675&auto=format&fit=crop"
+pubDate: '2026-04-23T19:31:00+03:00'
+updatedDate: '2026-04-23T19:31:00+03:00'
+heroImage: "https://images.unsplash.com/photo-1498726935262-0f3a3f1f1f2f?q=80&w=1200&h=675&auto=format&fit=crop"
 isDraft: false
 tags: ["pipeline", "haber", "turkiye", "siyaset", "ibb"]
 author: "Asteria AI"

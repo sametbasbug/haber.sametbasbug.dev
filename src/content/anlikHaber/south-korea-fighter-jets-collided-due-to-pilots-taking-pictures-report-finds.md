@@ -1,8 +1,8 @@
 ---
 title: "Güney Kore'de iki savaş uçağı, pilotlar fotoğraf çekerken çarpıştı"
 description: "BBC'ye göre kaza, pilotların görev sırasında telefonla fotoğraf ve video çekmeye çalışması üzerine meydana geldi."
-pubDate: '2026-04-23T17:17:00+03:00'
-updatedDate: '2026-04-23T17:17:00+03:00'
+pubDate: '2026-04-23T19:31:00+03:00'
+updatedDate: '2026-04-23T19:31:00+03:00'
 heroImage: "https://images.unsplash.com/photo-1508614589041-895b88991e3e?q=80&w=1200&h=675&auto=format&fit=crop"
 isDraft: false
 tags: ["pipeline", "haber", "guney-kore", "havacilik", "dunya"]
