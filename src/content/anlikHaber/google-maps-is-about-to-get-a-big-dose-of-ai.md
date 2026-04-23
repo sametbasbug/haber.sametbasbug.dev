@@ -1,8 +1,8 @@
 ---
-title: "Google Maps, yapay zekâ özellikleriyle genişliyor"
-description: "Haritalar ve Earth için gelen yeni araçlar, kurumsal kullanıcılara gerçekçi sahne üretimi ve veri analizi sunuyor."
-pubDate: '2026-04-22T22:01:36+03:00'
-updatedDate: '2026-04-22T22:10:00+03:00'
+title: "Google Maps, kurumsal kullanım için yeni yapay zekâ araçları aldı"
+description: "Haritalar ve Earth tarafındaki güncellemeler, gerçekçi sahne üretimiyle veri analizini aynı çerçevede topluyor."
+pubDate: '2026-04-23T10:06:20+03:00'
+updatedDate: '2026-04-23T10:17:00+03:00'
 heroImage: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=1200&h=675&auto=format&fit=crop"
 isDraft: false
 tags: ["pipeline", "haber", "google", "haritalar", "ai"]
@@ -15,15 +15,15 @@ sources:
 autoGlossaryLinks: true
 ---
 
-Google, Haritalar ve coğrafi analiz ürünlerine yeni üretken yapay zekâ özellikleri eklemeye başladı.
+Google, Haritalar ve coğrafi analiz ürünlerine yeni üretken yapay zekâ özellikleri ekledi.
 
-TechCrunch'ın aktardığına göre şirketin Cloud Next etkinliğinde duyurduğu güncelleme, özellikle kurumsal kullanıcıların harita verilerini ve uydu görüntülerini daha hızlı işlemesini hedefliyor.
+TechCrunch'ın aktardığına göre Cloud Next etkinliğinde duyurulan güncelleme, özellikle kurumsal kullanıcıların harita verilerini ve uydu görüntülerini daha hızlı işlemesini hedefliyor. Şirket, bu araçları doğrudan iş akışına yerleştirmek istiyor.
 
-Yeni özelliklerden Maps Imagery Grounding, Gemini Enterprise Agent Platform üzerinden girilen komutlarla Google Street View içinde gerçekçi sahneler üretmeye izin veriyor. Böylece bir film platosu ya da planlanan bir inşaat alanı gibi senaryolar önceden görselleştirilebiliyor.
+Maps Imagery Grounding adı verilen özellik, Gemini Enterprise Agent Platform üzerinden verilen komutlarla Google Street View içinde gerçekçi sahneler üretmeye izin veriyor. Böylece bir film platosu ya da planlanan bir inşaat alanı gibi senaryolar önceden görselleştirilebiliyor.
 
-Google ayrıca Aerial and Satellite Insights ve Earth AI Imagery modelleriyle uydu görüntülerinden veri çıkarma kapasitesini genişletiyor. Şirket, bu araçların köprü, yol ve enerji hattı gibi nesneleri tanıyabildiğini ve haftalar sürebilecek işleri dakikalara indirebildiğini söylüyor.
+Google ayrıca Aerial and Satellite Insights ve Earth AI Imagery modelleriyle uydu görüntülerinden veri çıkarma kapasitesini genişletiyor. Şirket, köprü, yol ve enerji hattı gibi nesnelerin tanınabildiğini ve haftalar sürebilecek işlerin dakikalara indirilebildiğini söylüyor.
 
-Duyuru, Google'ın Airbus ve Boston Children's Hospital gibi ortaklarla süren Earth AI kullanımını daha geniş bir kurumsal alana taşımaya çalıştığı bir dönemde geldi. Şirketin bu araçları hangi pazarlarda önce açacağı ise önümüzdeki haftalarda netleşecek.
+Duyuru, Google'ın Earth AI kullanımını Airbus ve Boston Children's Hospital gibi ortakların ötesine taşımaya çalıştığı bir dönemde geldi. Şirketin bu araçları hangi pazarlarda önce açacağı önümüzdeki haftalarda netleşecek.
 
 ## Kaynaklar
 
