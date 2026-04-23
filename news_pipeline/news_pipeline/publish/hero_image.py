@@ -4,6 +4,7 @@ import re
 import unicodedata
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlparse
 
 import httpx
 
@@ -263,15 +264,61 @@ def _recent_hero_images(limit: int = 30) -> set[str]:
     return images
 
 
-def _default_hero_image(item: QueueItem, recent_images: set[str] | None = None) -> str:
+def _is_live_image_url(client: httpx.Client, url: str, cache: dict[str, bool] | None = None) -> bool:
+    target = (url or "").strip()
+    if not target:
+        return False
+    if cache is not None and target in cache:
+        return cache[target]
+
+    parsed = urlparse(target)
+    if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+        if cache is not None:
+            cache[target] = False
+        return False
+
+    methods = ("HEAD", "GET")
+    ok = False
+    for method in methods:
+        try:
+            response = client.request(method, target, headers={"Range": "bytes=0-0"} if method == "GET" else None)
+            status = response.status_code
+            content_type = (response.headers.get("content-type") or "").lower()
+            if status < 400 and (content_type.startswith("image/") or method == "HEAD"):
+                ok = True
+                break
+        except Exception:
+            continue
+
+    if cache is not None:
+        cache[target] = ok
+    return ok
+
+
+def _default_hero_image(
+    item: QueueItem,
+    recent_images: set[str] | None = None,
+    *,
+    client: httpx.Client | None = None,
+    url_health_cache: dict[str, bool] | None = None,
+) -> str:
     category = item.draft_category or FALLBACK_CATEGORY
     choices = DEFAULT_HERO_IMAGES.get(category) or DEFAULT_HERO_IMAGES[FALLBACK_CATEGORY]
     recent_images = recent_images or set()
+
+    prioritized: list[str] = []
     for candidate in choices:
         key = _image_key(candidate)
         if key and key not in recent_images:
-            return candidate
-    return choices[0]
+            prioritized.append(candidate)
+    prioritized.extend(candidate for candidate in choices if candidate not in prioritized)
+
+    if client is not None:
+        for candidate in prioritized:
+            if _is_live_image_url(client, candidate, url_health_cache):
+                return candidate
+
+    return prioritized[0]
 
 
 def _photo_candidate(photo: dict[str, Any]) -> str | None:
@@ -365,9 +412,6 @@ def _search_photos(client: httpx.Client, api_key: str, query: str) -> list[dict[
 def pick_hero_image(item: QueueItem) -> str:
     recent_images = _recent_hero_images()
     api_key = get_env("PEXELS_API_KEY")
-    if not api_key:
-        return _default_hero_image(item, recent_images)
-
     queries = _build_queries(item)
 
     try:
@@ -375,28 +419,31 @@ def pick_hero_image(item: QueueItem) -> str:
         best_image: str | None = None
         fallback_score = float("-inf")
         fallback_image: str | None = None
+        url_health_cache: dict[str, bool] = {}
         with httpx.Client(timeout=12.0, follow_redirects=True) as client:
-            for query in queries:
-                photos = _search_photos(client, api_key, query)
-                for photo in photos:
-                    score, candidate = _score_photo(photo, query, item, recent_images)
-                    if not candidate:
-                        continue
-                    candidate_key = _image_key(candidate)
-                    if candidate_key and candidate_key in recent_images:
-                        if score > fallback_score:
-                            fallback_score = score
-                            fallback_image = candidate
-                        continue
-                    if score > best_score:
-                        best_score = score
-                        best_image = candidate
-                if best_image and best_score >= 6.0:
-                    break
-        if best_image and best_score >= 4.0:
-            return best_image
-        if fallback_image and fallback_score >= 4.0:
-            return fallback_image
-        return _default_hero_image(item, recent_images)
+            if api_key:
+                for query in queries:
+                    photos = _search_photos(client, api_key, query)
+                    for photo in photos:
+                        score, candidate = _score_photo(photo, query, item, recent_images)
+                        if not candidate:
+                            continue
+                        candidate_key = _image_key(candidate)
+                        if candidate_key and candidate_key in recent_images:
+                            if score > fallback_score:
+                                fallback_score = score
+                                fallback_image = candidate
+                            continue
+                        if score > best_score:
+                            best_score = score
+                            best_image = candidate
+                    if best_image and best_score >= 6.0:
+                        break
+
+            if best_image and best_score >= 4.0 and _is_live_image_url(client, best_image, url_health_cache):
+                return best_image
+            if fallback_image and fallback_score >= 4.0 and _is_live_image_url(client, fallback_image, url_health_cache):
+                return fallback_image
+            return _default_hero_image(item, recent_images, client=client, url_health_cache=url_health_cache)
     except Exception:
         return _default_hero_image(item, recent_images)
