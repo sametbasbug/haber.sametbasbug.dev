@@ -22,7 +22,7 @@ CATEGORY_WEIGHTS = {
 KEYWORD_BOOSTS = {
     "openai": 0.08,
     "anthropic": 0.08,
-    "google": 0.04,
+    "google": 0.01,
     "meta": 0.03,
     "trump": 0.02,
     "europe": 0.03,

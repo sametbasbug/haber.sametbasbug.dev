@@ -18,27 +18,63 @@ from collections import Counter
 root = Path('/Volumes/KIOXIA/haber-project/src/content/anlikHaber')
 files = sorted(root.glob('*.md'), key=lambda p: p.stat().st_mtime, reverse=True)
 source_re = re.compile(r'^\s*- name: "?(.*?)"?\s*$')
+title_re = re.compile(r'^title: "?(.*?)"?\s*$')
+company_patterns = {
+    'Google': re.compile(r'\bgoogle\b', re.I),
+    'OpenAI': re.compile(r'\bopenai\b', re.I),
+    'Anthropic': re.compile(r'\banthropic\b', re.I),
+    'Meta': re.compile(r'\bmeta\b', re.I),
+    'Microsoft': re.compile(r'\bmicrosoft|linkedin\b', re.I),
+    'Nvidia': re.compile(r'\bnvidia\b', re.I),
+    'Apple': re.compile(r'\bapple\b', re.I),
+    'Amazon': re.compile(r'\bamazon|aws\b', re.I),
+}
 rows = []
 for path in files[:20]:
     source = '-'
+    title = path.stem
     for line in path.read_text(encoding='utf-8').splitlines():
         m = source_re.match(line)
         if m:
             source = m.group(1)
+        t = title_re.match(line)
+        if t:
+            title = t.group(1)
+    company = '-'
+    for name, pattern in company_patterns.items():
+        if pattern.search(title):
+            company = name
             break
-    rows.append((path.stem, source))
+    rows.append((path.stem, source, title, company))
 
 last8 = rows[:8]
-counts = Counter(source for _, source in rows)
+source_counts = Counter(source for _, source, _, _ in rows)
+company_counts = Counter(company for _, _, _, company in rows if company != '-')
+last10_company_counts = Counter(company for _, _, _, company in rows[:10] if company != '-')
 
 out = []
 out.append('Son 8 yayın:')
-for slug, source in last8:
-    out.append(f"- {slug}: {source}")
+for slug, source, title, company in last8:
+    company_note = f' | şirket: {company}' if company != '-' else ''
+    out.append(f"- {slug}: {source}{company_note} | {title}")
 out.append('')
 out.append('Son 20 yayın kaynak sayımı:')
-for source, count in counts.most_common():
+for source, count in source_counts.most_common():
     out.append(f"- {source}: {count}")
+out.append('')
+out.append('Son 10 yayın şirket/konu sayımı:')
+if last10_company_counts:
+    for company, count in last10_company_counts.most_common():
+        out.append(f"- {company}: {count}")
+else:
+    out.append('- belirgin şirket kümesi yok')
+out.append('')
+out.append('Son 20 yayın şirket/konu sayımı:')
+if company_counts:
+    for company, count in company_counts.most_common():
+        out.append(f"- {company}: {count}")
+else:
+    out.append('- belirgin şirket kümesi yok')
 print('\n'.join(out))
 PY
 )
@@ -80,6 +116,9 @@ Kurallar:
 - ama TechCrunch dahil hiçbir güçlü kaynağı sırf son dönemde sık kullanıldı diye otomatik dışlama; gerçekten açık ara en temiz ve güçlü aday ondaysa kullan
 - bir koşuda iki veya üç kayıt publish edeceksen mümkünse aynı kaynağa yaslanma; yeterli kalite varsa kaynakları çeşitlendir
 - son 3 canlı yayının kaynağıyla aynı kaynağa yeniden yaslanacaksan bunu istisna say ve ancak belirgin kalite farkı varsa yap
+- aynı şirket veya ürün kümesinden başlıklar son 10 yayında zaten iki ya da daha fazla kez görünüyorsa buna seri yığılma muamelesi yap; açık ara daha güçlü değilse alternatif şirket/konu adayını seç
+- özellikle Google, OpenAI, Anthropic, Meta, Microsoft, Nvidia, Apple ve Amazon başlıklarında konu çeşitliliğini aktif koru; aynı şirketi kısa aralıkta üst üste bindirme
+- TechCrunch son 20 yayında baskın görünüyorsa küçük kalite farkında CNBC, WIRED, Ars Technica, Reuters, BBC, Politico, Guardian veya başka temiz alternatif kaynağa yönel
 
 Çıkışında kısa bir sonuç ver:
 - kaç kayıt publish edildi
