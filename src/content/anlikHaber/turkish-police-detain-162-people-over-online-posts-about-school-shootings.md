@@ -1,8 +1,8 @@
 ---
 title: "Okul saldırılarıyla ilgili paylaşımlar nedeniyle Türkiye'de 162 kişi gözaltına alındı"
-description: "BBC'ye göre yetkililer, saldırı görüntülerini paylaşan ve resmi açıklamaları hedef alan paylaşımlar nedeniyle yeni gözaltılar yaptı."
-pubDate: '2026-04-23T16:08:00+03:00'
-updatedDate: '2026-04-23T16:08:00+03:00'
+description: "BBC'ye göre yetkililer, saldırı görüntülerini paylaşan ve resmî açıklamaları hedef alan paylaşımlar nedeniyle yeni gözaltılar yaptı."
+pubDate: '2026-04-23T17:17:00+03:00'
+updatedDate: '2026-04-23T17:17:00+03:00'
 heroImage: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?q=80&w=1200&h=675&auto=format&fit=crop"
 isDraft: false
 tags: ["pipeline", "haber", "turkiye", "okul-guvenligi", "bbc"]
