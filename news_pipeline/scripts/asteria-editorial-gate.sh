@@ -119,6 +119,8 @@ Kurallar:
 - aynı şirket veya ürün kümesinden başlıklar son 10 yayında zaten iki ya da daha fazla kez görünüyorsa buna seri yığılma muamelesi yap; açık ara daha güçlü değilse alternatif şirket/konu adayını seç
 - özellikle Google, OpenAI, Anthropic, Meta, Microsoft, Nvidia, Apple ve Amazon başlıklarında konu çeşitliliğini aktif koru; aynı şirketi kısa aralıkta üst üste bindirme
 - TechCrunch son 20 yayında baskın görünüyorsa küçük kalite farkında CNBC, WIRED, Ars Technica, Reuters, BBC, Politico, Guardian veya başka temiz alternatif kaynağa yönel
+- publish kalitesini geçen `Türkiye` kategorisinde en az bir uygun aday varsa, bir koşudaki en fazla 3 publish hakkından birini öncelikle `Türkiye` kategorisine ayır
+- ama bu kuralı kör kota gibi uygulama; zayıf, riskli, tek kaynaklı sert itham içeren veya dil/bağlam kalitesi düşük `Türkiye` adayları bu önceliği hak etmez
 
 Çıkışında kısa bir sonuç ver:
 - kaç kayıt publish edildi
