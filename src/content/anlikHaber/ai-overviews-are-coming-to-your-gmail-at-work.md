@@ -1,11 +1,11 @@
 ---
-title: "Google, iş Gmail'ine AI Overviews getirdi"
-description: "Workspace güncellemeleri arasında öne çıkan yeni özellik, iş e-postalarını doğal dille sorgulanabilir hale getiriyor."
-pubDate: '2026-04-23T11:13:00+03:00'
-updatedDate: '2026-04-23T11:17:00+03:00'
-heroImage: "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?q=80&w=1200&h=675&auto=format&fit=crop"
+title: "Gmail'e iş için AI Overviews geliyor"
+description: "Google, Workspace güncellemeleri kapsamında AI Overviews özelliğini Gmail'e taşıyor. Kurumsal kullanıcılar artık gelen kutusundaki iletileri doğal dille özetleyebilecek."
+pubDate: '2026-04-27T11:42:00+03:00'
+updatedDate: '2026-04-27T11:42:00+03:00'
+heroImage: "https://images.unsplash.com/photo-1496171367470-9ed9a91ea931?q=80&w=1200&h=675&auto=format&fit=crop"
 isDraft: false
-tags: ["pipeline", "haber", "google", "gmail", "ai"]
+tags: ["pipeline", "haber", "ai"]
 author: "Asteria AI"
 category: "Teknoloji"
 breaking: false
@@ -15,15 +15,15 @@ sources:
 autoGlossaryLinks: true
 ---
 
-Google, iş dünyasında kullanılan Gmail'e AI Overviews özelliğini eklemeye hazırlanıyor.
+Google, Cloud Next konferansında Workspace'e bir dizi güncelleme duyurdu ve AI Overviews özelliğini Gmail'e taşıdı.
 
-TechCrunch'ın aktardığına göre şirket, Google Cloud Next etkinliğinde Workspace odaklı bir dizi güncelleme duyurdu. Bunların en dikkat çekeni, Google Arama'da özetleme yapan AI Overviews'un artık kurumsal Gmail kutularına da gelmesi oldu.
+Özellik, iş ortamındaki Gmail kullanıcılarının doğal dille soru sorup tek tek e-postaları açmadan kısa yanıtlar almasına izin verecek. Google, bunun performans iyileştirmeleri, proje kilometre taşları, faturalar, sunum notları ve seyahat ayrıntıları gibi başlıklarda kullanılabileceğini söylüyor.
 
-Yeni özellik, kullanıcıların e-postaları tek tek açıp okumadan doğal dille soru sormasına ve kısa yanıtlar almasına izin verecek. Google, bunun özellikle yoğun iş akışlarında zaman kazandıracağını söylüyor.
+AI Overviews, birden fazla e-posta ve konuşmadan derlenen anlık bir özet üretecek. Böylece kullanıcılar, gelen kutusunda dağınık duran bilgileri tek bir cevapta görebilecek.
 
-Bu hamle, şirketin Gemini ve Workspace ürünlerini daha sıkı bir şekilde birbirine bağlama stratejisinin parçası olarak öne çıkıyor. Böylece Google, üretken yapay zekâyı yalnızca ayrı bir araç değil, günlük ofis yazılımının içine yerleştiriyor.
+Google'a göre özellik, Gemini for Workspace ve Workspace Intelligence açık olan hesaplarda varsayılan olacak. Business, Enterprise, Frontline Plus ve Education paketleriyle de sunulacak; Drive tarafındaki AI Overviews da daha geniş kullanıma açılıyor.
 
-Özelliğin hangi kurumlarda ne hızla aktif edileceği ise önümüzdeki dönemde netleşecek.
+Şirket, kurumsal ürünlerinde yapay zekâ destekli arama ve özet katmanını daha derine indirirken, hangi hesaplarda ne hızla açılacağı yine yönetici ayarlarına bağlı kalacak.
 
 ## Kaynaklar
 
