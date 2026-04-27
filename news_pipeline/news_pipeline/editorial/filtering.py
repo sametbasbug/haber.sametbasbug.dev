@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import UTC, datetime, timedelta
 import re
 
 from news_pipeline.models.article import NormalizedArticle
@@ -67,8 +68,18 @@ FEATURE_TITLE_RE = re.compile(
     r"\b(portresi|kimdir|neden .*yasaklaniyor|neden .*yasaklaniyor)\b"
 )
 
+MAX_SOURCE_AGE_HOURS = 72
+MAX_FUTURE_SKEW_HOURS = 6
+
 
 def should_keep_article(article: NormalizedArticle) -> FilterDecision:
+    if article.published_at:
+        source_age = datetime.now(UTC) - article.published_at.astimezone(UTC)
+        if source_age > timedelta(hours=MAX_SOURCE_AGE_HOURS):
+            return FilterDecision(False, f"source item too old for Anlık Haber: older than {MAX_SOURCE_AGE_HOURS}h")
+        if source_age < -timedelta(hours=MAX_FUTURE_SKEW_HOURS):
+            return FilterDecision(False, "source publish date is implausibly in the future")
+
     title = article.title.strip().lower()
     summary = article.summary.strip().lower()
     joined = f"{title} {summary}"

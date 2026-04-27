@@ -3,7 +3,9 @@ from __future__ import annotations
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
+from news_pipeline.models.article import NormalizedArticle
 from news_pipeline.queue.service import QueueService
+from news_pipeline.storage.json_store import JsonStore
 
 
 TERMINAL_STATUSES = {"published", "rejected"}
@@ -16,15 +18,18 @@ def queue_cleanup_command(
     keep_score: float = 0.62,
     purge_rejected_archive_hours: int = 24,
     purge_published_archive_hours: int = 72,
+    stale_source_hours: int = 72,
 ) -> None:
     root = Path.cwd()
     queue_root = root / "news_pipeline/data/queue"
     archive_root = root / "news_pipeline/data/queue_archive"
     service = QueueService(queue_root)
+    normalized_store = JsonStore(root / "news_pipeline/data/normalized", NormalizedArticle)
     now = datetime.now(UTC)
 
     archived_terminal = 0
     archived_stale = 0
+    archived_source_stale = 0
     kept_stale = 0
     purged_rejected_archive = 0
     purged_published_archive = 0
@@ -37,7 +42,24 @@ def queue_cleanup_command(
                 archived_terminal += 1
             continue
 
-        if item.status not in ACTIVE_STATUSES or age < timedelta(hours=stale_hours):
+        if item.status not in ACTIVE_STATUSES:
+            continue
+
+        normalized = normalized_store.load(item.normalized_id)
+        if normalized:
+            source_age = now - (normalized.published_at or normalized.created_at).astimezone(UTC)
+            if source_age >= timedelta(hours=stale_source_hours):
+                item.status = "rejected"
+                item.editorial_priority = 0.0
+                stale_source_note = f"source-stale-auto-reject: source published older than {stale_source_hours}h"
+                if stale_source_note not in item.notes:
+                    item.notes.append(stale_source_note)
+                service.save(item)
+                if service.archive(item.queue_id, archive_root):
+                    archived_source_stale += 1
+                continue
+
+        if age < timedelta(hours=stale_hours):
             continue
 
         manual_review = any(note.startswith("manual-review:") for note in item.notes)
@@ -73,6 +95,7 @@ def queue_cleanup_command(
 
     print(f"archived_terminal={archived_terminal}")
     print(f"archived_stale={archived_stale}")
+    print(f"archived_source_stale={archived_source_stale}")
     print(f"kept_stale_review={kept_stale}")
     print(f"purged_rejected_archive={purged_rejected_archive}")
     print(f"purged_published_archive={purged_published_archive}")
