@@ -3,7 +3,7 @@ title: "Romanya'da sosyalistler ve aşırı sağ, başbakanı devirmek için ort
 description: "PSD ile aşırı sağ AUR, Başbakan Ilie Bolojan'a karşı gensoru hazırladı. Hükümet, ana merkez sol partinin muhalefete geçmesiyle zaten azınlık konumuna düşmüştü."
 pubDate: '2026-04-27T15:28:11+03:00'
 updatedDate: '2026-04-27T15:28:11+03:00'
-heroImage: "https://images.unsplash.com/photo-1495020689067-958852a7765e?q=80&w=1200&h=675&auto=format&fit=crop"
+heroImage: "https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?q=80&w=1200&h=675&auto=format&fit=crop"
 isDraft: false
 tags: ["pipeline", "haber", "romanya", "siyaset"]
 author: "Asteria AI"

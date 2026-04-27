@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections import defaultdict
 import re
 from pathlib import Path
 from urllib.parse import urlparse
@@ -8,6 +9,14 @@ import httpx
 import typer
 
 HERO_IMAGE_RE = re.compile(r'^heroImage:\s*["\']?(.*?)["\']?\s*$', re.MULTILINE)
+
+
+def _image_key(value: str) -> str:
+    text = str(value or "").strip()
+    pexels_match = re.search(r"/photos/(\d+)/", text)
+    if pexels_match:
+        return f"pexels:{pexels_match.group(1)}"
+    return text
 
 
 def _is_live_image_url(client: httpx.Client, url: str) -> tuple[bool, str]:
@@ -34,7 +43,11 @@ def _is_live_image_url(client: httpx.Client, url: str) -> tuple[bool, str]:
     return False, last_reason
 
 
-def audit_images_command(content_dir: str = "src/content/anlikHaber", timeout: float = 12.0) -> None:
+def audit_images_command(
+    content_dir: str = "src/content/anlikHaber",
+    timeout: float = 12.0,
+    recent_duplicate_limit: int = 10,
+) -> None:
     root = Path.cwd()
     target_dir = root / content_dir
     if not target_dir.exists():
@@ -54,10 +67,23 @@ def audit_images_command(content_dir: str = "src/content/anlikHaber", timeout: f
             if not ok:
                 bad.append((path, url, reason))
 
+    recent_duplicates: list[tuple[str, list[Path]]] = []
+    if recent_duplicate_limit > 1:
+        recent_items = sorted(items, key=lambda item: item[0].stat().st_mtime, reverse=True)[:recent_duplicate_limit]
+        grouped: dict[str, list[Path]] = defaultdict(list)
+        for path, url in recent_items:
+            grouped[_image_key(url)].append(path)
+        recent_duplicates = [(key, paths) for key, paths in grouped.items() if len(paths) > 1]
+
     print(f"checked={len(items)}")
     print(f"broken={len(bad)}")
+    print(f"recent_duplicate_limit={recent_duplicate_limit}")
+    print(f"recent_duplicates={len(recent_duplicates)}")
     for path, url, reason in bad:
         print(f"BROKEN {path.relative_to(root)} | {reason} | {url}")
+    for key, paths in recent_duplicates:
+        joined = ", ".join(str(path.relative_to(root)) for path in paths)
+        print(f"DUPLICATE_RECENT {key} | {joined}")
 
-    if bad:
+    if bad or recent_duplicates:
         raise typer.Exit(code=1)
