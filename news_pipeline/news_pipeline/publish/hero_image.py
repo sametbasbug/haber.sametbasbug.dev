@@ -284,7 +284,7 @@ def _is_live_image_url(client: httpx.Client, url: str, cache: dict[str, bool] | 
             response = client.request(method, target, headers={"Range": "bytes=0-0"} if method == "GET" else None)
             status = response.status_code
             content_type = (response.headers.get("content-type") or "").lower()
-            if status < 400 and (content_type.startswith("image/") or method == "HEAD"):
+            if status < 400 and content_type.startswith("image/"):
                 ok = True
                 break
         except Exception:

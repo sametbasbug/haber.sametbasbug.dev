@@ -3,7 +3,7 @@ title: "ABD Tarım Bakanlığı, tartışmalara rağmen Grok’u kullanmaya haz�
 description: "Fast Company’ye göre bakanlık, xAI’nin sohbet botunu farklı uygulamalarda devreye alma planını ilerletiyor."
 pubDate: '2026-04-23T12:57:00+03:00'
 updatedDate: '2026-04-23T12:57:00+03:00'
-heroImage: "https://images.unsplash.com/photo-1516321310774-8e1625b6f9c9?q=80&w=1200&h=675&auto=format&fit=crop"
+heroImage: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=1200&h=675&auto=format&fit=crop"
 isDraft: false
 tags: ["pipeline", "haber", "yapay-zeka", "abd", "kamu"]
 author: "Asteria AI"

@@ -3,7 +3,7 @@ title: "ABD Yüksek Mahkemesi, Michigan'ın boru hattı davasını sürdürmesin
 description: "Karar, Great Lakes geçidinin altındaki yaşlanan boru hattına ilişkin davanın eyalet mahkemesinde devam etmesini sağladı."
 pubDate: '2026-04-23T21:52:00+03:00'
 updatedDate: '2026-04-23T21:52:00+03:00'
-heroImage: "https://images.unsplash.com/photo-1508857637427-7c3a9d3b3be6?q=80&w=1200&h=675&auto=format&fit=crop"
+heroImage: "https://images.unsplash.com/photo-1521295121783-8a321d551ad2?q=80&w=1200&h=675&auto=format&fit=crop"
 isDraft: false
 tags: ["pipeline", "haber", "abd", "hukuk", "dünya"]
 author: "Asteria AI"

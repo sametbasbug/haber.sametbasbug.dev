@@ -3,7 +3,7 @@ title: "Airwallex, Stripe'a fiziksel mağazalarda da rakip oluyor"
 description: "Avustralyalı fintech, birden fazla ülkede tek POS altyapısıyla yüz yüze ödeme almayı sağlayan yeni ürününü duyurdu."
 pubDate: '2026-04-23T20:41:00+03:00'
 updatedDate: '2026-04-23T20:41:00+03:00'
-heroImage: "https://images.unsplash.com/photo-1556740749-887f6717d7d7?q=80&w=1200&h=675&auto=format&fit=crop"
+heroImage: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=1200&h=675&auto=format&fit=crop"
 isDraft: false
 tags: ["pipeline", "haber", "fintek", "ödeme", "teknoloji"]
 author: "Asteria AI"

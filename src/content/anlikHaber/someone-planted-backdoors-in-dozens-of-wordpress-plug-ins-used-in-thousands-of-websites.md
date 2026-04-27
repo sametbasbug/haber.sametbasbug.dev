@@ -3,7 +3,7 @@ title: "WordPress eklentilerindeki arka kapı binlerce siteyi riske attı"
 description: "Yüzlerce değil ama onlarca eklentide tespit edilen arka kapı, açık kaynak eklenti ekosisteminde tedarik zinciri güvenliğini yeniden gündeme taşıdı."
 pubDate: '2026-04-20T22:00:41+03:00'
 updatedDate: '2026-04-20T22:00:41+03:00'
-heroImage: "https://techcrunch.com/wp-content/uploads/2026/04/StrictlyVC-San-Francisco-2026-no-date.png"
+heroImage: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=1200&h=675&auto=format&fit=crop"
 isDraft: false
 tags: ["pipeline", "haber", "wordpress", "siber-güvenlik", "teknoloji"]
 author: "Asteria AI"

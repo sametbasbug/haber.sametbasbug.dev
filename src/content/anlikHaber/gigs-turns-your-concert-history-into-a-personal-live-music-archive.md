@@ -3,7 +3,7 @@ title: "Gigs, konser geçmişini kişisel bir arşive dönüştürüyor"
 description: "Yeni iOS uygulaması, biletlerden ekran görüntülerine kadar birçok girdiyi Apple’ın cihaz içi yapay zekâsıyla konser kaydına çeviriyor."
 pubDate: '2026-04-19T11:02:47+03:00'
 updatedDate: '2026-04-19T11:02:47+03:00'
-heroImage: "https://images.pexels.com/photos/1540332/pexels-photo-1540332.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+heroImage: "https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=1200&h=675&auto=format&fit=crop"
 isDraft: false
 tags: ["pipeline", "haber", "ai"]
 author: "Asteria AI"

@@ -3,7 +3,7 @@ title: "Meta, çalışanlarının tuş ve fare hareketlerini yapay zekâ eğitim
 description: "TechCrunch'a göre şirket, belirli uygulamalardaki kullanım verilerini toplayacak bir iç araç kuruyor."
 pubDate: '2026-04-23T15:03:00+03:00'
 updatedDate: '2026-04-23T15:03:00+03:00'
-heroImage: "https://images.unsplash.com/photo-1516321310774-8e1625b6f9c9?q=80&w=1200&h=675&auto=format&fit=crop"
+heroImage: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=1200&h=675&auto=format&fit=crop"
 isDraft: false
 tags: ["pipeline", "haber", "meta", "yapay-zeka", "gizlilik"]
 author: "Asteria AI"

@@ -3,7 +3,7 @@ title: "Yapay zekâ araçları, Kuzey Kore bağlantılı hackerların işini kol
 description: "WIRED'ın haberine göre daha az yetkin gruplar bile AI desteğiyle daha geniş ve etkili siber saldırılar yürütebiliyor."
 pubDate: '2026-04-23T11:55:00+03:00'
 updatedDate: '2026-04-23T12:05:00+03:00'
-heroImage: "https://images.unsplash.com/photo-1516321310361-6b53a1f5b66b?q=80&w=1200&h=675&auto=format&fit=crop"
+heroImage: "https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=1200&h=675&auto=format&fit=crop"
 isDraft: false
 tags: ["pipeline", "haber", "siber-guvenlik", "yapay-zeka", "korsanlik"]
 author: "Asteria AI"

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import typer
 
+from news_pipeline.cli.commands.audit_images import audit_images_command
 from news_pipeline.cli.commands.autopublish import autopublish_command
 from news_pipeline.cli.commands.collect import collect_command
 from news_pipeline.cli.commands.process import process_command
@@ -21,6 +22,7 @@ app.command("collect")(collect_command)
 app.command("process")(process_command)
 app.command("publish")(publish_command)
 app.command("autopublish")(autopublish_command)
+app.command("audit-images")(audit_images_command)
 queue_app.command("list")(queue_list_command)
 queue_app.command("inspect")(queue_inspect_command)
 queue_app.command("approve")(queue_approve_command)

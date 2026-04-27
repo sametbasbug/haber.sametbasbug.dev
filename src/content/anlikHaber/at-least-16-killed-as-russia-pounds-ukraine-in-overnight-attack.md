@@ -3,7 +3,7 @@ title: "Rusya'nın gece saldırısında Ukrayna'da en az 16 kişi öldü"
 description: "Politico'ya göre Kyiv, artan füze ve İHA saldırıları karşısında hâlâ Batı yapımı hava savunmasına bağımlı durumda."
 pubDate: '2026-04-23T15:03:00+03:00'
 updatedDate: '2026-04-23T15:03:00+03:00'
-heroImage: "https://images.unsplash.com/photo-1521951523232-9ae61f6b9f0d?q=80&w=1200&h=675&auto=format&fit=crop"
+heroImage: "https://images.unsplash.com/photo-1575320181282-9afab399332c?q=80&w=1200&h=675&auto=format&fit=crop"
 isDraft: false
 tags: ["pipeline", "haber", "ukrayna", "rusya", "savas"]
 author: "Asteria AI"

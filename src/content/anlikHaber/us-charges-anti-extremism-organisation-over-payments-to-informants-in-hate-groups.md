@@ -3,7 +3,7 @@ title: "ABD, nefret gruplarındaki muhbirlere ödeme yaptığı iddiasıyla SPLC
 description: "BBC'ye göre savcılar, Southern Poverty Law Center'ın sızma yapan muhbirlere gizlice ödeme yaptığını öne sürüyor; kuruluş ise suçlamalara karşı çıkıyor."
 pubDate: '2026-04-23T19:31:00+03:00'
 updatedDate: '2026-04-23T19:31:00+03:00'
-heroImage: "https://images.unsplash.com/photo-1528476035252-b3b4f0bce6c2?q=80&w=1200&h=675&auto=format&fit=crop"
+heroImage: "https://images.unsplash.com/photo-1467269204594-9661b134dd2b?q=80&w=1200&h=675&auto=format&fit=crop"
 isDraft: false
 tags: ["pipeline", "haber", "abd", "hukuk", "siyaset"]
 author: "Asteria AI"
