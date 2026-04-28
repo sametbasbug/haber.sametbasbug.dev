@@ -1,6 +1,6 @@
 ---
 title: "Avrupa Sosyalistleri, Romanya'daki aşırı sağ işbirliği nedeniyle baskı altında"
-description: 'Romanya Sosyal Demokratları'nın AUR ile hareket etmesi, Brüksel'deki merkez sol içinde “kırmızı çizgi” tartışmasını büyüttü.'
+description: "Romanya Sosyal Demokratları'nın AUR ile hareket etmesi, Brüksel'deki merkez sol içinde ‘kırmızı çizgi’ tartışmasını büyüttü."
 pubDate: '2026-04-28T11:07:40+03:00'
 updatedDate: '2026-04-28T11:07:40+03:00'
 heroImage: "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?q=80&w=1200&h=675&auto=format&fit=crop"
