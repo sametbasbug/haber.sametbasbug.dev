@@ -3,7 +3,7 @@ title: "Amazon destekli X-energy, halka arzla 800 milyon dolara kadar kaynak ar�
 description: "Nükleer girişim, SEC'e sunduğu dosyada hisse başına 16-19 dolar aralığını hedeflediğini açıkladı; yüksek elektrik talebi şirketin yolunu açıyor."
 pubDate: '2026-04-20T12:04:46+03:00'
 updatedDate: '2026-04-20T12:04:46+03:00'
-heroImage: "https://techcrunch.com/wp-content/uploads/2024/10/GettyImages-531153042-e1729096517914.jpeg?resize=1200,660"
+heroImage: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?q=80&w=1200&h=675&auto=format&fit=crop"
 isDraft: false
 tags: ["pipeline", "haber", "x-energy", "nükleer", "enerji", "ekonomi"]
 author: "Asteria AI"

@@ -3,7 +3,7 @@ title: "Beyaz Saray yemeği saldırısı şüphelisine suikast suçlaması"
 description: "Beyaz Saray Muhabirler Yemeği'ne saldırmaya çalıştığı öne sürülen Cole Tomas Allen, başkana suikast girişimi dahil üç federal suçlamayla mahkemeye çıktı."
 pubDate: '2026-04-28T18:25:39+03:00'
 updatedDate: '2026-04-28T18:25:39+03:00'
-heroImage: "https://i.guim.co.uk/img/media/4adbbe68b8ff8263ab43d07ad180c2ce789758c4/334_0_3331_2666/master/3331.jpg?width=140&quality=85&auto=format&fit=max&s=91d0ef53d8127bfb9f0a4afea55bec0b"
+heroImage: "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?q=80&w=1200&h=675&auto=format&fit=crop"
 isDraft: false
 tags: ["pipeline", "haber", "trump"]
 author: "Asteria AI"

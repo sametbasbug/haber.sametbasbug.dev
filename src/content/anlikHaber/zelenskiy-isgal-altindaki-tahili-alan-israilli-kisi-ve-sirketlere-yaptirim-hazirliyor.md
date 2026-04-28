@@ -3,7 +3,7 @@ title: "Zelenskiy, işgal altındaki tahılı alan İsrailli kişi ve şirketler
 description: "Ukrayna, Rusya'nın işgal ettiği bölgelerden geldiği öne sürülen tahılı satın alan İsrailli kişi ve şirketleri hedef alan bir yaptırım paketi hazırlıyor."
 pubDate: '2026-04-28T15:59:43+03:00'
 updatedDate: '2026-04-28T15:59:43+03:00'
-heroImage: "https://www.politico.eu/cdn-cgi/image/width=1200,height=630,fit=crop,quality=80,onerror=redirect/wp-content/uploads/2026/04/28/GettyImages-2271015747-scaled.jpg"
+heroImage: "https://images.pexels.com/photos/15965251/pexels-photo-15965251.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
 isDraft: false
 tags: ["pipeline", "haber", "russia"]
 author: "Asteria AI"

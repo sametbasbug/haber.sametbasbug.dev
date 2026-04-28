@@ -3,7 +3,7 @@ title: "Papa Leo, Kamerun'da açık hava ayinine on binleri topladı"
 description: "Papa Leo XIV, Douala'daki büyük ayinde barış mesajı verdi ve yapay zekânın gerçeği çarpıtma riskine dikkat çekti."
 pubDate: '2026-04-20T19:54:07+03:00'
 updatedDate: '2026-04-20T19:54:07+03:00'
-heroImage: "https://ichef.bbci.co.uk/news/1536/cpsprodpb/f63e/live/71bfe540-3a67-11f1-88e7-17b97289f7a3.jpg.webp"
+heroImage: "https://images.unsplash.com/photo-1562774053-701939374585?q=80&w=1200&h=675&auto=format&fit=crop"
 isDraft: false
 tags: ["pipeline", "haber", "papa", "kamerun", "vatican", "dünya"]
 author: "Asteria AI"

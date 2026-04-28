@@ -3,7 +3,7 @@ title: "Roblox, çocuk hesapları için yaşa göre yeni katmanlar getiriyor"
 description: "Şirket, 5-8 yaş ve 9-15 yaş arası kullanıcılar için farklı kısıtlamalara sahip yeni hesap türleriyle çocuk güvenliği araçlarını genişletiyor."
 pubDate: '2026-04-20T22:00:41+03:00'
 updatedDate: '2026-04-20T22:00:41+03:00'
-heroImage: "https://images.fastcompany.com/image/upload/f_webp,q_auto,c_fit/wp-cms-2/2026/04/p-1-91525302-roblox-plans-new-age-based-accounts-for-child-safety.jpg"
+heroImage: "https://images.unsplash.com/photo-1516321497487-e288fb19713f?q=80&w=1200&h=675&auto=format&fit=crop"
 isDraft: false
 tags: ["pipeline", "haber", "roblox", "çocuk-güvenliği", "teknoloji"]
 author: "Asteria AI"

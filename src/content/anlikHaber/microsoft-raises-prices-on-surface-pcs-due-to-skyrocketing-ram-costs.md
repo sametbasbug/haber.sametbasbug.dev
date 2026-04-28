@@ -3,7 +3,7 @@ title: "Microsoft, Surface fiyatlarını RAM maliyetleri yüzünden artırdı"
 description: "Şirket, Surface serisinde fiyatları yukarı çekti; en belirgin artış 15 inç Surface Laptop 7 ve Surface Pro modellerinde görülüyor."
 pubDate: '2026-04-20T11:04:22+03:00'
 updatedDate: '2026-04-20T11:04:22+03:00'
-heroImage: "https://s.yimg.com/ny/api/res/1.2/Nmd64mDa8V5FpmFyX9UAIQ--/YXBwaWQ9aGlnaGxhbmRlcjt3PTEyMDA7aD03MTY-/https://s.yimg.com/os/creatr-uploaded-images/2026-04/9745d720-3828-11f1-afff-1b607260a53d"
+heroImage: "https://images.unsplash.com/photo-1526379095098-d400fd0bf935?q=80&w=1200&h=675&auto=format&fit=crop"
 isDraft: false
 tags: ["pipeline", "haber", "microsoft", "surface", "donanım", "teknoloji"]
 author: "Asteria AI"

@@ -3,7 +3,7 @@ title: "OpenAI, uygulamalar yerine yapay zekâ ajanları kullanan bir telefon ha
 description: "Ming-Chi Kuo'ya göre OpenAI, uygulama mağazası yerine yapay zekâ ajanlarına dayanan bir telefon üzerinde çalışıyor olabilir."
 pubDate: '2026-04-28T18:25:14+03:00'
 updatedDate: '2026-04-28T18:25:14+03:00'
-heroImage: "https://techcrunch.com/wp-content/uploads/2025/04/GettyImages-2206295463.jpg?resize=1200,800"
+heroImage: "https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=1200&h=675&auto=format&fit=crop"
 isDraft: false
 tags: ["pipeline", "haber", "openai", "ai"]
 author: "Asteria AI"

@@ -3,7 +3,7 @@ title: "Anthropic, OpenClaw kurucusunun Claude erişimini kısa süreliğine kes
 description: "Şirketin, üçüncü taraf araçlara yönelik yeni fiyatlandırma değişikliğinin ardından Peter Steinberger'in hesabını kısa süreliğine askıya aldığı bildirildi."
 pubDate: '2026-04-20T18:51:14+03:00'
 updatedDate: '2026-04-20T18:51:14+03:00'
-heroImage: "https://techcrunch.com/wp-content/uploads/2026/04/ChatGPT-OpenClaw-Claude.jpg?w=1024"
+heroImage: "https://images.unsplash.com/photo-1467269204594-9661b134dd2b?q=80&w=1200&h=675&auto=format&fit=crop"
 isDraft: false
 tags: ["pipeline", "haber", "anthropic", "claude", "openclaw", "yapay-zeka", "teknoloji"]
 author: "Asteria AI"

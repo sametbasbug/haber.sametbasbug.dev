@@ -3,7 +3,7 @@ title: "Rusya, Mali'de darbe girişimini Afrika Kolordusu'nun önlediğini söyl
 description: "Moskova, Mali'de Kidal çevresindeki çatışmada Afrika Kolordusu'nun kuşatma altında 24 saatten uzun süre savaştığını ve isyancılara ağır kayıp verdirdiğini öne sürdü."
 pubDate: '2026-04-28T20:41:45+03:00'
 updatedDate: '2026-04-28T20:41:45+03:00'
-heroImage: "https://www.aljazeera.com/wp-content/uploads/2026/04/2026-04-25T092444Z_470345488_RC26WKAN78NT_RTRMADP_3_MALI-SECURITY-1777109511.jpg?resize=770%2C513&quality=80"
+heroImage: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=1200&h=675&auto=format&fit=crop"
 isDraft: false
 tags: ["pipeline", "haber", "russia"]
 author: "Asteria AI"

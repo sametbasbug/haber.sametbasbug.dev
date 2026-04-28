@@ -10,6 +10,57 @@ import typer
 
 HERO_IMAGE_RE = re.compile(r'^heroImage:\s*["\']?(.*?)["\']?\s*$', re.MULTILINE)
 
+APPROVED_IMAGE_HOSTS = {
+    "images.unsplash.com",
+    "images.pexels.com",
+}
+
+# News/source CDNs are intentionally blocked for Anlık Haber hero images.
+# A live image URL is not enough: using the original publisher's RSS/OG/article
+# image creates licensing and editorial reuse risk.
+BLOCKED_SOURCE_IMAGE_HOSTS = {
+    "techcrunch.com",
+    "www.techcrunch.com",
+    "s.yimg.com",
+    "o.aolcdn.com",
+    "i.guim.co.uk",
+    "media.guim.co.uk",
+    "www.politico.eu",
+    "politico.eu",
+    "images.mktw.net",
+    "www.marketwatch.com",
+    "marketwatch.com",
+    "platform.theverge.com",
+    "cdn.arstechnica.net",
+    "images.fastcompany.com",
+    "www.aljazeera.com",
+    "aljazeera.com",
+    "www.diken.com.tr",
+    "diken.com.tr",
+    "ichef.bbci.co.uk",
+    "www.bbc.co.uk",
+    "bbc.co.uk",
+    "medyascope.tv",
+    "www.medyascope.tv",
+    "kisadalga.net",
+    "www.kisadalga.net",
+    "www.cnbc.com",
+    "image.cnbcfm.com",
+    "static01.nyt.com",
+    "static.reuters.com",
+    "cloudfront-us-east-2.images.arcpublishing.com",
+}
+
+
+def _image_policy_violation(url: str) -> str | None:
+    parsed = urlparse((url or "").strip())
+    host = parsed.netloc.lower()
+    if host in APPROVED_IMAGE_HOSTS:
+        return None
+    if host in BLOCKED_SOURCE_IMAGE_HOSTS:
+        return f"source-image-host:{host}"
+    return f"unapproved-image-host:{host or '-'}"
+
 
 def _image_key(value: str) -> str:
     text = str(value or "").strip()
@@ -61,8 +112,12 @@ def audit_images_command(
             items.append((path, match.group(1).strip()))
 
     bad: list[tuple[Path, str, str]] = []
+    policy_violations: list[tuple[Path, str, str]] = []
     with httpx.Client(timeout=timeout, follow_redirects=True) as client:
         for path, url in items:
+            policy_reason = _image_policy_violation(url)
+            if policy_reason:
+                policy_violations.append((path, url, policy_reason))
             ok, reason = _is_live_image_url(client, url)
             if not ok:
                 bad.append((path, url, reason))
@@ -77,13 +132,16 @@ def audit_images_command(
 
     print(f"checked={len(items)}")
     print(f"broken={len(bad)}")
+    print(f"policy_violations={len(policy_violations)}")
     print(f"recent_duplicate_limit={recent_duplicate_limit}")
     print(f"recent_duplicates={len(recent_duplicates)}")
     for path, url, reason in bad:
         print(f"BROKEN {path.relative_to(root)} | {reason} | {url}")
+    for path, url, reason in policy_violations:
+        print(f"POLICY_VIOLATION {path.relative_to(root)} | {reason} | {url}")
     for key, paths in recent_duplicates:
         joined = ", ".join(str(path.relative_to(root)) for path in paths)
         print(f"DUPLICATE_RECENT {key} | {joined}")
 
-    if bad or recent_duplicates:
+    if bad or policy_violations or recent_duplicates:
         raise typer.Exit(code=1)

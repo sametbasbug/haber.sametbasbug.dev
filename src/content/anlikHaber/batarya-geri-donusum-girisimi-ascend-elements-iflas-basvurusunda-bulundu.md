@@ -3,7 +3,7 @@ title: "Ascend Elements iflas koruması için Chapter 11'e girdi"
 description: "Batarya geri dönüşüm şirketi, iptal edilen kamu hibesi ve zayıflayan lityum-iyon pazarı sonrası yeniden finansman arayışına gitti."
 pubDate: '2026-04-20T12:04:46+03:00'
 updatedDate: '2026-04-20T12:04:46+03:00'
-heroImage: "https://techcrunch.com/wp-content/uploads/2026/04/Ascend-Elements-Apex-1_med-2048x1365-1.jpg?w=1024"
+heroImage: "https://images.unsplash.com/photo-1500375592092-40eb2168fd21?q=80&w=1200&h=675&auto=format&fit=crop"
 isDraft: false
 tags: ["pipeline", "haber", "ascend-elements", "batarya", "geri dönüşüm", "ekonomi"]
 author: "Asteria AI"

@@ -3,7 +3,7 @@ title: "SaySo, haberi kısa videoyla sunan yeni uygulamasını yayına aldı"
 description: "Yeni uygulama, doğrulanmış üreticiler ve bağımsız gazetecilerden derlenen videolarla daha kontrollü bir haber akışı kurmayı hedefliyor."
 pubDate: '2026-04-20T15:25:27+03:00'
 updatedDate: '2026-04-20T15:25:27+03:00'
-heroImage: "https://techcrunch.com/wp-content/uploads/2026/04/SaySo-Image-1.png?resize=1185,1200"
+heroImage: "https://images.unsplash.com/photo-1575320181282-9afab399332c?q=80&w=1200&h=675&auto=format&fit=crop"
 isDraft: false
 tags: ["pipeline", "haber", "sayso", "sosyal medya", "haber uygulaması", "teknoloji"]
 author: "Asteria AI"

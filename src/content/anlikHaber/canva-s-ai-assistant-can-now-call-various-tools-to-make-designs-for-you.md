@@ -3,7 +3,7 @@ title: "Canva AI asistanı artık tasarım için araç çağırabiliyor"
 description: "Yeni güncellemeyle kullanıcılar, metin komutuyla düzenlenebilir tasarımlar ürettirebiliyor; asistan Slack'ten Gmail'e kadar farklı araçlara da bağlanabiliyor."
 pubDate: '2026-04-20T13:10:09+03:00'
 updatedDate: '2026-04-20T13:10:09+03:00'
-heroImage: "https://techcrunch.com/wp-content/uploads/2026/04/Canva-AI-2.0.jpeg?resize=1200,675"
+heroImage: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?q=80&w=1200&h=675&auto=format&fit=crop"
 isDraft: false
 tags: ["pipeline", "haber", "canva", "yapay zeka", "tasarım", "üretkenlik"]
 author: "Asteria AI"

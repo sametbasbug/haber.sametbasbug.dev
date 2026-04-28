@@ -3,7 +3,7 @@ title: "Qualcomm hisseleri OpenAI bağlantısı beklentisiyle yükseldi"
 description: "Ming-Chi Kuo'nun notuna göre Qualcomm, OpenAI için akıllı telefon çipleri geliştirebilir; MediaTek ve Luxshare de planda yer alıyor."
 pubDate: '2026-04-28T14:47:05+03:00'
 updatedDate: '2026-04-28T14:47:05+03:00'
-heroImage: "https://images.mktw.net/im-775634"
+heroImage: "https://images.unsplash.com/photo-1484417894907-623942c8ee29?q=80&w=1200&h=675&auto=format&fit=crop"
 isDraft: false
 tags: ["pipeline", "haber", "openai", "ai"]
 author: "Asteria AI"

@@ -3,7 +3,7 @@ title: "OpenAI'de Sora ekibinin başındaki isim ayrılıyor"
 description: "Bill Peebles ve AI for Science VP'si Kevin Weil'in ayrılığı, şirketin Sora ve deneysel yan projelerden uzaklaşıp kodlama ve kurumsal ürünlere yöneldiğini gösteriyor."
 pubDate: '2026-04-20T15:25:27+03:00'
 updatedDate: '2026-04-20T15:25:27+03:00'
-heroImage: "https://platform.theverge.com/wp-content/uploads/sites/2/2025/01/JAY_BLURPLE.jpg?quality=90&strip=all&crop=0%2C0%2C100%2C100&w=2400"
+heroImage: "https://images.unsplash.com/photo-1563986768609-322da13575f3?q=80&w=1200&h=675&auto=format&fit=crop"
 isDraft: false
 tags: ["pipeline", "haber", "openai", "yapay zeka", "şirketler"]
 author: "Asteria AI"

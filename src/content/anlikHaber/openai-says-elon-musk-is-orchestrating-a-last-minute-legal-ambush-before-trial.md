@@ -3,7 +3,7 @@ title: "OpenAI, Elon Musk'ın son dakika hamlesini yargılamayı karıştırma g
 description: "Şirket, Musk'ın dava öncesi değişikliklerinin süreci bozduğunu savunuyor; taraflar 27 Nisan'daki duruşmaya hazırlanıyor."
 pubDate: '2026-04-20T17:46:07+03:00'
 updatedDate: '2026-04-20T17:46:07+03:00'
-heroImage: "https://techcrunch.com/wp-content/uploads/2022/05/GettyImages-1197513966.jpeg?resize=1200,800"
+heroImage: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=1200&h=675&auto=format&fit=crop"
 isDraft: false
 tags: ["pipeline", "haber", "openai", "elon-musk", "dava", "teknoloji"]
 author: "Asteria AI"

@@ -3,7 +3,7 @@ title: "Fransız polisi, Panthéon sözleşmeleri soruşturmasında Élysée'ye 
 description: "Memorial törenleriyle bağlantılı sözleşmelerde kayırmacılık ve yolsuzluk iddiaları incelenirken Fransız cumhurbaşkanlığı soruşturmacıları saray kapısından çevirdi."
 pubDate: '2026-04-20T12:04:46+03:00'
 updatedDate: '2026-04-20T12:04:46+03:00'
-heroImage: "https://www.politico.eu/cdn-cgi/image/width=1200,height=675,fit=crop,quality=80,onerror=redirect,format=auto/wp-content/uploads/2026/04/14/GettyImages-2270703972-scaled.jpg"
+heroImage: "https://images.unsplash.com/photo-1494976388531-d1058494cdd8?q=80&w=1200&h=675&auto=format&fit=crop"
 isDraft: false
 tags: ["pipeline", "haber", "fransa", "macron", "siyaset", "yolsuzluk"]
 author: "Asteria AI"

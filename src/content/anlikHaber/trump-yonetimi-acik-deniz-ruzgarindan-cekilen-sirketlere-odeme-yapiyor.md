@@ -3,7 +3,7 @@ title: "Trump yönetimi açık deniz rüzgarından çekilen şirketlere ödeme y
 description: "ABD yönetimi, açık deniz rüzgar projelerinden çekilmeyi kabul eden iki enerji şirketiyle anlaşma yaptı; şirketler bunun yerine petrol ve gaz yatırımlarına yönelmeyi kabul etti."
 pubDate: '2026-04-28T18:24:36+03:00'
 updatedDate: '2026-04-28T18:24:36+03:00'
-heroImage: "https://o.aolcdn.com/images/dims?image_uri=https%3A%2F%2Fs.yimg.com%2Fos%2Fcreatr-uploaded-images%2F2026-04%2F2814c1b0-4311-11f1-bbbc-d38dc78cd5ed&resize=1400%2C1050&client=19f2b5e49a271b2bde77&signature=220d76974ee4e90bce1f4b27be01f7ee93d4bbcb"
+heroImage: "https://images.unsplash.com/photo-1495020689067-958852a7765e?q=80&w=1200&h=675&auto=format&fit=crop"
 isDraft: false
 tags: ["pipeline", "haber", "trump"]
 author: "Asteria AI"

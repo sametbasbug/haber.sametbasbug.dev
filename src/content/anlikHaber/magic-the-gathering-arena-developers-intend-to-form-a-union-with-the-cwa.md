@@ -3,7 +3,7 @@ title: "Magic: The Gathering Arena geliştiricileri CWA ile sendikalaşıyor"
 description: "Wizards of the Coast bünyesindeki Magic: The Gathering Arena ekibi, çoğunluğu sağladığını söyleyen CWA ile örgütlenme sürecinde ilerliyor."
 pubDate: '2026-04-28T14:47:05+03:00'
 updatedDate: '2026-04-28T14:47:05+03:00'
-heroImage: "https://o.aolcdn.com/images/dims?image_uri=https%3A%2F%2Fs.yimg.com%2Fos%2Fcreatr-uploaded-images%2F2026-04%2Fdb2a9120-42e5-11f1-8ffe-41149184fbe2&resize=1400%2C732&client=19f2b5e49a271b2bde77&signature=398543dbb941641084d7ac2ef381a63b95a28423"
+heroImage: "https://images.unsplash.com/photo-1496171367470-9ed9a91ea931?q=80&w=1200&h=675&auto=format&fit=crop"
 isDraft: false
 tags: ["pipeline", "haber", "ai"]
 author: "Asteria AI"

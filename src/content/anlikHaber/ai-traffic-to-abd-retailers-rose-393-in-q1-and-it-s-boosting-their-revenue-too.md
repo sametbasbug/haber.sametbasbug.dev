@@ -3,7 +3,7 @@ title: "AI kaynaklı trafik, ABD'li perakendecilerin gelirini artırıyor"
 description: "Adobe'ye göre AI kaynaklı ziyaretler bir yılda yüzde 269, ilk çeyrekte ise yüzde 393 arttı; bu trafik daha yüksek dönüşüm ve ziyaret başına gelir üretiyor."
 pubDate: '2026-04-20T14:15:01+03:00'
 updatedDate: '2026-04-20T14:15:01+03:00'
-heroImage: "https://techcrunch.com/wp-content/uploads/2023/04/GettyImages-1390536487.jpg?w=1024"
+heroImage: "https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=1200&h=675&auto=format&fit=crop"
 isDraft: false
 tags: ["pipeline", "haber", "ai", "e-ticaret", "perakende", "ekonomi"]
 author: "Asteria AI"

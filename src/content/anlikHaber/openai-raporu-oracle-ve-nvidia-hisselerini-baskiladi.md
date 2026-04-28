@@ -3,7 +3,7 @@ title: "OpenAI raporu Oracle ve Nvidia hisselerini baskıladı"
 description: "Wall Street Journal'ın haberine göre OpenAI bazı finansal hedeflerin gerisinde kaldı; Oracle, Nvidia ve SoftBank gibi hisselerde baskı oluştu."
 pubDate: '2026-04-28T15:59:06+03:00'
 updatedDate: '2026-04-28T15:59:06+03:00'
-heroImage: "https://images.mktw.net/im-62394843"
+heroImage: "https://images.unsplash.com/photo-1497366754035-f200968a6e72?q=80&w=1200&h=675&auto=format&fit=crop"
 isDraft: false
 tags: ["pipeline", "haber", "openai", "chatgpt"]
 author: "Asteria AI"

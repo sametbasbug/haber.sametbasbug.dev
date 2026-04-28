@@ -3,7 +3,7 @@ title: "IBM, DEI davasını 17 milyon dolarlık uzlaşmayla kapattı"
 description: "Şirket, Adalet Bakanlığı'nın ayrımcılık iddialarını uzlaşmayla çözdü; karar Trump yönetiminin DEI programlarına karşı baskısını da yeniden gündeme getirdi."
 pubDate: '2026-04-20T20:58:57+03:00'
 updatedDate: '2026-04-20T20:58:57+03:00'
-heroImage: "https://s.yimg.com/ny/api/res/1.2/DAdED74ifvWDgQ1U6tOP5Q--/YXBwaWQ9aGlnaGxhbmRlcjt3PTEyMDA7aD04MDA-/https://s.yimg.com/os/creatr-uploaded-images/2026-04/981c21a0-35b1-11f1-bffd-c96504cc4369"
+heroImage: "https://images.unsplash.com/photo-1521295121783-8a321d551ad2?q=80&w=1200&h=675&auto=format&fit=crop"
 isDraft: false
 tags: ["pipeline", "haber", "ibm", "abd", "dava", "teknoloji"]
 author: "Asteria AI"

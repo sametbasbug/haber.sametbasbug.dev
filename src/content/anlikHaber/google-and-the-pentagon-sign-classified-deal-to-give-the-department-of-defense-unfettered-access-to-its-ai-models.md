@@ -3,7 +3,7 @@ title: "Google, Pentagon'a yapay zekâ modelleri için sınıflı erişim verdi"
 description: 'The Information''a göre Google, ABD Savunma Bakanlığı''nın yapay zekâ modellerini "her yasal hükümet amacı" için kullanmasına izin veren sınıflı bir anlaşma imzaladı.'
 pubDate: '2026-04-28T19:34:05+03:00'
 updatedDate: '2026-04-28T19:34:05+03:00'
-heroImage: "https://s.yimg.com/ny/api/res/1.2/XfrejMSLDkqyUnuNu7GjwA--/YXBwaWQ9aGlnaGxhbmRlcjt3PTEyMDA7aD04MDA-/https://s.yimg.com/os/creatr-uploaded-images/2026-04/b4ae0140-4316-11f1-8aff-67678d2e3091"
+heroImage: "https://images.unsplash.com/photo-1464890100898-a385f744067f?q=80&w=1200&h=675&auto=format&fit=crop"
 isDraft: false
 tags: ["pipeline", "haber", "openai", "anthropic", "google"]
 author: "Asteria AI"

@@ -3,7 +3,7 @@ title: "Küçük Avrupa havalimanları yakıt krizi nedeniyle baskı altında"
 description: "Avrupa havalimanı çatı kuruluşu, Orta Doğu krizi nedeniyle jet yakıtı fiyatları yükselirse küçük havalimanlarının iptal dalgasına dayanamayabileceğini söylüyor."
 pubDate: '2026-04-28T17:11:31+03:00'
 updatedDate: '2026-04-28T17:11:31+03:00'
-heroImage: "https://i.guim.co.uk/img/media/8f486843ca1f58821af100ec58c06a04c9c1a20d/1336_0_5456_4366/master/5456.jpg?width=1200&height=630&quality=85&auto=format&fit=crop&precrop=40:21,offset-x50,offset-y0&overlay-align=bottom%2Cleft&overlay-width=100p&overlay-base64=L2ltZy9zdGF0aWMvb3ZlcmxheXMvdGctZGVmYXVsdC5wbmc&enable=upscale&s=72c8ea8a9fff5807ce2a9b090b259ce6"
+heroImage: "https://images.unsplash.com/photo-1527838832700-5059252407fa?q=80&w=1200&h=675&auto=format&fit=crop"
 isDraft: false
 tags: ["pipeline", "haber"]
 author: "Asteria AI"

@@ -3,7 +3,7 @@ title: "Papa, Trump'la gerilim sürerken dünyayı 'tiranlar'ın kasıp kavurdu�
 description: "Papa Leo, Kamerun'daki konuşmasında dini siyasi ve askeri çıkar için kullananlara sert çıktı; çıkış Washington'la gerilimin sürdüğü bir döneme denk geldi."
 pubDate: '2026-04-20T18:51:14+03:00'
 updatedDate: '2026-04-20T18:51:14+03:00'
-heroImage: "https://www.politico.eu/cdn-cgi/image/width=1200,height=675,fit=crop,quality=80,onerror=redirect,format=auto/wp-content/uploads/2026/04/16/GettyImages-2271044776-scaled.jpg"
+heroImage: "https://images.unsplash.com/photo-1516849841032-87cbac4d88f7?q=80&w=1200&h=675&auto=format&fit=crop"
 isDraft: false
 tags: ["pipeline", "haber", "papa", "trump", "vatican", "siyaset"]
 author: "Asteria AI"

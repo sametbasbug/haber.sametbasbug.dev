@@ -3,7 +3,7 @@ title: "AB, Avrupa'da jet yakıtı krizi olduğu iddiasını reddetti"
 description: "Brüksel, kıtada kerosen sıkıntısı yaşandığı yönündeki uyarıların abartılı olduğunu söylüyor; buna karşın bazı havayolları seferlerini kısmaya başladı."
 pubDate: '2026-04-20T17:46:07+03:00'
 updatedDate: '2026-04-20T17:46:07+03:00'
-heroImage: "https://www.politico.eu/cdn-cgi/image/width=1200,height=675,fit=crop,quality=80,onerror=redirect,format=auto/wp-content/uploads/2026/04/17/GettyImages-1242534642-scaled.jpg"
+heroImage: "https://images.unsplash.com/photo-1509391366360-2e959784a276?q=80&w=1200&h=675&auto=format&fit=crop"
 isDraft: false
 tags: ["pipeline", "haber", "avrupa-birliği", "havacılık", "enerji", "dünya"]
 author: "Asteria AI"

@@ -3,7 +3,7 @@ title: "YouTube Premium ve YouTube Music'in fiyatı ABD'de yükseldi"
 description: "Bireysel Premium planı 15.99 dolara, aile planı ise 26.99 dolara çıkıyor; zam mevcut aboneleri de etkileyecek."
 pubDate: '2026-04-20T19:54:07+03:00'
 updatedDate: '2026-04-20T19:54:07+03:00'
-heroImage: "https://techcrunch.com/wp-content/uploads/2026/04/GettyImages-2242441443.jpg?resize=1200,800"
+heroImage: "https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?q=80&w=1200&h=675&auto=format&fit=crop"
 isDraft: false
 tags: ["pipeline", "haber", "youtube", "abonelik", "teknoloji"]
 author: "Asteria AI"

@@ -3,7 +3,7 @@ title: "Chef Robotics, 100 milyon porsiyon eşiğini aşarken büyüdüğünü s
 description: "Şirket, mutfak robotlarını toplu yemek üretimine taşıyarak batık girişimlerle anılan alanda tutunabildiğini ve yeni müşteriler kazandığını söylüyor."
 pubDate: '2026-04-20T17:46:07+03:00'
 updatedDate: '2026-04-20T17:46:07+03:00'
-heroImage: "https://techcrunch.com/wp-content/uploads/2026/04/Chef-robots-deposit-rice-at-Chef-Bombay.jpg?resize=1200,900"
+heroImage: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?q=80&w=1200&h=675&auto=format&fit=crop"
 isDraft: false
 tags: ["pipeline", "haber", "chef-robotics", "robotik", "yapay-zeka", "teknoloji"]
 author: "Asteria AI"

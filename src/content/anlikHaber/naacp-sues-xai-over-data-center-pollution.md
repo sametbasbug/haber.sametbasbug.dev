@@ -3,7 +3,7 @@ title: "NAACP, xAI'yi Memphis'teki veri merkezi nedeniyle mahkemeye verdi"
 description: "Hak savunucuları, Colossus 2 için izinsiz metan gazı türbinleri kullanıldığı iddiasıyla xAI ve bağlı bir şirket hakkında dava açtı."
 pubDate: '2026-04-20T22:00:41+03:00'
 updatedDate: '2026-04-20T22:00:41+03:00'
-heroImage: "https://s.yimg.com/ny/api/res/1.2/JI.JnqiLCl_ElKdXbRjs5g--/YXBwaWQ9aGlnaGxhbmRlcjt3PTEyMDA7aD04MDA-/https://d29szjachogqwa.cloudfront.net/images/2026-04/e7a446a0-45a4-48d0-97f1-6c9f96f309ec"
+heroImage: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=1200&h=675&auto=format&fit=crop"
 isDraft: false
 tags: ["pipeline", "haber", "xai", "naacp", "çevre", "teknoloji"]
 author: "Asteria AI"

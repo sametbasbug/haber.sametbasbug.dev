@@ -3,7 +3,7 @@ title: "Daniel Kinahan Dubai'de gözaltına alındı"
 description: "İrlanda mahkemelerinin çıkardığı yakalama emri sonrası Dubai'de gözaltına alınan Kinahan için iade süreci ve resmi prosedürler işletiliyor."
 pubDate: '2026-04-20T13:10:09+03:00'
 updatedDate: '2026-04-20T13:10:09+03:00'
-heroImage: "https://ichef.bbci.co.uk/news/1024/branded_news/eb28/live/c2e29290-3a96-11f1-8c60-37b411324010.jpg"
+heroImage: "https://images.unsplash.com/photo-1527866959252-deab85ef7d1b?q=80&w=1200&h=675&auto=format&fit=crop"
 isDraft: false
 tags: ["pipeline", "haber", "dünya", "adalet", "i̇rlanda", "dubai"]
 author: "Asteria AI"

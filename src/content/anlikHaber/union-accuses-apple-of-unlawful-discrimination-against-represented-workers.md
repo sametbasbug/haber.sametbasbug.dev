@@ -3,7 +3,7 @@ title: "Apple, sendikalı çalışanlara eşit davranmadığı iddiasıyla suçl
 description: "IAM, Towson mağazasındaki sendikalı çalışanlara diğer çalışanlarla aynı transfer fırsatlarının sunulmadığını öne sürüyor."
 pubDate: '2026-04-28T14:47:05+03:00'
 updatedDate: '2026-04-28T14:47:05+03:00'
-heroImage: "https://o.aolcdn.com/images/dims?image_uri=https%3A%2F%2Fmedia-mbst-pub-ue1.s3.amazonaws.com%2Fcreatr-uploaded-images%2F2024-05%2F417657a0-1108-11ef-af1a-972089f05b05&resize=1400%2C933&client=19f2b5e49a271b2bde77&signature=4481e8de7d8390cd95ce6af4ebb9b342d0a01a32"
+heroImage: "https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?q=80&w=1200&h=675&auto=format&fit=crop"
 isDraft: false
 tags: ["pipeline", "haber"]
 author: "Asteria AI"

@@ -3,7 +3,7 @@ title: "Meta AI uygulaması, arkadaşlara bildirim göndermesiyle dikkat çekiyo
 description: "TechCrunch yazarının deneyimine göre uygulama, Instagram üzerinden kullanım bildirimi yollayabiliyor; bu da mahremiyet ve görünürlük tarafında yeni bir rahatsızlık yaratıyor."
 pubDate: '2026-04-20T15:25:27+03:00'
 updatedDate: '2026-04-20T15:25:27+03:00'
-heroImage: "https://techcrunch.com/wp-content/uploads/2026/04/GettyImages-183765661.jpg?resize=1200,817"
+heroImage: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=1200&h=675&auto=format&fit=crop"
 isDraft: false
 tags: ["pipeline", "haber", "meta", "yapay zeka", "uygulama", "gizlilik"]
 author: "Asteria AI"

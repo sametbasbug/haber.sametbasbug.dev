@@ -3,7 +3,7 @@ title: "RAM baskısı, PC alımlarını öne çekti"
 description: "Counterpoint Research'e göre küresel PC sevkiyatı ilk çeyrekte yüzde 3,2 arttı; fiyat artışı beklentisi tüketicileri erken alıma itti."
 pubDate: '2026-04-20T14:15:01+03:00'
 updatedDate: '2026-04-20T14:15:01+03:00'
-heroImage: "https://s.yimg.com/ny/api/res/1.2/yxIYSnnMFLIETBukntq_Rw--/YXBwaWQ9aGlnaGxhbmRlcjt3PTEyMDA7aD04MDA-/https://d29szjachogqwa.cloudfront.net/images/2026-04/2ceddefd-4e45-4b93-af45-0902357a7b99"
+heroImage: "https://images.unsplash.com/photo-1556228720-195a672e8a03?q=80&w=1200&h=675&auto=format&fit=crop"
 isDraft: false
 tags: ["pipeline", "haber", "pc", "ram", "donanım", "teknoloji"]
 author: "Asteria AI"

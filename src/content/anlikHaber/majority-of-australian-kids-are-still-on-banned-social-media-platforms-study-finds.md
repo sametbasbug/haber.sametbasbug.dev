@@ -3,7 +3,7 @@ title: "Avustralya'da yasaklı sosyal medya platformlarında kalan çocuk oranı
 description: "Bir araştırma, 12-15 yaş aralığındaki çocukların büyük bölümünün yasaklı platformlarda hâlâ aktif hesaplara sahip olduğunu ortaya koydu."
 pubDate: '2026-04-20T20:58:57+03:00'
 updatedDate: '2026-04-20T20:58:57+03:00'
-heroImage: "https://s.yimg.com/ny/api/res/1.2/S4thWp7UFYhRNIxHlZidEg--/YXBwaWQ9aGlnaGxhbmRlcjt3PTEyMDA7aD04MDA-/https://s.yimg.com/os/creatr-uploaded-images/2026-04/0028d270-3751-11f1-aea6-9632d37e0be7"
+heroImage: "https://images.unsplash.com/photo-1508614589041-895b88991e3e?q=80&w=1200&h=675&auto=format&fit=crop"
 isDraft: false
 tags: ["pipeline", "haber", "avustralya", "sosyal-medya", "çocuklar", "siyaset"]
 author: "Asteria AI"

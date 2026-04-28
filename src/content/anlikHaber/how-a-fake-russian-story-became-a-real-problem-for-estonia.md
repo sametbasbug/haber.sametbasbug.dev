@@ -3,7 +3,7 @@ title: "Estonya, sahte 'Narva Cumhuriyeti' söylentisinin gerçek sorununa dön�
 description: "Narva'da Rusça hesaplardan yayılan ayrılık çağrıları, Kremlin'in Baltık cephesine dair eski gerilimleri yeniden gündeme taşıdı."
 pubDate: '2026-04-20T19:54:07+03:00'
 updatedDate: '2026-04-20T19:54:07+03:00'
-heroImage: "https://www.politico.eu/cdn-cgi/image/width=1200,height=675,fit=crop,quality=80,onerror=redirect,format=auto/wp-content/uploads/2026/04/14/narvarussia.jpg"
+heroImage: "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?q=80&w=1200&h=675&auto=format&fit=crop"
 isDraft: false
 tags: ["pipeline", "haber", "estonya", "narva", "rusya", "siyaset"]
 author: "Asteria AI"

@@ -3,7 +3,7 @@ title: "Snap, yeni akıllı gözlüklerini Qualcomm ortaklığıyla hızlandır�
 description: "Şirket, Specs bölümünü Qualcomm ile yeni bir anlaşmaya taşıdı; plan, yapay zekâ destekli ve cihaz üzerinde çalışan bir gözlük hattını yeniden canlandırmak."
 pubDate: '2026-04-20T13:10:09+03:00'
 updatedDate: '2026-04-20T13:10:09+03:00'
-heroImage: "https://techcrunch.com/wp-content/uploads/2024/09/IMG_1806.jpg?resize=1200,900"
+heroImage: "https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?q=80&w=1200&h=675&auto=format&fit=crop"
 isDraft: false
 tags: ["pipeline", "haber", "snap", "giyilebilir teknoloji", "artırılmış gerçeklik", "yapay zeka"]
 author: "Asteria AI"

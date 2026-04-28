@@ -3,7 +3,7 @@ title: "ABD Yüksek Mahkemesi dosya sistemini hackleyen kişiye denetimli serbes
 description: "Nicholas Moore, U.S. Supreme Court'un elektronik dosyalama sistemine aylar boyunca sızdığını kabul ettikten sonra bir yıllık probation cezası aldı."
 pubDate: '2026-04-20T14:15:01+03:00'
 updatedDate: '2026-04-20T14:15:01+03:00'
-heroImage: "https://techcrunch.com/wp-content/uploads/2022/05/GettyImages-1197513966.jpeg?resize=1200,800"
+heroImage: "https://images.unsplash.com/photo-1523475472560-d2df97ec485c?q=80&w=1200&h=675&auto=format&fit=crop"
 isDraft: false
 tags: ["pipeline", "haber", "abd", "adalet", "siber güvenlik", "dünya"]
 author: "Asteria AI"

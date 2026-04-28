@@ -3,7 +3,7 @@ title: "Shark Tank destekli Scholly'nin kurucusu Sallie Mae'ye dava açtı"
 description: "Chris Gray, Sallie Mae'nin Scholly verilerini üçüncü taraflara aktardığını ve kendisini haksız yere işten çıkardığını öne sürüyor."
 pubDate: '2026-04-28T19:34:29+03:00'
 updatedDate: '2026-04-28T19:34:29+03:00'
-heroImage: "https://techcrunch.com/wp-content/uploads/2026/04/christopher-gray-scholly.jpg?resize=1200,1024"
+heroImage: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?q=80&w=1200&h=675&auto=format&fit=crop"
 isDraft: false
 tags: ["pipeline", "haber"]
 author: "Asteria AI"

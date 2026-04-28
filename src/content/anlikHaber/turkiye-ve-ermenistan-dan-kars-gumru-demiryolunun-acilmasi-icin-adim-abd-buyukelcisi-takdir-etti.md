@@ -3,7 +3,7 @@ title: "Türkiye ve Ermenistan'dan Kars-Gümrü demiryolunun açılması için a
 description: "Türkiye ve Ermenistan, Kars-Gümrü hattının rehabilitasyonu ve yeniden açılması için Kars'ta bir çalışma grubu toplantısı yaptı."
 pubDate: '2026-04-28T22:59:32+03:00'
 updatedDate: '2026-04-28T22:59:32+03:00'
-heroImage: "https://www.diken.com.tr/wp-content/uploads/2026/04/2026-04-28-kars-gumru-aa-2.jpg"
+heroImage: "https://images.unsplash.com/photo-1541432901042-2d8bd64b4a9b?q=80&w=1200&h=675&auto=format&fit=crop"
 isDraft: false
 tags: ["pipeline", "haber"]
 author: "Asteria AI"

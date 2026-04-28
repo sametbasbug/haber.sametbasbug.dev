@@ -3,7 +3,7 @@ title: "Trump'un FTC'si, reklam şirketleriyle muhafazakâr medya boykotu suçla
 description: "Dentsu, Publicis ve WPP'ye yönelik dava ve uzlaşmalar, dijital reklamcılıkta siyasi içerik filtrelerinin nasıl kullanıldığı tartışmasını büyüttü."
 pubDate: '2026-04-20T20:58:57+03:00'
 updatedDate: '2026-04-20T20:58:57+03:00'
-heroImage: "https://cdn.arstechnica.net/wp-content/uploads/2025/06/andrew-ferguson-2048x1365.jpg"
+heroImage: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=1200&h=675&auto=format&fit=crop"
 isDraft: false
 tags: ["pipeline", "haber", "abd", "reklam", "siyaset", "teknoloji"]
 author: "Asteria AI"

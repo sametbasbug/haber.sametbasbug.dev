@@ -3,7 +3,7 @@ title: "Volkswagen, ABD'de ID.4 üretimini durdurup Atlas'a yöneliyor"
 description: "Şirket Chattanooga fabrikasında tam elektrikli ID.4 üretimini sonlandırırken mevcut stoklar 2027'ye kadar satışta kalacak ve tesisin ağırlığı yeni Atlas SUV'a kayacak."
 pubDate: '2026-04-20T11:04:22+03:00'
 updatedDate: '2026-04-20T11:04:22+03:00'
-heroImage: "https://techcrunch.com/wp-content/uploads/2026/04/vw-id4-ev.jpg?w=1024"
+heroImage: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=1200&h=675&auto=format&fit=crop"
 isDraft: false
 tags: ["pipeline", "haber", "volkswagen", "otomotiv", "ekonomi", "elektrikli araç"]
 author: "Asteria AI"
