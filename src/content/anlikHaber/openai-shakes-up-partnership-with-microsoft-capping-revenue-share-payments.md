@@ -23,9 +23,6 @@ OpenAI, ürünlerini artık Amazon ve Google dahil farklı bulut sağlayıcılar
 
 Değişiklik, OpenAI'nin son aylarda altyapı ve dağıtım tarafında daha fazla esneklik aradığını gösteriyor. CNBC, bu hamlenin şirketin Amazon'la kurduğu daha geniş işbirliği ve Microsoft'la geçmişte yaşadığı sürtüşmelerin ardından geldiğini aktarıyor.
 
-## Editoryal not
-
-- related-coverage: 1 benzer kayıt bulundu
 ## Kaynaklar
 
 - Ana kaynak: [CNBC Technology](https://www.cnbc.com/2026/04/27/openai-microsoft-partnership-revenue-cap.html)
