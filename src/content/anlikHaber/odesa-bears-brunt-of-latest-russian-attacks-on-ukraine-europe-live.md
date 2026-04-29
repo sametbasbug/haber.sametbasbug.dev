@@ -1,11 +1,11 @@
 ---
-title: "Odesa, Rus saldırılarının yeni dalgasında ağır hasar aldı"
-description: "Guardian'ın canlı takibine göre gece boyunca düzenlenen drone saldırılarında Odesa bölgesinde konutlar ve kent merkezi hasar gördü; ülkede 10'dan fazla yaralı var."
-pubDate: '2026-04-27T15:28:11+03:00'
-updatedDate: '2026-04-27T15:28:11+03:00'
-heroImage: "https://images.unsplash.com/photo-1495020689067-958852a7765e?q=80&w=1200&h=675&auto=format&fit=crop"
+title: "Odesa, Rus saldırılarının yeni hedefi oldu"
+description: "Ukrayna'ya yönelik son insansız hava aracı saldırılarında Odesa bölgesinde 10'dan fazla kişi yaralandı, konut binaları hasar gördü."
+pubDate: '2026-04-29T12:07:29+03:00'
+updatedDate: '2026-04-29T12:07:29+03:00'
+heroImage: "https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?q=80&w=1200&h=675&auto=format&fit=crop"
 isDraft: false
-tags: ["pipeline", "haber", "ukraine", "russia"]
+tags: ["pipeline", "haber", "ukrayna", "rusya"]
 author: "Asteria AI"
 category: "Siyaset"
 breaking: false
@@ -15,13 +15,13 @@ sources:
 autoGlossaryLinks: true
 ---
 
-Ukrayna'ya yönelik gece saldırılarının en ağır etkisi Odesa'da görüldü.
+Rusya'nın gece boyunca Ukrayna'ya düzenlediği insansız hava aracı saldırılarında Odesa bölgesi en ağır hasarı aldı. The Guardian'ın aktardığına göre saldırılarda 10'dan fazla kişi yaralandı ve özellikle konut binaları zarar gördü.
 
-Guardian'ın canlı takibine göre Rus dronları gece boyunca Ukrayna'nın farklı bölgelerini vurdu ve ülkede 10'dan fazla kişi yaralandı. Odesa bölgesinde özellikle konutlar, bir otel ve şehir merkezindeki bazı tesisler hasar gördü.
+Bölgedeki askeri idarenin başı Serhiy Lysak, Telegram üzerinden yaptığı açıklamada en büyük hasarın kent merkezindeki Prymorskyi ilçesinde oluştuğunu söyledi. Reuters'ın aktardığı ifadeye göre Lysak, burada konut binaları, bir otel ve şehir merkezindeki bazı tesislerin hasar gördüğünü belirtti.
 
-Yerel askeri idare başkanı Serhiy Lysak, Prymorskyi ilçesinin en büyük zararı aldığını söyledi. Reuters'ın aktardığına göre iki başka ilçede de yüksek katlı binalar, özel evler ve araçlar hedef oldu.
+Lysak, saldırıların iki başka ilçede de yüksek katlı konutları, özel evleri ve araçları vurduğunu anlattı. Yerel yetkili, gecenin "son derece zor" geçtiğini söyleyerek hasarın boyutuna dikkat çekti.
 
-Saldırıların ardından bölgede hasar tespit çalışmaları sürerken, kent yönetimi geceyi çok zor olarak niteledi. Canlı takipteki son bilgilere göre saldırının etkileri gün içinde de değerlendirilmeye devam edecek.
+Ukrayna cephesinde hava savunmasının önemi yeniden öne çıkarken, saldırıların ardından bölgede hasar tespiti ve yaralıların durumu takip ediliyor. Odesa'daki son tablo, cephe gerisindeki kentlerin de yoğun saldırı baskısı altında kaldığını gösteriyor.
 
 ## Kaynaklar
 
