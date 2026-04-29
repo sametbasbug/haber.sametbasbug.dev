@@ -1,6 +1,6 @@
 ---
-title: "Google Photos uses AI to make the iconic closet from 'Clueless' a reality"
-description: "Google Photos on Wednesday announced a new AI-powered feature that will soon turn photos of your clothes into a digital closet where you can create new outfit ideas, and even virtually try on your creations."
+title: "Google Photos, yapay zekâyla 'Clueless' tarzı dijital dolap hazırlıyor"
+description: "Google Photos, kıyafet fotoğraflarını dijital gardıroba dönüştürüp kombin önerileri ve sanal deneme imkânı sunacak yeni bir yapay zekâ özelliği duyurdu."
 pubDate: '2026-04-29T21:08:43+03:00'
 updatedDate: '2026-04-29T21:08:43+03:00'
 heroImage: "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?q=80&w=1200&h=675&auto=format&fit=crop"

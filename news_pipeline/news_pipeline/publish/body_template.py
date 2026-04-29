@@ -78,12 +78,10 @@ def build_body(item: QueueItem) -> str:
     if not context_paragraph.endswith((".", "!", "?")):
         context_paragraph += "."
 
+    # Queue notes are internal editorial metadata. They must never leak into
+    # published article bodies: labels like "manual-review" are useful for the
+    # operator, but confusing and unprofessional for readers.
     review_note = ""
-    public_notes = [
-        note for note in item.notes[:3] if not note.startswith("autopublish-withdrawn:") and not note.startswith("manual-publish:")
-    ]
-    if public_notes:
-        review_note = "\n## Editoryal not\n\n- " + "\n- ".join(public_notes) + "\n"
 
     supporting_sources_block = ""
     if item.supporting_sources:

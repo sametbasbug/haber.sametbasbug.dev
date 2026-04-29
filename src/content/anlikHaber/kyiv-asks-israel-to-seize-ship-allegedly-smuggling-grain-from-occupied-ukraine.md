@@ -23,9 +23,6 @@ Ukrayna Dışişleri Bakanı Andrii Sybiha, geminin kapalı bir limandan çıkar
 
 Kiev ile Tel Aviv arasındaki bu başlık, savaşın sadece cephede değil, limanlar ve ticaret hatları üzerinden de sürdüğünü gösteriyor. Ukrayna tarafı İsrail'den daha net bir cevap beklerken, İsrail makamlarının başvuruya vereceği yanıtın nasıl şekilleneceği izleniyor.
 
-## Editoryal not
-
-- manual-review: hassas/hukuki iddia içeren haber
 ## Kaynaklar
 
 - Ana kaynak: [Politico Europe](https://www.politico.eu/article/kyiv-wants-israel-to-arrest-cargo-ship-allegedly-smuggling-grain-from-occupied-part-of-ukraine/?utm_source=RSS_Feed&utm_medium=RSS&utm_campaign=RSS_Syndication)

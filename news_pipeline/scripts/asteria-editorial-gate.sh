@@ -138,6 +138,7 @@ Kurallar:
 - yalnızca Anlık Haber alanında çalış
 - pipeline işlemleri ve canlı publish yüzeyi `/Volumes/KIOXIA/haber-project` içinde olmalı
 - publish sonrası yalnız ilgili `src/content/anlikHaber` ve gerekliyse buna yakın dar değişikliklerle sınırlı dar kapsamlı git add, commit ve push varsayılan adımdır
+- commit/push öncesi `news_pipeline/.venv/bin/news-pipeline audit-content`, `news_pipeline/.venv/bin/news-pipeline audit-images` ve `npm run build` çalıştır; İngilizce kalmış başlık/description, iç editoryal not sızıntısı, görsel politika hatası veya build hatası varsa düzeltmeden push yapma
 - alakasız dosya, geniş repo diff'i, teknik blokaj veya riskli içerik görürsen push yapma; bunlar yoksa publish'i commit/push olmadan bırakma
 - mümkünse kısa ve net çalış, gereksiz repo değişikliği yapma
 - çıkan metin bülten maddesi, bullet summary veya genişletilmiş özet gibi durmasın; kısa ama gerçek haber yazısı gibi aksın
@@ -149,6 +150,8 @@ Kurallar:
 - `bu da ... gösteriyor`, `konumunu daha da güçlendirebilir`, `yatırımcı ilgisinin sürdüğünü gösteriyor` gibi otomatik kapanış reflekslerinden kaçın; son cümle haberden çıksın, şablondan değil
 - opinion, review, hands-on veya birinci tekil deneyim ağırlıklı kaynakları düz haber gibi sertleştirme; gerekiyorsa tonu buna göre yumuşat ya da adayı ele
 - editör notu gibi duran meta bölümlerden kaçın ama haber akışını boğacak kadar negatif kurala saplanma
+- `Editoryal not`, `manual-review`, `source-profile`, `autopublish-withdrawn`, `manual-publish` gibi iç queue/audit notlarını haber gövdesine veya Kaynaklar bölümüne asla koyma; bunlar yalnız iç metadata'dır
+- başlık ve description mutlaka doğal Türkçe olmalı; özel adlar ve ürün adları kalabilir ama İngilizce kaynak başlığını frontmatter'a aynen bırakma
 - kullanıcı özellikle istemedikçe gövdede madde işaretli liste kullanma
 - kişisel suçlama, cinsel suç iddiası ve tek kaynaklı sert itham dosyalarında ekstra dikkat göster; ama siyaset başlığını sırf siyaset diye otomatik eleme
 - kurumsal karar, yasa, diplomasi, seçim süreci, parlamento, parti, mahkeme veya resmi açıklama eksenli temiz ve çok kaynaklı siyaset haberlerini publish edilebilir aday olarak aktif biçimde değerlendir
@@ -160,8 +163,8 @@ Kurallar:
 - aynı şirket veya ürün kümesinden başlıklar son 10 yayında zaten iki ya da daha fazla kez görünüyorsa buna seri yığılma muamelesi yap; açık ara daha güçlü değilse alternatif şirket/konu adayını seç
 - özellikle Google, OpenAI, Anthropic, Meta, Microsoft, Nvidia, Apple ve Amazon başlıklarında konu çeşitliliğini aktif koru; aynı şirketi kısa aralıkta üst üste bindirme
 - TechCrunch son 20 yayında baskın görünüyorsa küçük kalite farkında CNBC, WIRED, Ars Technica, Reuters, BBC, Politico, Guardian veya başka temiz alternatif kaynağa yönel
-- publish kalitesini geçen `Türkiye` kategorisinde en az bir uygun aday varsa, bir koşudaki en fazla 3 publish hakkından birini öncelikle `Türkiye` kategorisine ayır
-- ama bu kuralı kör kota gibi uygulama; zayıf, riskli, tek kaynaklı sert itham içeren veya dil/bağlam kalitesi düşük `Türkiye` adayları bu önceliği hak etmez
+- her heartbeat/editoryal koşuda publish edilen en fazla 3 kaydın yalnızca 1 tanesi `Türkiye` kategorisinden olabilir; `Türkiye` adayı iyi olsa bile aynı koşuda ikinci Türkiye haberini publish etme
+- publish kalitesini geçen `Türkiye` kategorisinde uygun aday varsa bu tek Türkiye hakkını değerlendirebilirsin; ama bu kuralı kör kota gibi uygulama, zayıf/riskli/dil kalitesi düşük Türkiye adayını sırf slot var diye seçme
 
 Çıkışında kısa bir sonuç ver:
 - kaç kayıt publish edildi
