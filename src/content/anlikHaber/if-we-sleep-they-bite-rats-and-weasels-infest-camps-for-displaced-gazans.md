@@ -1,9 +1,9 @@
 ---
-title: "Gazze'deki yerinden edilmişlerin kamplarında sıçan ve gelincik istilası"
-description: "BBC'ye konuşan aileler, çadırların çevresindeki çöplükler ve açık kanalizasyon nedeniyle çocukların da hedef olduğu bir haşere krizi yaşandığını anlatıyor."
+title: "Gazze kamplarında sıçan ve gelincik istilası büyüyor"
+description: "BBC'ye konuşan aileler, çöplükler ve açık kanalizasyon nedeniyle çocukların da hedef olduğu bir haşere krizinden söz ediyor."
 pubDate: '2026-05-02T11:36:06+03:00'
 updatedDate: '2026-05-02T11:36:06+03:00'
-heroImage: "https://images.unsplash.com/photo-1500375592092-40eb2168fd21?q=80&w=1200&h=675&auto=format&fit=crop"
+heroImage: "https://images.pexels.com/photos/1108099/pexels-photo-1108099.jpeg?auto=compress&cs=tinysrgb&w=1200&h=675"
 isDraft: false
 tags: ["pipeline", "haber", "gaza", "dunya"]
 author: "Asteria AI"
@@ -15,15 +15,13 @@ sources:
 autoGlossaryLinks: true
 ---
 
-Gazze Şeridi'nde yerinden edilmiş ailelerin kaldığı kamplar, şimdi de sıçanlar, gelincikler ve diğer haşerelerle mücadele ediyor. BBC'nin aktardığına göre savaşın yıktığı bölgede gündelik yaşam, giderek bir halk sağlığı krizine dönüşüyor.
+Gazze Şeridi'nde yerinden edilmiş ailelerin kaldığı kamplar, sıçanlar, gelincikler ve diğer haşerelerle mücadele ediyor. BBC'nin aktardığına göre savaşın yıktığı bölgede bu sorun artık doğrudan bir halk sağlığı krizine dönüşmüş durumda.
 
-Haberde, Gazze Şehri'nde bir çöp döküm alanının hemen yanında yaşayan Rizq Abu Laila'nın dört küçük çocuğuyla birlikte bu tehdidi her gün yaşadığı anlatılıyor. Kızının gece bir gelincik tarafından ısırıldığını söyleyen Samah al-Daabla da kamplardaki tehlikenin çocuklara kadar uzandığını aktarıyor.
+BBC'ye konuşan Samah al-Daabla, dört yaşındaki kızının gece bir gelincik tarafından ısırıldığını anlattı. Gazze Şehri'nde çöp döküm alanının hemen yanında yaşayan Rizq Abu Laila ise dört çocuğuyla birlikte bu tehdidi her gün yaşadığını söylüyor.
 
-Çadırlara yakın alanlarda açık kanalizasyon, biriken çöp yığınları ve sıcak hava, kemirgenlerin hızla çoğalmasına zemin hazırlıyor. BBC'ye konuşan yardım çalışanları, daha fazla kamyon, boru ve atık yönetimi ekipmanı olmadan sorunun kontrol altına alınamayacağını söylüyor.
+Çadırlara yakın açık kanalizasyon, biriken çöp yığınları ve sıcak hava, kemirgenlerin hızla çoğalmasına zemin hazırlıyor. Yardım çalışanları, daha fazla atık toplama ekipmanı ve altyapı onarımı olmadan sorunun büyümeye devam edeceğini belirtiyor.
 
-İsrail'in geçişleri denetleyen askeri kurumu Cogat ise BM ve uluslararası kuruluşlarla sanitasyon ihtiyaçları için çalıştığını, çöp kaldırma ve ekipman girişine koordinasyon sağladığını belirtiyor. Kuruma göre son dönemde yaklaşık 1.000 sıçan kapanı ve 10 ton kadar pestisit Gazze'ye sokuldu.
-
-DSÖ ise bu yıl parazit kaynaklı hastalık ve enfestasyon şikâyetlerinin 111.500 vakaya ulaştığını bildiriyor. Savaş sürerken altyapı onarımı ve atık yönetimi yapılmadığı için kamplardaki kriz kısa vadede hafifleyecek gibi görünmüyor.
+İsrail'in geçişleri denetleyen askeri kurumu Cogat ise BM ve uluslararası kuruluşlarla sanitasyon ihtiyaçları için çalıştığını, son dönemde yaklaşık 1.000 sıçan kapanı ve 10 ton pestisitin Gazze'ye girişine izin verildiğini söylüyor. DSÖ verilerine göre yıl içinde parazit kaynaklı hastalık ve enfestasyon vakaları 111.500'e ulaştı.
 
 ## Kaynaklar
 
