@@ -1,30 +1,28 @@
 ---
-title: "Pentagon, Almanya'daki 5 bin ABD askerini çekiyor"
-description: "Washington, Avrupa'daki konuşlanmayı yeniden değerlendirirken çekilmenin 6 ila 12 ay içinde tamamlanacağını söylüyor."
-pubDate: '2026-05-02T10:22:11+03:00'
-updatedDate: '2026-05-02T10:22:11+03:00'
-heroImage: "https://images.unsplash.com/photo-1489515217757-5fd1be406fef?q=80&w=1200&h=675&auto=format&fit=crop"
+title: "Pentagon, Almanya'dan 5 bin askeri çekmeye hazırlanıyor"
+description: "Plan gerçekleşirse ABD'nin Almanya'daki mevcudu yaklaşık 33 bine düşecek; karar Trump ile Merz arasındaki İran geriliminin gölgesinde geldi."
+pubDate: '2026-05-02T11:18:11+03:00'
+updatedDate: '2026-05-02T11:18:11+03:00'
+heroImage: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=1200&h=675&auto=format&fit=crop"
 isDraft: false
-tags: ["pipeline", "haber", "abd", "almanya", "siyaset"]
+tags: ["pipeline", "haber", "trump", "almanya", "siyaset"]
 author: "Asteria AI"
 category: "Siyaset"
 breaking: false
 sources:
   - name: "Politico Europe"
-    url: "https://www.politico.eu/article/pentagon-orders-withdrawal-of-5000-us-troops-from-germany/?utm_source=RSS_Feed&utm_medium=RSS&utm_campaign=RSS_Syndication"
+    url: "https://www.politico.com/news/2026/05/01/hegseth-withdrawal-us-troops-germany-00903551?utm_source=RSS_Feed&utm_medium=RSS&utm_campaign=RSS_Syndication"
 autoGlossaryLinks: true
 ---
 
-Pentagon, Almanya'da konuşlu yaklaşık 5 bin Amerikan askerini geri çekme kararı aldı. Politico Europe'un aktardığına göre adım, ABD'nin Avrupa'daki askeri varlığını yeniden tarttığı bir dönemde geldi.
+ABD Savunma Bakanlığı'nın Almanya'daki 5 bin askeri çekmeye hazırlandığı bildirildi. Reuters ve Politico Europe'un aktardığı çerçeveye göre bu adım, ABD'nin ülkedeki asker sayısını yaklaşık 33 bine indirecek.
 
-Savunma Bakanlığı sözcüsü Sean Parnell, çekilmenin Savunma Bakanı Pete Hegseth'in Avrupa'daki konuşlanmayı gözden geçirmesinin ardından verildiğini söyledi. Parnell, sürecin "sahadaki koşullar ve tiyatro ihtiyaçları" doğrultusunda yürütüldüğünü belirtti.
+Karar, Donald Trump ile Almanya Başbakanı Friedrich Merz arasında İran savaşı üzerinden büyüyen gerilimin ortasında gündeme geldi. Merz'in Trump'ı İran konusunda sert şekilde eleştirmesi, Washington-Berlin hattındaki tansiyonu son günlerde daha da yükseltmişti.
 
-Habere göre Almanya'da yaklaşık 38 bin Amerikan askeri ve personeli bulunuyordu; çekilmenin ardından bu sayı yaklaşık 33 bine inecek. Pentagon, işlemin önümüzdeki 6 ila 12 ay içinde tamamlanmasını bekliyor.
+Trump cephesi Avrupa müttefiklerinin savaşa yeterince destek vermediğini savunurken, Pentagon'un olası bir yeniden konuşlanma planı da masaya gelmiş oldu. Haberde, çekilmenin hemen değil, daha geniş bir askeri ve siyasi sürecin parçası olarak değerlendirildiği anlaşılıyor.
 
-Karar, Donald Trump'ın İran savaşı nedeniyle Almanya lideriyle gerilim yaşamasının ardından geldi. Trump, son aylarda NATO ülkelerinin yeterince katkı vermediğini savunuyor; buna karşın bazı Cumhuriyetçiler de çekilmenin Avrupa'da caydırıcılığı zayıflatacağından endişe ediyor.
-
-Emekli ya da eski bazı güvenlik yetkilileri, bunun Rusya'ya fayda sağlayabileceğini ve ABD'nin Akdeniz'e güç yansıtma kapasitesini azaltabileceğini söylüyor. Karar, Capitol Hill'de yeni bir itiraz dalgası doğurmaya aday.
+Almanya, NATO içindeki en büyük ABD askeri varlıklarından birine ev sahipliği yapıyor. Bu nedenle 5 bin kişilik bir azaltma, sadece sembolik değil, fiili denge açısından da dikkat çekici bir değişim anlamına geliyor.
 
 ## Kaynaklar
 
-- Ana kaynak: [Politico Europe](https://www.politico.eu/article/pentagon-orders-withdrawal-of-5000-us-troops-from-germany/?utm_source=RSS_Feed&utm_medium=RSS&utm_campaign=RSS_Syndication)
+- Ana kaynak: [Politico Europe](https://www.politico.com/news/2026/05/01/hegseth-withdrawal-us-troops-germany-00903551?utm_source=RSS_Feed&utm_medium=RSS&utm_campaign=RSS_Syndication)
