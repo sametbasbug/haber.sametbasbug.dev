@@ -1,11 +1,11 @@
 ---
-title: "Pentagon Almanya'daki 5 bin ABD askerini geri çekiyor"
-description: "Karar, Trump'ın İran savaşı üzerinden Avrupa'ya verdiği baskının ardından geldi; Almanya'da yaklaşık 33 bin ABD askeri kalacak."
-pubDate: '2026-05-02T09:08:31+03:00'
-updatedDate: '2026-05-02T09:08:31+03:00'
-heroImage: "https://images.unsplash.com/photo-1495020689067-958852a7765e?q=80&w=1200&h=675&auto=format&fit=crop"
+title: "Pentagon, Almanya'daki 5 bin ABD askerini çekiyor"
+description: "Washington, Avrupa'daki konuşlanmayı yeniden değerlendirirken çekilmenin 6 ila 12 ay içinde tamamlanacağını söylüyor."
+pubDate: '2026-05-02T10:22:11+03:00'
+updatedDate: '2026-05-02T10:22:11+03:00'
+heroImage: "https://images.unsplash.com/photo-1489515217757-5fd1be406fef?q=80&w=1200&h=675&auto=format&fit=crop"
 isDraft: false
-tags: ["pipeline", "haber", "almanya", "abd", "nato", "trump"]
+tags: ["pipeline", "haber", "abd", "almanya", "siyaset"]
 author: "Asteria AI"
 category: "Siyaset"
 breaking: false
@@ -15,15 +15,15 @@ sources:
 autoGlossaryLinks: true
 ---
 
-Pentagon, Almanya'daki ABD üslerinden yaklaşık 5 bin askeri çekecek. Politico Europe'un aktardığına göre karar, Donald Trump'ın Almanya lideriyle İran savaşı nedeniyle yaşadığı gerilimin ardından geldi.
+Pentagon, Almanya'da konuşlu yaklaşık 5 bin Amerikan askerini geri çekme kararı aldı. Politico Europe'un aktardığına göre adım, ABD'nin Avrupa'daki askeri varlığını yeniden tarttığı bir dönemde geldi.
 
-Savunma Bakanlığı Sözcüsü Sean Parnell, çekilmenin Pete Hegseth'in Avrupa'daki konuşlanmayı gözden geçirmesinden sonra alındığını ve "saha koşulları" ile "theater requirements" doğrultusunda yapıldığını söyledi. Parnell, sürecin 6 ila 12 ay içinde tamamlanmasını beklediklerini aktardı.
+Savunma Bakanlığı sözcüsü Sean Parnell, çekilmenin Savunma Bakanı Pete Hegseth'in Avrupa'daki konuşlanmayı gözden geçirmesinin ardından verildiğini söyledi. Parnell, sürecin "sahadaki koşullar ve tiyatro ihtiyaçları" doğrultusunda yürütüldüğünü belirtti.
 
-Bu adım, Joe Biden döneminde Rusya'nın Ukrayna'yı işgalinden sonra artırılan yığınağın kısmi geri çekilmesi anlamına geliyor. Buna rağmen Almanya'da hâlâ yaklaşık 33 bin ABD askeri kalacak.
+Habere göre Almanya'da yaklaşık 38 bin Amerikan askeri ve personeli bulunuyordu; çekilmenin ardından bu sayı yaklaşık 33 bine inecek. Pentagon, işlemin önümüzdeki 6 ila 12 ay içinde tamamlanmasını bekliyor.
 
-Almanya, ABD Avrupa Komutanlığı ve Afrika Komutanlığı'na ev sahipliği yapıyor; ülkedeki toplam Amerikan asker sayısı 38 bin civarında. Trump ise son aylarda NATO ülkelerinin İran savaşına yeterli destek vermediğini savunarak Avrupa'dan güç çekme tehdidini yineledi.
+Karar, Donald Trump'ın İran savaşı nedeniyle Almanya lideriyle gerilim yaşamasının ardından geldi. Trump, son aylarda NATO ülkelerinin yeterince katkı vermediğini savunuyor; buna karşın bazı Cumhuriyetçiler de çekilmenin Avrupa'da caydırıcılığı zayıflatacağından endişe ediyor.
 
-Karara bazı Cumhuriyetçiler de mesafeli yaklaştı. Eski ulusal güvenlik danışmanı Brad Bowman, bu tür bir çekilmenin ABD'nin caydırıcılığını zayıflatabileceğini söyledi.
+Emekli ya da eski bazı güvenlik yetkilileri, bunun Rusya'ya fayda sağlayabileceğini ve ABD'nin Akdeniz'e güç yansıtma kapasitesini azaltabileceğini söylüyor. Karar, Capitol Hill'de yeni bir itiraz dalgası doğurmaya aday.
 
 ## Kaynaklar
 
