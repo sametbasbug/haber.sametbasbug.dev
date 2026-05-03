@@ -5,11 +5,64 @@ ROOT="/Volumes/KIOXIA/haber-project"
 BIN="$ROOT/news_pipeline/.venv/bin/news-pipeline"
 RAW_DIR="$ROOT/news_pipeline/data/raw"
 STALE_SECONDS="${STALE_RAW_SECONDS:-10800}"
+STATE_DIR="$ROOT/news_pipeline/data/state"
+STATE_FILE="$STATE_DIR/heartbeat-cycle.json"
+MIN_INTERVAL_SECONDS="${HEARTBEAT_CYCLE_MIN_INTERVAL_SECONDS:-3300}"
 cd "$ROOT"
 
 if [ ! -x "$BIN" ]; then
   echo "heartbeat-cycle: missing executable $BIN" >&2
   exit 1
+fi
+
+mkdir -p "$STATE_DIR"
+
+if [ "${FORCE_HEARTBEAT_CYCLE:-0}" != "1" ]; then
+  if ! python3 - "$STATE_FILE" "$MIN_INTERVAL_SECONDS" <<'PYGUARD'
+from __future__ import annotations
+
+import json
+import sys
+import time
+from pathlib import Path
+
+state_path = Path(sys.argv[1])
+min_interval = int(sys.argv[2])
+now = int(time.time())
+
+try:
+    state = json.loads(state_path.read_text(encoding="utf-8"))
+except Exception:
+    state = {}
+
+last = int(state.get("last_started_at") or state.get("last_completed_at") or 0)
+age = now - last if last else None
+if last and age is not None and age < min_interval:
+    print("--- HEARTBEAT GUARD ---")
+    print(f"recent_cycle_age_seconds={age}")
+    print(f"min_interval_seconds={min_interval}")
+    print("guard_result=skip_recent_cycle")
+    print("instruction=Asteria: this wake was likely caused by an exec-completion event from the previous heartbeat. Do not publish; reply HEARTBEAT_OK.")
+    sys.exit(1)
+
+state["last_started_at"] = now
+state_path.write_text(json.dumps(state, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+PYGUARD
+  then
+    exit 0
+  fi
+else
+  python3 - "$STATE_FILE" <<'PYFORCE'
+import json, sys, time
+from pathlib import Path
+path = Path(sys.argv[1])
+try:
+    state = json.loads(path.read_text(encoding="utf-8"))
+except Exception:
+    state = {}
+state["last_started_at"] = int(time.time())
+path.write_text(json.dumps(state, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+PYFORCE
 fi
 
 "$BIN" collect >/tmp/news-pipeline-collect.log 2>&1 || cat /tmp/news-pipeline-collect.log
@@ -69,3 +122,15 @@ if [ "${RUN_ASTERIA_GATE:-0}" = "1" ]; then
 else
   echo "skipped by default to avoid duplicate Asteria turns; set RUN_ASTERIA_GATE=1 to force the extra gate run"
 fi
+
+python3 - "$STATE_FILE" <<'PYDONE'
+import json, sys, time
+from pathlib import Path
+path = Path(sys.argv[1])
+try:
+    state = json.loads(path.read_text(encoding="utf-8"))
+except Exception:
+    state = {}
+state["last_completed_at"] = int(time.time())
+path.write_text(json.dumps(state, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+PYDONE
