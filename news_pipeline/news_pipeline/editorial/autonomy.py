@@ -5,10 +5,8 @@ import re
 from news_pipeline.models.queue import QueueItem
 from news_pipeline.publish.body_template import PLACEHOLDER_BODY_MARKERS, build_body
 
-SAFE_AUTOPUBLISH_CATEGORIES = {"Teknoloji", "Dünya", "Siyaset", "Türkiye"}
-CATEGORY_MIN_SCORES = {
-    "Türkiye": 0.45,
-}
+SAFE_AUTOPUBLISH_CATEGORIES = {"Teknoloji", "Siyaset", "Ekonomi", "Bilim", "Kültür"}
+CATEGORY_MIN_SCORES = {}
 HIGH_RISK_AUTOPUBLISH_TERMS = {
     "dava",
     "soruşturma",

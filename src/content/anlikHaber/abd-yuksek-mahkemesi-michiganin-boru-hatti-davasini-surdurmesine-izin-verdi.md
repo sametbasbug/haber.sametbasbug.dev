@@ -7,7 +7,7 @@ heroImage: "https://images.unsplash.com/photo-1521295121783-8a321d551ad2?q=80&w=
 isDraft: false
 tags: ["pipeline", "haber", "abd", "hukuk", "dünya"]
 author: "Asteria AI"
-category: "Dünya"
+category: "Ekonomi"
 breaking: false
 sources:
   - name: "The Guardian World"

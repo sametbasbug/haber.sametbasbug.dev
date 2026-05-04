@@ -22,20 +22,20 @@ DEFAULT_HERO_IMAGES = {
         "https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?q=80&w=1200&h=675&auto=format&fit=crop",
         "https://images.unsplash.com/photo-1554224155-6726b3ff858f?q=80&w=1200&h=675&auto=format&fit=crop",
     ],
-    "Dünya": [
-        "https://images.unsplash.com/photo-1521295121783-8a321d551ad2?q=80&w=1200&h=675&auto=format&fit=crop",
-        "https://images.unsplash.com/photo-1467269204594-9661b134dd2b?q=80&w=1200&h=675&auto=format&fit=crop",
-        "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?q=80&w=1200&h=675&auto=format&fit=crop",
+    "Bilim": [
+        "https://images.unsplash.com/photo-1532094349884-543bc11b234d?q=80&w=1200&h=675&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1446776877081-d282a0f896e2?q=80&w=1200&h=675&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1581093588401-fbb62a02f120?q=80&w=1200&h=675&auto=format&fit=crop",
+    ],
+    "Kültür": [
+        "https://images.unsplash.com/photo-1499364615650-ec38552f4f34?q=80&w=1200&h=675&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1518998053901-5348d3961a04?q=80&w=1200&h=675&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?q=80&w=1200&h=675&auto=format&fit=crop",
     ],
     "Siyaset": [
         "https://images.unsplash.com/photo-1495020689067-958852a7765e?q=80&w=1200&h=675&auto=format&fit=crop",
         "https://images.unsplash.com/photo-1575320181282-9afab399332c?q=80&w=1200&h=675&auto=format&fit=crop",
         "https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?q=80&w=1200&h=675&auto=format&fit=crop",
-    ],
-    "Türkiye": [
-        "https://images.unsplash.com/photo-1541432901042-2d8bd64b4a9b?q=80&w=1200&h=675&auto=format&fit=crop",
-        "https://images.unsplash.com/photo-1527838832700-5059252407fa?q=80&w=1200&h=675&auto=format&fit=crop",
-        "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?q=80&w=1200&h=675&auto=format&fit=crop",
     ],
 }
 FALLBACK_CATEGORY = "Teknoloji"
@@ -59,20 +59,20 @@ CATEGORY_QUERIES = {
         "politics diplomacy official building flags",
         "press briefing government office",
     ],
-    "Dünya": [
-        "international diplomacy world map newsroom",
-        "global affairs diplomacy official meeting room",
-        "border checkpoint international relations",
+    "Bilim": [
+        "science laboratory research equipment",
+        "space mission satellite observatory",
+        "climate science research landscape",
+    ],
+    "Kültür": [
+        "culture arts museum gallery",
+        "cinema theater audience culture",
+        "music performance cultural event",
     ],
     "Ekonomi": [
         "financial market data charts business desk",
         "economy finance trading screen analytics",
         "business documents finance office charts",
-    ],
-    "Türkiye": [
-        "ankara government turkey skyline",
-        "istanbul city skyline turkey",
-        "turkey public institution building",
     ],
 }
 EVENT_PENALTY_TERMS = {
@@ -200,7 +200,7 @@ def _build_queries(item: QueueItem) -> list[str]:
 
     if category == "Teknoloji":
         queries.extend(_queries_from_rules(text, TECH_QUERY_RULES))
-    elif category in {"Siyaset", "Dünya", "Türkiye"}:
+    elif category in {"Siyaset", "Bilim", "Kültür"}:
         queries.extend(_queries_from_rules(text, POLITICS_QUERY_RULES))
     elif category == "Ekonomi":
         queries.extend(_queries_from_rules(text, ECONOMY_QUERY_RULES))
@@ -213,7 +213,7 @@ def _build_queries(item: QueueItem) -> list[str]:
         queries.append(" ".join(title_keywords[:3] + ["technology", "software"]))
     elif category == "Ekonomi" and title_keywords:
         queries.append(" ".join(title_keywords[:3] + ["business", "finance"]))
-    elif category in {"Siyaset", "Dünya", "Türkiye"} and title_keywords:
+    elif category in {"Siyaset", "Bilim", "Kültür"} and title_keywords:
         queries.append(" ".join(title_keywords[:3] + ["government", "diplomacy"]))
 
     queries.extend(CATEGORY_QUERIES.get(category, ["news editorial illustration abstract"]))
@@ -363,7 +363,7 @@ def _score_photo(photo: dict[str, Any], query: str, item: QueueItem, recent_imag
         for term in ["finance", "chart", "market", "business", "analytics", "trading"]:
             if term in photo_text:
                 score += 1.8
-    if item.draft_category in {"Siyaset", "Dünya", "Türkiye"}:
+    if item.draft_category in {"Siyaset", "Bilim", "Kültür"}:
         for term in ["government", "parliament", "flag", "building", "diplomacy", "city"]:
             if term in photo_text:
                 score += 1.6

@@ -2,7 +2,7 @@ import { getCollection, type CollectionEntry } from 'astro:content';
 import { getNewsHomeHref, getNewsPageHref as getNewsSitePageHref } from './newsSite';
 
 export const ANLIK_HABER_PAGE_SIZE = 20;
-export const NEWS_CATEGORIES = ['Siyaset', 'Ekonomi', 'Türkiye', 'Dünya', 'Teknoloji'] as const;
+export const NEWS_CATEGORIES = ['Siyaset', 'Ekonomi', 'Teknoloji', 'Bilim', 'Kültür'] as const;
 
 export type NewsCategory = (typeof NEWS_CATEGORIES)[number];
 export type AnlikHaberEntry = CollectionEntry<'anlikHaber'>;

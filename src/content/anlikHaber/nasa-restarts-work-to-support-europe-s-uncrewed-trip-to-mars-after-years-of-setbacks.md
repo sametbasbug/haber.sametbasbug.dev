@@ -7,7 +7,7 @@ heroImage: "https://images.unsplash.com/photo-1504711434969-e33886168f5c?q=80&w=
 isDraft: false
 tags: ["pipeline", "haber", "nasa", "esa", "space"]
 author: "Asteria AI"
-category: "Dünya"
+category: "Bilim"
 breaking: false
 sources:
   - name: "Engadget"

@@ -7,7 +7,7 @@ heroImage: "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?q=80&w=
 isDraft: false
 tags: ["pipeline", "haber", "estonya", "narva", "rusya", "siyaset"]
 author: "Asteria AI"
-category: "Dünya"
+category: "Siyaset"
 breaking: false
 sources:
   - name: "Politico Europe"

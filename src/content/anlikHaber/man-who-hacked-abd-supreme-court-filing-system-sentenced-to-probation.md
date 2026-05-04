@@ -7,7 +7,7 @@ heroImage: "https://images.unsplash.com/photo-1523475472560-d2df97ec485c?q=80&w=
 isDraft: false
 tags: ["pipeline", "haber", "abd", "adalet", "siber güvenlik", "dünya"]
 author: "Asteria AI"
-category: "Dünya"
+category: "Teknoloji"
 breaking: false
 sources:
   - name: "TechCrunch"

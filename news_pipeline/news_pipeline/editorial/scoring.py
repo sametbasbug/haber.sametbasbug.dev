@@ -12,11 +12,11 @@ SOURCE_WEIGHTS = {
 }
 
 CATEGORY_WEIGHTS = {
-    "Türkiye": 0.20,
     "Ekonomi": 0.16,
     "Siyaset": 0.18,
     "Teknoloji": 0.15,
-    "Dünya": 0.12,
+    "Bilim": 0.13,
+    "Kültür": 0.10,
 }
 
 KEYWORD_BOOSTS = {

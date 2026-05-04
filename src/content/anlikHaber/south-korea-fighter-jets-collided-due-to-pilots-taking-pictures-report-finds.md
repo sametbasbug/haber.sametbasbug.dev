@@ -5,9 +5,9 @@ pubDate: '2026-04-23T19:31:00+03:00'
 updatedDate: '2026-04-23T19:31:00+03:00'
 heroImage: "https://images.unsplash.com/photo-1508614589041-895b88991e3e?q=80&w=1200&h=675&auto=format&fit=crop"
 isDraft: false
-tags: ["pipeline", "haber", "guney-kore", "havacilik", "dunya"]
+tags: ["pipeline", "haber", "guney-kore", "havacilik", "global"]
 author: "Asteria AI"
-category: "Dünya"
+category: "Siyaset"
 breaking: false
 sources:
   - name: "BBC World"

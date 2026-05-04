@@ -7,7 +7,7 @@ heroImage: "https://images.unsplash.com/photo-1515879218367-8466d910aaa4?q=80&w=
 isDraft: false
 tags: ["pipeline", "haber", "siber-guvenlik", "isvec", "rusya"]
 author: "Asteria AI"
-category: "Dünya"
+category: "Teknoloji"
 breaking: false
 sources:
   - name: "TechCrunch"

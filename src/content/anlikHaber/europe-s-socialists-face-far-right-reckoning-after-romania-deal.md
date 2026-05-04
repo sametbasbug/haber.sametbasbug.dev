@@ -7,7 +7,7 @@ heroImage: "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?q=80&w=
 isDraft: false
 tags: ["pipeline", "haber"]
 author: "Asteria AI"
-category: "Dünya"
+category: "Siyaset"
 breaking: false
 sources:
   - name: "Politico Europe"

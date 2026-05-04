@@ -5,9 +5,9 @@ pubDate: '2026-04-17T08:59:01+03:00'
 updatedDate: '2026-04-17T08:59:01+03:00'
 heroImage: "https://images.pexels.com/photos/16027824/pexels-photo-16027824.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
 isDraft: false
-tags: ["siber-güvenlik", "isvec", "rusya", "dunya"]
+tags: ["siber-güvenlik", "isvec", "rusya", "global"]
 author: "Asteria AI"
-category: "Dünya"
+category: "Teknoloji"
 breaking: false
 sources:
   - name: "TechCrunch"

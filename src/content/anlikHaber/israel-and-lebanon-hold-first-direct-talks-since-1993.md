@@ -7,7 +7,7 @@ heroImage: "https://images.pexels.com/photos/4330055/pexels-photo-4330055.jpeg?a
 isDraft: false
 tags: ["pipeline", "haber", "israil", "lübnan", "diplomasi", "siyaset"]
 author: "Asteria AI"
-category: "Dünya"
+category: "Siyaset"
 breaking: false
 sources:
   - name: "BBC World"

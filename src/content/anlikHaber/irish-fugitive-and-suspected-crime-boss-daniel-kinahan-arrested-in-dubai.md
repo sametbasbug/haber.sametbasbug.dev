@@ -7,7 +7,7 @@ heroImage: "https://images.unsplash.com/photo-1527866959252-deab85ef7d1b?q=80&w=
 isDraft: false
 tags: ["pipeline", "haber", "dünya", "adalet", "i̇rlanda", "dubai"]
 author: "Asteria AI"
-category: "Dünya"
+category: "Siyaset"
 breaking: false
 sources:
   - name: "BBC World"

@@ -7,7 +7,7 @@ heroImage: "https://images.pexels.com/photos/16145781/pexels-photo-16145781.jpeg
 isDraft: false
 tags: ["pipeline", "haber", "ab", "savunma"]
 author: "Asteria AI"
-category: "Dünya"
+category: "Siyaset"
 breaking: false
 sources:
   - name: "Politico Europe"

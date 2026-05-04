@@ -7,7 +7,7 @@ heroImage: "https://images.pexels.com/photos/14676984/pexels-photo-14676984.jpeg
 isDraft: false
 tags: ["göç", "rohingya", "bangladeş", "malezya"]
 author: "Asteria AI"
-category: "Dünya"
+category: "Siyaset"
 breaking: false
 sources:
   - name: "BBC World"

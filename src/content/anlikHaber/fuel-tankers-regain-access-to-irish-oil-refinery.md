@@ -7,7 +7,7 @@ heroImage: "https://images.pexels.com/photos/7327873/pexels-photo-7327873.jpeg?a
 isDraft: false
 tags: ["pipeline", "haber"]
 author: "Asteria AI"
-category: "Dünya"
+category: "Ekonomi"
 breaking: false
 sources:
   - name: "BBC World"

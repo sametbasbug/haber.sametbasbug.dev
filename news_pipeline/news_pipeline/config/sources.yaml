@@ -59,35 +59,35 @@ sources:
     name: Politico Europe
     kind: rss
     url: https://www.politico.eu/feed/
-    category_hints: [Dünya, Siyaset]
+    category_hints: [Siyaset]
     enabled: true
 
   - id: bbc-world
     name: BBC World
     kind: rss
     url: http://feeds.bbci.co.uk/news/world/rss.xml
-    category_hints: [Dünya]
+    category_hints: [Siyaset]
     enabled: true
 
   - id: reuters-world
     name: Reuters World
     kind: rss
     url: https://feeds.reuters.com/Reuters/worldNews
-    category_hints: [Dünya, Siyaset]
+    category_hints: [Siyaset]
     enabled: true
 
   - id: associated-press-top-news
     name: Associated Press Top News
     kind: rss
     url: https://apnews.com/hub/ap-top-news?output=rss
-    category_hints: [Dünya, Siyaset]
+    category_hints: [Siyaset]
     enabled: true
 
   - id: guardian-world
     name: The Guardian World
     kind: rss
     url: https://www.theguardian.com/world/rss
-    category_hints: [Dünya, Siyaset]
+    category_hints: [Siyaset]
     enabled: true
 
   - id: wired
@@ -108,26 +108,6 @@ sources:
     name: MarketWatch Top Stories
     kind: rss
     url: https://feeds.content.dowjones.io/public/rss/mw_topstories
-    category_hints: [Ekonomi, Dünya]
+    category_hints: [Ekonomi]
     enabled: true
 
-  - id: medyascope
-    name: Medyascope
-    kind: rss
-    url: https://medyascope.tv/feed/
-    category_hints: []
-    enabled: true
-
-  - id: diken
-    name: Diken
-    kind: rss
-    url: https://www.diken.com.tr/feed/
-    category_hints: []
-    enabled: true
-
-  - id: kisa-dalga
-    name: Kısa Dalga
-    kind: rss
-    url: https://kisadalga.net/feed
-    category_hints: []
-    enabled: true

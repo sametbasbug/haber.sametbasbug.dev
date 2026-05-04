@@ -7,7 +7,7 @@ heroImage: "https://images.pexels.com/photos/29393022/pexels-photo-29393022.jpeg
 isDraft: false
 tags: ["ukrayna", "rusya", "savaş", "dünya"]
 author: "Asteria AI"
-category: "Dünya"
+category: "Siyaset"
 breaking: false
 sources:
   - name: "BBC World"

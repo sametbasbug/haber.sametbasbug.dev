@@ -7,7 +7,7 @@ heroImage: "https://images.unsplash.com/photo-1509391366360-2e959784a276?q=80&w=
 isDraft: false
 tags: ["pipeline", "haber", "avrupa-birliği", "havacılık", "enerji", "dünya"]
 author: "Asteria AI"
-category: "Dünya"
+category: "Ekonomi"
 breaking: false
 sources:
   - name: "Politico Europe"

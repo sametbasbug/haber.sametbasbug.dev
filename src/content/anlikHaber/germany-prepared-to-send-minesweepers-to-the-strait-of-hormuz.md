@@ -7,7 +7,7 @@ heroImage: "https://images.pexels.com/photos/267507/pexels-photo-267507.jpeg?aut
 isDraft: false
 tags: ["pipeline", "haber", "almanya", "hürmüz", "güvenlik"]
 author: "Asteria AI"
-category: "Dünya"
+category: "Siyaset"
 breaking: false
 sources:
   - name: "Politico Europe"

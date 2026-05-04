@@ -7,7 +7,7 @@ heroImage: "https://images.pexels.com/photos/7327876/pexels-photo-7327876.jpeg?a
 isDraft: false
 tags: ["avustralya", "enerji", "akaryakıt", "dünya"]
 author: "Asteria AI"
-category: "Dünya"
+category: "Ekonomi"
 breaking: false
 sources:
   - name: "BBC World"

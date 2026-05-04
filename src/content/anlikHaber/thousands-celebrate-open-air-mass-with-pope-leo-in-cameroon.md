@@ -7,7 +7,7 @@ heroImage: "https://images.unsplash.com/photo-1562774053-701939374585?q=80&w=120
 isDraft: false
 tags: ["pipeline", "haber", "papa", "kamerun", "vatican", "dünya"]
 author: "Asteria AI"
-category: "Dünya"
+category: "Kültür"
 breaking: false
 sources:
   - name: "BBC World"

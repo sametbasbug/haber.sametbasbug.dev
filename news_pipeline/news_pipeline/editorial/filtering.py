@@ -44,30 +44,12 @@ LOW_SIGNAL_TERMS = {
     "funny",
 }
 
-SOURCE_BLOCKLIST_TERMS = {
-    "kisa-dalga": {
-        "bir dakikada bugün ne oldu",
-        "bir dakikada bugun ne oldu",
-    },
-    "diken": {
-        "madde değil, değersizlik",
-        "madde degil, degersizlik",
-    },
-}
-
 SPORT_TITLE_RE = re.compile(
     r"\b(chelsea|arsenal|liverpool|manchester city|manchester united|tottenham|barcelona|real madrid|psg|juventus|bayern|galatasaray|fenerbahce|fenerbahçe|besiktas|beşiktaş|trabzonspor)\b"
 )
 SPORT_SIGNAL_RE = re.compile(
     r"\b(kovdu|transfer|teknik direkt[oö]r|ma[çc]ı|maci|gol|puan|lig|kupas[ıi]|şampiyon|sampiyon|kadro)\b"
 )
-OPINION_TITLE_RE = re.compile(
-    r"^(agora|d[uü]nya alem|9 soruda|[çc]er[çc]eve)\b"
-)
-FEATURE_TITLE_RE = re.compile(
-    r"\b(portresi|kimdir|neden .*yasaklaniyor|neden .*yasaklaniyor)\b"
-)
-
 MAX_SOURCE_AGE_HOURS = 72
 MAX_FUTURE_SKEW_HOURS = 6
 
@@ -88,18 +70,8 @@ def should_keep_article(article: NormalizedArticle) -> FilterDecision:
         if term in joined:
             return FilterDecision(False, f"blocked by term: {term}")
 
-    for term in SOURCE_BLOCKLIST_TERMS.get(article.source_id, set()):
-        if term in title:
-            return FilterDecision(False, f"blocked by source term: {term}")
-
     if SPORT_TITLE_RE.search(title) and SPORT_SIGNAL_RE.search(title):
         return FilterDecision(False, "sports item outside current editorial line")
-
-    if article.source_id in {"diken", "medyascope"} and OPINION_TITLE_RE.search(title):
-        return FilterDecision(False, "opinion/format item outside current editorial line")
-
-    if article.source_id in {"medyascope", "diken"} and FEATURE_TITLE_RE.search(title):
-        return FilterDecision(False, "feature-style item outside current editorial line")
 
     low_signal_hits = sum(1 for term in LOW_SIGNAL_TERMS if term in joined)
     if low_signal_hits >= 2:

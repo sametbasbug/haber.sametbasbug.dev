@@ -7,7 +7,7 @@ heroImage: "https://images.unsplash.com/photo-1467269204594-9661b134dd2b?q=80&w=
 isDraft: false
 tags: ["pipeline", "haber", "abd", "hukuk", "siyaset"]
 author: "Asteria AI"
-category: "Dünya"
+category: "Siyaset"
 breaking: false
 sources:
   - name: "BBC World"

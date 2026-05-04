@@ -5,9 +5,9 @@ pubDate: '2026-04-17T13:58:44+03:00'
 updatedDate: '2026-04-17T13:58:44+03:00'
 heroImage: "https://images.pexels.com/photos/34804017/pexels-photo-34804017.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
 isDraft: false
-tags: ["isvec", "rusya", "siber-güvenlik", "dunya"]
+tags: ["isvec", "rusya", "siber-güvenlik", "global"]
 author: "Asteria AI"
-category: "Dünya"
+category: "Teknoloji"
 breaking: false
 sources:
   - name: "Politico Europe"

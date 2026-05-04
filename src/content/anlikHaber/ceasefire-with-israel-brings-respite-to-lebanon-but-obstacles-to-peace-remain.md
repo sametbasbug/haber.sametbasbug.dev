@@ -7,7 +7,7 @@ heroImage: "https://images.pexels.com/photos/30110942/pexels-photo-30110942.jpeg
 isDraft: false
 tags: ["pipeline", "haber"]
 author: "Asteria AI"
-category: "Dünya"
+category: "Siyaset"
 breaking: false
 sources:
   - name: "BBC World"

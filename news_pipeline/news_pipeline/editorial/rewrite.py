@@ -345,75 +345,21 @@ def build_tags(article: NormalizedArticle) -> list[str]:
 
 def choose_category(article: NormalizedArticle) -> str:
     text = f"{article.title} {article.summary}".lower()
-    local_turkey_terms = [
-        "türkiye",
-        "turkiye",
-        "erdoğan",
-        "erdogan",
-        "imamoğlu",
-        "imamoglu",
-        "özgür özel",
-        "ozgur ozel",
-        "chp",
-        "akp",
-        "dem parti",
-        "ibb",
-        "tbmm",
-        "silivri",
-        "belediye başkanı",
-        "belediye baskani",
-        "kayyım",
-        "kayyim",
-        "rtük",
-        "rtuk",
-        "merkez bankası",
-        "merkez bankasi",
-        "adalet bakanı",
-        "adalet bakani",
-        "valilik",
-    ]
-    foreign_turkey_terms = ["turkey", "turkish"]
-    foreign_turkey_context_terms = [
-        "police",
-        "mayor",
-        "court",
-        "governor",
-        "municipality",
-        "detain",
-        "detains",
-        "detained",
-        "school shooting",
-        "school shootings",
-        "high school",
-        "nation mourns",
-        "mourns",
-        "erdogan",
-        "imamoglu",
-        "ozgur ozel",
-        "chp",
-        "akp",
-    ]
-    local_source_ids = {"medyascope", "diken", "kisa-dalga"}
-
-    has_local_turkey_signal = any(_contains_term(text, term) for term in local_turkey_terms)
-    has_foreign_turkey_signal = any(_contains_term(text, term) for term in foreign_turkey_terms)
-    has_foreign_turkey_context = any(_contains_term(text, term) for term in foreign_turkey_context_terms)
-
-    if article.source_id in local_source_ids and (has_local_turkey_signal or has_foreign_turkey_signal):
-        return "Türkiye"
-    if has_local_turkey_signal:
-        return "Türkiye"
-    if has_foreign_turkey_signal and has_foreign_turkey_context:
-        return "Türkiye"
-    if any(_contains_term(text, term) for term in ["openai", "chatgpt", "anthropic", "google", "meta", "nvidia", "ai", "chip"]):
+    if any(_contains_term(text, term) for term in ["openai", "chatgpt", "anthropic", "google", "meta", "nvidia", "ai", "chip", "cyber", "hacker", "hack"]):
         return "Teknoloji"
-    if any(_contains_term(text, term) for term in ["election", "government", "trump", "parliament", "prime minister", "president", "ukraine", "russia", "orbán", "orban"]):
-        return "Siyaset"
-    if any(_contains_term(text, term) for term in ["market", "economy", "tariff", "trade", "valuation"]):
+    if any(_contains_term(text, term) for term in ["nasa", "esa", "mars", "space", "climate", "science", "research", "health", "uzay", "iklim", "bilim", "sağlık", "saglik"]):
+        return "Bilim"
+    if any(_contains_term(text, term) for term in ["culture", "film", "music", "media", "pope", "art", "museum", "kültür", "kultur", "sanat", "müzik", "muzik", "papa"]):
+        return "Kültür"
+    if any(_contains_term(text, term) for term in ["market", "economy", "tariff", "trade", "valuation", "oil", "fuel", "energy", "finance"]):
         return "Ekonomi"
+    if any(_contains_term(text, term) for term in ["election", "government", "trump", "parliament", "prime minister", "president", "ukraine", "russia", "orbán", "orban", "turkey", "turkish", "erdogan", "war", "court", "diplomacy"]):
+        return "Siyaset"
     if article.category_hints:
-        return article.category_hints[0]
-    return "Dünya"
+        for category in article.category_hints:
+            if category in {"Siyaset", "Ekonomi", "Teknoloji", "Bilim", "Kültür"}:
+                return category
+    return "Siyaset"
 
 
 def needs_manual_review(article: NormalizedArticle) -> bool:
@@ -430,8 +376,8 @@ def build_rewrite(article: NormalizedArticle) -> tuple[str, str, str, list[str],
     notes: list[str] = []
     if needs_manual_review(article):
         notes.append("manual-review: hassas/hukuki iddia içeren haber")
-    if article.source_id == "bbc-world" and category == "Dünya":
-        notes.append("source-profile: BBC Dünya akışından geldi")
+    if article.source_id == "bbc-world":
+        notes.append("source-profile: BBC World akışından geldi")
     return title, description, category, tags, notes, facts
 
 
