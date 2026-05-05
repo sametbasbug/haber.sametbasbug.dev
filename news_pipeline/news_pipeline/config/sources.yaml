@@ -111,3 +111,38 @@ sources:
     category_hints: [Ekonomi]
     enabled: true
 
+  - id: nasa-news
+    name: NASA News
+    kind: rss
+    url: https://www.nasa.gov/news-release/feed/
+    category_hints: [Bilim]
+    enabled: true
+
+  - id: sciencedaily-top-science
+    name: ScienceDaily Top Science
+    kind: rss
+    url: https://www.sciencedaily.com/rss/top/science.xml
+    category_hints: [Bilim]
+    enabled: true
+
+  - id: guardian-science
+    name: The Guardian Science
+    kind: rss
+    url: https://www.theguardian.com/science/rss
+    category_hints: [Bilim]
+    enabled: true
+
+  - id: guardian-culture
+    name: The Guardian Culture
+    kind: rss
+    url: https://www.theguardian.com/culture/rss
+    category_hints: [Kültür]
+    enabled: true
+
+  - id: guardian-film
+    name: The Guardian Film
+    kind: rss
+    url: https://www.theguardian.com/film/rss
+    category_hints: [Kültür]
+    enabled: true
+

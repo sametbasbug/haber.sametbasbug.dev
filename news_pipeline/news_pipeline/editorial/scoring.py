@@ -7,16 +7,21 @@ from news_pipeline.models.article import NormalizedArticle
 
 SOURCE_WEIGHTS = {
     "bbc-world": 0.34,
-    "politico-eu": 0.39,
-    "techcrunch": 0.37,
+    "politico-eu": 0.36,
+    "techcrunch": 0.35,
+    "nasa-news": 0.36,
+    "sciencedaily-top-science": 0.34,
+    "guardian-science": 0.35,
+    "guardian-culture": 0.34,
+    "guardian-film": 0.33,
 }
 
 CATEGORY_WEIGHTS = {
     "Ekonomi": 0.16,
-    "Siyaset": 0.18,
+    "Siyaset": 0.17,
     "Teknoloji": 0.15,
-    "Bilim": 0.13,
-    "Kültür": 0.10,
+    "Bilim": 0.17,
+    "Kültür": 0.15,
 }
 
 KEYWORD_BOOSTS = {

@@ -347,9 +347,9 @@ def choose_category(article: NormalizedArticle) -> str:
     text = f"{article.title} {article.summary}".lower()
     if any(_contains_term(text, term) for term in ["openai", "chatgpt", "anthropic", "google", "meta", "nvidia", "ai", "chip", "cyber", "hacker", "hack"]):
         return "Teknoloji"
-    if any(_contains_term(text, term) for term in ["nasa", "esa", "mars", "space", "climate", "science", "research", "health", "uzay", "iklim", "bilim", "sağlık", "saglik"]):
+    if any(_contains_term(text, term) for term in ["nasa", "esa", "mars", "space", "climate", "science", "research", "study", "health", "medicine", "biology", "physics", "astronomy", "uzay", "iklim", "bilim", "araştırma", "arastirma", "sağlık", "saglik"]):
         return "Bilim"
-    if any(_contains_term(text, term) for term in ["culture", "film", "music", "media", "pope", "art", "museum", "kültür", "kultur", "sanat", "müzik", "muzik", "papa"]):
+    if any(_contains_term(text, term) for term in ["culture", "film", "music", "media", "pope", "art", "artist", "museum", "book", "novel", "theatre", "theater", "tv", "streaming", "kültür", "kultur", "sanat", "müzik", "muzik", "kitap", "sinema", "papa"]):
         return "Kültür"
     if any(_contains_term(text, term) for term in ["market", "economy", "tariff", "trade", "valuation", "oil", "fuel", "energy", "finance"]):
         return "Ekonomi"
