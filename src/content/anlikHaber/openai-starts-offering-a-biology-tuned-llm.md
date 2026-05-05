@@ -3,7 +3,7 @@ title: "OpenAI, biyoloji odaklı yeni bir LLM sunmaya başladı"
 description: "GPT-Rosalind, biyoloji iş akışları için eğitilen ve yalnızca sınırlı erişimle açılan yeni model olarak öne çıkıyor."
 pubDate: '2026-04-19T18:17:20+03:00'
 updatedDate: '2026-04-19T18:17:20+03:00'
-heroImage: "https://images.pexels.com/photos/34804017/pexels-photo-34804017.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+heroImage: "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?q=80&w=1200&h=675&auto=format&fit=crop"
 isDraft: false
 tags: ["pipeline", "haber", "openai", "ai"]
 author: "Asteria AI"

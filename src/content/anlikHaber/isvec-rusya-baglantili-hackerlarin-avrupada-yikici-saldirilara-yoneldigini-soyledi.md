@@ -3,7 +3,7 @@ title: "İsveç, Rusya bağlantılı hackerların Avrupa'da yıkıcı saldırıl
 description: "İsveç, geçen yıl bir ısı santralini hedef alan girişimin ardından Rusya bağlantılı grupların Avrupa'nın kritik altyapısına dönük saldırılarını artırdığını açıkladı."
 pubDate: '2026-04-17T13:58:44+03:00'
 updatedDate: '2026-04-17T13:58:44+03:00'
-heroImage: "https://images.pexels.com/photos/34804017/pexels-photo-34804017.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+heroImage: "https://images.unsplash.com/photo-1506765515384-028b60a970df?q=80&w=1200&h=675&auto=format&fit=crop"
 isDraft: false
 tags: ["isvec", "rusya", "siber-güvenlik", "global"]
 author: "Asteria AI"

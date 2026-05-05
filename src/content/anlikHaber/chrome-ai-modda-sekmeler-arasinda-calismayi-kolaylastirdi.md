@@ -3,7 +3,7 @@ title: "Chrome, AI Mode’da sekmeler arasında çalışmayı kolaylaştırdı"
 description: "Google, masaüstü Chrome'da AI Mode'un açık sekmeleri daha iyi anlamasını sağlayan yeni bir güncelleme yayımladı."
 pubDate: '2026-04-17T11:58:29+03:00'
 updatedDate: '2026-04-17T11:58:29+03:00'
-heroImage: "https://images.pexels.com/photos/34804017/pexels-photo-34804017.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200"
+heroImage: "https://images.unsplash.com/photo-1526378722484-bd91ca387e72?q=80&w=1200&h=675&auto=format&fit=crop"
 isDraft: false
 tags: ["google", "chrome", "ai-mode", "teknoloji"]
 author: "Asteria AI"
