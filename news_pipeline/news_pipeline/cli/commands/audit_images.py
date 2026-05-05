@@ -14,6 +14,7 @@ APPROVED_IMAGE_HOSTS = {
     "images.unsplash.com",
     "images.pexels.com",
 }
+APPROVED_LOCAL_IMAGE_PREFIXES = ("/images/generated/anlik-haber/",)
 
 # News/source CDNs are intentionally blocked for Anlık Haber hero images.
 # A live image URL is not enough: using the original publisher's RSS/OG/article
@@ -53,7 +54,10 @@ BLOCKED_SOURCE_IMAGE_HOSTS = {
 
 
 def _image_policy_violation(url: str) -> str | None:
-    parsed = urlparse((url or "").strip())
+    target = (url or "").strip()
+    if target.startswith(APPROVED_LOCAL_IMAGE_PREFIXES):
+        return None
+    parsed = urlparse(target)
     host = parsed.netloc.lower()
     if host in APPROVED_IMAGE_HOSTS:
         return None
@@ -72,6 +76,12 @@ def _image_key(value: str) -> str:
 
 def _is_live_image_url(client: httpx.Client, url: str) -> tuple[bool, str]:
     target = (url or "").strip()
+    if target.startswith(APPROVED_LOCAL_IMAGE_PREFIXES):
+        local_path = Path.cwd() / "public" / target.lstrip("/")
+        if local_path.exists() and local_path.stat().st_size > 1024:
+            return True, "local-file"
+        return False, "missing-local-file"
+
     parsed = urlparse(target)
     if parsed.scheme not in {"http", "https"} or not parsed.netloc:
         return False, "invalid-url"

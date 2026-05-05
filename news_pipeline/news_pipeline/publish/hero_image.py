@@ -1,12 +1,15 @@
 from __future__ import annotations
 
+import json
 import re
+import subprocess
 import unicodedata
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
 
 import httpx
+from slugify import slugify
 
 from news_pipeline.models.queue import QueueItem
 from news_pipeline.utils.env import get_env
@@ -40,7 +43,12 @@ DEFAULT_HERO_IMAGES = {
 }
 FALLBACK_CATEGORY = "Teknoloji"
 PEXELS_SEARCH_URL = "https://api.pexels.com/v1/search"
-NEWS_CONTENT_DIR = Path(__file__).resolve().parents[3] / "src" / "content" / "anlikHaber"
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
+NEWS_CONTENT_DIR = PROJECT_ROOT / "src" / "content" / "anlikHaber"
+GENERATED_HERO_DIR = PROJECT_ROOT / "public" / "images" / "generated" / "anlik-haber"
+GENERATED_HERO_PUBLIC_PREFIX = "/images/generated/anlik-haber"
+AI_HERO_DEFAULT_MODEL = "openai/gpt-image-2"
+AI_HERO_TIMEOUT_MS = 180_000
 STOPWORDS = {
     "the", "and", "for", "with", "that", "this", "from", "into", "after", "over", "under", "near",
     "can", "will", "now", "still", "more", "less", "amid", "says", "said", "new", "latest", "its",
@@ -228,6 +236,132 @@ def _build_queries(item: QueueItem) -> list[str]:
     return deduped[:6]
 
 
+def _category_visual_direction(category: str) -> str:
+    directions = {
+        "Teknoloji": "modern technology editorial cover, software interfaces, devices, chips, AI infrastructure, clean digital newsroom aesthetic",
+        "Siyaset": "symbolic diplomacy and institutions, parliament architecture, flags, maps, documents, podiums without readable text, no fake portraits",
+        "Ekonomi": "global markets, trade routes, energy, finance dashboards, business infrastructure, sober economic editorial cover",
+        "Bilim": "scientific research, space, climate, laboratory, biology or astronomy visuals, precise and calm science-magazine cover",
+        "Kültür": "cinema, theatre, books, music, media, museums or festivals, refined culture-section editorial cover",
+    }
+    return directions.get(category, directions["Teknoloji"])
+
+
+def _build_ai_hero_prompt(item: QueueItem) -> str:
+    category = item.draft_category or FALLBACK_CATEGORY
+    facts = "; ".join(item.draft_facts[:4])
+    tags = ", ".join(item.draft_tags[:8])
+    source_names = ", ".join(source.name for source in item.draft_sources[:2])
+    return f"""
+Create a 16:9 modern editorial hero image for a Turkish global news site named Anlık Haber.
+
+Article category: {category}
+Visual direction: {_category_visual_direction(category)}
+Headline: {item.draft_title}
+Description: {item.draft_description}
+Key facts: {facts or '-'}
+Tags: {tags or '-'}
+Source context: {source_names or '-'}
+
+Hard rules:
+- The image must represent the specific news topic, not just generic category decoration.
+- Do not copy or imitate any publisher/source image.
+- Do not add readable text, letters, headlines, captions, UI text, watermarks, or logos.
+- Do not fabricate photorealistic faces of real people; for politics use symbolic institutional imagery instead.
+- Avoid generic handshake, conference audience, random office meeting, celebration, tourist, food, beach, wedding, or party visuals.
+- No clickbait, disaster porn, gore, caricature, propaganda poster style, or misleading scene reconstruction.
+- Premium digital news cover style, realistic lighting, sharp composition, editorial restraint.
+""".strip()
+
+
+def _generated_hero_candidates(slug: str) -> list[Path]:
+    return sorted(GENERATED_HERO_DIR.glob(f"{slug}*"), key=lambda path: path.stat().st_mtime, reverse=True)
+
+
+def _public_image_path(path: Path) -> str:
+    return f"{GENERATED_HERO_PUBLIC_PREFIX}/{path.name}"
+
+
+def _pick_generated_output(slug: str, preferred_output: Path) -> Path | None:
+    if preferred_output.exists() and preferred_output.stat().st_size > 1024:
+        return preferred_output
+    for candidate in _generated_hero_candidates(slug):
+        if candidate.is_file() and candidate.stat().st_size > 1024:
+            return candidate
+    return None
+
+
+def _ai_hero_image(item: QueueItem) -> str | None:
+    if get_env("NEWS_PIPELINE_DISABLE_AI_HERO", "0") in {"1", "true", "TRUE", "yes", "YES"}:
+        return None
+
+    model = get_env("NEWS_PIPELINE_AI_HERO_MODEL", AI_HERO_DEFAULT_MODEL) or AI_HERO_DEFAULT_MODEL
+    timeout_ms_raw = get_env("NEWS_PIPELINE_AI_HERO_TIMEOUT_MS", str(AI_HERO_TIMEOUT_MS))
+    try:
+        timeout_ms = max(30_000, int(timeout_ms_raw or AI_HERO_TIMEOUT_MS))
+    except ValueError:
+        timeout_ms = AI_HERO_TIMEOUT_MS
+
+    slug = slugify(item.draft_title, lowercase=True) or "anlik-haber"
+    GENERATED_HERO_DIR.mkdir(parents=True, exist_ok=True)
+    output = GENERATED_HERO_DIR / f"{slug}.webp"
+
+    if output.exists() and output.stat().st_size > 1024:
+        return _public_image_path(output)
+
+    prompt = _build_ai_hero_prompt(item)
+    command = [
+        "openclaw",
+        "infer",
+        "image",
+        "generate",
+        "--model",
+        model,
+        "--prompt",
+        prompt,
+        "--output",
+        str(output),
+        "--size",
+        "1536x1024",
+        "--output-format",
+        "webp",
+        "--timeout-ms",
+        str(timeout_ms),
+        "--json",
+    ]
+    try:
+        result = subprocess.run(
+            command,
+            cwd=PROJECT_ROOT,
+            text=True,
+            capture_output=True,
+            timeout=(timeout_ms / 1000) + 30,
+            check=False,
+        )
+    except Exception:
+        return None
+
+    if result.returncode != 0:
+        return None
+
+    generated = _pick_generated_output(slug, output)
+    if generated:
+        return _public_image_path(generated)
+
+    try:
+        payload = json.loads(result.stdout or "{}")
+    except json.JSONDecodeError:
+        payload = {}
+    for key in ("output", "path", "file", "filename"):
+        value = payload.get(key)
+        if isinstance(value, str):
+            candidate = Path(value)
+            if not candidate.is_absolute():
+                candidate = PROJECT_ROOT / candidate
+            if candidate.exists() and candidate.stat().st_size > 1024:
+                return _public_image_path(candidate)
+    return None
+
 def _image_key(value: str | None) -> str | None:
     if not value:
         return None
@@ -410,6 +544,10 @@ def _search_photos(client: httpx.Client, api_key: str, query: str) -> list[dict[
 
 
 def pick_hero_image(item: QueueItem) -> str:
+    ai_image = _ai_hero_image(item)
+    if ai_image:
+        return ai_image
+
     recent_images = _recent_hero_images()
     api_key = get_env("PEXELS_API_KEY")
     queries = _build_queries(item)

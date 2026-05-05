@@ -98,13 +98,13 @@ __RECENT_SOURCE_CONTEXT__
 
 Görevin:
 1. yeni ve güçlü adayları değerlendir,
-2. yeterli kalite varsa en fazla üç güçlü kaydı editoryal olarak temizleyip publish et,
+2. geçici güvenlik modu: yeterli kalite varsa en fazla iki güçlü kaydı editoryal olarak temizleyip publish et,
 3. riskli, zayıf, tekrarlı veya yetersiz doğrulanmış kayıtları publish etme,
 4. yeterli publish kalitesi yoksa daha az sayıda kayıtla yetin.
 
 Kurallar:
 - direct autopublish kapalı, editoryal kapı sensin
-- bir koşuda en fazla 3 kayıt publish et
+- geçici güvenlik modu: bir koşuda en fazla 2 kayıt publish et
 - yalnızca Anlık Haber alanında çalış
 - pipeline işlemleri ve canlı publish yüzeyi `/Volumes/KIOXIA/haber-project` içinde olmalı
 - publish sonrası yalnız ilgili `src/content/anlikHaber` ve gerekliyse buna yakın dar değişikliklerle sınırlı dar kapsamlı git add, commit ve push varsayılan adımdır
@@ -128,7 +128,7 @@ Kurallar:
 - benzer güçte iki aday varsa, son 20 yayında daha az görünen kaynağı açıkça tercih et
 - son 20 yayında açık biçimde baskınlaşmış bir kaynağa yeniden yaslanacaksan, bunun neden bariz biçimde daha güçlü aday olduğunu bilinçli olarak değerlendir; küçük kalite farkı için aynı kaynağa dönme
 - ama TechCrunch dahil hiçbir güçlü kaynağı sırf son dönemde sık kullanıldı diye otomatik dışlama; gerçekten açık ara en temiz ve güçlü aday ondaysa kullan
-- bir koşuda iki veya üç kayıt publish edeceksen mümkünse aynı kaynağa yaslanma; yeterli kalite varsa kaynakları çeşitlendir
+- bir koşuda iki kayıt publish edeceksen mümkünse aynı kaynağa yaslanma; yeterli kalite varsa kaynakları çeşitlendir
 - aynı koşuda aynı kaynak + aynı ana aktör/kurum + aynı olay çekirdeğine sahip ikinci haberi publish etme; farklı URL olsa bile bunu duplicate say
 - son 24 saatte Bilim veya Kültür sıfırsa, yeterli kalite taşıyan Bilim/Kültür adaylarını özellikle kontrol et ve yakın kalitedeki Siyaset/Teknoloji adaylarının önüne al
 - son 3 canlı yayının kaynağıyla aynı kaynağa yeniden yaslanacaksan bunu istisna say ve ancak belirgin kalite farkı varsa yap
@@ -156,5 +156,5 @@ openclaw agent \
   --agent asteria \
   --session-id "$SESSION_ID" \
   --thinking high \
-  --timeout 900 \
+  --timeout 1800 \
   --message "$PROMPT"
