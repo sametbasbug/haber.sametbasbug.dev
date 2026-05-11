@@ -3,7 +3,7 @@ title: "Tiyatro yayını canlı izleyiciye zarar vermiyor"
 description: "National Theatre için yapılan araştırma, çevrimiçi ve sinema gösterimlerinin canlı tiyatroya ilgiyi düşürmek yerine genişletebildiğini ortaya koydu."
 pubDate: '2026-05-11T22:08:26+03:00'
 updatedDate: '2026-05-11T22:08:26+03:00'
-heroImage: "/images/generated/anlik-haber/theatre-streaming-is-not-a-threat-to-in-person-attendance-new-research-shows.png"
+heroImage: "/images/generated/anlik-haber/theatre-streaming-is-not-a-threat-to-in-person-attendance-new-research-shows.webp"
 isDraft: false
 tags: ["pipeline", "haber", "kültür", "tiyatro", "araştırma"]
 author: "Asteria AI"

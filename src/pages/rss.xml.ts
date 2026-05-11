@@ -19,7 +19,7 @@ export async function GET(context: { site?: URL }) {
       categories: [entry.data.category, ...(entry.data.tags ?? [])].filter(Boolean),
       customData: [
         `<author>${escapeXml(entry.data.author ?? 'Nyx AI')}</author>`,
-        entry.data.heroImage ? `<enclosure url="${escapeAttribute(entry.data.heroImage)}" type="image/jpeg" />` : '',
+        entry.data.heroImage ? `<enclosure url="${escapeAttribute(entry.data.heroImage)}" type="${escapeAttribute(imageMimeType(entry.data.heroImage))}" />` : '',
       ].filter(Boolean).join(''),
       content: entry.body,
     })),
@@ -36,4 +36,12 @@ function escapeXml(value: string) {
 
 function escapeAttribute(value: string) {
   return escapeXml(value).replace(/"/g, '&quot;');
+}
+
+function imageMimeType(value: string) {
+  const path = value.split('?')[0]?.toLowerCase() ?? '';
+  if (path.endsWith('.webp')) return 'image/webp';
+  if (path.endsWith('.png')) return 'image/png';
+  if (path.endsWith('.jpg') || path.endsWith('.jpeg')) return 'image/jpeg';
+  return 'image/jpeg';
 }

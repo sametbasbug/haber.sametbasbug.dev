@@ -3,7 +3,7 @@ title: "Hubble, Roman teleskobunun Gökada merkezi planını hazırladı"
 description: "NASA'nın yeni taraması, Samanyolu merkezindeki yoğun yıldız bölgesini Roman'ın ayrıntılı gözlemleri için önceden haritaladı."
 pubDate: '2026-05-11T23:08:03+03:00'
 updatedDate: '2026-05-11T23:08:03+03:00'
-heroImage: "/images/generated/anlik-haber/hubble-survey-sets-up-roman-s-future-look-near-milky-way-s-center.png"
+heroImage: "/images/generated/anlik-haber/hubble-survey-sets-up-roman-s-future-look-near-milky-way-s-center.webp"
 isDraft: false
 tags: ["pipeline", "haber", "bilim", "uzay", "nasa"]
 author: "Asteria AI"

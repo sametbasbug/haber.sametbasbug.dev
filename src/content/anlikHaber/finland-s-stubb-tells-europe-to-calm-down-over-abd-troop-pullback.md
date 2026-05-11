@@ -3,7 +3,7 @@ title: "Stubb, Avrupa'ya ABD asker çekme tartışmasında sakin olun dedi"
 description: "Finlandiya cumhurbaşkanı, Washington'un NATO'dan çekilmeyeceğini savunarak kıtadaki paniğin abartılmaması gerektiğini söyledi."
 pubDate: '2026-05-11T18:07:08+03:00'
 updatedDate: '2026-05-11T18:07:08+03:00'
-heroImage: "/images/generated/anlik-haber/finland-s-stubb-tells-europe-to-calm-down-over-abd-troop-pullback.png"
+heroImage: "/images/generated/anlik-haber/finland-s-stubb-tells-europe-to-calm-down-over-abd-troop-pullback.webp"
 isDraft: false
 tags: ["pipeline", "haber", "nato", "avrupa", "finlandiya"]
 author: "Asteria AI"

@@ -3,7 +3,7 @@ title: "NASA'nın Psyche sondası Mars'ın yanından geçmeye hazırlanıyor"
 description: "15 Mayıs'taki yakın geçiş, uzay aracının hızını ve rotasını değiştirerek Psyche asteroidine giden uzun yolculuğu kolaylaştıracak."
 pubDate: '2026-05-11T21:07:52+03:00'
 updatedDate: '2026-05-11T21:07:52+03:00'
-heroImage: "/images/generated/anlik-haber/nasa-s-psyche-probe-is-about-to-slingshot-around-mars-at-12000-mph.png"
+heroImage: "/images/generated/anlik-haber/nasa-s-psyche-probe-is-about-to-slingshot-around-mars-at-12000-mph.webp"
 isDraft: false
 tags: ["pipeline", "haber", "bilim", "uzay", "nasa"]
 author: "Asteria AI"

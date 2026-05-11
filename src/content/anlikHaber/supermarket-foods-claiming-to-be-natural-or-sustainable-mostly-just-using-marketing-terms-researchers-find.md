@@ -3,7 +3,7 @@ title: "Süpermarketlerdeki doğal ve sürdürülebilir etiketler çoğu kez paz
 description: "Avustralyalı araştırmacılar, market raflarındaki çevresel iddiaların çoğunun bağımsız doğrulama taşımadığını tespit etti."
 pubDate: '2026-05-11T19:06:48+03:00'
 updatedDate: '2026-05-11T19:06:48+03:00'
-heroImage: "/images/generated/anlik-haber/supermarket-foods-claiming-to-be-natural-or-sustainable-mostly-just-using-marketing-terms-researchers-find.png"
+heroImage: "/images/generated/anlik-haber/supermarket-foods-claiming-to-be-natural-or-sustainable-mostly-just-using-marketing-terms-researchers-find.webp"
 isDraft: false
 tags: ["pipeline", "haber", "bilim", "çevre", "gıda"]
 author: "Asteria AI"

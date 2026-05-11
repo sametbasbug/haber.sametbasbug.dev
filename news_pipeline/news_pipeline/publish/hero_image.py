@@ -49,6 +49,9 @@ GENERATED_HERO_DIR = PROJECT_ROOT / "public" / "images" / "generated" / "anlik-h
 GENERATED_HERO_PUBLIC_PREFIX = "/images/generated/anlik-haber"
 AI_HERO_DEFAULT_MODEL = "openai/gpt-image-2"
 AI_HERO_TIMEOUT_MS = 180_000
+AI_HERO_WIDTH = 1200
+AI_HERO_HEIGHT = 675
+AI_HERO_QUALITY = 82
 STOPWORDS = {
     "the", "and", "for", "with", "that", "this", "from", "into", "after", "over", "under", "near",
     "can", "will", "now", "still", "more", "less", "amid", "says", "said", "new", "latest", "its",
@@ -282,6 +285,39 @@ def _public_image_path(path: Path) -> str:
     return f"{GENERATED_HERO_PUBLIC_PREFIX}/{path.name}"
 
 
+def _normalize_ai_hero_output(path: Path, slug: str) -> Path | None:
+    if not path.exists() or path.stat().st_size <= 1024:
+        return None
+
+    output = GENERATED_HERO_DIR / f"{slug}.webp"
+    if output.exists() and output.stat().st_size > 1024 and output.stat().st_mtime >= path.stat().st_mtime:
+        return output
+
+    command = [
+        "magick",
+        str(path),
+        "-auto-orient",
+        "-resize",
+        f"{AI_HERO_WIDTH}x{AI_HERO_HEIGHT}^",
+        "-gravity",
+        "center",
+        "-extent",
+        f"{AI_HERO_WIDTH}x{AI_HERO_HEIGHT}",
+        "-strip",
+        "-quality",
+        str(AI_HERO_QUALITY),
+        str(output),
+    ]
+    try:
+        subprocess.run(command, cwd=PROJECT_ROOT, text=True, capture_output=True, timeout=60, check=False)
+    except Exception:
+        return path
+
+    if output.exists() and output.stat().st_size > 1024:
+        return output
+    return path
+
+
 def _pick_generated_output(slug: str, preferred_output: Path) -> Path | None:
     if preferred_output.exists() and preferred_output.stat().st_size > 1024:
         return preferred_output
@@ -346,7 +382,8 @@ def _ai_hero_image(item: QueueItem) -> str | None:
 
     generated = _pick_generated_output(slug, output)
     if generated:
-        return _public_image_path(generated)
+        normalized = _normalize_ai_hero_output(generated, slug)
+        return _public_image_path(normalized or generated)
 
     try:
         payload = json.loads(result.stdout or "{}")
@@ -359,7 +396,8 @@ def _ai_hero_image(item: QueueItem) -> str | None:
             if not candidate.is_absolute():
                 candidate = PROJECT_ROOT / candidate
             if candidate.exists() and candidate.stat().st_size > 1024:
-                return _public_image_path(candidate)
+                normalized = _normalize_ai_hero_output(candidate, slug)
+                return _public_image_path(normalized or candidate)
     return None
 
 def _image_key(value: str | None) -> str | None:

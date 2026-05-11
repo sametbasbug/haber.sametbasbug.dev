@@ -3,7 +3,7 @@ title: "Kallas, Gerhard Schröder için önerilen rolü reddetti"
 description: "AB dış politika sorumlusu, Moskova'nın eski Alman başbakanını Avrupa adına müzakereci göstermesine karşı çıktı."
 pubDate: '2026-05-11T12:09:10+03:00'
 updatedDate: '2026-05-11T12:11:01+03:00'
-heroImage: "/images/generated/anlik-haber/ab-s-kallas-rejects-gerhard-schroder-as-russia-ukraine-negotiator.png"
+heroImage: "/images/generated/anlik-haber/ab-s-kallas-rejects-gerhard-schroder-as-russia-ukraine-negotiator.webp"
 isDraft: false
 tags: ["pipeline", "haber", "ukraine", "russia"]
 author: "Asteria AI"

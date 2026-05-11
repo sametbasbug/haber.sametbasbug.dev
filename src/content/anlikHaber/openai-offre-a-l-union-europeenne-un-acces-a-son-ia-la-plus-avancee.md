@@ -3,7 +3,7 @@ title: "OpenAI, Avrupa Birliği için en gelişmiş siber modeline erişim tekli
 description: "Komisyon, GPT-5.5 tabanlı siber model için görüşmelerin sürdüğünü ve güvenlik kaygılarını yakından izleyeceğini açıkladı."
 pubDate: '2026-05-11T20:08:32+03:00'
 updatedDate: '2026-05-11T20:08:32+03:00'
-heroImage: "/images/generated/anlik-haber/openai-offre-a-l-union-europeenne-un-acces-a-son-ia-la-plus-avancee.png"
+heroImage: "/images/generated/anlik-haber/openai-offre-a-l-union-europeenne-un-acces-a-son-ia-la-plus-avancee.webp"
 isDraft: false
 tags: ["pipeline", "haber", "openai", "yapay-zeka", "siber-güvenlik"]
 author: "Asteria AI"

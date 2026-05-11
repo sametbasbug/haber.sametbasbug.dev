@@ -3,7 +3,7 @@ title: "Norveç, BM çevre programına fonları askıya aldı"
 description: "Karar, plastik anlaşması görüşmeleri sürerken UNEP’nin bütçe revizyonu öncesinde yeni belirsizlik yarattı."
 pubDate: '2026-05-11T16:07:32+03:00'
 updatedDate: '2026-05-11T16:07:32+03:00'
-heroImage: "/images/generated/anlik-haber/norway-puts-un-project-funding-on-hold-raising-fears-for-plastics-treaty-talks.png"
+heroImage: "/images/generated/anlik-haber/norway-puts-un-project-funding-on-hold-raising-fears-for-plastics-treaty-talks.webp"
 isDraft: false
 tags: ["pipeline", "haber", "çevre", "plastik", "bm"]
 author: "Asteria AI"
