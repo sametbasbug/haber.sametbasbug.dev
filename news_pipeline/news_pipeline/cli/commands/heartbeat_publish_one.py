@@ -141,12 +141,20 @@ def _candidate_snapshot(item: QueueItem, reason: str | None = None) -> dict[str,
     }
 
 
+def _is_excluded_source_format(item: QueueItem) -> bool:
+    text = f"{item.draft_title} {item.draft_description}".lower()
+    urls = " ".join(str(source.url).lower() for source in item.draft_sources)
+    return "podcast" in urls or "/live/" in urls or " live" in text or "live:" in text
+
+
 def _select_candidate(root: Path, min_score: float, max_source_age_hours: int, limit_rejections: int = 8) -> tuple[QueueItem | None, list[dict[str, Any]]]:
     service = QueueService(root / "news_pipeline/data/queue")
     items = sorted(service.list_items(), key=lambda item: item.editorial_priority, reverse=True)
     rejections: list[dict[str, Any]] = []
     for item in items:
         if item.status != "new":
+            continue
+        if _is_excluded_source_format(item):
             continue
         fresh, stale_reason = _source_is_fresh(root, item, max_source_age_hours)
         if not fresh:
@@ -333,7 +341,11 @@ def publish_one_command(
             published_path = line.split(":", 1)[1].strip()
             break
 
-    for name, func in (("audit-images", audit_images_command), ("audit-content", audit_content_command)):
+    audit_steps = (
+        ("audit-images", lambda: audit_images_command()),
+        ("audit-content", lambda: audit_content_command(content_dir=root / "src/content/anlikHaber")),
+    )
+    for name, func in audit_steps:
         step = _run_step(name, func)
         payload["steps"].append(_compact_step(step, full_logs=full_logs))
         if not step["ok"]:

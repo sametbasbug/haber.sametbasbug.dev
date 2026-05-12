@@ -167,6 +167,30 @@ PHRASE_REWRITES = [
         re.compile(r"AMC will stream .* on TikTok.*", re.I),
         "AMC'nin yeni dizisini TikTok üzerinden parçalara bölerek yayınlama kararı, medya şirketlerinin genç izleyiciye ulaşmak için platform stratejilerini sert biçimde değiştirdiğini gösteriyor.",
     ),
+    (
+        re.compile(r"After more than a decade of global consultation, polycystic ovary syndrome \(PCOS\).*has been renamed\.??", re.I),
+        "On yılı aşan küresel danışma sürecinin ardından, her sekiz kadından birini etkileyen polikistik over sendromunun adı değiştirildi.",
+    ),
+    (
+        re.compile(r"The hormonal disorder, estimated to impact 170 million women worldwide, will now be known as polyendocrine metabolic ovarian syndrome \(PMOS\)\.??", re.I),
+        "Dünya çapında yaklaşık 170 milyon kadını etkilediği tahmin edilen hormonal bozukluk, artık polendokrin metabolik over sendromu adıyla anılacak.",
+    ),
+    (
+        re.compile(r"The name change was published in the Lancet and announced at the European Congress of Endocrinology in Prague on Tuesday.*", re.I),
+        "Ad değişikliği Lancet'te yayımlandı ve Prag'daki Avrupa Endokrinoloji Kongresi'nde, altı kıtadan hasta grupları ve uzman derneklerinin 14 yıllık çalışması sonrası duyuruldu.",
+    ),
+    (
+        re.compile(r"NASA.?s High Performance Spaceflight Computing project aims to dramatically improve the computing power of spacecraft\.??", re.I),
+        "NASA'nın Yüksek Performanslı Uzay Uçuşu Bilişim projesi, uzay araçlarının işlem gücünü belirgin biçimde artırmayı hedefliyor.",
+    ),
+    (
+        re.compile(r"Missions need processors that can withstand the harsh space environment.*", re.I),
+        "Uzay görevleri zorlu radyasyon ve sıcaklık koşullarına dayanabilen işlemcilere ihtiyaç duyduğu için, kurum yıllardır güvenilir ama eski nesil çiplere bağımlıydı.",
+    ),
+    (
+        re.compile(r"But upgraded chips are needed to enable the development of autonomous spacecraft.*", re.I),
+        "Yeni çipler otonom uzay araçlarını, daha hızlı bilimsel veri analizini ve Ay ile Mars görevlerinde astronotlara verilecek desteği mümkün kılacak.",
+    ),
 ]
 
 ACRONYM_WORD_RE = re.compile(r"\b[A-Z]{2,5}\b")
@@ -247,6 +271,10 @@ def rewrite_title(article: NormalizedArticle) -> str:
         return "Volkswagen, ABD'de tam elektrikli ID.4'ten geri adım atıp benzinli SUV'lara yöneliyor"
     if re.search(r"AMC will stream .* on TikTok", original_title, flags=re.IGNORECASE):
         return "AMC, 'The Audacity' prömiyerini TikTok'ta 21 parça halinde yayınlayacak"
+    if re.search(r"polycystic ovary syndrome.*new name|global effort gives new name", original_title, flags=re.IGNORECASE):
+        return "Polikistik over sendromunun adı küresel uzlaşıyla değiştirildi"
+    if re.search(r"NASA.?s Next-Gen Space Processor", original_title, flags=re.IGNORECASE):
+        return "NASA'nın yeni nesil uzay işlemcisi test aşamasına geçti"
 
     title = title.replace(" announces ", " açıkladı ")
     title = title.replace(" responds to ", " yanıt verdi: ")

@@ -70,6 +70,10 @@ def should_keep_article(article: NormalizedArticle) -> FilterDecision:
         if term in joined:
             return FilterDecision(False, f"blocked by term: {term}")
 
+    url = str(article.canonical_url).lower()
+    if "/live/" in url or re.search(r"[–-]\s*[^–-]*(politics|europe|crisis|world|ukraine|abd|us)?\s*live\b", title):
+        return FilterDecision(False, "blocked by liveblog format")
+
     if SPORT_TITLE_RE.search(title) and SPORT_SIGNAL_RE.search(title):
         return FilterDecision(False, "sports item outside current editorial line")
 

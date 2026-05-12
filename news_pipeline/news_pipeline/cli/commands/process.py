@@ -105,6 +105,19 @@ def process_command(
             continue
         normalized = normalizer.normalize(raw, source)
         existing_item = queue_by_normalized_id.get(normalized.id)
+        decision = should_keep_article(normalized)
+        if not decision.keep:
+            reason = decision.reason or "filtered out"
+            filter_skips[reason] += 1
+            if verbose_logs:
+                logger.info(f"filter skip: {normalized.title} ({reason})")
+            if existing_item and existing_item.status != "published":
+                rejected_item = queue_service.reject(existing_item.queue_id, note=reason)
+                if rejected_item is not None:
+                    queue_by_normalized_id[rejected_item.normalized_id] = rejected_item
+                rejected += 1
+            continue
+
         if (
             not reprocess_all
             and existing_item is not None
@@ -118,17 +131,6 @@ def process_command(
             skipped_duplicate += 1
             if verbose_logs:
                 logger.info(f"dedupe skip: {normalized.title}")
-            continue
-
-        decision = should_keep_article(normalized)
-        if not decision.keep:
-            reason = decision.reason or "filtered out"
-            filter_skips[reason] += 1
-            if verbose_logs:
-                logger.info(f"filter skip: {normalized.title} ({reason})")
-            if existing_item and existing_item.status != "published":
-                queue_service.reject(existing_item.queue_id, note=reason)
-                rejected += 1
             continue
 
         normalized_store.save(normalized.id, normalized)
