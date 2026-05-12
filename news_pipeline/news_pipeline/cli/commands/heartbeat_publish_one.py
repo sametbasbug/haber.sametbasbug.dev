@@ -23,6 +23,7 @@ from news_pipeline.storage.json_store import JsonStore
 
 
 DEFAULT_MIN_SCORE = 0.68
+ASTERIA_POLISHED_MIN_SCORE = 0.60
 DEFAULT_MAX_SOURCE_AGE_HOURS = 72
 DEFAULT_MIN_INTERVAL_SECONDS = 900
 STATE_PATH = Path("news_pipeline/data/state/heartbeat-publish-one.json")
@@ -147,9 +148,20 @@ def _is_excluded_source_format(item: QueueItem) -> bool:
     return "podcast" in urls or "/live/" in urls or " live" in text or "live:" in text
 
 
+def _has_asteria_polish(item: QueueItem) -> bool:
+    return any(note == "asteria-editorial-polish" or note.startswith("asteria-editorial-polish") for note in item.notes)
+
+
+def _candidate_sort_key(item: QueueItem) -> tuple[int, float]:
+    # Asteria-polished candidates are intentional selections and must be checked
+    # before raw high-score queue items; otherwise the publish rail gets stuck on
+    # unrelated "missing polish" rejections and never reaches the edited story.
+    return (1 if _has_asteria_polish(item) else 0, float(item.editorial_priority))
+
+
 def _select_candidate(root: Path, min_score: float, max_source_age_hours: int, limit_rejections: int = 8) -> tuple[QueueItem | None, list[dict[str, Any]]]:
     service = QueueService(root / "news_pipeline/data/queue")
-    items = sorted(service.list_items(), key=lambda item: item.editorial_priority, reverse=True)
+    items = sorted(service.list_items(), key=_candidate_sort_key, reverse=True)
     rejections: list[dict[str, Any]] = []
     for item in items:
         if item.status != "new":
@@ -161,7 +173,8 @@ def _select_candidate(root: Path, min_score: float, max_source_age_hours: int, l
             if len(rejections) < limit_rejections:
                 rejections.append(_candidate_snapshot(item, stale_reason))
             continue
-        ok, reason = is_autopublish_candidate(item, min_score=min_score)
+        effective_min_score = min(min_score, ASTERIA_POLISHED_MIN_SCORE) if _has_asteria_polish(item) else min_score
+        ok, reason = is_autopublish_candidate(item, min_score=effective_min_score)
         if ok:
             return item, rejections
         if len(rejections) < limit_rejections:
