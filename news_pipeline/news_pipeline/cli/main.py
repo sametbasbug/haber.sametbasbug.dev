@@ -15,6 +15,8 @@ from news_pipeline.cli.commands.queue_list import queue_list_command
 from news_pipeline.cli.commands.queue_reject import queue_reject_command
 from news_pipeline.cli.commands.queue_review import queue_review_command
 from news_pipeline.cli.commands.queue_summary import queue_summary_command
+from news_pipeline.cli.commands.queue_polish import queue_polish_command
+from news_pipeline.cli.commands.heartbeat_prepare_one import prepare_one_command
 from news_pipeline.cli.commands.heartbeat_publish_one import publish_one_command
 
 app = typer.Typer(help="Editorial-first news pipeline CLI")
@@ -34,6 +36,8 @@ queue_app.command("reject")(queue_reject_command)
 queue_app.command("review")(queue_review_command)
 queue_app.command("summary")(queue_summary_command)
 queue_app.command("cleanup")(queue_cleanup_command)
+queue_app.command("polish")(queue_polish_command)
+heartbeat_app.command("prepare-one")(prepare_one_command)
 heartbeat_app.command("publish-one")(publish_one_command)
 app.add_typer(queue_app, name="queue")
 app.add_typer(heartbeat_app, name="heartbeat")
