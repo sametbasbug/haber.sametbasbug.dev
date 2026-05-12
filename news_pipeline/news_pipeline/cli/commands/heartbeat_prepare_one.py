@@ -24,13 +24,6 @@ def _article_payload(root: Path, item: Any) -> dict[str, Any]:
         "queueId": item.queue_id,
         "status": item.status,
         "score": round(float(item.editorial_priority), 3),
-        "currentDraft": {
-            "title": item.draft_title,
-            "description": item.draft_description,
-            "category": item.draft_category,
-            "facts": item.draft_facts,
-            "tags": item.draft_tags,
-        },
         "source": {
             "name": article.source_name if article else (item.draft_sources[0].name if item.draft_sources else ""),
             "url": str(article.canonical_url if article else (item.draft_sources[0].url if item.draft_sources else "")),
@@ -102,7 +95,7 @@ def prepare_one_command(
         "schemaVersion": 1,
         "command": "heartbeat prepare-one",
         "result": result,
-        "instruction": "Asteria must choose one candidate, rewrite title/description/facts herself, apply it with `queue polish`, then run `heartbeat publish-one --execute --no-collect --json`. Do not publish untouched Python drafts.",
+        "instruction": "Asteria must choose one candidate from the original source text, translate/rewrite title/description/facts herself, apply it with `queue polish`, then run `heartbeat publish-one --execute --no-collect --json`. Python drafts are intentionally hidden to avoid anchoring; do not publish without Asteria editorial polish.",
         "steps": steps,
         "candidates": packs,
         "skippedSamples": skipped,
