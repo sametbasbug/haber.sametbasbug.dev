@@ -336,6 +336,8 @@ def _normalize_ai_hero_output(path: Path, slug: str) -> Path | None:
         return path
 
     if output.exists() and output.stat().st_size > 1024:
+        if path != output and path.parent == GENERATED_HERO_DIR and path.name.startswith(slug):
+            path.unlink(missing_ok=True)
         return output
     return path
 
