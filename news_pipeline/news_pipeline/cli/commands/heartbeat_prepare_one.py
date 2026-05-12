@@ -216,7 +216,7 @@ def prepare_one_command(
     cleanup: bool = typer.Option(True, "--cleanup/--no-cleanup", help="Run queue cleanup before preparing the editorial pack."),
     full_collect: bool = typer.Option(False, "--full-collect", help="Bypass source cadence during collect."),
     min_score: float = typer.Option(0.68, "--min-score", help="Strict publish threshold used for diagnostics."),
-    max_source_age_hours: int = typer.Option(36, "--max-source-age-hours", help="Maximum source age for auto publish diagnostics."),
+    max_source_age_hours: int = typer.Option(24, "--max-source-age-hours", help="Maximum source age for headline board freshness and auto publish diagnostics."),
     limit: int = typer.Option(20, "--limit", help="How many headline candidates to return."),
     json_output: bool = typer.Option(False, "--json", help="Emit machine-readable JSON."),
 ) -> None:
