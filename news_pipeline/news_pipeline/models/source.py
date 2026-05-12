@@ -15,3 +15,4 @@ class SourceConfig(BaseModel):
     url: HttpUrl
     category_hints: list[str] = []
     enabled: bool = True
+    cadence: str = "hourly"

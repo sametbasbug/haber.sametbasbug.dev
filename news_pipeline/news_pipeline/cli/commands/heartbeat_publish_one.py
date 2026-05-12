@@ -26,6 +26,31 @@ DEFAULT_MIN_SCORE = 0.68
 DEFAULT_MAX_SOURCE_AGE_HOURS = 72
 DEFAULT_MIN_INTERVAL_SECONDS = 3300
 STATE_PATH = Path("news_pipeline/data/state/heartbeat-publish-one.json")
+MAX_STEP_LOG_CHARS = 900
+
+
+def _compact_text(value: str, max_chars: int = MAX_STEP_LOG_CHARS) -> str:
+    text = (value or "").strip()
+    if len(text) <= max_chars:
+        return text
+    head = text[: max_chars // 2].rstrip()
+    tail = text[-max_chars // 2 :].lstrip()
+    return f"{head}\n…[truncated {len(text) - len(head) - len(tail)} chars]…\n{tail}"
+
+
+def _compact_step(step: dict[str, Any], *, full_logs: bool = False) -> dict[str, Any]:
+    if full_logs:
+        return step
+    compact = dict(step)
+    stdout = str(compact.get("stdout") or "")
+    stderr = str(compact.get("stderr") or "")
+    if stdout or stderr:
+        compact["logChars"] = {"stdout": len(stdout), "stderr": len(stderr)}
+    if stdout:
+        compact["stdout"] = _compact_text(stdout)
+    if stderr:
+        compact["stderr"] = _compact_text(stderr)
+    return compact
 
 
 def _run_step(name: str, func, *args, **kwargs) -> dict[str, Any]:
@@ -218,6 +243,7 @@ def publish_one_command(
     commit_message: str = typer.Option("Publish one heartbeat news item", "--commit-message", help="Git commit message."),
     min_interval_seconds: int = typer.Option(DEFAULT_MIN_INTERVAL_SECONDS, "--min-interval-seconds", help="Skip if another heartbeat publish-one cycle started recently."),
     force: bool = typer.Option(False, "--force", help="Bypass the recent-cycle guard."),
+    full_logs: bool = typer.Option(False, "--full-logs", help="Keep full stdout/stderr in JSON output instead of compacting step logs."),
 ) -> None:
     """Run one low-noise heartbeat publish cycle with strict quality gates.
 
@@ -257,7 +283,7 @@ def publish_one_command(
             ("queue-cleanup", ["queue", "cleanup"], 60),
         ):
             step = _run_pipeline_command(name, args, timeout=timeout)
-            payload["steps"].append(step)
+            payload["steps"].append(_compact_step(step, full_logs=full_logs))
             if not step["ok"]:
                 payload["result"] = "error"
                 payload["reason"] = f"{name} failed"
@@ -293,7 +319,7 @@ def publish_one_command(
         raise typer.Exit(code=1)
 
     publish_step = _run_step("publish", publish_command, approved.queue_id, max_source_age_hours=max_source_age_hours)
-    payload["steps"].append(publish_step)
+    payload["steps"].append(_compact_step(publish_step, full_logs=full_logs))
     if not publish_step["ok"]:
         payload["result"] = "error"
         payload["reason"] = "publish failed"
@@ -309,7 +335,7 @@ def publish_one_command(
 
     for name, func in (("audit-images", audit_images_command), ("audit-content", audit_content_command)):
         step = _run_step(name, func)
-        payload["steps"].append(step)
+        payload["steps"].append(_compact_step(step, full_logs=full_logs))
         if not step["ok"]:
             payload["result"] = "error"
             payload["reason"] = f"{name} failed"
@@ -319,7 +345,7 @@ def publish_one_command(
 
     if build:
         build_step = _run_shell("npm-build", ["npm", "run", "build"], timeout=240)
-        payload["steps"].append(build_step)
+        payload["steps"].append(_compact_step(build_step, full_logs=full_logs))
         if not build_step["ok"]:
             payload["result"] = "error"
             payload["reason"] = "build failed"
@@ -328,7 +354,7 @@ def publish_one_command(
             raise typer.Exit(code=1)
 
     git_steps = _git_commit_and_push(commit_message, push=push)
-    payload["steps"].extend(git_steps)
+    payload["steps"].extend(_compact_step(step, full_logs=full_logs) for step in git_steps)
     if any(not step.get("ok") for step in git_steps):
         payload["result"] = "error"
         payload["reason"] = "git commit/push failed"

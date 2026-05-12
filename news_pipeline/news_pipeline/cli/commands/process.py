@@ -1,6 +1,12 @@
 from __future__ import annotations
 
+from collections import Counter
+from datetime import UTC, datetime, timedelta
+import json
+import os
 from pathlib import Path
+
+import typer
 
 from news_pipeline.config.loader import load_yaml
 from news_pipeline.dedupe.similarity import are_probably_duplicates, are_probably_related
@@ -19,36 +25,109 @@ from news_pipeline.storage.json_store import JsonStore
 from news_pipeline.utils.logging import get_logger
 
 
-def process_command(config_path: str = "news_pipeline/news_pipeline/config/sources.yaml") -> None:
+MAX_PROCESS_SOURCE_AGE_HOURS = 72
+DEFAULT_PURGE_STALE_RAW_HOURS = 96
+
+
+def _verbose_enabled(value: bool) -> bool:
+    if value:
+        return True
+    return os.environ.get("NEWS_PIPELINE_VERBOSE", "0") in {"1", "true", "TRUE", "yes", "YES"}
+
+
+def _purge_stale_raw(raw_root: Path, now: datetime, older_than_hours: int) -> int:
+    if older_than_hours <= 0:
+        return 0
+    purged = 0
+    cutoff = now - timedelta(hours=older_than_hours)
+    for path in raw_root.glob("*.json"):
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+            published_raw = payload.get("published_at")
+            if not published_raw:
+                continue
+            published_at = datetime.fromisoformat(str(published_raw)).astimezone(UTC)
+        except Exception:
+            continue
+        if published_at < cutoff:
+            path.unlink(missing_ok=True)
+            purged += 1
+    return purged
+
+
+def process_command(
+    config_path: str = "news_pipeline/news_pipeline/config/sources.yaml",
+    verbose: bool = typer.Option(False, "--verbose", help="Print per-item process diagnostics."),
+    reprocess_all: bool = typer.Option(False, "--reprocess-all", help="Re-score/rewrite unchanged queue items too."),
+    purge_stale_raw_hours: int = typer.Option(DEFAULT_PURGE_STALE_RAW_HOURS, "--purge-stale-raw-hours", help="Delete raw items too old to publish before processing; 0 disables."),
+) -> None:
     logger = get_logger()
     root = Path.cwd()
-    raw_store = JsonStore(root / "news_pipeline/data/raw", RawArticle)
+    raw_root = root / "news_pipeline/data/raw"
+    now = datetime.now(UTC)
+    purged_stale_raw = _purge_stale_raw(raw_root, now, purge_stale_raw_hours)
+    raw_store = JsonStore(raw_root, RawArticle)
     normalized_store = JsonStore(root / "news_pipeline/data/normalized", NormalizedArticle)
     queue_service = QueueService(root / "news_pipeline/data/queue")
     normalizer = ArticleNormalizer()
+    verbose_logs = _verbose_enabled(verbose)
 
     config = load_yaml(root / config_path)
     sources = {item["id"]: SourceConfig.model_validate(item) for item in config.get("sources", [])}
+    queue_items = queue_service.list_items()
+    queue_by_normalized_id = {item.normalized_id: item for item in queue_items}
 
-    kept: list[NormalizedArticle] = []
+    kept: list[NormalizedArticle] = [
+        article
+        for article in normalized_store.list_all()
+        if not article.published_at or now - article.published_at.astimezone(UTC) <= timedelta(hours=MAX_PROCESS_SOURCE_AGE_HOURS)
+    ]
+    kept_ids = {article.id for article in kept}
     created = 0
     updated = 0
     rejected = 0
+    skipped_missing_source = 0
+    skipped_stale_raw = 0
+    skipped_unchanged = 0
+    skipped_duplicate = 0
+    filter_skips: Counter[str] = Counter()
+    related_links = 0
+    supporting_merges = 0
+    notes_added = 0
+
     for raw in raw_store.list_all():
         source = sources.get(raw.source_id)
         if source is None:
+            skipped_missing_source += 1
+            continue
+        if raw.published_at and now - raw.published_at.astimezone(UTC) > timedelta(hours=MAX_PROCESS_SOURCE_AGE_HOURS):
+            skipped_stale_raw += 1
             continue
         normalized = normalizer.normalize(raw, source)
-        if any(are_probably_duplicates(normalized, existing) for existing in kept):
-            logger.info(f"dedupe skip: {normalized.title}")
+        existing_item = queue_by_normalized_id.get(normalized.id)
+        if (
+            not reprocess_all
+            and existing_item is not None
+            and existing_item.status in {"new", "reviewing", "approved", "published"}
+            and normalized_store.load(normalized.id) is not None
+        ):
+            skipped_unchanged += 1
             continue
 
-        existing_item = queue_service.find_by_normalized_id(normalized.id)
+        if any(existing.id != normalized.id and are_probably_duplicates(normalized, existing) for existing in kept):
+            skipped_duplicate += 1
+            if verbose_logs:
+                logger.info(f"dedupe skip: {normalized.title}")
+            continue
+
         decision = should_keep_article(normalized)
         if not decision.keep:
-            logger.info(f"filter skip: {normalized.title} ({decision.reason})")
+            reason = decision.reason or "filtered out"
+            filter_skips[reason] += 1
+            if verbose_logs:
+                logger.info(f"filter skip: {normalized.title} ({reason})")
             if existing_item and existing_item.status != "published":
-                queue_service.reject(existing_item.queue_id, note=decision.reason or "filtered out")
+                queue_service.reject(existing_item.queue_id, note=reason)
                 rejected += 1
             continue
 
@@ -57,6 +136,7 @@ def process_command(config_path: str = "news_pipeline/news_pipeline/config/sourc
 
         if existing_item is None:
             item = queue_service.enqueue(normalized)
+            queue_by_normalized_id[item.normalized_id] = item
             created += 1
         else:
             item = existing_item
@@ -88,21 +168,38 @@ def process_command(config_path: str = "news_pipeline/news_pipeline/config/sourc
 
         if related_items:
             item.related_queue_ids = [related.id for related in related_items[:5]]
+            related_links += len(item.related_queue_ids)
             merge_related_note(item, len(related_items))
             for related in related_items[:3]:
                 item = merge_supporting_source(item, related)
-                related_item = queue_service.find_by_normalized_id(related.id)
+                supporting_merges += 1
+                related_item = queue_by_normalized_id.get(related.id)
                 if related_item is not None:
                     related_item.related_queue_ids = list({*related_item.related_queue_ids, normalized.id})
                     merge_related_note(related_item, len(related_item.related_queue_ids))
                     related_item = merge_supporting_source(related_item, normalized)
                     queue_service.save(related_item)
+                    queue_by_normalized_id[related_item.normalized_id] = related_item
 
         for note in rewrite_notes:
             if note not in item.notes:
                 item.notes.append(note)
+                notes_added += 1
         item = rebalance_sources(item)
         queue_service.save(item)
-        kept.append(normalized)
+        queue_by_normalized_id[item.normalized_id] = item
+        if normalized.id not in kept_ids:
+            kept.append(normalized)
+            kept_ids.add(normalized.id)
 
-    logger.info(f"processed created={created}, updated={updated}, rejected={rejected}")
+    logger.info(
+        "process summary: "
+        f"created={created}, updated={updated}, rejected={rejected}, "
+        f"stale_raw_purged={purged_stale_raw}, stale_raw_skipped={skipped_stale_raw}, unchanged_skipped={skipped_unchanged}, "
+        f"dedupe_skipped={skipped_duplicate}, missing_source_skipped={skipped_missing_source}, "
+        f"filter_skipped={sum(filter_skips.values())}, related_links={related_links}, "
+        f"supporting_merges={supporting_merges}, notes_added={notes_added}"
+    )
+    if filter_skips:
+        top_reasons = "; ".join(f"{reason}={count}" for reason, count in filter_skips.most_common(6))
+        logger.info(f"process filter reasons: {top_reasons}")

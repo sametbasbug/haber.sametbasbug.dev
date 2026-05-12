@@ -5,6 +5,7 @@ sources:
     url: https://techcrunch.com/feed/
     category_hints: [Teknoloji]
     enabled: true
+    cadence: hourly
 
   - id: the-verge
     name: The Verge
@@ -12,6 +13,7 @@ sources:
     url: https://www.theverge.com/rss/index.xml
     category_hints: [Teknoloji]
     enabled: true
+    cadence: 3h
 
   - id: ars-technica
     name: Ars Technica
@@ -19,6 +21,7 @@ sources:
     url: https://feeds.arstechnica.com/arstechnica/index
     category_hints: [Teknoloji]
     enabled: true
+    cadence: 3h
 
   - id: engadget
     name: Engadget
@@ -26,6 +29,7 @@ sources:
     url: https://www.engadget.com/rss.xml
     category_hints: [Teknoloji]
     enabled: true
+    cadence: 3h
 
   - id: mit-tech-review
     name: MIT Technology Review
@@ -33,6 +37,7 @@ sources:
     url: https://www.technologyreview.com/feed/
     category_hints: [Teknoloji]
     enabled: true
+    cadence: 6h
 
   - id: zdnet
     name: ZDNET
@@ -40,6 +45,7 @@ sources:
     url: https://www.zdnet.com/topic/innovation/rss.xml
     category_hints: [Teknoloji]
     enabled: true
+    cadence: 6h
 
   - id: fast-company-tech
     name: Fast Company Tech
@@ -47,6 +53,7 @@ sources:
     url: https://www.fastcompany.com/technology/rss
     category_hints: [Teknoloji]
     enabled: true
+    cadence: 6h
 
   - id: reuters-tech
     name: Reuters Technology
@@ -54,6 +61,7 @@ sources:
     url: https://feeds.reuters.com/reuters/technologyNews
     category_hints: [Teknoloji]
     enabled: true
+    cadence: 6h
 
   - id: politico-eu
     name: Politico Europe
@@ -61,6 +69,7 @@ sources:
     url: https://www.politico.eu/feed/
     category_hints: [Siyaset]
     enabled: true
+    cadence: hourly
 
   - id: bbc-world
     name: BBC World
@@ -68,6 +77,7 @@ sources:
     url: http://feeds.bbci.co.uk/news/world/rss.xml
     category_hints: [Siyaset]
     enabled: true
+    cadence: hourly
 
   - id: reuters-world
     name: Reuters World
@@ -75,6 +85,7 @@ sources:
     url: https://feeds.reuters.com/Reuters/worldNews
     category_hints: [Siyaset]
     enabled: true
+    cadence: 6h
 
   - id: associated-press-top-news
     name: Associated Press Top News
@@ -82,6 +93,7 @@ sources:
     url: https://apnews.com/hub/ap-top-news?output=rss
     category_hints: [Siyaset]
     enabled: true
+    cadence: 6h
 
   - id: guardian-world
     name: The Guardian World
@@ -89,6 +101,7 @@ sources:
     url: https://www.theguardian.com/world/rss
     category_hints: [Siyaset]
     enabled: true
+    cadence: hourly
 
   - id: wired
     name: WIRED
@@ -96,6 +109,7 @@ sources:
     url: https://www.wired.com/feed/rss
     category_hints: [Teknoloji]
     enabled: true
+    cadence: 3h
 
   - id: cnbc-tech
     name: CNBC Technology
@@ -103,6 +117,7 @@ sources:
     url: https://www.cnbc.com/id/19854910/device/rss/rss.html
     category_hints: [Teknoloji, Ekonomi]
     enabled: true
+    cadence: 3h
 
   - id: marketwatch-top-stories
     name: MarketWatch Top Stories
@@ -110,6 +125,7 @@ sources:
     url: https://feeds.content.dowjones.io/public/rss/mw_topstories
     category_hints: [Ekonomi]
     enabled: true
+    cadence: 6h
 
   - id: nasa-news
     name: NASA News
@@ -117,6 +133,7 @@ sources:
     url: https://www.nasa.gov/news-release/feed/
     category_hints: [Bilim]
     enabled: true
+    cadence: 3h
 
   - id: sciencedaily-top-science
     name: ScienceDaily Top Science
@@ -124,6 +141,7 @@ sources:
     url: https://www.sciencedaily.com/rss/top/science.xml
     category_hints: [Bilim]
     enabled: true
+    cadence: 3h
 
   - id: guardian-science
     name: The Guardian Science
@@ -131,6 +149,7 @@ sources:
     url: https://www.theguardian.com/science/rss
     category_hints: [Bilim]
     enabled: true
+    cadence: 6h
 
   - id: guardian-culture
     name: The Guardian Culture
@@ -138,6 +157,7 @@ sources:
     url: https://www.theguardian.com/culture/rss
     category_hints: [Kültür]
     enabled: true
+    cadence: 3h
 
   - id: guardian-film
     name: The Guardian Film
@@ -145,4 +165,5 @@ sources:
     url: https://www.theguardian.com/film/rss
     category_hints: [Kültür]
     enabled: true
+    cadence: 6h
 
