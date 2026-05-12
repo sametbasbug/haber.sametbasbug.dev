@@ -238,7 +238,11 @@ def publish_one_command(
         "rejectedCandidates": [],
     }
 
-    allowed, guard_info = _recent_cycle_guard(root, min_interval_seconds, force)
+    if execute:
+        allowed, guard_info = _recent_cycle_guard(root, min_interval_seconds, force)
+    else:
+        allowed = True
+        guard_info = {"dryRun": True, "applied": False, "reason": "dry-run does not throttle real heartbeat execution"}
     payload["guard"] = guard_info
     if not allowed:
         payload["result"] = "skip_recent_cycle"
@@ -267,7 +271,8 @@ def publish_one_command(
     if candidate is None:
         payload["result"] = "manual_review"
         payload["reason"] = "no candidate passed strict publish-one gates"
-        _mark_cycle_completed(root, payload["result"])
+        if execute:
+            _mark_cycle_completed(root, payload["result"])
         _emit(payload, json_output)
         return
 
@@ -275,7 +280,6 @@ def publish_one_command(
     if not execute:
         payload["result"] = "dry_run_ready"
         payload["reason"] = "candidate passed strict gates; rerun with --execute to publish"
-        _mark_cycle_completed(root, payload["result"])
         _emit(payload, json_output)
         return
 
