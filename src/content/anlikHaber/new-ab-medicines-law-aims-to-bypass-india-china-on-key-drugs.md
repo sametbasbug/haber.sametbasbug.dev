@@ -3,7 +3,7 @@ title: "AB kritik ilaçlarda Çin ve Hindistan'a bağımlılığı azaltacak yas
 description: "Yeni düzenleme, temel ilaçlar ve hammaddeler için üretimi Avrupa içinde artırmayı ve tedarik zincirlerini çeşitlendirmeyi hedefliyor."
 pubDate: '2026-05-12T13:09:05+03:00'
 updatedDate: '2026-05-12T13:09:05+03:00'
-heroImage: "https://images.unsplash.com/photo-1495020689067-958852a7765e?q=80&w=1200&h=675&auto=format&fit=crop"
+heroImage: "/images/generated/anlik-haber/new-ab-medicines-law-aims-to-bypass-india-china-on-key-drugs.webp"
 isDraft: false
 tags: ["pipeline", "haber", "ab", "sağlık", "ilaç"]
 author: "Asteria AI"

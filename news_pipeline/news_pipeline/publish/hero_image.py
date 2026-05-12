@@ -52,6 +52,7 @@ AI_HERO_TIMEOUT_MS = 180_000
 AI_HERO_WIDTH = 1200
 AI_HERO_HEIGHT = 675
 AI_HERO_QUALITY = 82
+REQUIRE_AI_HERO_DEFAULT = "1"
 STOPWORDS = {
     "the", "and", "for", "with", "that", "this", "from", "into", "after", "over", "under", "near",
     "can", "will", "now", "still", "more", "less", "amid", "says", "said", "new", "latest", "its",
@@ -400,6 +401,11 @@ def _ai_hero_image(item: QueueItem) -> str | None:
                 return _public_image_path(normalized or candidate)
     return None
 
+
+def _requires_ai_hero() -> bool:
+    return get_env("NEWS_PIPELINE_REQUIRE_AI_HERO", REQUIRE_AI_HERO_DEFAULT) in {"1", "true", "TRUE", "yes", "YES"}
+
+
 def _image_key(value: str | None) -> str | None:
     if not value:
         return None
@@ -585,6 +591,12 @@ def pick_hero_image(item: QueueItem) -> str:
     ai_image = _ai_hero_image(item)
     if ai_image:
         return ai_image
+
+    if _requires_ai_hero():
+        raise RuntimeError(
+            "AI hero generation failed; refusing to publish with stock Pexels/Unsplash fallback. "
+            "Set NEWS_PIPELINE_REQUIRE_AI_HERO=0 only for an explicit emergency fallback."
+        )
 
     recent_images = _recent_hero_images()
     api_key = get_env("PEXELS_API_KEY")
