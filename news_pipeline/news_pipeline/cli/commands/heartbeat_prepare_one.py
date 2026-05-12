@@ -17,6 +17,8 @@ from news_pipeline.queue.service import QueueService
 from news_pipeline.storage.json_store import JsonStore
 
 MAX_PER_SOURCE = 3
+HOT_CATEGORY_RECENT_WINDOW = 3
+HOT_CATEGORY_BOARD_LIMIT = 1
 MIN_CATEGORY_TARGETS = {"Bilim": 2, "Kültür": 2, "Ekonomi": 2, "Teknoloji": 3, "Siyaset": 3}
 RISKY_HEADLINE_TERMS = {
     "lawsuit",
@@ -69,6 +71,49 @@ def _source_name(item: Any) -> str:
     return item.draft_sources[0].name if item.draft_sources else "-"
 
 
+def _frontmatter_value(text: str, key: str) -> str:
+    match = re.search(rf"(?m)^{re.escape(key)}:\s*[\"']?(.*?)[\"']?\s*$", text)
+    return match.group(1).strip() if match else ""
+
+
+def _live_markdown_files(root: Path) -> list[Path]:
+    return list((root / "src/content/anlikHaber").glob("*.md"))
+
+
+def _recent_live_categories(root: Path, limit: int = HOT_CATEGORY_RECENT_WINDOW) -> list[str]:
+    rows: list[tuple[str, str]] = []
+    for path in _live_markdown_files(root):
+        try:
+            text = path.read_text(encoding="utf-8")
+        except Exception:
+            continue
+        pub_date = _frontmatter_value(text, "pubDate")
+        category = _frontmatter_value(text, "category")
+        if pub_date and category:
+            rows.append((pub_date, category))
+    rows.sort(reverse=True)
+    return [category for _, category in rows[:limit]]
+
+
+def _hot_category(root: Path) -> str | None:
+    categories = _recent_live_categories(root)
+    if len(categories) < HOT_CATEGORY_RECENT_WINDOW:
+        return None
+    first = categories[0]
+    return first if all(category == first for category in categories) else None
+
+
+def _live_source_urls(root: Path) -> set[str]:
+    urls: set[str] = set()
+    for path in _live_markdown_files(root):
+        try:
+            text = path.read_text(encoding="utf-8")
+        except Exception:
+            continue
+        urls.update(re.findall(r"(?m)^\s+url:\s*[\"']?([^\"'\s]+)", text))
+    return {url.strip() for url in urls if url.strip()}
+
+
 def _headline_text(root: Path, item: Any) -> str:
     normalized_store = JsonStore(root / "news_pipeline/data/normalized", NormalizedArticle)
     article = normalized_store.load(item.normalized_id)
@@ -106,11 +151,14 @@ def _board_score(root: Path, item: Any) -> tuple[float, list[str]]:
     return round(score, 3), reasons
 
 
-def _passes_basic_board_filter(root: Path, item: Any, max_source_age_hours: int) -> tuple[bool, str | None]:
+def _passes_basic_board_filter(root: Path, item: Any, max_source_age_hours: int, live_urls: set[str] | None = None) -> tuple[bool, str | None]:
     if item.status != "new":
         return False, "status is not new"
     if _is_excluded_source_format(item):
         return False, "excluded source format (podcast/liveblog)"
+    live_urls = live_urls or set()
+    if any(str(source.url) in live_urls for source in item.draft_sources):
+        return False, "source already published"
     fresh, stale_reason = _source_is_fresh(root, item, max_source_age_hours)
     if not fresh:
         return False, stale_reason
@@ -125,10 +173,12 @@ def _passes_basic_board_filter(root: Path, item: Any, max_source_age_hours: int)
 
 
 def _select_headline_board(root: Path, items: list[Any], limit: int, max_source_age_hours: int) -> tuple[list[Any], list[dict[str, Any]], dict[str, Any]]:
+    hot_category = _hot_category(root)
+    live_urls = _live_source_urls(root)
     eligible: list[tuple[Any, float, list[str]]] = []
     skipped: list[dict[str, Any]] = []
     for item in items:
-        ok, reason = _passes_basic_board_filter(root, item, max_source_age_hours)
+        ok, reason = _passes_basic_board_filter(root, item, max_source_age_hours, live_urls)
         if not ok:
             if len(skipped) < 12:
                 skipped.append({"queueId": item.queue_id, "score": round(float(item.editorial_priority), 3), "title": item.draft_title, "reason": reason})
@@ -152,6 +202,8 @@ def _select_headline_board(root: Path, items: list[Any], limit: int, max_source_
         source = _source_name(item)
         if source_counts[source] >= MAX_PER_SOURCE:
             return False
+        if hot_category and item.draft_category == hot_category and category_counts[hot_category] >= HOT_CATEGORY_BOARD_LIMIT:
+            return False
         selected.append(item)
         selected_ids.add(item.queue_id)
         selected_headlines.append(headline)
@@ -160,6 +212,8 @@ def _select_headline_board(root: Path, items: list[Any], limit: int, max_source_
         return True
 
     for category, target in MIN_CATEGORY_TARGETS.items():
+        if category == hot_category:
+            target = min(target, HOT_CATEGORY_BOARD_LIMIT)
         for item, _, _ in eligible:
             if len(selected) >= limit or category_counts[category] >= target:
                 break
@@ -176,6 +230,9 @@ def _select_headline_board(root: Path, items: list[Any], limit: int, max_source_
         "eligibleCount": len(eligible),
         "sourceCounts": dict(source_counts),
         "categoryCounts": dict(category_counts),
+        "recentCategories": _recent_live_categories(root),
+        "hotCategory": hot_category,
+        "hotCategoryBoardLimit": HOT_CATEGORY_BOARD_LIMIT if hot_category else None,
         "maxPerSource": MAX_PER_SOURCE,
     }
     return selected, skipped, {"scores": score_map, "diagnostics": diagnostics}
