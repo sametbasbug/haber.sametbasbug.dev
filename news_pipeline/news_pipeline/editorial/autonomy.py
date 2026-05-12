@@ -151,8 +151,8 @@ def has_publishable_body_depth(item: QueueItem) -> bool:
 def is_autopublish_candidate(item: QueueItem, min_score: float = 0.68) -> tuple[bool, str | None]:
     has_polish = has_asteria_editorial_polish(item)
     min_score = 0.0 if has_polish else CATEGORY_MIN_SCORES.get(item.draft_category, min_score)
-    if item.status != "new":
-        return False, "status is not new"
+    if item.status not in {"new", "approved"}:
+        return False, "status is not new or approved"
     if has_manual_review(item):
         return False, "manual-review item"
     if has_withdrawn_flag(item):

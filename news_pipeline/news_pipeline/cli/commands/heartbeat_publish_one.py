@@ -164,7 +164,7 @@ def _select_candidate(root: Path, min_score: float, max_source_age_hours: int, l
     items = sorted(service.list_items(), key=_candidate_sort_key, reverse=True)
     rejections: list[dict[str, Any]] = []
     for item in items:
-        if item.status != "new":
+        if item.status not in {"new", "approved"}:
             continue
         if _is_excluded_source_format(item):
             continue
