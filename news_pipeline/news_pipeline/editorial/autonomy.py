@@ -149,7 +149,8 @@ def has_publishable_body_depth(item: QueueItem) -> bool:
 
 
 def is_autopublish_candidate(item: QueueItem, min_score: float = 0.68) -> tuple[bool, str | None]:
-    min_score = CATEGORY_MIN_SCORES.get(item.draft_category, min_score)
+    has_polish = has_asteria_editorial_polish(item)
+    min_score = 0.0 if has_polish else CATEGORY_MIN_SCORES.get(item.draft_category, min_score)
     if item.status != "new":
         return False, "status is not new"
     if has_manual_review(item):
@@ -162,7 +163,7 @@ def is_autopublish_candidate(item: QueueItem, min_score: float = 0.68) -> tuple[
         return False, f"category not in safe autopublish set ({item.draft_category})"
     if is_high_risk_autopublish_topic(item):
         return False, "topic is high risk for autopublish"
-    if not has_asteria_editorial_polish(item):
+    if not has_polish:
         return False, "missing Asteria editorial polish"
     if not has_hero_brief(item):
         return False, "missing Asteria hero brief"
