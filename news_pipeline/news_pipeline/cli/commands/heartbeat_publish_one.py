@@ -231,6 +231,10 @@ def _git_commit_and_push(message: str, *, push: bool) -> list[dict[str, Any]]:
     steps.append(_run_shell("git-add", ["git", "add", "news_pipeline", "src/content/anlikHaber", "public/images/generated/anlik-haber"], timeout=60))
     if not steps[-1]["ok"]:
         return steps
+    lock_path = Path("src/content/anlikHaber/.hero-image.lock")
+    if lock_path.exists():
+        lock_path.unlink(missing_ok=True)
+    subprocess.run(["git", "rm", "--cached", "--ignore-unmatch", str(lock_path)], text=True, capture_output=True, check=False)
     steps.append(_run_shell("git-commit", ["git", "commit", "-m", message], timeout=120))
     if not steps[-1]["ok"]:
         return steps
