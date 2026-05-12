@@ -23,6 +23,7 @@ description: \"{item.draft_description}\"
 pubDate: '{now}'
 updatedDate: '{now}'
 heroImage: "{hero_image}"
+heroAlt: "{item.hero_alt}"
 isDraft: {draft_value}
 tags: [{tags}]
 author: "Asteria AI"

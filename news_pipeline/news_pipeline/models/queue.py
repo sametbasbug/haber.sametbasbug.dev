@@ -26,6 +26,9 @@ class QueueItem(BaseModel):
     draft_tags: list[str] = Field(default_factory=list)
     draft_sources: list[DraftSource] = Field(default_factory=list)
     draft_facts: list[str] = Field(default_factory=list)
+    draft_body: str = ""
+    hero_prompt: str = ""
+    hero_alt: str = ""
     supporting_sources: list[DraftSource] = Field(default_factory=list)
     related_queue_ids: list[str] = Field(default_factory=list)
     notes: list[str] = Field(default_factory=list)

@@ -253,6 +253,27 @@ def _category_visual_direction(category: str) -> str:
 
 def _build_ai_hero_prompt(item: QueueItem) -> str:
     category = item.draft_category or FALLBACK_CATEGORY
+    if item.hero_prompt.strip():
+        return f"""
+Create a 16:9 modern editorial hero image for a Turkish global news site named Anlık Haber.
+
+Asteria editorial visual brief:
+{item.hero_prompt.strip()}
+
+Article category: {category}
+Headline: {item.draft_title}
+Description: {item.draft_description}
+
+Hard rules:
+- The image must represent the specific news topic, not just generic category decoration.
+- Do not copy or imitate any publisher/source image.
+- Do not add readable text, letters, headlines, captions, UI text, watermarks, or logos.
+- Do not fabricate photorealistic faces of real people; use symbolic/editorial imagery for public figures and politics.
+- Avoid generic handshake, conference audience, random office meeting, celebration, tourist, food, beach, wedding, or party visuals.
+- No clickbait, disaster porn, gore, caricature, propaganda poster style, or misleading scene reconstruction.
+- Premium digital news cover style, realistic lighting, sharp composition, editorial restraint.
+""".strip()
+
     facts = "; ".join(item.draft_facts[:4])
     tags = ", ".join(item.draft_tags[:8])
     source_names = ", ".join(source.name for source in item.draft_sources[:2])

@@ -31,6 +31,9 @@ def queue_polish_command(
     description: str = typer.Option(..., "--description", help="Asteria-edited Turkish deck/description."),
     category: str = typer.Option(..., "--category", help="One of: Siyaset, Ekonomi, Teknoloji, Bilim, Kültür."),
     facts_json: str = typer.Option(..., "--facts-json", help="JSON array of 2-4 Asteria-edited Turkish fact sentences."),
+    body: str = typer.Option(..., "--body", help="Asteria-written Turkish article body, without the sources section."),
+    hero_prompt: str = typer.Option(..., "--hero-prompt", help="Asteria-written image generation prompt for the hero visual."),
+    hero_alt: str = typer.Option(..., "--hero-alt", help="Short Turkish alt text for the generated hero image."),
     tags_json: str | None = typer.Option(None, "--tags-json", help="Optional JSON array of tags."),
     note: str = typer.Option("asteria-editorial-polish", "--note", help="Editorial note to attach to the queue item."),
     json_output: bool = typer.Option(False, "--json", help="Emit JSON result."),
@@ -54,6 +57,9 @@ def queue_polish_command(
     item.draft_description = description.strip()[:240]
     item.draft_category = category
     item.draft_facts = facts[:4]
+    item.draft_body = body.strip()
+    item.hero_prompt = hero_prompt.strip()
+    item.hero_alt = hero_alt.strip()
     item.draft_tags = tags[:6]
     if note and note not in item.notes:
         item.notes.append(note)
@@ -67,6 +73,9 @@ def queue_polish_command(
         "description": item.draft_description,
         "category": item.draft_category,
         "facts": item.draft_facts,
+        "bodyChars": len(item.draft_body),
+        "heroPromptChars": len(item.hero_prompt),
+        "heroAlt": item.hero_alt,
         "tags": item.draft_tags,
     }
     if json_output:

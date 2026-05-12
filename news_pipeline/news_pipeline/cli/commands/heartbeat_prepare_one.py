@@ -30,11 +30,7 @@ def _article_payload(root: Path, item: Any) -> dict[str, Any]:
             "publishedAt": article.published_at.isoformat() if article and article.published_at else None,
             "ageHours": source_age_hours,
         },
-        "sourceText": {
-            "title": article.title if article else "",
-            "summary": article.summary if article else "",
-            "contentSnippet": article.content_snippet[:1600] if article else "",
-        },
+        "headline": article.title if article else item.draft_title,
     }
 
 
@@ -95,7 +91,7 @@ def prepare_one_command(
         "schemaVersion": 1,
         "command": "heartbeat prepare-one",
         "result": result,
-        "instruction": "Asteria must choose one candidate from the original source text, translate/rewrite title/description/facts herself, apply it with `queue polish`, then run `heartbeat publish-one --execute --no-collect --json`. Python drafts are intentionally hidden to avoid anchoring; do not publish without Asteria editorial polish.",
+        "instruction": "Headline board only. Asteria must choose promising headlines, fetch/read the selected article herself, write Turkish title/description/body/facts plus heroPrompt/heroAlt, apply them with `queue polish`, then run `heartbeat publish-one --execute --no-collect --json`. Python summaries and drafts are intentionally hidden to avoid anchoring.",
         "steps": steps,
         "candidates": packs,
         "skippedSamples": skipped,

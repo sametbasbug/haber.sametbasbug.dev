@@ -41,10 +41,18 @@ def _topic_context(item: QueueItem) -> str:
 
 
 def build_body(item: QueueItem) -> str:
-    lead = item.draft_description.strip()
     source_name = item.draft_sources[0].name if item.draft_sources else "ilk kaynak"
     source_url = item.draft_sources[0].url if item.draft_sources else "https://example.com"
+    if item.draft_body.strip():
+        body = item.draft_body.strip()
+        return f"""{body}
 
+## Kaynaklar
+
+- Ana kaynak: [{source_name}]({source_url})
+"""
+
+    lead = item.draft_description.strip()
     facts = _clean_facts(item)
 
     opening = lead or "Gelişmeye ilişkin ilk çerçeve mevcut kaynaklardan derlendi."

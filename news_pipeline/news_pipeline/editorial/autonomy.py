@@ -127,6 +127,14 @@ def has_enough_fact_depth(item: QueueItem) -> bool:
     return True
 
 
+def has_asteria_editorial_polish(item: QueueItem) -> bool:
+    return any(note == "asteria-editorial-polish" or note.startswith("asteria-editorial-polish") for note in item.notes)
+
+
+def has_hero_brief(item: QueueItem) -> bool:
+    return bool(item.hero_prompt.strip()) and bool(item.hero_alt.strip())
+
+
 def has_publishable_body_depth(item: QueueItem) -> bool:
     body = build_body(item)
     if len(body.strip()) < MIN_AUTOPUBLISH_BODY_LENGTH:
@@ -150,6 +158,10 @@ def is_autopublish_candidate(item: QueueItem, min_score: float = 0.68) -> tuple[
         return False, f"category not in safe autopublish set ({item.draft_category})"
     if is_high_risk_autopublish_topic(item):
         return False, "topic is high risk for autopublish"
+    if not has_asteria_editorial_polish(item):
+        return False, "missing Asteria editorial polish"
+    if not has_hero_brief(item):
+        return False, "missing Asteria hero brief"
     if looks_too_english(item.draft_title):
         return False, "title still too english"
     if looks_too_english(item.draft_description):
