@@ -140,8 +140,11 @@ def has_hero_brief(item: QueueItem) -> bool:
 
 
 def has_publishable_body_depth(item: QueueItem) -> bool:
-    body = build_body(item)
-    if len(body.strip()) < MIN_AUTOPUBLISH_BODY_LENGTH:
+    # Check Asteria's editorial body, not the rendered Markdown with the
+    # source footer appended. Otherwise English words inside URLs/source titles
+    # can falsely reject an otherwise clean Turkish article body.
+    body = item.draft_body.strip() or build_body(item)
+    if len(body) < MIN_AUTOPUBLISH_BODY_LENGTH:
         return False
     if looks_too_english(body):
         return False
