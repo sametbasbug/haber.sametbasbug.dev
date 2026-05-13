@@ -21,7 +21,6 @@ TITLE_DUPLICATE_THRESHOLD = 88
 DESCRIPTION_DUPLICATE_THRESHOLD = 92
 COMBINED_TOPIC_DUPLICATE_THRESHOLD = 82
 SAME_SOURCE_TOPIC_DUPLICATE_THRESHOLD = 74
-RECENT_TOPIC_FAMILY_WINDOW_HOURS = 36
 DISALLOWED_LOCAL_SOURCE_NAMES = {"Diken", "Kısa Dalga", "Kisa Dalga", "Medyascope"}
 
 TOPIC_STOPWORDS = {
@@ -133,54 +132,6 @@ def _topic_tokens(value: str) -> set[str]:
     return tokens
 
 
-def _has_token_prefix(tokens: set[str], *prefixes: str) -> bool:
-    return any(any(token.startswith(prefix) for token in tokens) for prefix in prefixes)
-
-
-def _topic_family_hits(value: str) -> set[str]:
-    """Return broad issue families that should not repeat in near-adjacent publishes.
-
-    Fuzzy title/description matching misses stories that are packaged differently but
-    still land on the same reader-facing issue. Keep this deliberately conservative:
-    it only fires on high-signal combinations, not on a country name alone.
-    """
-    tokens = _topic_tokens(value)
-    hits: set[str] = set()
-    has_ukraine = _has_token_prefix(tokens, "ukrayn", "ukrain")
-    has_russia = _has_token_prefix(tokens, "rusya", "russia", "kremlin", "moskova", "moscow")
-    has_child = _has_token_prefix(tokens, "cocuk", "child", "teen", "genc")
-    has_missing_or_abduction = _has_token_prefix(
-        tokens,
-        "kayip",
-        "missing",
-        "stolen",
-        "abduct",
-        "kacir",
-        "deport",
-        "gotur",
-        "return",
-    )
-    if has_ukraine and has_russia and has_child and has_missing_or_abduction:
-        hits.add("ukraine_russia_missing_children")
-    return hits
-
-
-def _published_at_from_frontmatter(frontmatter: str) -> datetime | None:
-    value = _frontmatter_value(frontmatter, "pubDate")
-    if not value:
-        return None
-    try:
-        return datetime.fromisoformat(value).astimezone(UTC)
-    except ValueError:
-        return None
-
-
-def _is_recent_published_topic(frontmatter: str) -> bool:
-    published_at = _published_at_from_frontmatter(frontmatter)
-    if published_at is None:
-        return False
-    return datetime.now(UTC) - published_at <= timedelta(hours=RECENT_TOPIC_FAMILY_WINDOW_HOURS)
-
 
 def _assert_not_duplicate_topic(
     path: Path,
@@ -200,12 +151,6 @@ def _assert_not_duplicate_topic(
     item_tokens = _topic_tokens(item_text)
     existing_tokens = _topic_tokens(existing_topic)
     shared_tokens = item_tokens & existing_tokens
-    item_families = _topic_family_hits(item_text)
-    existing_families = _topic_family_hits(existing_topic)
-    if item_families & existing_families and _is_recent_published_topic(existing_frontmatter):
-        family = sorted(item_families & existing_families)[0]
-        raise typer.BadParameter(f"recent same issue family already published in {path.name}: {family}")
-
     if len(shared_tokens) < 4:
         return
 
