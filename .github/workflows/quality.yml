@@ -33,6 +33,21 @@ jobs:
       - name: Compile Python pipeline
         run: python -m compileall news_pipeline/news_pipeline
 
+      - name: Check deprecated CLI guardrails
+        run: |
+          if news-pipeline --help | grep -q "^│ publish"; then
+            echo "direct publish command should not appear in public help" >&2
+            exit 1
+          fi
+          set +e
+          news-pipeline publish __ci_guardrail__ >/tmp/publish.out 2>&1
+          code=$?
+          set -e
+          cat /tmp/publish.out
+          test "$code" -eq 2
+          grep -q "DEPRECATED: news-pipeline publish is disabled" /tmp/publish.out
+          grep -q "heartbeat publish-one" /tmp/publish.out
+
       - name: Run pipeline audits
         run: |
           news-pipeline audit-content

@@ -48,16 +48,22 @@ news-pipeline queue inspect <QUEUE_ID>
 news-pipeline queue approve <QUEUE_ID>
 ```
 
-### 8. Canlı markdown üret
+### 8. Asteria polish uygula
 ```bash
-news-pipeline publish <QUEUE_ID>
+news-pipeline queue polish <QUEUE_ID> \
+  --title "..." \
+  --description "..." \
+  --body-file /tmp/body.md \
+  --hero-prompt "..." \
+  --hero-alt "..."
 ```
 
-### 9. Son edit
-- `src/content/anlikHaber/` altındaki üretilen markdown dosyasını gözden geçir
-- başlığı keskinleştir
-- description'ı rafine et
-- gerekiyorsa ikinci/üçüncü kaynak ekle
+### 9. Teknik publish rayını çalıştır
+```bash
+news-pipeline heartbeat publish-one --execute --no-collect --json
+```
+
+Not: `news-pipeline publish <QUEUE_ID>` artık doğrudan kullanılmaz. Bu düşük seviye iç adım, Asteria polish + audit + build + commit/push zincirini bypass edebileceği için CLI’da devre dışı bırakıldı.
 
 ---
 

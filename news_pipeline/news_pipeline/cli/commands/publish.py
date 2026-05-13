@@ -185,7 +185,7 @@ def _assert_not_duplicate_live(content_root: Path, item_title: str, item_descrip
         _assert_not_duplicate_topic(path, text, item_topic_text, item_urls, existing_urls)
 
 
-def publish_command(queue_id: str, publish_dir: str = "src/content/anlikHaber", max_source_age_hours: int = MAX_SOURCE_AGE_HOURS) -> None:
+def publish_queue_item(queue_id: str, publish_dir: str = "src/content/anlikHaber", max_source_age_hours: int = MAX_SOURCE_AGE_HOURS) -> None:
     root = Path.cwd()
     service = QueueService(root / "news_pipeline/data/queue")
     item = service.store.load(queue_id)
@@ -217,3 +217,14 @@ def publish_command(queue_id: str, publish_dir: str = "src/content/anlikHaber", 
     path = write_live(content_root, item)
     service.mark_published(queue_id, path.stem)
     print(f"published: {path}")
+
+
+def publish_command(queue_id: str) -> None:
+    """Deprecated direct publish entrypoint kept only as a guardrail."""
+    typer.echo("DEPRECATED: news-pipeline publish is disabled", err=True)
+    typer.echo("This is a low-level internal publish step. Do not use it directly.", err=True)
+    typer.echo("Use production flow instead:", err=True)
+    typer.echo("  news-pipeline heartbeat prepare-one --json", err=True)
+    typer.echo("  news-pipeline queue polish <QUEUE_ID> ...", err=True)
+    typer.echo("  news-pipeline heartbeat publish-one --execute --no-collect --json", err=True)
+    raise typer.Exit(code=2)

@@ -25,7 +25,7 @@ heartbeat_app = typer.Typer(help="Heartbeat operations")
 
 app.command("collect")(collect_command)
 app.command("process")(process_command)
-app.command("publish")(publish_command)
+app.command("publish", hidden=True)(publish_command)
 app.command("autopublish")(autopublish_command)
 app.command("audit-images")(audit_images_command)
 app.command("audit-content")(audit_content_command)

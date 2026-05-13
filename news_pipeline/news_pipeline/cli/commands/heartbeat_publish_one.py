@@ -14,7 +14,7 @@ import typer
 
 from news_pipeline.cli.commands.audit_content import audit_content_command
 from news_pipeline.cli.commands.audit_images import audit_images_command
-from news_pipeline.cli.commands.publish import publish_command
+from news_pipeline.cli.commands.publish import publish_queue_item
 from news_pipeline.editorial.autonomy import is_autopublish_candidate
 from news_pipeline.models.article import NormalizedArticle
 from news_pipeline.models.queue import QueueItem
@@ -343,7 +343,7 @@ def publish_one_command(
         _emit(payload, json_output)
         raise typer.Exit(code=1)
 
-    publish_step = _run_step("publish", publish_command, approved.queue_id, max_source_age_hours=max_source_age_hours)
+    publish_step = _run_step("publish", publish_queue_item, approved.queue_id, max_source_age_hours=max_source_age_hours)
     payload["steps"].append(_compact_step(publish_step, full_logs=full_logs))
     if not publish_step["ok"]:
         payload["result"] = "error"
