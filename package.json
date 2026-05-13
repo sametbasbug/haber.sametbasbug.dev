@@ -8,12 +8,10 @@
     "preview": "astro preview",
     "astro": "astro",
     "ozet:new": "node scripts/new-gunluk-ozet.mjs",
-    "briefing:v1": "node scripts/briefing-v1-prepare.mjs",
-    "briefing:v1:draft": "node scripts/briefing-v1-draft.mjs",
-    "briefing:v1:validate": "node scripts/briefing-v1-validate.mjs",
-    "briefing:v1:report": "node scripts/briefing-v1-report.mjs",
-    "briefing:v1:run": "node scripts/briefing-v1-run.mjs",
-    "briefing:v1:run:ci": "node scripts/briefing-v1-run-ci.mjs"
+    "news:prepare": "news_pipeline/.venv/bin/news-pipeline heartbeat prepare-one --json",
+    "news:publish-one": "news_pipeline/.venv/bin/news-pipeline heartbeat publish-one --execute --no-collect --json",
+    "news:audit": "news_pipeline/.venv/bin/news-pipeline audit-content && news_pipeline/.venv/bin/news-pipeline audit-images",
+    "quality": "npm run news:audit && npm run build"
   },
   "dependencies": {
     "@astrojs/rss": "^4.0.18",

@@ -1,31 +1,22 @@
 from __future__ import annotations
 
-from pathlib import Path
-
-from news_pipeline.editorial.autonomy import is_autopublish_candidate
-from news_pipeline.publish.markdown_writer import write_live
-from news_pipeline.queue.service import QueueService
+import typer
 
 
-def autopublish_command(limit: int = 1, min_score: float = 0.68, publish_dir: str = "src/content/anlikHaber") -> None:
-    root = Path.cwd()
-    service = QueueService(root / "news_pipeline/data/queue")
-    items = sorted(service.list_items(), key=lambda item: item.editorial_priority, reverse=True)
+def autopublish_command() -> None:
+    """Deprecated direct autopublish entrypoint.
 
-    published = 0
-    for item in items:
-        ok, reason = is_autopublish_candidate(item, min_score=min_score)
-        if not ok:
-            continue
-        approved = service.approve(item.queue_id)
-        if approved is None or approved.status != "approved":
-            continue
-        path = write_live(root / publish_dir, approved)
-        service.mark_published(approved.queue_id, path.stem)
-        print(f"autopublished: {approved.queue_id} -> {path}")
-        published += 1
-        if published >= limit:
-            break
-
-    if published == 0:
-        print("autopublished: none")
+    This command intentionally refuses to publish. The current production rail is
+    Asteria-led: prepare a headline board, let Asteria read/write/polish the
+    story, then run the guarded heartbeat publish command.
+    """
+    typer.echo(
+        "DEPRECATED: `news-pipeline autopublish` is disabled.\n"
+        "Do not use this command for Anlık Haber. It bypasses Asteria's editorial handoff.\n"
+        "Use instead:\n"
+        "  news-pipeline heartbeat prepare-one --json\n"
+        "  news-pipeline queue polish <QUEUE_ID> ... --json\n"
+        "  news-pipeline heartbeat publish-one --execute --no-collect --json",
+        err=True,
+    )
+    raise typer.Exit(code=2)

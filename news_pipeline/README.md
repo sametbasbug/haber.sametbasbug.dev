@@ -1,151 +1,169 @@
 # News Pipeline
 
-Ham haber akışını editoryal karara hazır, temiz taslaklara dönüştüren Python tabanlı hazırlık sistemi.
+`news_pipeline`, Anlık Haber’in Python tabanlı teknik rayıdır.
 
-## Ne işe yarar?
+Bu katman haber toplar, normalize eder, tekrarları azaltır, başlık panosu üretir, kuyruk tutar, kalite kapılarını çalıştırır, AI hero görselini üretir ve Astro markdown yayınına güvenli geçiş sağlar.
 
-Bu katman haber-project içinde yaşar; kaynaklardan haber toplar, normalize eder, tekrarları ayıklar, editoryal kuyruğa düşürür. Onaylanan kayıt doğrudan `anlikHaber` canlı markdown çıktısına yazılır.
+Önemli çizgi: **Python editör değildir.** Asteria haber seçimini yapar, kaynak metni okur, Türkçe başlık/açıklama/gövde/fact/tags yazar ve `heroPrompt` + `heroAlt` üretir. Python bu editoryal dokunuşu denetimli biçimde yayına taşır.
 
-Kısa akış:
+## Güncel üretim akışı
 
-1. `collect` → ham kayıtları toplar
-2. `process` → normalize + filtre + dedupe + queue güncelleme yapar
-3. `queue` → editoryal sırayı yönetir
-4. `publish` → onaylanan kaydı Astro markdown yayınına dönüştürür
+Aktif heartbeat akışı şu sıradadır:
 
----
+```bash
+news-pipeline heartbeat prepare-one --json
+# Asteria seçilen URL'yi okur ve haberi yazar
+news-pipeline queue polish <QUEUE_ID> \
+  --title '...' \
+  --description '...' \
+  --category 'Teknoloji' \
+  --facts-json '["...", "..."]' \
+  --body '...' \
+  --hero-prompt '...' \
+  --hero-alt '...' \
+  --tags-json '["pipeline", "haber", "..."]' \
+  --json
+news-pipeline heartbeat publish-one --execute --no-collect --json
+```
 
-## Mimari kararlar
+`prepare-one` yalnız başlık panosu verir. Python’un Türkçe taslak/özet üretip Asteria’yı çıpalamasına izin verilmez.
 
-### 1. Editorial-first
-Pipeline otomatik yayın yapmaz. Önce editoryal kuyruk üretir.
+`publish-one` teknik raydır:
 
-### 2. Python pipeline, Astro yayın yüzeyi
-Veri işleme katmanı Python'da, yayın yüzeyi mevcut Astro yapısında kalır.
+- Asteria polish notunu kontrol eder
+- hero brief var mı bakar
+- kaynak yaşı ve duplicate guard çalıştırır
+- markdown üretir
+- AI hero üretir ve WebP optimize eder
+- `audit-images` ve `audit-content` çalıştırır
+- `npm run build` çalıştırır
+- dar kapsamlı commit/push yapar
 
-### 3. Dosya tabanlı storage
-İlk sürümde JSON tabanlı klasör yapısı kullanılır. Gereksiz DB karmaşası yok.
+Deneysel modda heartbeat başına en fazla **1 haber** yayımlanır.
 
-### 4. Manual-review ayrımı
-Hassas veya hukuki riskli haberler ayrı işaretlenir.
+## Deprecated: direct autopublish
 
----
+`news-pipeline autopublish` artık kapalıdır.
+
+Bu komut silinmedi; eski referanslar kırılmasın diye duruyor. Ancak çalıştırıldığında yayın yapmaz ve açık uyarıyla çıkar. Sebep: direct autopublish Asteria’nın editoryal handoff’unu bypass eder.
+
+Kullanılacak güvenli ray:
+
+```bash
+news-pipeline heartbeat prepare-one --json
+news-pipeline queue polish <QUEUE_ID> ... --json
+news-pipeline heartbeat publish-one --execute --no-collect --json
+```
+
+## Kurulum
+
+Repo kökünden:
+
+```bash
+python3 -m venv news_pipeline/.venv
+source news_pipeline/.venv/bin/activate
+pip install -e news_pipeline
+npm install
+```
 
 ## Klasör yapısı
 
 ```text
 news_pipeline/
   news_pipeline/
-    cli/
-    collectors/
-    config/
-    dedupe/
-    editorial/
-    models/
-    normalize/
-    publish/
-    queue/
-    storage/
-    utils/
+    cli/                 # Typer CLI komutları
+    collectors/          # RSS/toplama
+    config/              # kaynak ve kategori configleri
+    dedupe/              # benzerlik/tekrar yardımcıları
+    editorial/           # scoring, filtering, autonomy gates
+    models/              # Pydantic veri modelleri
+    normalize/           # raw -> normalized temizlik
+    publish/             # markdown, frontmatter, body, hero image
+    queue/               # queue servisleri
+    storage/             # JSON file storage
+    utils/               # logging vb.
   data/
     raw/
     normalized/
     queue/
-    logs/
-    published/
+    state/
+    archive/
 ```
-
----
-
-## Kurulum
-
-Proje kökünden:
-
-```bash
-python3 -m venv news_pipeline/.venv
-source news_pipeline/.venv/bin/activate
-pip install -e news_pipeline
-```
-
-İsteğe bağlı görsel akışı için proje kökündeki `.env` dosyasına şu alan eklenebilir:
-
-```bash
-PEXELS_API_KEY=
-```
-
-Bu dosya zaten `.gitignore` içinde olduğu için key repoya girmez.
-
----
 
 ## Temel komutlar
 
-### Kaynakları topla
+### Kaynak toplama ve işleme
 
 ```bash
-source news_pipeline/.venv/bin/activate
 news-pipeline collect
-```
-
-### Ham veriyi işle ve queue üret
-
-```bash
-source news_pipeline/.venv/bin/activate
 news-pipeline process
-```
-
-### Queue listesi
-
-```bash
-news-pipeline queue list
-news-pipeline queue list --manual-only
-news-pipeline queue list --status new
-```
-
-### Queue temizliği
-
-```bash
 news-pipeline queue cleanup
 ```
 
-Varsayılan politika:
-- `published` ve `rejected` kayıtlar 24 saat sonra arşive taşınır
-- `new/reviewing/approved` kayıtlar 48 saat sonra bayat sayılır
-- yüksek skorlu veya manual-review işaretli birkaç kayıt son kontrol için tutulabilir
-- arşivdeki `rejected` kayıtlar 24 saat sonra silinir
-- arşivdeki `published` kayıtlar 72 saat sonra silinir
-
-### Hassas inceleme kuyruğu
+### Heartbeat panosu
 
 ```bash
+news-pipeline heartbeat prepare-one --json
+```
+
+Bu komut Asteria’ya şu tür bilgiler verir:
+
+- aday başlıklar
+- kaynak adı ve URL
+- skor/sinyal
+- `strictGate.reason`
+- son yayımlanan haberler (`board.recentPosts`)
+- sıcak kategori/kaynak sinyali (`hotCategory`, `hotSource`)
+
+### Queue inceleme
+
+```bash
+news-pipeline queue summary
+news-pipeline queue list --status new
+news-pipeline queue inspect <QUEUE_ID>
 news-pipeline queue review
 ```
 
-### Tek kaydı incele
+### Asteria polish
 
 ```bash
-news-pipeline queue inspect <QUEUE_ID>
+news-pipeline queue polish <QUEUE_ID> \
+  --title 'Türkçe başlık' \
+  --description 'Türkçe açıklama' \
+  --category 'Bilim' \
+  --facts-json '["fact 1", "fact 2"]' \
+  --body 'Haber gövdesi...' \
+  --hero-prompt 'AI hero prompt...' \
+  --hero-alt 'Türkçe alt metin' \
+  --tags-json '["pipeline", "haber", "bilim"]' \
+  --json
 ```
 
-### Onayla / reddet
+Polish olmadan production publish kapısı geçilmez.
+
+### Teknik publish
 
 ```bash
-news-pipeline queue approve <QUEUE_ID>
-news-pipeline queue reject <QUEUE_ID> --note "neden reddedildi"
+news-pipeline heartbeat publish-one --execute --no-collect --json
 ```
 
-### Yayına yaz
+Manual-review sonrası aynı gerçek scheduler wake içinde bilinçli düzeltme yapılıp ikinci kez deneniyorsa:
 
 ```bash
-news-pipeline publish <QUEUE_ID>
+news-pipeline heartbeat publish-one --execute --no-collect --force --json
 ```
 
-Çıktı yolu:
+`--force` kör retry için değil, aynı wake içinde Asteria’nın düzelttiği adayın recent-cycle guard’a takılmasını önlemek içindir.
 
-```text
-src/content/anlikHaber/
+### Audit
+
+```bash
+news-pipeline audit-content
+news-pipeline audit-images
+npm run build
 ```
 
----
+CI/local kalite kapısında bunlar provider çağrısı yapmadan çalışmalıdır.
 
 ## Queue mantığı
 
@@ -157,66 +175,43 @@ Durumlar:
 - `rejected`
 - `published`
 
-Ek alanlar:
+Önemli alanlar:
 
-- `manual-review` notu → hassas/hukuki içerik
-- `related_queue_ids` → benzer coverage kayıtları
-- `supporting_sources` → ana kaydı güçlendiren ek kaynaklar
+- `notes` içinde `asteria-editorial-polish` → Asteria dokunuşu var
+- `draft_body` → Asteria’nın Türkçe haber gövdesi
+- `hero_prompt` → Asteria’nın görsel brief’i
+- `hero_alt` → Türkçe alt metin
+- `draft_sources` → kaynaklar
+- `related_queue_ids` / `supporting_sources` → destekleyici kayıtlar
 
----
+## Kalite ve güvenlik kapıları
 
-## Şu an çalışan kalite katmanları
+Production publish şu kapılardan geçer:
 
-- RSS collector
-- normalize
-- temel dedupe
-- editorial filtering
-- editorial scoring
-- Türkçe başlık/description rewrite için kural tabanı
-- manual-review işaretleme
-- supporting source merge
-- primary/supporting source ayrımı
-- Astro `anlikHaber` canlı markdown üretimi
+- Asteria polish notu zorunlu
+- `heroPrompt` ve `heroAlt` zorunlu
+- başlık/açıklama/fact/body Türkçe kontrolü
+- minimum gövde derinliği
+- source age: varsayılan 72 saat
+- aynı URL tekrar kontrolü
+- fuzzy title/description/topic duplicate kontrolü
+- AI hero üretimi zorunlu; stok fallback varsayılan kapalı
+- `audit-images` → broken/policy/recent duplicate sıfır olmalı
+- `audit-content` → iç not/meta sızıntısı olmamalı
+- Astro build geçmeli
 
----
+## AI hero politikası
 
-## Bilinen sınırlar
+Hero görseller haber özelinde AI ile üretilir.
 
-Bunlar henüz tam çözülmüş değil:
+Varsayılan çıktı:
 
-- rewrite sistemi hâlâ kural tabanlı, kusursuz değil
-- olay düzeyinde gerçek cluster master record yok
-- source diversity mantığı temel seviyede
-- browser fallback yok
-- görsel seçimi Pexels key yoksa güvenli fallback görsele döner
-- otomatik publish yok
+- `1200×675`
+- `WebP`
+- kalite `82`
+- `public/images/generated/anlik-haber/`
 
-Bu bilinçli. Önce güvenilir omurga, sonra şatafat.
-
----
-
-## Güvenli çalışma akışı
-
-Önerilen günlük akış:
-
-```bash
-news-pipeline collect
-news-pipeline process
-news-pipeline queue cleanup
-news-pipeline queue review
-news-pipeline queue list --status new
-news-pipeline queue inspect <id>
-news-pipeline queue approve <id>
-news-pipeline publish <id>
-```
-
-Önemli not:
-
-- `publish` yalnız `approved` item kabul eder
-- `published` item yeniden publish edilemez
-- hassas haberlerde `queue review` öncelikli bakış olmalı
-
----
+AI provider geçici olarak doluysa `hero_image.py` birkaç kez yeniden dener ve son provider/CLI hatasını raporlar. `NEWS_PIPELINE_AI_HERO_ATTEMPTS` ile deneme sayısı ayarlanabilir; stok fallback yalnız açık acil override ile kullanılmalıdır.
 
 ## Config dosyaları
 
@@ -224,14 +219,28 @@ news-pipeline publish <id>
 - `news_pipeline/config/categories.yaml`
 - `news_pipeline/config/rules.yaml`
 
-İlk sürümde ana config noktası `sources.yaml`.
+Ana kaynak havuzu `sources.yaml` içindedir. Kaynakların cadence ayarı heartbeat yükünü azaltmak için kullanılır.
 
----
+## CI beklentisi
 
-## Sonraki mantıklı aşamalar
+CI dış servis/provider çağırmamalı. Güvenli kontroller:
 
-- event-level cluster master record
-- daha güçlü source diversity scoring
-- daha geniş Türkçe rewrite kapsaması
-- cron entegrasyonu
-- küçük editorial panel
+```bash
+python -m compileall news_pipeline/news_pipeline
+news-pipeline audit-content
+news-pipeline audit-images
+npm run build
+```
+
+`collect`, `process`, AI hero generation veya gerçek publish CI’da çalıştırılmaz.
+
+## Operasyon notu
+
+Bu sistem artık deneysel “her şeyi yeniden tasarla” aşamasında değil. Güncel bakım çizgisi:
+
+- küçük bug fix
+- kalite kapısı iyileştirme
+- dokümantasyon düzeltme
+- Asteria’nın editoryal rolünü koruma
+
+Büyük mimari değişiklikler ayrıca değerlendirilmelidir.

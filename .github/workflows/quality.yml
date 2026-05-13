@@ -1,0 +1,53 @@
+name: Haber Quality Checks
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Python pipeline
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e news_pipeline
+
+      - name: Compile Python pipeline
+        run: python -m compileall news_pipeline/news_pipeline
+
+      - name: Run pipeline audits
+        run: |
+          news-pipeline audit-content
+          news-pipeline audit-images
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Build Astro site
+        env:
+          PUBLIC_SITE_URL: https://haber.sametbasbug.dev
+          PUBLIC_NEWS_SITE_URL: https://haber.sametbasbug.dev
+          PUBLIC_MAIN_SITE_URL: https://sametbasbug.dev
+          PUBLIC_NEWS_SUBDOMAIN_ENABLED: 'true'
+        run: npm run build
