@@ -11,7 +11,7 @@ import typer
 from rapidfuzz.fuzz import token_set_ratio
 
 from news_pipeline.cli.commands.heartbeat_publish_one import _is_excluded_source_format, _run_pipeline_command, _source_is_fresh
-from news_pipeline.editorial.autonomy import is_autopublish_candidate
+from news_pipeline.editorial.autonomy import is_autopublish_candidate, is_high_risk_autopublish_topic
 from news_pipeline.models.article import NormalizedArticle
 from news_pipeline.queue.service import QueueService
 from news_pipeline.storage.json_store import JsonStore
@@ -185,6 +185,8 @@ def _passes_basic_board_filter(root: Path, item: Any, max_source_age_hours: int,
         return False, stale_reason
     if any(note.startswith(EXCLUDED_NOTE_PREFIXES) for note in item.notes):
         return False, "excluded by editorial note"
+    if is_high_risk_autopublish_topic(item):
+        return False, "topic is high risk for autopublish"
     headline = _normalized(_headline_text(root, item))
     if any(term in headline for term in {"podcast", "newsletter", "live updates", "puzzle", "quiz"}):
         return False, "blocked headline format"
@@ -238,7 +240,7 @@ def _select_headline_board(root: Path, items: list[Any], limit: int, max_source_
 
     for category, target in MIN_CATEGORY_TARGETS.items():
         if category == hot_category:
-            target = min(target, HOT_CATEGORY_BOARD_LIMIT)
+            continue
         for item, _, _ in eligible:
             if len(selected) >= limit or category_counts[category] >= target:
                 break
