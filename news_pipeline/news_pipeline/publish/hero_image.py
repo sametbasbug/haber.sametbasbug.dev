@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import re
 import subprocess
+import time
 import unicodedata
 from pathlib import Path
 from typing import Any
@@ -49,10 +50,13 @@ GENERATED_HERO_DIR = PROJECT_ROOT / "public" / "images" / "generated" / "anlik-h
 GENERATED_HERO_PUBLIC_PREFIX = "/images/generated/anlik-haber"
 AI_HERO_DEFAULT_MODEL = "openai/gpt-image-2"
 AI_HERO_TIMEOUT_MS = 180_000
+AI_HERO_ATTEMPTS = 3
+AI_HERO_RETRY_DELAY_SECONDS = 12
 AI_HERO_WIDTH = 1200
 AI_HERO_HEIGHT = 675
 AI_HERO_QUALITY = 82
 REQUIRE_AI_HERO_DEFAULT = "1"
+_LAST_AI_HERO_ERROR: str | None = None
 STOPWORDS = {
     "the", "and", "for", "with", "that", "this", "from", "into", "after", "over", "under", "near",
     "can", "will", "now", "still", "more", "less", "amid", "says", "said", "new", "latest", "its",
@@ -352,15 +356,23 @@ def _pick_generated_output(slug: str, preferred_output: Path) -> Path | None:
 
 
 def _ai_hero_image(item: QueueItem) -> str | None:
+    global _LAST_AI_HERO_ERROR
+    _LAST_AI_HERO_ERROR = None
     if get_env("NEWS_PIPELINE_DISABLE_AI_HERO", "0") in {"1", "true", "TRUE", "yes", "YES"}:
+        _LAST_AI_HERO_ERROR = "NEWS_PIPELINE_DISABLE_AI_HERO is enabled"
         return None
 
     model = get_env("NEWS_PIPELINE_AI_HERO_MODEL", AI_HERO_DEFAULT_MODEL) or AI_HERO_DEFAULT_MODEL
     timeout_ms_raw = get_env("NEWS_PIPELINE_AI_HERO_TIMEOUT_MS", str(AI_HERO_TIMEOUT_MS))
+    attempts_raw = get_env("NEWS_PIPELINE_AI_HERO_ATTEMPTS", str(AI_HERO_ATTEMPTS))
     try:
         timeout_ms = max(30_000, int(timeout_ms_raw or AI_HERO_TIMEOUT_MS))
     except ValueError:
         timeout_ms = AI_HERO_TIMEOUT_MS
+    try:
+        attempts = max(1, min(5, int(attempts_raw or AI_HERO_ATTEMPTS)))
+    except ValueError:
+        attempts = AI_HERO_ATTEMPTS
 
     slug = slugify(item.draft_title, lowercase=True) or "anlik-haber"
     GENERATED_HERO_DIR.mkdir(parents=True, exist_ok=True)
@@ -389,39 +401,49 @@ def _ai_hero_image(item: QueueItem) -> str | None:
         str(timeout_ms),
         "--json",
     ]
-    try:
-        result = subprocess.run(
-            command,
-            cwd=PROJECT_ROOT,
-            text=True,
-            capture_output=True,
-            timeout=(timeout_ms / 1000) + 30,
-            check=False,
-        )
-    except Exception:
-        return None
 
-    if result.returncode != 0:
-        return None
+    for attempt in range(1, attempts + 1):
+        try:
+            result = subprocess.run(
+                command,
+                cwd=PROJECT_ROOT,
+                text=True,
+                capture_output=True,
+                timeout=(timeout_ms / 1000) + 30,
+                check=False,
+            )
+        except Exception as exc:
+            _LAST_AI_HERO_ERROR = f"attempt {attempt}/{attempts}: {type(exc).__name__}: {exc}"
+        else:
+            if result.returncode == 0:
+                generated = _pick_generated_output(slug, output)
+                if generated:
+                    normalized = _normalize_ai_hero_output(generated, slug)
+                    return _public_image_path(normalized or generated)
 
-    generated = _pick_generated_output(slug, output)
-    if generated:
-        normalized = _normalize_ai_hero_output(generated, slug)
-        return _public_image_path(normalized or generated)
+                try:
+                    payload = json.loads(result.stdout or "{}")
+                except json.JSONDecodeError:
+                    payload = {}
+                for key in ("output", "path", "file", "filename"):
+                    value = payload.get(key)
+                    if isinstance(value, str):
+                        candidate = Path(value)
+                        if not candidate.is_absolute():
+                            candidate = PROJECT_ROOT / candidate
+                        if candidate.exists() and candidate.stat().st_size > 1024:
+                            normalized = _normalize_ai_hero_output(candidate, slug)
+                            return _public_image_path(normalized or candidate)
+                _LAST_AI_HERO_ERROR = f"attempt {attempt}/{attempts}: command succeeded but no image file was found"
+            else:
+                stderr = (result.stderr or "").strip()
+                stdout = (result.stdout or "").strip()
+                detail = stderr or stdout or f"exit code {result.returncode}"
+                _LAST_AI_HERO_ERROR = f"attempt {attempt}/{attempts}: {detail[:1200]}"
 
-    try:
-        payload = json.loads(result.stdout or "{}")
-    except json.JSONDecodeError:
-        payload = {}
-    for key in ("output", "path", "file", "filename"):
-        value = payload.get(key)
-        if isinstance(value, str):
-            candidate = Path(value)
-            if not candidate.is_absolute():
-                candidate = PROJECT_ROOT / candidate
-            if candidate.exists() and candidate.stat().st_size > 1024:
-                normalized = _normalize_ai_hero_output(candidate, slug)
-                return _public_image_path(normalized or candidate)
+        if attempt < attempts:
+            time.sleep(AI_HERO_RETRY_DELAY_SECONDS * attempt)
+
     return None
 
 
@@ -616,9 +638,11 @@ def pick_hero_image(item: QueueItem) -> str:
         return ai_image
 
     if _requires_ai_hero():
+        detail = f" Last error: {_LAST_AI_HERO_ERROR}" if _LAST_AI_HERO_ERROR else ""
         raise RuntimeError(
             "AI hero generation failed; refusing to publish with stock Pexels/Unsplash fallback. "
             "Set NEWS_PIPELINE_REQUIRE_AI_HERO=0 only for an explicit emergency fallback."
+            f"{detail}"
         )
 
     recent_images = _recent_hero_images()
