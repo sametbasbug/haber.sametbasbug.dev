@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from datetime import datetime
 import re
 from pathlib import Path
 from urllib.parse import urlparse
@@ -9,6 +10,7 @@ import httpx
 import typer
 
 HERO_IMAGE_RE = re.compile(r'^heroImage:\s*["\']?(.*?)["\']?\s*$', re.MULTILINE)
+PUB_DATE_RE = re.compile(r'^pubDate:\s*["\']?(.*?)["\']?\s*$', re.MULTILINE)
 
 APPROVED_IMAGE_HOSTS = {
     "images.unsplash.com",
@@ -74,6 +76,28 @@ def _image_key(value: str) -> str:
     return text
 
 
+def _published_timestamp(path: Path) -> float:
+    """Sort recent duplicate checks by article pubDate, not checkout mtime.
+
+    GitHub Actions checks out all files with fresh mtimes, so using filesystem
+    mtime makes old stock-image reuse look like a recent duplicate. The audit is
+    meant to catch recent publishing mistakes, therefore frontmatter pubDate is
+    the stable clock.
+    """
+    try:
+        text = path.read_text(encoding="utf-8", errors="ignore")
+    except OSError:
+        return path.stat().st_mtime
+    match = PUB_DATE_RE.search(text)
+    if not match:
+        return path.stat().st_mtime
+    value = match.group(1).strip().replace("Z", "+00:00")
+    try:
+        return datetime.fromisoformat(value).timestamp()
+    except ValueError:
+        return path.stat().st_mtime
+
+
 def _is_live_image_url(client: httpx.Client, url: str) -> tuple[bool, str]:
     target = (url or "").strip()
     if target.startswith(APPROVED_LOCAL_IMAGE_PREFIXES):
@@ -134,7 +158,7 @@ def audit_images_command(
 
     recent_duplicates: list[tuple[str, list[Path]]] = []
     if recent_duplicate_limit > 1:
-        recent_items = sorted(items, key=lambda item: item[0].stat().st_mtime, reverse=True)[:recent_duplicate_limit]
+        recent_items = sorted(items, key=lambda item: _published_timestamp(item[0]), reverse=True)[:recent_duplicate_limit]
         grouped: dict[str, list[Path]] = defaultdict(list)
         for path, url in recent_items:
             grouped[_image_key(url)].append(path)
