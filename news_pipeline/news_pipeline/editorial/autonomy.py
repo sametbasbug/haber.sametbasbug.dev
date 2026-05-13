@@ -161,8 +161,6 @@ def is_autopublish_candidate(item: QueueItem, min_score: float = 0.68) -> tuple[
         return False, f"score below threshold ({item.editorial_priority:.3f})"
     if item.draft_category not in SAFE_AUTOPUBLISH_CATEGORIES:
         return False, f"category not in safe autopublish set ({item.draft_category})"
-    if is_high_risk_autopublish_topic(item):
-        return False, "topic is high risk for autopublish"
     if not has_polish:
         return False, "missing Asteria editorial polish"
     if not has_hero_brief(item):
