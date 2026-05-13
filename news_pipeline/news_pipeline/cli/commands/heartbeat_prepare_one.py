@@ -18,10 +18,14 @@ from news_pipeline.storage.json_store import JsonStore
 
 MAX_PER_SOURCE = 3
 HOT_CATEGORY_RECENT_WINDOW = 3
+HOT_CATEGORY_REPEAT_THRESHOLD = 2
 HOT_CATEGORY_BOARD_LIMIT = 1
 HOT_SOURCE_RECENT_WINDOW = 3
 HOT_SOURCE_BOARD_LIMIT = 1
-MIN_CATEGORY_TARGETS = {"Bilim": 2, "Kültür": 2, "Ekonomi": 2, "Teknoloji": 3, "Siyaset": 3}
+MIN_CATEGORY_TARGETS = {"Siyaset": 3, "Ekonomi": 3, "Teknoloji": 3, "Kültür": 2, "Bilim": 1}
+SCIENCE_SPACE_RECENT_WINDOW = 5
+SCIENCE_SPACE_RECENT_THRESHOLD = 2
+SCIENCE_SPACE_BOARD_LIMIT = 1
 RISKY_HEADLINE_TERMS = {
     "lawsuit",
     "trial",
@@ -50,12 +54,7 @@ EXCLUDED_NOTE_PREFIXES = (
     "manual-review:",
 )
 POSITIVE_HEADLINE_TERMS = {
-    "nasa",
-    "science",
-    "research",
-    "study",
     "climate",
-    "space",
     "security",
     "cyber",
     "ai",
@@ -66,6 +65,33 @@ POSITIVE_HEADLINE_TERMS = {
     "eu",
     "europe",
     "ukraine",
+}
+SCIENCE_SPACE_TERMS = {
+    "nasa",
+    "mars",
+    "hubble",
+    "perseverance",
+    "rover",
+    "space",
+    "telescope",
+    "planet",
+    "moon",
+    "asteroid",
+    "galaxy",
+    "jupiter",
+    "saturn",
+}
+HIGH_IMPORTANCE_SPACE_TERMS = {
+    "breakthrough",
+    "first",
+    "discovers",
+    "discovery",
+    "launches",
+    "landing",
+    "mission failure",
+    "crash",
+    "crew",
+    "earth-threatening",
 }
 
 
@@ -108,8 +134,8 @@ def _hot_category(root: Path) -> str | None:
     categories = _recent_live_categories(root)
     if len(categories) < HOT_CATEGORY_RECENT_WINDOW:
         return None
-    first = categories[0]
-    return first if all(category == first for category in categories) else None
+    category, count = Counter(categories).most_common(1)[0]
+    return category if count >= HOT_CATEGORY_REPEAT_THRESHOLD else None
 
 
 def _recent_live_sources(root: Path, limit: int = HOT_SOURCE_RECENT_WINDOW) -> list[str]:
@@ -122,6 +148,16 @@ def _hot_source(root: Path) -> str | None:
         return None
     first = sources[0]
     return first if first and all(source == first for source in sources) else None
+
+
+def _science_space_pressure(root: Path) -> bool:
+    recent = _recent_live_posts(root, limit=SCIENCE_SPACE_RECENT_WINDOW)
+    count = 0
+    for post in recent:
+        text = _normalized(f"{post.get('category', '')} {post.get('source', '')} {post.get('title', '')}")
+        if post.get("category") == "Bilim" and any(_headline_has_term(text, term) for term in SCIENCE_SPACE_TERMS):
+            count += 1
+    return count >= SCIENCE_SPACE_RECENT_THRESHOLD
 
 
 def _live_source_urls(root: Path) -> set[str]:
@@ -151,9 +187,10 @@ def _headline_has_term(headline: str, term: str) -> bool:
     return term in headline
 
 
-def _board_score(root: Path, item: Any) -> tuple[float, list[str]]:
+def _board_score(root: Path, item: Any, *, science_space_pressure: bool = False) -> tuple[float, list[str]]:
     headline = _normalized(_headline_text(root, item))
     category = item.draft_category or ""
+    source = _normalized(_source_name(item))
     score = float(item.editorial_priority)
     reasons: list[str] = []
     for term in RISKY_HEADLINE_TERMS:
@@ -166,9 +203,17 @@ def _board_score(root: Path, item: Any) -> tuple[float, list[str]]:
             score += 0.035
             reasons.append(f"signal_boost:{term}")
             break
-    if category in {"Bilim", "Kültür"}:
-        score += 0.025
-        reasons.append(f"category_boost:{category}")
+    if category == "Kültür":
+        score += 0.015
+        reasons.append("category_boost:Kültür")
+    is_space_science = category == "Bilim" and (
+        any(_headline_has_term(headline, term) for term in SCIENCE_SPACE_TERMS)
+        or any(_headline_has_term(source, term) for term in {"nasa"})
+    )
+    is_high_importance_space = any(_headline_has_term(headline, term) for term in HIGH_IMPORTANCE_SPACE_TERMS)
+    if science_space_pressure and is_space_science and not is_high_importance_space:
+        score -= 0.12
+        reasons.append("recency_penalty:space_science_saturation")
     return round(score, 3), reasons
 
 
@@ -196,7 +241,8 @@ def _passes_basic_board_filter(root: Path, item: Any, max_source_age_hours: int,
 def _select_headline_board(root: Path, items: list[Any], limit: int, max_source_age_hours: int) -> tuple[list[Any], list[dict[str, Any]], dict[str, Any]]:
     hot_category = _hot_category(root)
     hot_source = _hot_source(root)
-    recent_posts = _recent_live_posts(root, limit=max(HOT_CATEGORY_RECENT_WINDOW, HOT_SOURCE_RECENT_WINDOW))
+    science_space_pressure = _science_space_pressure(root)
+    recent_posts = _recent_live_posts(root, limit=max(SCIENCE_SPACE_RECENT_WINDOW, HOT_CATEGORY_RECENT_WINDOW, HOT_SOURCE_RECENT_WINDOW))
     live_urls = _live_source_urls(root)
     eligible: list[tuple[Any, float, list[str]]] = []
     skipped: list[dict[str, Any]] = []
@@ -206,7 +252,7 @@ def _select_headline_board(root: Path, items: list[Any], limit: int, max_source_
             if len(skipped) < 12:
                 skipped.append({"queueId": item.queue_id, "score": round(float(item.editorial_priority), 3), "title": item.draft_title, "reason": reason})
             continue
-        board_score, reasons = _board_score(root, item)
+        board_score, reasons = _board_score(root, item, science_space_pressure=science_space_pressure)
         eligible.append((item, board_score, reasons))
 
     eligible.sort(key=lambda row: row[1], reverse=True)
@@ -228,6 +274,13 @@ def _select_headline_board(root: Path, items: list[Any], limit: int, max_source_
         if hot_category and item.draft_category == hot_category and category_counts[hot_category] >= HOT_CATEGORY_BOARD_LIMIT:
             return False
         if hot_source and source == hot_source and source_counts[hot_source] >= HOT_SOURCE_BOARD_LIMIT:
+            return False
+        headline = _normalized(_headline_text(root, item))
+        is_space_science = item.draft_category == "Bilim" and (
+            any(_headline_has_term(headline, term) for term in SCIENCE_SPACE_TERMS)
+            or any(_headline_has_term(_normalized(source), term) for term in {"nasa"})
+        )
+        if science_space_pressure and is_space_science and category_counts["Bilim"] >= SCIENCE_SPACE_BOARD_LIMIT:
             return False
         selected.append(item)
         selected_ids.add(item.queue_id)
@@ -259,9 +312,12 @@ def _select_headline_board(root: Path, items: list[Any], limit: int, max_source_
         "recentCategories": [post.get("category", "") for post in recent_posts],
         "recentSources": [post.get("source", "") for post in recent_posts],
         "hotCategory": hot_category,
+        "hotCategoryRepeatThreshold": HOT_CATEGORY_REPEAT_THRESHOLD,
         "hotCategoryBoardLimit": HOT_CATEGORY_BOARD_LIMIT if hot_category else None,
         "hotSource": hot_source,
         "hotSourceBoardLimit": HOT_SOURCE_BOARD_LIMIT if hot_source else None,
+        "scienceSpacePressure": science_space_pressure,
+        "scienceSpaceBoardLimit": SCIENCE_SPACE_BOARD_LIMIT if science_space_pressure else None,
         "maxPerSource": MAX_PER_SOURCE,
     }
     return selected, skipped, {"scores": score_map, "diagnostics": diagnostics}
