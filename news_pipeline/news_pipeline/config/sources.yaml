@@ -69,7 +69,7 @@ sources:
     url: https://www.politico.eu/feed/
     category_hints: [Siyaset]
     enabled: true
-    cadence: hourly
+    cadence: 3h
 
   - id: bbc-world
     name: BBC World

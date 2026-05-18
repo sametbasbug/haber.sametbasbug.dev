@@ -7,7 +7,7 @@ from news_pipeline.models.article import NormalizedArticle
 
 SOURCE_WEIGHTS = {
     "bbc-world": 0.34,
-    "politico-eu": 0.36,
+    "politico-eu": 0.32,
     "techcrunch": 0.35,
     "nasa-news": 0.36,
     "sciencedaily-top-science": 0.34,

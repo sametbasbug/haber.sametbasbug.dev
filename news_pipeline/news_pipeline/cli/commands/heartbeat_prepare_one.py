@@ -26,6 +26,11 @@ MIN_CATEGORY_TARGETS = {"Siyaset": 3, "Ekonomi": 3, "Teknoloji": 3, "Kültür": 
 SCIENCE_SPACE_RECENT_WINDOW = 5
 SCIENCE_SPACE_RECENT_THRESHOLD = 2
 SCIENCE_SPACE_BOARD_LIMIT = 1
+RECENT_SOURCE_PENALTY_WINDOW = 5
+RECENT_SOURCE_PENALTY_PER_ITEM = 0.07
+RECENT_SOURCE_PENALTY_MAX = 0.18
+POLITICO_EU_BASELINE_PENALTY = 0.035
+POLITICO_EU_RECENT_EXTRA_PENALTY = 0.04
 RISKY_HEADLINE_TERMS = {
     "lawsuit",
     "trial",
@@ -187,12 +192,32 @@ def _headline_has_term(headline: str, term: str) -> bool:
     return term in headline
 
 
-def _board_score(root: Path, item: Any, *, science_space_pressure: bool = False) -> tuple[float, list[str]]:
+def _board_score(
+    root: Path,
+    item: Any,
+    *,
+    science_space_pressure: bool = False,
+    recent_posts: list[dict[str, str]] | None = None,
+) -> tuple[float, list[str]]:
     headline = _normalized(_headline_text(root, item))
     category = item.draft_category or ""
     source = _normalized(_source_name(item))
     score = float(item.editorial_priority)
     reasons: list[str] = []
+    if source == "politico europe":
+        score -= POLITICO_EU_BASELINE_PENALTY
+        reasons.append("source_penalty:politico_europe_baseline")
+    recent_source_count = sum(
+        1
+        for post in (recent_posts or [])[:RECENT_SOURCE_PENALTY_WINDOW]
+        if _normalized(post.get("source", "")) == source
+    )
+    if recent_source_count:
+        source_penalty = min(RECENT_SOURCE_PENALTY_MAX, recent_source_count * RECENT_SOURCE_PENALTY_PER_ITEM)
+        if source == "politico europe":
+            source_penalty += POLITICO_EU_RECENT_EXTRA_PENALTY
+        score -= source_penalty
+        reasons.append(f"recency_penalty:source_repeat:{recent_source_count}")
     for term in RISKY_HEADLINE_TERMS:
         if _headline_has_term(headline, term):
             score -= 0.10
@@ -252,7 +277,7 @@ def _select_headline_board(root: Path, items: list[Any], limit: int, max_source_
             if len(skipped) < 12:
                 skipped.append({"queueId": item.queue_id, "score": round(float(item.editorial_priority), 3), "title": item.draft_title, "reason": reason})
             continue
-        board_score, reasons = _board_score(root, item, science_space_pressure=science_space_pressure)
+        board_score, reasons = _board_score(root, item, science_space_pressure=science_space_pressure, recent_posts=recent_posts)
         eligible.append((item, board_score, reasons))
 
     eligible.sort(key=lambda row: row[1], reverse=True)

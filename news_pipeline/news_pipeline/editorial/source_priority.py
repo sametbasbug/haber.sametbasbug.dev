@@ -6,7 +6,7 @@ SOURCE_NAME_WEIGHTS = {
     "Reuters Technology": 0.93,
     "BBC World": 0.91,
     "Reuters World": 0.90,
-    "Politico Europe": 0.88,
+    "Politico Europe": 0.84,
     "Ars Technica": 0.87,
     "The Verge": 0.86,
     "MIT Technology Review": 0.86,
