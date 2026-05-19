@@ -82,6 +82,21 @@ TURKISH_MARKERS = {
     " ev sahipligi ",
 }
 
+TURKISH_MORPHOLOGY_RE = re.compile(
+    r"\b[\wçğıöşü]+(?:"
+    r"daki|deki|taki|teki|"
+    r"ların|lerin|ları|leri|"
+    r"nın|nin|nun|nün|"
+    r"ını|ini|unu|ünü|"
+    r"mayı|meyi|mak|mek|"
+    r"acak|ecek|"
+    r"ıyor|iyor|uyor|üyor|"
+    r"di|dı|du|dü|ti|tı|tu|tü|"
+    r"arak|erek|"
+    r"an|en"
+    r")\b"
+)
+
 
 def has_manual_review(item: QueueItem) -> bool:
     return any(note.startswith("manual-review:") for note in item.notes)
@@ -102,10 +117,18 @@ def looks_too_english(text: str) -> bool:
 def has_strong_turkish_signal(text: str) -> bool:
     lowered = f" {text.strip().lower()} "
     turkish_hits = sum(1 for marker in TURKISH_MARKERS if marker in lowered)
-    if re.search(r"[çğıöşü]", lowered):
+    has_turkish_chars = bool(re.search(r"[çğıöşü]", lowered))
+    morphology_hits = len(TURKISH_MORPHOLOGY_RE.findall(lowered))
+
+    if has_turkish_chars:
         turkish_hits += 1
-    if re.search(r"\b\w+(iyor|ıyor|uyor|üyor|di|dı|du|dü|ti|tı|tu|tü|nin|nın|nun|nün|si|sı|su|sü|lari|ları|leri)\b", lowered):
-        turkish_hits += 1
+    # Do not make the gate depend only on a small hand-picked word list.
+    # Clean Turkish descriptions often carry the signal in suffixes such as
+    # "liderliğindeki", "şirketlerin", "büyütecek" or "hedefleyen".
+    # Cap morphology contribution so one repetitive/odd sentence cannot pass
+    # purely by suffix spam while still avoiding false negatives like the
+    # Stilta description from 2026-05-19.
+    turkish_hits += min(morphology_hits, 2)
     return turkish_hits >= 2
 
 
