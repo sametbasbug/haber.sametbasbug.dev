@@ -22,7 +22,7 @@ HOT_CATEGORY_REPEAT_THRESHOLD = 2
 HOT_CATEGORY_BOARD_LIMIT = 1
 HOT_SOURCE_RECENT_WINDOW = 3
 HOT_SOURCE_BOARD_LIMIT = 1
-MIN_CATEGORY_TARGETS = {"Siyaset": 3, "Ekonomi": 3, "Teknoloji": 3, "Kültür": 2, "Bilim": 1}
+MIN_CATEGORY_TARGETS = {"Siyaset": 3, "Ekonomi": 3, "Teknoloji": 3, "Bilim": 1}
 SCIENCE_SPACE_RECENT_WINDOW = 5
 SCIENCE_SPACE_RECENT_THRESHOLD = 2
 SCIENCE_SPACE_BOARD_LIMIT = 1
@@ -228,9 +228,6 @@ def _board_score(
             score += 0.035
             reasons.append(f"signal_boost:{term}")
             break
-    if category == "Kültür":
-        score += 0.015
-        reasons.append("category_boost:Kültür")
     is_space_science = category == "Bilim" and (
         any(_headline_has_term(headline, term) for term in SCIENCE_SPACE_TERMS)
         or any(_headline_has_term(source, term) for term in {"nasa"})

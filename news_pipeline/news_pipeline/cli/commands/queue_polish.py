@@ -10,7 +10,7 @@ from news_pipeline.queue.service import QueueService
 from news_pipeline.utils.logging import get_logger
 
 
-VALID_CATEGORIES = {"Siyaset", "Ekonomi", "Teknoloji", "Bilim", "Kültür"}
+VALID_CATEGORIES = {"Siyaset", "Ekonomi", "Teknoloji", "Bilim"}
 
 
 def _parse_json_list(value: str | None, *, field_name: str) -> list[str] | None:
@@ -29,7 +29,7 @@ def queue_polish_command(
     queue_id: str,
     title: str = typer.Option(..., "--title", help="Asteria-edited Turkish headline."),
     description: str = typer.Option(..., "--description", help="Asteria-edited Turkish deck/description."),
-    category: str = typer.Option(..., "--category", help="One of: Siyaset, Ekonomi, Teknoloji, Bilim, Kültür."),
+    category: str = typer.Option(..., "--category", help="One of: Siyaset, Ekonomi, Teknoloji, Bilim."),
     facts_json: str = typer.Option(..., "--facts-json", help="JSON array of 2-4 Asteria-edited Turkish fact sentences."),
     body: str = typer.Option(..., "--body", help="Asteria-written Turkish article body, without the sources section."),
     hero_prompt: str = typer.Option(..., "--hero-prompt", help="Asteria-written image generation prompt for the hero visual."),

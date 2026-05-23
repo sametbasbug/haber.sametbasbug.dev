@@ -150,20 +150,3 @@ sources:
     category_hints: [Bilim]
     enabled: true
     cadence: 6h
-
-  - id: guardian-culture
-    name: The Guardian Culture
-    kind: rss
-    url: https://www.theguardian.com/culture/rss
-    category_hints: [Kültür]
-    enabled: true
-    cadence: 3h
-
-  - id: guardian-film
-    name: The Guardian Film
-    kind: rss
-    url: https://www.theguardian.com/film/rss
-    category_hints: [Kültür]
-    enabled: true
-    cadence: 6h
-

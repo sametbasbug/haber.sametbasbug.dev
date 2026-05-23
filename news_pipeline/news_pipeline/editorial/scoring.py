@@ -12,8 +12,6 @@ SOURCE_WEIGHTS = {
     "nasa-news": 0.36,
     "sciencedaily-top-science": 0.34,
     "guardian-science": 0.35,
-    "guardian-culture": 0.34,
-    "guardian-film": 0.33,
 }
 
 CATEGORY_WEIGHTS = {
@@ -21,7 +19,6 @@ CATEGORY_WEIGHTS = {
     "Siyaset": 0.17,
     "Teknoloji": 0.15,
     "Bilim": 0.17,
-    "Kültür": 0.15,
 }
 
 KEYWORD_BOOSTS = {

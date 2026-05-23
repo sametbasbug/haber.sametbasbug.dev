@@ -31,11 +31,6 @@ DEFAULT_HERO_IMAGES = {
         "https://images.unsplash.com/photo-1446776877081-d282a0f896e2?q=80&w=1200&h=675&auto=format&fit=crop",
         "https://images.unsplash.com/photo-1581093588401-fbb62a02f120?q=80&w=1200&h=675&auto=format&fit=crop",
     ],
-    "Kültür": [
-        "https://images.unsplash.com/photo-1499364615650-ec38552f4f34?q=80&w=1200&h=675&auto=format&fit=crop",
-        "https://images.unsplash.com/photo-1518998053901-5348d3961a04?q=80&w=1200&h=675&auto=format&fit=crop",
-        "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?q=80&w=1200&h=675&auto=format&fit=crop",
-    ],
     "Siyaset": [
         "https://images.unsplash.com/photo-1495020689067-958852a7765e?q=80&w=1200&h=675&auto=format&fit=crop",
         "https://images.unsplash.com/photo-1575320181282-9afab399332c?q=80&w=1200&h=675&auto=format&fit=crop",
@@ -79,11 +74,6 @@ CATEGORY_QUERIES = {
         "science laboratory research equipment",
         "space mission satellite observatory",
         "climate science research landscape",
-    ],
-    "Kültür": [
-        "culture arts museum gallery",
-        "cinema theater audience culture",
-        "music performance cultural event",
     ],
     "Ekonomi": [
         "financial market data charts business desk",
@@ -216,7 +206,7 @@ def _build_queries(item: QueueItem) -> list[str]:
 
     if category == "Teknoloji":
         queries.extend(_queries_from_rules(text, TECH_QUERY_RULES))
-    elif category in {"Siyaset", "Bilim", "Kültür"}:
+    elif category in {"Siyaset", "Bilim"}:
         queries.extend(_queries_from_rules(text, POLITICS_QUERY_RULES))
     elif category == "Ekonomi":
         queries.extend(_queries_from_rules(text, ECONOMY_QUERY_RULES))
@@ -229,7 +219,7 @@ def _build_queries(item: QueueItem) -> list[str]:
         queries.append(" ".join(title_keywords[:3] + ["technology", "software"]))
     elif category == "Ekonomi" and title_keywords:
         queries.append(" ".join(title_keywords[:3] + ["business", "finance"]))
-    elif category in {"Siyaset", "Bilim", "Kültür"} and title_keywords:
+    elif category in {"Siyaset", "Bilim"} and title_keywords:
         queries.append(" ".join(title_keywords[:3] + ["government", "diplomacy"]))
 
     queries.extend(CATEGORY_QUERIES.get(category, ["news editorial illustration abstract"]))
@@ -250,7 +240,6 @@ def _category_visual_direction(category: str) -> str:
         "Siyaset": "symbolic diplomacy and institutions, parliament architecture, flags, maps, documents, podiums without readable text, no fake portraits",
         "Ekonomi": "global markets, trade routes, energy, finance dashboards, business infrastructure, sober economic editorial cover",
         "Bilim": "scientific research, space, climate, laboratory, biology or astronomy visuals, precise and calm science-magazine cover",
-        "Kültür": "cinema, theatre, books, music, media, museums or festivals, refined culture-section editorial cover",
     }
     return directions.get(category, directions["Teknoloji"])
 
@@ -586,7 +575,7 @@ def _score_photo(photo: dict[str, Any], query: str, item: QueueItem, recent_imag
         for term in ["finance", "chart", "market", "business", "analytics", "trading"]:
             if term in photo_text:
                 score += 1.8
-    if item.draft_category in {"Siyaset", "Bilim", "Kültür"}:
+    if item.draft_category in {"Siyaset", "Bilim"}:
         for term in ["government", "parliament", "flag", "building", "diplomacy", "city"]:
             if term in photo_text:
                 score += 1.6

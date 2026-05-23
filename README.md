@@ -23,7 +23,6 @@ Anlık Haber global odaklı bir Türkçe haber yüzeyidir. Kategori seti bilinç
 - **Ekonomi**
 - **Teknoloji**
 - **Bilim**
-- **Kültür**
 
 Türkiye bağlantılı haberler ancak global bağlamı güçlüyse bu kategoriler içinde değerlendirilir.
 
