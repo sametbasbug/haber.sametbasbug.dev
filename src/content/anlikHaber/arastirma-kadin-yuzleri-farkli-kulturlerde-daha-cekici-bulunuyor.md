@@ -1,5 +1,5 @@
 ---
-title: "Araştırma: Kadın yüzleri farklı kültürlerde daha çekici bulunuyor"
+title: "Araştırma: Kadın yüzleri, kadınlar tarafından da daha çekici bulunuyor"
 description: "76 ülkeden verileri birleştiren çalışma, kadın yüzlerinin hem erkekler hem kadınlar tarafından ortalama olarak daha çekici puanlandığını; bu farkın yaş ilerledikçe azaldığını ortaya koydu."
 pubDate: '2026-05-27T10:29:14+03:00'
 updatedDate: '2026-05-27T10:29:14+03:00'
