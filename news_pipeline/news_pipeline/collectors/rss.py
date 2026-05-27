@@ -16,7 +16,11 @@ class RssCollector(BaseCollector):
         parsed = feedparser.parse(str(self.source.url))
         articles: list[RawArticle] = []
 
-        for entry in parsed.entries:
+        entries = list(parsed.entries)
+        if self.source.max_items is not None:
+            entries = entries[: self.source.max_items]
+
+        for index, entry in enumerate(entries):
             published_at = None
             if getattr(entry, "published", None):
                 try:
@@ -31,7 +35,10 @@ class RssCollector(BaseCollector):
 
             article_url = entry.link
             summary = clean_text(getattr(entry, "summary", ""))
-            article_snippet = fetch_article_snippet(article_url)
+            should_fetch_snippet = self.source.fetch_snippets and (
+                self.source.snippet_limit is None or index < self.source.snippet_limit
+            )
+            article_snippet = fetch_article_snippet(article_url) if should_fetch_snippet else ""
 
             articles.append(
                 RawArticle(

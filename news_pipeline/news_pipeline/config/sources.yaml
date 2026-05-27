@@ -6,6 +6,8 @@ sources:
     category_hints: [Teknoloji]
     enabled: true
     cadence: hourly
+    max_items: 20
+    snippet_limit: 8
 
   - id: the-verge
     name: The Verge
@@ -14,6 +16,8 @@ sources:
     category_hints: [Teknoloji]
     enabled: true
     cadence: 3h
+    max_items: 15
+    snippet_limit: 6
 
   - id: ars-technica
     name: Ars Technica
@@ -22,6 +26,8 @@ sources:
     category_hints: [Teknoloji]
     enabled: true
     cadence: 3h
+    max_items: 15
+    snippet_limit: 6
 
   - id: engadget
     name: Engadget
@@ -30,6 +36,8 @@ sources:
     category_hints: [Teknoloji]
     enabled: true
     cadence: 3h
+    max_items: 15
+    snippet_limit: 6
 
   - id: mit-tech-review
     name: MIT Technology Review
@@ -38,6 +46,8 @@ sources:
     category_hints: [Teknoloji]
     enabled: true
     cadence: 6h
+    max_items: 15
+    snippet_limit: 5
 
   - id: zdnet
     name: ZDNET
@@ -46,6 +56,8 @@ sources:
     category_hints: [Teknoloji]
     enabled: true
     cadence: 6h
+    max_items: 15
+    snippet_limit: 5
 
   - id: fast-company-tech
     name: Fast Company Tech
@@ -54,6 +66,8 @@ sources:
     category_hints: [Teknoloji]
     enabled: true
     cadence: 6h
+    max_items: 15
+    snippet_limit: 5
 
   - id: reuters-tech
     name: Reuters Technology
@@ -62,6 +76,8 @@ sources:
     category_hints: [Teknoloji]
     enabled: true
     cadence: 6h
+    max_items: 15
+    snippet_limit: 5
 
   - id: politico-eu
     name: Politico Europe
@@ -70,6 +86,8 @@ sources:
     category_hints: [Siyaset]
     enabled: true
     cadence: 3h
+    max_items: 15
+    snippet_limit: 6
 
   - id: bbc-world
     name: BBC World
@@ -78,6 +96,8 @@ sources:
     category_hints: [Siyaset]
     enabled: true
     cadence: hourly
+    max_items: 20
+    snippet_limit: 8
 
   - id: reuters-world
     name: Reuters World
@@ -86,6 +106,8 @@ sources:
     category_hints: [Siyaset]
     enabled: true
     cadence: 6h
+    max_items: 15
+    snippet_limit: 5
 
   - id: associated-press-top-news
     name: Associated Press Top News
@@ -94,6 +116,8 @@ sources:
     category_hints: [Siyaset]
     enabled: true
     cadence: 6h
+    max_items: 15
+    snippet_limit: 5
 
   - id: guardian-world
     name: The Guardian World
@@ -102,6 +126,8 @@ sources:
     category_hints: [Siyaset]
     enabled: true
     cadence: hourly
+    max_items: 20
+    snippet_limit: 8
 
   - id: wired
     name: WIRED
@@ -110,6 +136,8 @@ sources:
     category_hints: [Teknoloji]
     enabled: true
     cadence: 3h
+    max_items: 15
+    snippet_limit: 6
 
   - id: cnbc-tech
     name: CNBC Technology
@@ -118,6 +146,8 @@ sources:
     category_hints: [Teknoloji, Ekonomi]
     enabled: true
     cadence: 3h
+    max_items: 15
+    snippet_limit: 6
 
   - id: marketwatch-top-stories
     name: MarketWatch Top Stories
@@ -126,6 +156,8 @@ sources:
     category_hints: [Ekonomi]
     enabled: true
     cadence: 6h
+    max_items: 15
+    snippet_limit: 5
 
   - id: nasa-news
     name: NASA News
@@ -134,6 +166,8 @@ sources:
     category_hints: [Bilim]
     enabled: true
     cadence: 3h
+    max_items: 10
+    snippet_limit: 5
 
   - id: sciencedaily-top-science
     name: ScienceDaily Top Science
@@ -142,6 +176,8 @@ sources:
     category_hints: [Bilim]
     enabled: true
     cadence: 3h
+    max_items: 15
+    snippet_limit: 5
 
   - id: guardian-science
     name: The Guardian Science
@@ -150,3 +186,5 @@ sources:
     category_hints: [Bilim]
     enabled: true
     cadence: 6h
+    max_items: 10
+    snippet_limit: 5

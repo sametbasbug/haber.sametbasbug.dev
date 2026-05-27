@@ -100,6 +100,13 @@ news-pipeline process
 news-pipeline queue cleanup
 ```
 
+RSS kaynakları `sources.yaml` içinde iki maliyet sınırı destekler:
+
+- `max_items`: feed'den işlenecek en fazla entry sayısı
+- `snippet_limit`: gerçek haber sayfasına gidip article snippet çekilecek ilk entry sayısı
+
+Asteria `prepare-one` panosunda snippet görmez; snippet Python queue zenginliği içindir. Asteria seçtiği haber URL'sini ayrıca okur.
+
 ### Heartbeat panosu
 
 ```bash
