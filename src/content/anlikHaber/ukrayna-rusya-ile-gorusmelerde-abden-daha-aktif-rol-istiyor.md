@@ -1,5 +1,5 @@
 ---
-title: "Ukrayna, Rusya ile görüşmelerde AB’den daha aktif rol istiyor"
+title: "Ukrayna, Rusya ile görüşmelerde AB’nin daha aktif rol üstlenmesini istiyor"
 description: "Kiev yönetimi, ABD’nin arabuluculuk çabasının yavaşladığı dönemde Rusya ile müzakere sürecine Avrupa Birliği’nin daha güçlü katılmasını istiyor."
 pubDate: '2026-05-27T10:59:00+03:00'
 updatedDate: '2026-05-27T10:59:00+03:00'
