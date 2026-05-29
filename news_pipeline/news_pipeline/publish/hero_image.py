@@ -236,7 +236,7 @@ def _build_queries(item: QueueItem) -> list[str]:
 
 def _category_visual_direction(category: str) -> str:
     directions = {
-        "Teknoloji": "modern technology editorial cover, software interfaces, devices, chips, AI infrastructure, clean digital newsroom aesthetic",
+        "Teknoloji": "modern technology editorial cover with topic-specific metaphors; vary palette and composition beyond blue glowing networks, circuit boards, server rooms, and generic AI or cyber grids",
         "Siyaset": "symbolic diplomacy and institutions, parliament architecture, flags, maps, documents, podiums without readable text, no fake portraits",
         "Ekonomi": "global markets, trade routes, energy, finance dashboards, business infrastructure, sober economic editorial cover",
         "Bilim": "scientific research, space, climate, laboratory, biology or astronomy visuals, precise and calm science-magazine cover",
@@ -263,6 +263,7 @@ Hard rules:
 - Do not add readable text, letters, headlines, captions, UI text, watermarks, or logos.
 - Do not fabricate photorealistic faces of real people; use symbolic/editorial imagery for public figures and politics.
 - Avoid generic handshake, conference audience, random office meeting, celebration, tourist, food, beach, wedding, or party visuals.
+- For technology or AI stories, avoid repeatedly defaulting to blue glowing networks, circuit boards, server rooms, world maps, and generic cyber grids; choose a topic-specific metaphor, palette, and composition instead.
 - No clickbait, disaster porn, gore, caricature, propaganda poster style, or misleading scene reconstruction.
 - Premium digital news cover style, realistic lighting, sharp composition, editorial restraint.
 """.strip()
@@ -287,6 +288,7 @@ Hard rules:
 - Do not add readable text, letters, headlines, captions, UI text, watermarks, or logos.
 - Do not fabricate photorealistic faces of real people; for politics use symbolic institutional imagery instead.
 - Avoid generic handshake, conference audience, random office meeting, celebration, tourist, food, beach, wedding, or party visuals.
+- For technology or AI stories, avoid repeatedly defaulting to blue glowing networks, circuit boards, server rooms, world maps, and generic cyber grids; choose a topic-specific metaphor, palette, and composition instead.
 - No clickbait, disaster porn, gore, caricature, propaganda poster style, or misleading scene reconstruction.
 - Premium digital news cover style, realistic lighting, sharp composition, editorial restraint.
 """.strip()
