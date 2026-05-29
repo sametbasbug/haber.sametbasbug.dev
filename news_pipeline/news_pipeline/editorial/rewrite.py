@@ -375,12 +375,12 @@ def choose_category(article: NormalizedArticle) -> str:
     text = f"{article.title} {article.summary}".lower()
     if any(_contains_term(text, term) for term in ["openai", "chatgpt", "anthropic", "google", "meta", "nvidia", "ai", "chip", "cyber", "hacker", "hack"]):
         return "Teknoloji"
-    if any(_contains_term(text, term) for term in ["nasa", "esa", "mars", "space", "climate", "science", "research", "study", "health", "medicine", "biology", "physics", "astronomy", "uzay", "iklim", "bilim", "araştırma", "arastirma", "sağlık", "saglik"]):
-        return "Bilim"
     if any(_contains_term(text, term) for term in ["market", "economy", "tariff", "trade", "valuation", "oil", "fuel", "energy", "finance"]):
         return "Ekonomi"
     if any(_contains_term(text, term) for term in ["election", "government", "trump", "parliament", "prime minister", "president", "ukraine", "russia", "orbán", "orban", "turkey", "turkish", "erdogan", "war", "court", "diplomacy"]):
         return "Siyaset"
+    if any(_contains_term(text, term) for term in ["nasa", "esa", "mars", "space", "science", "research", "study", "health", "medicine", "biology", "physics", "astronomy", "uzay", "bilim", "araştırma", "arastirma", "sağlık", "saglik"]):
+        return "Bilim"
     if article.category_hints:
         for category in article.category_hints:
             if category in {"Siyaset", "Ekonomi", "Teknoloji", "Bilim"}:

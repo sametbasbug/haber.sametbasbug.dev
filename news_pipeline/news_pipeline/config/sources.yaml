@@ -165,9 +165,9 @@ sources:
     url: https://www.nasa.gov/news-release/feed/
     category_hints: [Bilim]
     enabled: true
-    cadence: 3h
-    max_items: 10
-    snippet_limit: 5
+    cadence: 6h
+    max_items: 6
+    snippet_limit: 3
 
   - id: sciencedaily-top-science
     name: ScienceDaily Top Science
@@ -175,9 +175,9 @@ sources:
     url: https://www.sciencedaily.com/rss/top/science.xml
     category_hints: [Bilim]
     enabled: true
-    cadence: 3h
-    max_items: 15
-    snippet_limit: 5
+    cadence: 12h
+    max_items: 6
+    snippet_limit: 3
 
   - id: guardian-science
     name: The Guardian Science
@@ -185,6 +185,6 @@ sources:
     url: https://www.theguardian.com/science/rss
     category_hints: [Bilim]
     enabled: true
-    cadence: 6h
-    max_items: 10
-    snippet_limit: 5
+    cadence: 12h
+    max_items: 6
+    snippet_limit: 3

@@ -9,16 +9,16 @@ SOURCE_WEIGHTS = {
     "bbc-world": 0.34,
     "politico-eu": 0.32,
     "techcrunch": 0.35,
-    "nasa-news": 0.36,
-    "sciencedaily-top-science": 0.34,
-    "guardian-science": 0.35,
+    "nasa-news": 0.31,
+    "sciencedaily-top-science": 0.29,
+    "guardian-science": 0.31,
 }
 
 CATEGORY_WEIGHTS = {
     "Ekonomi": 0.16,
     "Siyaset": 0.17,
     "Teknoloji": 0.15,
-    "Bilim": 0.17,
+    "Bilim": 0.12,
 }
 
 KEYWORD_BOOSTS = {

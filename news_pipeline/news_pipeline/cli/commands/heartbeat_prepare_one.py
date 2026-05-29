@@ -23,6 +23,10 @@ HOT_CATEGORY_BOARD_LIMIT = 1
 HOT_SOURCE_RECENT_WINDOW = 3
 HOT_SOURCE_BOARD_LIMIT = 1
 MIN_CATEGORY_TARGETS = {"Siyaset": 3, "Ekonomi": 3, "Teknoloji": 3, "Bilim": 1}
+SCIENCE_RECENT_WINDOW = 8
+SCIENCE_RECENT_THRESHOLD = 2
+SCIENCE_BOARD_LIMIT = 1
+SCIENCE_RECENT_PENALTY = 0.16
 SCIENCE_SPACE_RECENT_WINDOW = 5
 SCIENCE_SPACE_RECENT_THRESHOLD = 2
 SCIENCE_SPACE_BOARD_LIMIT = 1
@@ -165,6 +169,12 @@ def _science_space_pressure(root: Path) -> bool:
     return count >= SCIENCE_SPACE_RECENT_THRESHOLD
 
 
+def _science_pressure(root: Path) -> bool:
+    recent = _recent_live_posts(root, limit=SCIENCE_RECENT_WINDOW)
+    count = sum(1 for post in recent if post.get("category") == "Bilim")
+    return count >= SCIENCE_RECENT_THRESHOLD
+
+
 def _live_source_urls(root: Path) -> set[str]:
     urls: set[str] = set()
     for path in _live_markdown_files(root):
@@ -196,6 +206,7 @@ def _board_score(
     root: Path,
     item: Any,
     *,
+    science_pressure: bool = False,
     science_space_pressure: bool = False,
     recent_posts: list[dict[str, str]] | None = None,
 ) -> tuple[float, list[str]]:
@@ -228,6 +239,9 @@ def _board_score(
             score += 0.035
             reasons.append(f"signal_boost:{term}")
             break
+    if science_pressure and category == "Bilim":
+        score -= SCIENCE_RECENT_PENALTY
+        reasons.append("recency_penalty:science_saturation")
     is_space_science = category == "Bilim" and (
         any(_headline_has_term(headline, term) for term in SCIENCE_SPACE_TERMS)
         or any(_headline_has_term(source, term) for term in {"nasa"})
@@ -263,8 +277,9 @@ def _passes_basic_board_filter(root: Path, item: Any, max_source_age_hours: int,
 def _select_headline_board(root: Path, items: list[Any], limit: int, max_source_age_hours: int) -> tuple[list[Any], list[dict[str, Any]], dict[str, Any]]:
     hot_category = _hot_category(root)
     hot_source = _hot_source(root)
+    science_pressure = _science_pressure(root)
     science_space_pressure = _science_space_pressure(root)
-    recent_posts = _recent_live_posts(root, limit=max(SCIENCE_SPACE_RECENT_WINDOW, HOT_CATEGORY_RECENT_WINDOW, HOT_SOURCE_RECENT_WINDOW))
+    recent_posts = _recent_live_posts(root, limit=max(SCIENCE_RECENT_WINDOW, SCIENCE_SPACE_RECENT_WINDOW, HOT_CATEGORY_RECENT_WINDOW, HOT_SOURCE_RECENT_WINDOW))
     live_urls = _live_source_urls(root)
     eligible: list[tuple[Any, float, list[str]]] = []
     skipped: list[dict[str, Any]] = []
@@ -274,7 +289,7 @@ def _select_headline_board(root: Path, items: list[Any], limit: int, max_source_
             if len(skipped) < 12:
                 skipped.append({"queueId": item.queue_id, "score": round(float(item.editorial_priority), 3), "title": item.draft_title, "reason": reason})
             continue
-        board_score, reasons = _board_score(root, item, science_space_pressure=science_space_pressure, recent_posts=recent_posts)
+        board_score, reasons = _board_score(root, item, science_pressure=science_pressure, science_space_pressure=science_space_pressure, recent_posts=recent_posts)
         eligible.append((item, board_score, reasons))
 
     eligible.sort(key=lambda row: row[1], reverse=True)
@@ -297,6 +312,8 @@ def _select_headline_board(root: Path, items: list[Any], limit: int, max_source_
             return False
         if hot_source and source == hot_source and source_counts[hot_source] >= HOT_SOURCE_BOARD_LIMIT:
             return False
+        if science_pressure and item.draft_category == "Bilim" and category_counts["Bilim"] >= SCIENCE_BOARD_LIMIT:
+            return False
         headline = _normalized(_headline_text(root, item))
         is_space_science = item.draft_category == "Bilim" and (
             any(_headline_has_term(headline, term) for term in SCIENCE_SPACE_TERMS)
@@ -313,6 +330,8 @@ def _select_headline_board(root: Path, items: list[Any], limit: int, max_source_
 
     for category, target in MIN_CATEGORY_TARGETS.items():
         if category == hot_category:
+            continue
+        if category == "Bilim" and science_pressure:
             continue
         for item, _, _ in eligible:
             if len(selected) >= limit or category_counts[category] >= target:
@@ -338,6 +357,8 @@ def _select_headline_board(root: Path, items: list[Any], limit: int, max_source_
         "hotCategoryBoardLimit": HOT_CATEGORY_BOARD_LIMIT if hot_category else None,
         "hotSource": hot_source,
         "hotSourceBoardLimit": HOT_SOURCE_BOARD_LIMIT if hot_source else None,
+        "sciencePressure": science_pressure,
+        "scienceBoardLimit": SCIENCE_BOARD_LIMIT if science_pressure else None,
         "scienceSpacePressure": science_space_pressure,
         "scienceSpaceBoardLimit": SCIENCE_SPACE_BOARD_LIMIT if science_space_pressure else None,
         "maxPerSource": MAX_PER_SOURCE,
