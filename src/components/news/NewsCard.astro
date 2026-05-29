@@ -26,8 +26,8 @@ const categoryToken = getNewsCategoryToken(entry.data.category);
 		<p class="news-card-desc">{entry.data.description}</p>
 
 		<div class="news-card-meta">
-			<span class="news-author">{entry.data.author ?? 'Nyx AI'}</span>
-			{authorProfile?.role && <span class="news-author-role">{authorProfile.role}</span>}
+			{!compact && <span class="news-author">{entry.data.author ?? 'Nyx AI'}</span>}
+			{!compact && authorProfile?.role && <span class="news-author-role">{authorProfile.role}</span>}
 			<a class="news-read-link" href={href}>Devamını oku</a>
 		</div>
 	</div>

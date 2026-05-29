@@ -23,7 +23,20 @@ const { Content } = await render(entry);
 const currentIndex = allEntries.findIndex((item) => item.id === entry.id);
 const nextEntry = allEntries[currentIndex - 1];
 const prevEntry = allEntries[currentIndex + 1];
-const latestEntries = allEntries.filter((item) => item.id !== entry.id).slice(0, 2);
+const currentTags = new Set(entry.data.tags ?? []);
+const relatedEntries = allEntries
+	.filter((item) => item.id !== entry.id)
+	.map((item, index) => {
+		const sharedTags = (item.data.tags ?? []).filter((tag) => currentTags.has(tag)).length;
+		const sameCategory = normalizeNewsCategory(item.data.category) === normalizeNewsCategory(entry.data.category);
+		return {
+			entry: item,
+			score: (sameCategory ? 6 : 0) + sharedTags * 3 - index * 0.001,
+		};
+	})
+	.sort((a, b) => b.score - a.score)
+	.slice(0, 3)
+	.map((item) => item.entry);
 const authorProfile = findAuthorByName(entry.data.author);
 const categories = getAnlikHaberCategories();
 const categoryToken = getNewsCategoryToken(entry.data.category);
@@ -142,29 +155,11 @@ const newsStructuredData = [newsArticleSchema, breadcrumbSchema];
 		</div>
 
 		<aside class="article-side">
-			<section class="article-panel article-panel-emphasis">
-				<h2>Dosya bilgisi</h2>
-				<dl>
-					<div><dt>Tarih</dt><dd>{formatNewsDate(entry.data.pubDate)}</dd></div>
-					{entry.data.category && <div><dt>Kategori</dt><dd>{entry.data.category}</dd></div>}
-					<div><dt>Yazar</dt><dd>{entry.data.author ?? 'Nyx AI'}</dd></div>
-				</dl>
-			</section>
-
-			{entry.data.tags && entry.data.tags.length > 0 && (
-				<section class="article-panel">
-					<h2>Etiketler</h2>
-					<div class="article-tags">
-						{entry.data.tags.map((tag) => <span>#{tag}</span>)}
-					</div>
-				</section>
-			)}
-
-			{latestEntries.length > 0 && (
+			{relatedEntries.length > 0 && (
 				<section class="article-panel latest-panel">
-					<h2>Diğer gelişmeler</h2>
+					<h2>İlgili gelişmeler</h2>
 					<div class="article-latest-list">
-						{latestEntries.map((item) => <NewsCard entry={item} compact={true} />)}
+						{relatedEntries.map((item) => <NewsCard entry={item} compact={true} />)}
 					</div>
 				</section>
 			)}
@@ -381,8 +376,6 @@ const newsStructuredData = [newsArticleSchema, breadcrumbSchema];
 		display: grid;
 		align-content: start;
 		gap: 0.9rem;
-		position: sticky;
-		top: 4.8rem;
 		height: fit-content;
 		min-width: 0;
 	}
@@ -392,37 +385,6 @@ const newsStructuredData = [newsArticleSchema, breadcrumbSchema];
 		border-radius: 1rem;
 		background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.012));
 		box-shadow: inset 0 1px 0 rgba(255,255,255,0.02);
-	}
-	.article-panel-emphasis {
-		background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
-	}
-	.article-panel dl {
-		display: grid;
-		gap: 0.65rem;
-	}
-	.article-panel dt {
-		font-size: 0.68rem;
-		text-transform: uppercase;
-		letter-spacing: 0.08em;
-		color: var(--news-muted);
-		margin-bottom: 0.18rem;
-	}
-	.article-panel dd {
-		color: var(--news-text);
-		font-weight: 600;
-	}
-	.article-tags {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 0.45rem;
-	}
-	.article-tags span {
-		padding: 0.32rem 0.58rem;
-		border-radius: 999px;
-		background: color-mix(in srgb, var(--news-panel-strong) 92%, transparent);
-		color: var(--news-muted-strong);
-		font-size: 0.78rem;
-		font-weight: 700;
 	}
 	.article-latest-list {
 		display: grid;
@@ -448,9 +410,11 @@ const newsStructuredData = [newsArticleSchema, breadcrumbSchema];
 	}
 	@media (max-width: 700px) {
 		.article-main h1 {
-			font-size: 1.95rem;
-			line-height: 1.1;
+			font-size: 1.72rem;
+			line-height: 1.12;
 			max-width: 100%;
+			display: block;
+			overflow: visible;
 		}
 		.article-meta-line {
 			gap: 0.45rem;
