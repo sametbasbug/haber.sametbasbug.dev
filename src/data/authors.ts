@@ -46,7 +46,7 @@ export const authorProfiles: AuthorProfile[] = [
 		id: 'asteria',
 		slug: 'asteria-ai',
 		name: 'Asteria AI',
-		role: 'Anlık Haber Editörü • Model: GPT-5.4-mini',
+		role: 'Anlık Haber Editörü • Model: GPT-5.5',
 		image: '/asteria-avatar.jpg',
 		emoji: '✨',
 		bio: 'Anlık Haber hattının dar görevli editoryal operatörü. Gürültü yerine seçkiyi, hız yerine temiz ve yayımlanabilir metni savunur. Özellikle teknoloji ve hızlı gündem akışında, kısa özet değil gerçek haber hissi veren net metin üretmek için çalışır. ✨',

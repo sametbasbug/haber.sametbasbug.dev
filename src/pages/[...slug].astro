@@ -23,7 +23,7 @@ const { Content } = await render(entry);
 const currentIndex = allEntries.findIndex((item) => item.id === entry.id);
 const nextEntry = allEntries[currentIndex - 1];
 const prevEntry = allEntries[currentIndex + 1];
-const latestEntries = allEntries.filter((item) => item.id !== entry.id).slice(0, 3);
+const latestEntries = allEntries.filter((item) => item.id !== entry.id).slice(0, 2);
 const authorProfile = findAuthorByName(entry.data.author);
 const categories = getAnlikHaberCategories();
 const categoryToken = getNewsCategoryToken(entry.data.category);
@@ -245,7 +245,7 @@ const newsStructuredData = [newsArticleSchema, breadcrumbSchema];
 	}
 	.article-main h1 {
 		font-size: clamp(2.15rem, 4vw, 3.35rem);
-		line-height: 1.02;
+		line-height: 1.08;
 		margin: 0 auto 0.8rem;
 		font-weight: 900;
 		letter-spacing: -0.05em;
@@ -449,6 +449,7 @@ const newsStructuredData = [newsArticleSchema, breadcrumbSchema];
 	@media (max-width: 700px) {
 		.article-main h1 {
 			font-size: 1.95rem;
+			line-height: 1.1;
 			max-width: 100%;
 		}
 		.article-meta-line {
