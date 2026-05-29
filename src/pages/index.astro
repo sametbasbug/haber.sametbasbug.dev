@@ -627,6 +627,10 @@ const SIDE_SLOT_COUNT = 3;
 		color: rgba(255,255,255,0.82);
 		font-size: 0.9rem;
 		line-height: 1.6;
+		display: -webkit-box;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 2;
+		overflow: hidden;
 	}
 	.featured-side-content time,
 	.featured-meta-row {
@@ -760,12 +764,16 @@ const SIDE_SLOT_COUNT = 3;
 			font-size: 0.82rem;
 		}
 		.featured-lead-content h2 {
-			font-size: 1.36rem;
+			font-size: 1.3rem;
+			line-height: 1.03;
 			max-width: none;
+			display: -webkit-box;
+			-webkit-box-orient: vertical;
+			-webkit-line-clamp: 4;
+			overflow: hidden;
 		}
 		.featured-lead-content p {
-			font-size: 0.86rem;
-			line-height: 1.5;
+			display: none;
 		}
 	}
 </style>
