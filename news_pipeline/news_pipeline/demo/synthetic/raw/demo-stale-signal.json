@@ -1,0 +1,11 @@
+{
+  "source_id": "demo-archive",
+  "fetched_at": "2000-01-01T09:01:00Z",
+  "url": "https://example.org/demo/old-satellite-note",
+  "title": "Demo satellite note from the archive",
+  "summary": "A synthetic old item used to demonstrate source-age rejection.",
+  "published_at": "2000-01-01T09:00:00Z",
+  "image_url": null,
+  "raw_html_path": null,
+  "metadata": {"fixture": true}
+}

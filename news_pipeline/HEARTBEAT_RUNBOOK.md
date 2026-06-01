@@ -1,76 +1,61 @@
 # Heartbeat Runbook
 
-Bu dosya heartbeat sırasında news pipeline için izlenecek en sade operasyon akışını tanımlar.
+Concise runbook for the current Anlık Haber heartbeat.
 
-## Amaç
+For full operations details, use `news_pipeline/OPERATIONS.md`. This file intentionally mirrors the same canonical flow.
 
-Heartbeat tetiklendiğinde tek hedef şudur:
-- yeni haberleri içeri almak
-- queue'yu güncellemek
-- önemli aday varsa kısa özet vermek
-- yoksa sessiz kalmak
-
-## Tek komutluk akış
+## One command
 
 ```bash
 cd /Volumes/KIOXIA/haber-project && bash news_pipeline/scripts/heartbeat-cycle.sh
 ```
 
-## Script içinde ne çalışır?
+## What the script does
 
 1. `news_pipeline/.venv/bin/news-pipeline collect`
 2. `news_pipeline/.venv/bin/news-pipeline process`
-3. raw input tazeliği raporlanır (`raw_latest`, `raw_age_seconds`, `raw_status`)
-4. `news_pipeline/.venv/bin/news-pipeline queue summary`
-5. direct autopublish çalıştırılmaz, bu hat devre dışıdır
-6. `news_pipeline/.venv/bin/news-pipeline queue review`
-7. `news_pipeline/.venv/bin/news-pipeline queue list --status new`
-8. `bash news_pipeline/scripts/asteria-editorial-gate.sh`
-9. publish kararı Asteria editoryal kapısından geçer
+3. `news_pipeline/.venv/bin/news-pipeline queue cleanup`
+4. report raw freshness (`raw_latest`, `raw_age_seconds`, `raw_status`)
+5. `news_pipeline/.venv/bin/news-pipeline queue summary`
+6. print that direct autopublish is disabled
+7. `news_pipeline/.venv/bin/news-pipeline queue review | sed -n '1,5p'`
+8. `news_pipeline/.venv/bin/news-pipeline queue list --status new | sed -n '1,8p'`
+9. skip the extra Asteria gate by default; run it only with `RUN_ASTERIA_GATE=1`
 
-## Heartbeat karar kuralı
+## Important boundary
 
-### Kullanıcıya yaz
-Yalnız şu durumlardan biri varsa:
-- yeni `manual-review` kaydı çıktıysa
-- güçlü ve yayınlanabilir yeni aday oluştuysa
-- aynı olay birden fazla kaynakla güçlendiyse
-- yayınlanmaya değer 1-3 temiz haber belirdiyse
+The heartbeat script itself does not publish live articles.
 
-### Sessiz kal
-Şu durumlarda `HEARTBEAT_OK`:
-- sadece gürültü/tekrar ayıklandıysa
-- yeni anlamlı aday yoksa
-- yalnız zayıf skorlar geldiyse
-- son update çok yakın zamanda verildiyse
-- `raw_status=stale_or_missing` dönmüş ve collect/process hattı veri tazeleyememişse
+Production publish requires:
 
-## Editoryal yetki
+```bash
+news-pipeline heartbeat prepare-one --json
+news-pipeline queue polish <QUEUE_ID> ... --json
+news-pipeline heartbeat publish-one --execute --no-collect --json
+```
 
-Varsayılan mod: **direct autopublish kapalı**.
+Asteria must read the selected source URL and apply the editorial polish before `publish-one` can carry the item through the technical rail.
 
-Heartbeat akışı artık:
-- toplar
-- işler
-- queue görünürlüğü sağlar
-- sonunda `news_pipeline/scripts/asteria-editorial-gate.sh` ile Asteria'yı çağırır
+## When to speak up
 
-Yani heartbeat script'i kendi başına canlı publish yapmaz.
-Canlı publish kararı Asteria değerlendirmesinden geçmeden verilmez.
+Send a short update only when one of these is true:
 
-## Kısa mesaj formatı
+- a new `manual-review` item appears;
+- a strong publish candidate appears;
+- the same story gains useful supporting sources;
+- collect/process/audit/build fails;
+- raw input is stale or missing for a meaningful period.
 
-Örnek:
+## When to stay quiet
 
-- `2 güçlü aday çıktı, 1'i manual-review istiyor.`
-- `Yeni yayın adayı: ...`
-- `Manual-review kuyruğunda 1 hassas kayıt var.`
+Reply `HEARTBEAT_OK` when:
 
-Uzun rapor dökme.
+- only duplicates/noise were filtered;
+- no meaningful candidate exists;
+- all candidates are weak or stale;
+- the cycle is skipped by recent-cycle guard;
+- the last useful update was very recent.
 
-## Not
+## Direct autopublish status
 
-Bu runbook'ta direct autopublish devre dışıdır.
-Heartbeat script'i artık canlı `src/content/anlikHaber/` klasörüne kendi başına otomatik yazmaz ve otomatik git commit + push yapmaz.
-Bunun yerine heartbeat sonunda Asteria editoryal kapısı çağrılır.
-Amaç, veri motorunu çalışır tutarken canlı publish düğmesini kontrollü bir editoryal katmana taşımaktır.
+Direct autopublish remains disabled. `news-pipeline autopublish` and hidden `news-pipeline publish <QUEUE_ID>` are guardrails, not production paths.

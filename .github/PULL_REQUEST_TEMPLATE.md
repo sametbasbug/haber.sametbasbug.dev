@@ -9,16 +9,18 @@
 - [ ] CI/build
 - [ ] Editorial policy/config
 
-## Checks
+## Provider-free checks
 
 - [ ] `python -m compileall news_pipeline/news_pipeline`
+- [ ] `python -m pytest news_pipeline/tests`
 - [ ] `news-pipeline audit-content`
 - [ ] `news-pipeline audit-images`
 - [ ] `npm run build`
 
-## Safety notes
+## Editorial safety
 
-- [ ] Does not include secrets, cookies, or local runtime data
-- [ ] Does not bypass editorial/manual-review gates
+- [ ] Does not bypass Asteria/editorial-polish/manual-review gates
+- [ ] Does not re-enable direct `publish` or `autopublish`
 - [ ] Does not add protected third-party article bodies as fixtures
+- [ ] Does not include secrets, cookies, tokens, or local runtime data
 - [ ] Content/license boundary remains clear

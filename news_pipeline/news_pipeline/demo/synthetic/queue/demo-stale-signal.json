@@ -1,0 +1,35 @@
+{
+  "queue_id": "demo-stale-signal",
+  "status": "new",
+  "normalized_id": "demo-stale-signal",
+  "cluster_key": "demo-stale",
+  "editorial_priority": 0.86,
+  "draft_title": "Demo arşiv notu eski kaynak kontrolüne takılır",
+  "draft_description": "Sentetik eski kayıt, kaynak yaşı sınırının publish-one seçiminde nasıl çalıştığını göstermek için bekletilir.",
+  "draft_category": "Bilim",
+  "draft_tags": [
+    "demo",
+    "stale"
+  ],
+  "draft_sources": [
+    {
+      "name": "Demo Archive",
+      "url": "https://example.org/demo/old-satellite-note"
+    }
+  ],
+  "draft_facts": [
+    "Demo arşiv kaydı eski kaynak tarihine sahiptir ve yayın kapısından geçmemelidir.",
+    "Bu örnek kaynak yaşı reddini göstermek için tasarlanmıştır."
+  ],
+  "draft_body": "Demo kent yönetimi, ulaşım uyarıları için yeni bir yapay zeka güvenlik panosu başlattı. Sistem, acil durum mesajlarını tek merkezde topluyor ve kamu ekiplerine daha hızlı karar desteği sunmayı hedefliyor. Pilot uygulama önce metro ve otobüs hatlarında denenecek, sonuçlar bağımsız bir teknik raporla değerlendirilecek. Yetkililer, aracın insan kararının yerine geçmeyeceğini ve yalnızca önceliklendirme desteği sağlayacağını vurguluyor. Bu sınırlı kapsam, haberin düşük riskli bir teknoloji güncellemesi olarak izlenmesini sağlıyor.",
+  "hero_prompt": "Abstract satellite archive illustration, no logos, no text.",
+  "hero_alt": "Eski uydu arşiv kaydını temsil eden soyut görsel",
+  "supporting_sources": [],
+  "related_queue_ids": [],
+  "notes": [
+    "asteria-editorial-polish"
+  ],
+  "created_at": "2000-01-01T09:05:00Z",
+  "updated_at": "2000-01-01T09:05:00Z",
+  "published_slug": null
+}

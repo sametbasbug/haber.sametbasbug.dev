@@ -1,0 +1,11 @@
+{
+  "source_id": "demo-courts",
+  "fetched_at": "2999-01-01T09:31:00Z",
+  "url": "https://example.org/demo/sensitive-claim",
+  "title": "Demo founder faces lawsuit claims over alleged data misuse",
+  "summary": "A synthetic sensitive legal claim used to demonstrate manual-review separation.",
+  "published_at": "2999-01-01T09:30:00Z",
+  "image_url": null,
+  "raw_html_path": null,
+  "metadata": {"fixture": true}
+}

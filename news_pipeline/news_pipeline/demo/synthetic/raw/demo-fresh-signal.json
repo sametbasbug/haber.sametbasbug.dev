@@ -1,0 +1,11 @@
+{
+  "source_id": "demo-wire",
+  "fetched_at": "2999-01-01T09:01:00Z",
+  "url": "https://example.org/demo/signal-safety-board",
+  "title": "Demo city opens a public AI safety board for transit alerts",
+  "summary": "A synthetic public-service technology story used to demonstrate the editorial queue and publish gates.",
+  "published_at": "2999-01-01T09:00:00Z",
+  "image_url": null,
+  "raw_html_path": null,
+  "metadata": {"fixture": true}
+}

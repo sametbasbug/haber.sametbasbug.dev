@@ -11,7 +11,9 @@
     "news:prepare": "news_pipeline/.venv/bin/news-pipeline heartbeat prepare-one --json",
     "news:publish-one": "news_pipeline/.venv/bin/news-pipeline heartbeat publish-one --execute --no-collect --json",
     "news:audit": "news_pipeline/.venv/bin/news-pipeline audit-content && news_pipeline/.venv/bin/news-pipeline audit-images",
-    "quality": "npm run news:audit && npm run build"
+    "news:demo": "news_pipeline/.venv/bin/news-pipeline demo walkthrough",
+    "test:pipeline": "news_pipeline/.venv/bin/python -m pytest news_pipeline/tests",
+    "quality": "npm run news:audit && npm run test:pipeline && npm run build"
   },
   "dependencies": {
     "@astrojs/rss": "^4.0.18",

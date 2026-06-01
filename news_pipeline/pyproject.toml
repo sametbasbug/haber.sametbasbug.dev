@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "news-pipeline"
 version = "0.1.0"
-description = "Editorial-first news ingestion and drafting pipeline for blog-project."
+description = "Editorial-first AI-assisted news publishing pipeline for static sites."
 readme = "README.md"
 requires-python = ">=3.12"
 authors = [
@@ -22,6 +22,11 @@ dependencies = [
   "rapidfuzz>=3.13.0",
   "readability-lxml>=0.8.4.1",
   "typer>=0.15.3",
+]
+
+[project.optional-dependencies]
+test = [
+  "pytest>=8.0.0",
 ]
 
 [project.scripts]

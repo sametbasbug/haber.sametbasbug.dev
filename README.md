@@ -31,6 +31,18 @@ Most small publishing projects eventually hit the same maintenance wall:
 
 Anlık Haber is a working experiment around those constraints.
 
+## Why this matters for OSS maintainers
+
+Many maintainers now have to review AI-assisted changes, generated summaries, bot-authored PRs, or automated release notes. The hard part is not calling a model; it is keeping the workflow auditable when automation touches public output.
+
+This repo is useful as a small, concrete reference for:
+
+- separating ingestion/automation from final editorial authority;
+- keeping provider-dependent steps out of CI;
+- writing tests for stale-source, duplicate, manual-review, and leak-prevention gates;
+- documenting where automation must stop and a human/maintainer must decide;
+- preserving a clear license boundary between reusable tooling and protected published content.
+
 ## Architecture
 
 The repository has two main parts:
@@ -143,11 +155,19 @@ npm run quality
 
 # Compile Python pipeline
 python -m compileall news_pipeline/news_pipeline
+
+# Run pipeline unit tests
+news_pipeline/.venv/bin/python -m pytest news_pipeline/tests
+
+# Explore the synthetic demo dataset (dry-run walkthrough; no providers/push)
+news-pipeline demo seed --force
+news-pipeline demo walkthrough
 ```
 
 ## Documentation
 
 - [`news_pipeline/README.md`](news_pipeline/README.md) — pipeline CLI and workflow details
+- [`news_pipeline/news_pipeline/demo/synthetic/README.md`](news_pipeline/news_pipeline/demo/synthetic/README.md) — tiny provider-free demo dataset
 - [`news_pipeline/OPERATIONS.md`](news_pipeline/OPERATIONS.md) — operational runbook
 - [`news_pipeline/HEARTBEAT_RUNBOOK.md`](news_pipeline/HEARTBEAT_RUNBOOK.md) — heartbeat cycle notes
 - [`news_pipeline/AUTONOMOUS_PUBLISH_POLICY.md`](news_pipeline/AUTONOMOUS_PUBLISH_POLICY.md) — autonomy boundaries

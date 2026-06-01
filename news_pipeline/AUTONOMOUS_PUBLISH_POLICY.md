@@ -1,94 +1,57 @@
 # Autonomous Publish Policy
 
-Bu belge, news pipeline için otonom yayın karar sınırlarını tanımlar.
+This document defines the current autonomy boundary for the Anlık Haber pipeline.
 
-## Temel ilke
+The historical direct-autopublish path is **disabled**. The production model is now the Asteria/heartbeat/manual-review model: Python prepares and verifies the technical rail; Asteria provides the editorial handoff; sensitive or weak items stay out of production.
 
-Nyx haber akışının kesilmemesi için normal koşullarda editoryal son kararı verebilir.
-Ama bu yetki sınırsız değildir. Riskli alanlarda insan onayı devreye girer.
+## Current default
 
-## Otonom publish AÇIK
+- Heartbeat runs collect/process/cleanup and queue diagnostics.
+- `news-pipeline autopublish` refuses to publish.
+- `news-pipeline publish <QUEUE_ID>` is a hidden, deprecated guardrail command and refuses to publish.
+- The only production publish rail is:
 
-Varsayılan mod:
-- heartbeat yaklaşık 60 dakikada bir çalışır
-- pipeline collect + process yapar
-- queue içinden uygun adayları Nyx seçer
-- düşük riskli ve çizgiye uygun kayıtlar doğrudan canlı `src/content/anlikHaber/` klasörüne yazılır
-- gerektiğinde yayın akışı Nyx tarafından sürdürülür
+```bash
+news-pipeline heartbeat prepare-one --json
+# Asteria reads the selected source URL and applies editorial polish
+news-pipeline queue polish <QUEUE_ID> ... --json
+news-pipeline heartbeat publish-one --execute --no-collect --json
+```
 
-## Nyx'in doğrudan publish edebileceği haberler
+`publish-one` is technical automation, not editorial authority. It may write the live Markdown only after the editorial polish and safety gates are present.
 
-### 1. Düşük riskli teknoloji haberleri
-- ürün güncellemeleri
-- model / şirket / platform duyuruları
-- AI ve yazılım ekosistemindeki doğrulanabilir gelişmeler
-- açık kaynaklı veya teknik etkisi net olaylar
+## What Asteria may publish through the technical rail
 
-### 2. Düşük-orta riskli dünya / siyaset haberleri
-- seçim, diplomasi, ekonomi, yaptırım, ticaret, devlet politikası gibi alanlarda
-- açık kaynaklı ve güçlü yayıncı destekli gelişmeler
-- kişisel itham içermeyen temiz politik özetler
+Asteria may advance a story when all of these are true:
 
-### 3. Çoklu kaynakla güçlenmiş kayıtlar
-- primary + supporting source yapısı varsa
-- olay en azından editoryal olarak daha sağlam görünüyorsa
+- the item is low-risk and globally relevant;
+- `manual-review:` notes are absent;
+- Asteria has read the selected source URL directly;
+- `queue polish` has supplied Turkish title, description, facts, body, tags, `heroPrompt`, and `heroAlt`;
+- the item passes freshness, duplicate, Turkish-language, body-depth, hero, image audit, content audit, and build gates.
 
-## Nyx'in publish ETMEMESİ gereken haberler
+In the cautious production mode, at most one clean item should normally be published per heartbeat cycle unless Samet explicitly changes the operating mode.
 
-### Mutlaka kullanıcıya sorulacak alanlar
-- cinsel suç iddiaları
-- kişisel suçlama / karakter ithamı
-- tek kaynağa dayanan sert hukuki iddialar
-- hassas dava dosyaları
-- yüksek gerilimli Türkiye iç siyaset başlıkları
-- itibar riski yüksek gri alanlar
-- doğrulama açığı bulunan kırılgan haberler
+## What must not bypass manual review
 
-### Varsayılan bekletme alanları
-- manual-review işaretli kayıtlar
-- description/body hâlâ editoryal olarak zayıf kalan kayıtlar
-- aynı olayın çelişen versiyonları
-- bağlamı eksik veya dedupe/merge açısından yarım görünen kayıtlar
+Do not publish automatically when the item involves:
 
-## Publish kararı için pratik eşikler
+- lawsuits, investigations, sexual abuse claims, personal allegations, or reputationally risky claims;
+- single-source hard accusations;
+- high-tension domestic politics without strong global context;
+- unclear or contradictory source material;
+- `manual-review:` notes;
+- weak Turkish body/description/facts;
+- duplicate/near-duplicate topic risk.
 
-Nyx bir kaydı otonom publish etmeye daha yatkındır, eğer:
-- `status = new`
-- `manual-review` notu yok
-- skor yaklaşık `>= 0.68`
-- başlık ve description Türkçe/temiz seviyeye gelmiş
-- kaynak güvenilir
-- kayıt açıkça spam/gürültü değil
+These stay in the queue for explicit editorial escalation.
 
-İlk güvenli modda heartbeat başına en fazla **1 kayıt** otomatik publish edilir.
+## Responsibility split
 
-## Manual-review politikası
+- **Python pipeline:** collect, normalize, dedupe, score, queue, expose a headline board, enforce gates, generate/write assets, audit, build, and keep commits narrow.
+- **Asteria:** choose the candidate, read the source, write the Turkish article, create the hero brief, and decide whether the story deserves publication.
+- **Samet/Nyx:** approve or steer high-risk policy changes, provider changes, and broad automation changes.
 
-Şu an `manual-review` taşıyan haberler otomatik publish edilmez.
-Önce kullanıcı onayı gerekir.
+## Non-goals
 
-Buna tipik örnekler:
-- dava
-- saldırı
-- kişisel suçlama
-- Epstein benzeri yüksek hassasiyetli dosyalar
-
-## Editoryal ton ilkesi
-
-Otonom publish açıksa bile Nyx şunları yapmaz:
-- bağıran clickbait başlık
-- teyitsiz sert hüküm
-- kişisel itibarı gereksiz zedeleyen dil
-- tek kaynağa dayanıp kesin hüküm kurma
-
-## Varsayılan güvenlik önerisi
-
-En güvenli pratik:
-- otonom publish açık
-- ama yalnız düşük riskli haberlerde aktif
-- manual-review ve kırmızı bayraklı alanlar kullanıcıya eskale edilir
-
-## Son söz
-
-Amaç tam otomatik kaos değil.
-Amaç, haber akışını canlı tutarken riski kontrollü biçimde Nyx'in omuzlamasıdır.
+This policy is not a license to run blind autonomous news publishing. The goal is boring reliability: keep the feed maintainable while preventing the common failures of AI-assisted publishing—duplicated stories, stale sources, leaked internal notes, and unreviewed sensitive claims.

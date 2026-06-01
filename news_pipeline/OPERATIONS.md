@@ -1,171 +1,109 @@
 # News Pipeline Operations
 
-Bu dosya günlük kullanım ve ileride cron entegrasyonu için pratik operasyon rehberidir.
+This is the canonical production operations guide for Anlık Haber.
 
-## Amaç
+The current production model is **Asteria/heartbeat/manual-review**. Direct autopublish is disabled; production publishing goes through the heartbeat board, Asteria editorial polish, and the guarded `heartbeat publish-one` rail.
 
-Pipeline'ı güvenli ve öngörülebilir biçimde çalıştırmak.
+## Canonical production flow
 
-## Önerilen manuel akış
-
-### 1. Topla
-```bash
-source news_pipeline/.venv/bin/activate
-news-pipeline collect
-```
-
-### 2. İşle
-```bash
-news-pipeline process
-```
-
-### 3. Önce hassas kuyruğa bak
-```bash
-news-pipeline queue review
-```
-
-### 4. Önce queue temizliğini çalıştır
-```bash
-news-pipeline queue cleanup
-```
-
-Bu komut yalnız aktif queue'yi değil, arşiv retention'ını da uygular:
-- rejected archive: 24 saat
-- published archive: 72 saat
-
-### 5. Sonra genel yeni kayıtları tara
-```bash
-news-pipeline queue list --status new
-```
-
-### 6. Gerekli kaydı aç
-```bash
-news-pipeline queue inspect <QUEUE_ID>
-```
-
-### 7. Onayla
-```bash
-news-pipeline queue approve <QUEUE_ID>
-```
-
-### 8. Asteria polish uygula
-```bash
-news-pipeline queue polish <QUEUE_ID> \
-  --title "..." \
-  --description "..." \
-  --body-file /tmp/body.md \
-  --hero-prompt "..." \
-  --hero-alt "..."
-```
-
-### 9. Teknik publish rayını çalıştır
-```bash
-news-pipeline heartbeat publish-one --execute --no-collect --json
-```
-
-Not: `news-pipeline publish <QUEUE_ID>` artık doğrudan kullanılmaz. Bu düşük seviye iç adım, Asteria polish + audit + build + commit/push zincirini bypass edebileceği için CLI’da devre dışı bırakıldı.
-
----
-
-## Heartbeat için önerilen yaklaşım
-
-Bu pipeline artık haber-project içinde yaşar; ilk tercih cron değil, heartbeat akışıdır.
-
-Neden?
-- haber akışı tam saat bağımlı değil
-- queue kontrolü daha doğal yapılır
-- boş turda sessiz kalmak kolaydır
-- editoryal karar akışı daha insani kalır
-
-Önerilen heartbeat script'i:
+From the repository root:
 
 ```bash
-cd /Volumes/KIOXIA/haber-project && bash news_pipeline/scripts/heartbeat-cycle.sh
-```
-
-Script şu adımları çalıştırır:
-
-```bash
-news-pipeline collect
-news-pipeline process
-news-pipeline queue summary
-news-pipeline queue review
-news-pipeline queue list --status new
-# varsayılan: extra Asteria gate çağrısı kapalı
-# gerekirse RUN_ASTERIA_GATE=1 ile manuel açılır
+cd /Volumes/KIOXIA/haber-project
 bash news_pipeline/scripts/heartbeat-cycle.sh
 ```
 
-Önemli not:
-- `heartbeat-cycle.sh` içinde ekstra `asteria-editorial-gate.sh` çağrısı artık varsayılan olarak kapalıdır.
-- Sebep, aynı heartbeat içinde Asteria'ya ikinci bir görev mesajı gidip günlük turn/message limitini gereksiz tüketebilmesidir.
-- İkinci gate koşusu gerçekten isteniyorsa açıkça `RUN_ASTERIA_GATE=1` verilmelidir.
+The heartbeat script performs the routine technical cycle:
 
-Detaylı çalışma notları için:
+1. `collect`
+2. `process`
+3. `queue cleanup`
+4. raw freshness report
+5. `queue summary`
+6. manual-review preview
+7. strong-new preview
+8. optional Asteria gate only when `RUN_ASTERIA_GATE=1`
 
-- `news_pipeline/HEARTBEAT_RUNBOOK.md`
+By default, `heartbeat-cycle.sh` does **not** call the extra Asteria gate. This avoids double-consuming Asteria turns in one wake. If a human/operator intentionally wants the extra gate in the same run:
 
-## Neden?
+```bash
+RUN_ASTERIA_GATE=1 bash news_pipeline/scripts/heartbeat-cycle.sh
+```
 
-Çünkü:
-- düşük kaliteli veya hassas haberler ayıklanmalı
-- hukuki risk taşıyan içeriklerde son karar kontrollü editoryal kapıdan geçmeli
-- direct autopublish şu aşamada fazla cesur kalıyor
-- heartbeat boş turda sessiz kalabilir
+## Editorial handoff flow
 
----
+When a candidate deserves work, the safe publish rail is:
 
-## Otonom publish modu
+```bash
+news-pipeline heartbeat prepare-one --json
+# Asteria reads the selected source URL and writes the Turkish story
+news-pipeline queue polish <QUEUE_ID> \
+  --title "..." \
+  --description "..." \
+  --category "Teknoloji" \
+  --facts-json '["...", "..."]' \
+  --body "..." \
+  --hero-prompt "..." \
+  --hero-alt "..." \
+  --tags-json '["pipeline", "haber"]' \
+  --json
+news-pipeline heartbeat publish-one --execute --no-collect --json
+```
 
-Varsayılan mod artık **direct autopublish kapalı** çizgisidir.
+`publish-one` handles the technical rail: freshness, duplicate guards, hero generation, image/content audits, build, and narrow git commit/push.
 
-Bu ne demek?
-- pipeline toplamaya ve işlemeye devam eder
-- queue görünürlüğü sürer
-- `news-pipeline autopublish` tabanlı doğrudan canlı yayın hattı kullanılmaz
-- canlı publish kararı `news_pipeline/scripts/asteria-editorial-gate.sh` üzerinden Asteria editoryal kapısına taşınır
+## Manual-review policy
 
-Detaylı sınırlar için:
-
-- `news_pipeline/AUTONOMOUS_PUBLISH_POLICY.md`
-
-## Manual-review politikası
-
-Şu tip içerikler ayrı dikkat ister:
-
-- dava
-- saldırı
-- cinsel suç iddiası
-- kişisel suçlama
-- Epstein benzeri yüksek riskli politik/sosyal dosyalar
-
-Bu içerikleri önce:
+Inspect sensitive items first:
 
 ```bash
 news-pipeline queue review
 ```
 
-ile aç.
+Manual-review items must not be auto-published. Typical triggers:
 
----
+- lawsuits or investigations;
+- sexual abuse or personal allegations;
+- high-reputation-risk claims;
+- single-source hard accusations;
+- unclear or contradictory source material.
 
-## Sağlık kontrolü
+## Disabled direct publish paths
 
-Kod değişikliğinden sonra hızlı doğrulama:
+These commands are intentionally not production paths:
+
+```bash
+news-pipeline autopublish
+news-pipeline publish <QUEUE_ID>
+```
+
+They remain only as guardrails for old references and should refuse to publish. Use `heartbeat publish-one` after Asteria polish instead.
+
+## Provider-free local checks
+
+After pipeline changes:
 
 ```bash
 python3 -m compileall news_pipeline/news_pipeline
+news_pipeline/.venv/bin/python -m pytest news_pipeline/tests
+news-pipeline audit-content
+news-pipeline audit-images
+npm run build
 ```
 
----
+## Demo walkthrough
 
-## Pratik not
-
-Queue kalabalıklaşırsa önce bunlara bak:
+A tiny synthetic dataset is available for local OSS review without providers or third-party article bodies:
 
 ```bash
-news-pipeline queue review
-news-pipeline queue list --status new
+news-pipeline demo seed --force
+news-pipeline demo walkthrough
 ```
 
-Reject etmekten çekinme. Gürültü biriktiren queue, işe yarayan queue değildir.
+The walkthrough uses dry-run `publish-one` by default, so it does not write articles, commit, push, or call providers. The demo data is synthetic and safe, but it is still runtime data; avoid seeding it into a production queue unless you intentionally want demo fixtures present.
+
+## Reference docs
+
+- `news_pipeline/HEARTBEAT_RUNBOOK.md` — concise heartbeat runbook
+- `news_pipeline/AUTONOMOUS_PUBLISH_POLICY.md` — autonomy boundaries
+- `news_pipeline/README.md` — CLI and pipeline details

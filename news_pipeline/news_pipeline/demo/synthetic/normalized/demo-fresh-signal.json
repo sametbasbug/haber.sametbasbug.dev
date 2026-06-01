@@ -1,0 +1,17 @@
+{
+  "id": "demo-fresh-signal",
+  "source_id": "demo-wire",
+  "source_name": "Demo Wire",
+  "canonical_url": "https://example.org/demo/signal-safety-board",
+  "title": "Demo city opens a public AI safety board for transit alerts",
+  "summary": "A synthetic public-service technology story used to demonstrate the editorial queue and publish gates.",
+  "published_at": "2999-01-01T09:00:00Z",
+  "image_url": null,
+  "content_snippet": "Synthetic source text for a harmless public-service technology story.",
+  "category_hints": ["Teknoloji"],
+  "tags": ["demo", "pipeline"],
+  "language": "en",
+  "fingerprint": "demo-fresh-signal-fingerprint",
+  "cluster_key": "demo-signal",
+  "created_at": "2999-01-01T09:00:00Z"
+}
