@@ -32,7 +32,7 @@ Please avoid PRs that:
 ```bash
 python3 -m venv news_pipeline/.venv
 source news_pipeline/.venv/bin/activate
-pip install -e news_pipeline
+pip install -e "news_pipeline[test]"
 npm install
 ```
 
@@ -42,6 +42,7 @@ Run the provider-free gates:
 
 ```bash
 python -m compileall news_pipeline/news_pipeline
+python -m pytest news_pipeline/tests
 news-pipeline audit-content
 news-pipeline audit-images
 npm run build

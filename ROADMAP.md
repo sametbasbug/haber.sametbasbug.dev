@@ -2,17 +2,21 @@
 
 Anlık Haber is already a working publishing system. The roadmap below focuses on making the open-source parts easier to inspect, test, and reuse without weakening editorial safety.
 
-## Near term
+## Completed recently
 
-- Add provider-free fixture tests for:
+- Added provider-free fixture tests for:
   - URL/title/topic duplicate detection;
   - source-age and manual-review gates;
   - content audit leak detection;
-  - image audit policy checks.
-- Add a tiny synthetic demo dataset for local pipeline walkthroughs.
+  - manual-review candidate selection behavior.
+- Added a tiny synthetic demo dataset and local walkthrough command for provider-free pipeline review.
+
+## Near term
+
 - Improve CLI help text around safe heartbeat publishing.
 - Document the queue file format and status transitions more explicitly.
 - Add example `.env` documentation for optional provider integrations without shipping secrets.
+- Add provider-free image audit policy fixtures.
 
 ## Medium term
 

@@ -124,7 +124,7 @@ The pipeline is designed to reduce common publishing failure modes:
 - Astro build before deploy;
 - narrow commit/push scope for published items.
 
-CI runs provider-free checks only: Python compile, pipeline audits, and Astro build. It does not call external source collection, AI providers, or production publish commands.
+CI runs provider-free checks only: Python compile, pipeline tests with `pytest`, pipeline audits, and Astro build. It does not call external source collection, AI providers, or production publish commands.
 
 ## Installation
 
@@ -137,7 +137,7 @@ Requirements:
 ```bash
 python3 -m venv news_pipeline/.venv
 source news_pipeline/.venv/bin/activate
-pip install -e news_pipeline
+pip install -e "news_pipeline[test]"
 npm install
 ```
 
