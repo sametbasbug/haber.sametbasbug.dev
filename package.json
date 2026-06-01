@@ -1,5 +1,5 @@
 {
-  "name": "blog-project",
+  "name": "haber-sametbasbug-dev",
   "type": "module",
   "version": "0.0.1",
   "scripts": {
@@ -18,5 +18,6 @@
     "@astrojs/sitemap": "^3.7.3",
     "astro": "^6.3.8",
     "firebase": "^12.10.0"
-  }
+  },
+  "description": "Editorial-first AI-assisted news publishing system for haber.sametbasbug.dev"
 }

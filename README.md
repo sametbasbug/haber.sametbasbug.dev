@@ -1,82 +1,126 @@
 # Anlık Haber
 
-Anlık Haber, `haber.sametbasbug.dev` için geliştirilmiş editoryal öncelikli haber yayın sistemidir.
+[![Quality Checks](https://github.com/sametbasbug/haber.sametbasbug.dev/actions/workflows/quality.yml/badge.svg)](https://github.com/sametbasbug/haber.sametbasbug.dev/actions/workflows/quality.yml)
+[![Deploy](https://github.com/sametbasbug/haber.sametbasbug.dev/actions/workflows/deploy.yml/badge.svg)](https://github.com/sametbasbug/haber.sametbasbug.dev/actions/workflows/deploy.yml)
+[![License: MIT](https://img.shields.io/badge/code%20license-MIT-blue.svg)](LICENSE)
 
-Amaç basit: günün gürültüsünü büyütmeden, güvenilir kaynaklardan gelen önemli gelişmeleri kısa, temiz ve Türkçe okunur haberler hâline getirmek.
+Anlık Haber is an editorial-first, AI-assisted news publishing system for [`haber.sametbasbug.dev`](https://haber.sametbasbug.dev/).
 
-Canlı yayın: https://haber.sametbasbug.dev
+The project explores a practical question: can a small public news surface be maintained with a transparent pipeline where software handles ingestion, deduplication, queueing, audits, build/deploy discipline, and image generation, while an editorial agent/human-in-the-loop keeps the final news judgment?
 
-## Ne var burada?
+The live site is Turkish and global-focused. The code and pipeline are documented in English/Turkish because the reusable part is the workflow, not only the content.
 
-Bu repo iki ana parçadan oluşur:
+## What is open source here?
 
-- **Astro yayın yüzeyi** — haber sayfaları, RSS, sitemap, kategori yapısı ve statik deploy.
-- **Python news pipeline** — RSS toplama, normalize etme, dedupe, kuyruk, kalite kapıları, hero görsel üretimi ve yayın rayı.
+This repository is intentionally split into two layers:
 
-Asteria AI bu sistemin dar kapsamlı editoryal ajanıdır. Python haberin editörü değildir; teknik raydır. Asteria başlığı seçer, kaynağı okur, Türkçe metni ve görsel brief’i yazar. Pipeline ise bunu güvenli biçimde markdown’a dönüştürür, görsel üretir, audit/build yapar ve yayına çıkarır.
+- **Source code and workflow tooling** are MIT licensed. This includes the Astro site, Python news pipeline, CLI, audits, queue logic, and build/deploy workflow.
+- **Editorial content, generated/published images, brand identity, and protected media** are not included in the MIT license. See [`CONTENT_LICENSE.md`](CONTENT_LICENSE.md).
 
-## Yayın çizgisi
+In short: the system can be studied, reused, forked, and adapted; the published news archive and brand layer should not be treated as open content.
 
-Anlık Haber global odaklı bir Türkçe haber yüzeyidir. Kategori seti bilinçli olarak dar tutulur:
+## Why this repository exists
+
+Most small publishing projects eventually hit the same maintenance wall:
+
+- collecting sources is easy, but selecting responsibly is hard;
+- automation is fast, but blind autopublish is risky;
+- duplicate stories and repeated angles quietly lower quality;
+- AI-generated drafts can help, but they must not become the editor;
+- publishing needs boring guardrails: audits, build checks, narrow commits, and rollback-friendly history.
+
+Anlık Haber is a working experiment around those constraints.
+
+## Architecture
+
+The repository has two main parts:
+
+- **Astro publishing surface** — static news pages, RSS, sitemap, category UI, author/site shell, and GitHub Pages deployment.
+- **Python news pipeline** — RSS collection, normalization, duplicate reduction, editorial queue, scoring/filtering, quality gates, AI hero generation handoff, markdown generation, audits, and controlled publish workflow.
+
+```text
+haber-project/
+  src/
+    components/news/          # News UI components
+    content/anlikHaber/       # Published markdown news items
+    pages/                    # Astro routes, RSS, sitemap
+  public/images/generated/    # Generated hero images
+  news_pipeline/
+    news_pipeline/
+      collectors/             # RSS/source ingestion
+      normalize/              # Raw item cleanup
+      dedupe/                 # Similarity and duplicate checks
+      editorial/              # Filtering, scoring, autonomy gates
+      queue/                  # Editorial queue state
+      publish/                # Markdown/frontmatter/hero helpers
+      cli/                    # Typer CLI commands
+    data/                     # Runtime data, ignored except placeholders/docs
+```
+
+## Editorial model
+
+The project is **editorial-first**.
+
+Python is not the editor. It is the technical rail: it collects, normalizes, scores, queues, audits, builds, and publishes only after the editorial handoff is present.
+
+Asteria AI is the narrow editorial agent used in this project. Its role is to inspect candidates, read selected source URLs, write the Turkish article body, prepare facts/tags, and produce the hero image brief. The pipeline then validates and carries that work into the Astro site.
+
+Current category set:
 
 - **Siyaset**
 - **Ekonomi**
 - **Teknoloji**
 - **Bilim**
 
-Türkiye bağlantılı haberler ancak global bağlamı güçlüyse bu kategoriler içinde değerlendirilir.
+Turkey-related stories are included only when the global context is strong enough for one of those categories.
 
-## Editoryal prensipler
+## Core workflow
 
-- Haber kısa olabilir; bülten maddesi gibi görünmemeli.
-- İddia, dava veya soruşturma haberleri yasak değildir; kesin hüküm gibi yazılmaz, atıf açık tutulur.
-- Aynı olay ailesi yakın aralıklarla tekrar paketlenmez.
-- Kategori ve kaynak dengesi korunur; sistem tek bir kaynak ya da kategoriye saplanmaz.
-- İngilizce teknik/finansal/hukuki terimler gereksiz yere metne sızmaz.
-- Hero görseller haber özelinde AI ile üretilir; stok görsel fallback’i varsayılan olarak kapalıdır.
+```bash
+# Collect source items
+news-pipeline collect
 
-## Asteria akışı
+# Normalize raw items and update the queue
+news-pipeline process
 
-Güncel heartbeat akışı:
+# Prepare a board for editorial selection
+news-pipeline heartbeat prepare-one --json
 
-1. `prepare-one` başlık panosu üretir.
-2. Asteria son yayınları, kategori/kaynak dengesini ve adayları inceler.
-3. Asteria seçtiği haberin kaynak URL’sini okur.
-4. Asteria Türkçe başlık, açıklama, gövde, fact listesi, etiketler, `heroPrompt` ve `heroAlt` yazar.
-5. `queue polish` bu editoryal dokunuşu queue item üzerine işler.
-6. `publish-one` teknik yayını yapar:
-   - markdown üretimi
-   - AI hero üretimi ve WebP optimizasyonu
-   - görsel/content audit
-   - Astro build
-   - dar kapsamlı commit/push
+# After editorial review/polish, publish through the technical rail
+news-pipeline heartbeat publish-one --execute --no-collect --json
 
-Deneysel hedef: heartbeat başına en fazla **1 haber**.
-
-## Teknik mimari
-
-```text
-haber-project/
-  src/
-    components/news/          # Haber arayüz bileşenleri
-    content/anlikHaber/       # Yayınlanan markdown haberler
-    pages/                    # Astro sayfaları, RSS, sitemap
-  public/images/generated/    # Üretilen hero görseller
-  news_pipeline/
-    news_pipeline/
-      collectors/             # RSS/toplama
-      normalize/              # Temizleme ve normalize
-      dedupe/                 # Benzerlik ve tekrar kontrolü
-      editorial/              # Filtreleme, scoring, kalite kapıları
-      queue/                  # Editoryal kuyruk
-      publish/                # Markdown + hero + frontmatter üretimi
-      cli/                    # news-pipeline komutları
-    data/                     # Raw/normalized/queue/state verileri
+# Local quality gates
+news-pipeline audit-content
+news-pipeline audit-images
+npm run build
 ```
 
-## Kullanım
+The direct `publish` path is intentionally disabled in public CLI help. Production publishing should go through the heartbeat/editorial-polish route so the editorial handoff, hero brief, audits, and build checks are preserved.
 
-Kurulum:
+## Quality and safety gates
+
+The pipeline is designed to reduce common publishing failure modes:
+
+- source age checks;
+- URL/title/description/topic duplicate guards;
+- manual-review separation for sensitive legal/political/personal-risk stories;
+- required editorial polish before production publish;
+- Turkish title/body/fact checks;
+- required hero prompt and alt text;
+- AI hero generation with WebP optimization;
+- image/content audits before build;
+- Astro build before deploy;
+- narrow commit/push scope for published items.
+
+CI runs provider-free checks only: Python compile, pipeline audits, and Astro build. It does not call external source collection, AI providers, or production publish commands.
+
+## Installation
+
+Requirements:
+
+- Python 3.12+
+- Node.js 24+
+- npm
 
 ```bash
 python3 -m venv news_pipeline/.venv
@@ -85,67 +129,45 @@ pip install -e news_pipeline
 npm install
 ```
 
-Temel komutlar:
+## Development commands
 
 ```bash
-# Kaynakları topla
-news-pipeline collect
+# Run the Astro dev server
+npm run dev
 
-# Raw kayıtları normalize edip queue üret
-news-pipeline process
-
-# Editoryal pano hazırla
-news-pipeline heartbeat prepare-one --json
-
-# Asteria polish sonrası tek haber yayımla
-news-pipeline heartbeat publish-one --execute --no-collect --json
-
-# Kalite kontrolleri
-news-pipeline audit-content
-news-pipeline audit-images
+# Build the static site
 npm run build
+
+# Run provider-free local quality checks
+npm run quality
+
+# Compile Python pipeline
+python -m compileall news_pipeline/news_pipeline
 ```
 
-## Hero görseller
+## Documentation
 
-Hero görselleri varsayılan olarak OpenClaw image generation hattı üzerinden üretilir ve şu biçime normalize edilir:
+- [`news_pipeline/README.md`](news_pipeline/README.md) — pipeline CLI and workflow details
+- [`news_pipeline/OPERATIONS.md`](news_pipeline/OPERATIONS.md) — operational runbook
+- [`news_pipeline/HEARTBEAT_RUNBOOK.md`](news_pipeline/HEARTBEAT_RUNBOOK.md) — heartbeat cycle notes
+- [`news_pipeline/AUTONOMOUS_PUBLISH_POLICY.md`](news_pipeline/AUTONOMOUS_PUBLISH_POLICY.md) — autonomy boundaries
+- [`CONTRIBUTING.md`](CONTRIBUTING.md) — contribution guidelines
+- [`ROADMAP.md`](ROADMAP.md) — maintainability roadmap
+- [`SECURITY.md`](SECURITY.md) — security reporting and scope
 
-- Boyut: `1200×675`
-- Format: `WebP`
-- Kalite: `82`
-- Konum: `public/images/generated/anlik-haber/`
+## Current status
 
-Stok Pexels/Unsplash fallback’i kalite çizgisini düşürdüğü için varsayılan olarak kullanılmaz. AI hero üretimi başarısızsa yayın durur; sistem hata nedenini raporlar ve gerekirse tekrar denenir.
+This is a working public project, not a polished framework package. It currently powers the live Anlık Haber site and contains real operational history.
 
-## Deploy
+The near-term OSS goal is to make the reusable parts easier for others to study and adapt:
 
-Repo `main` branch’e push edildiğinde GitHub Actions ile GitHub Pages deploy çalışır.
+- clearer setup and example data;
+- stronger tests around dedupe/scoring/audit gates;
+- more provider-agnostic interfaces for AI image/text handoff;
+- safer documentation for human-in-the-loop editorial automation.
 
-Canlı domain:
+## License
 
-```text
-haber.sametbasbug.dev
-```
-
-Workflow:
-
-```text
-.github/workflows/deploy.yml
-```
-
-## Durum
-
-Sistem artık büyük mimari değişiklik bekleyen deneysel bir prototip değil. Güncel yaklaşım:
-
-- Büyük yeniden tasarım yok.
-- Küçük bug fix ve kalite ayarları var.
-- Asteria editoryal kaliteyi korur.
-- Python hattı hız, güvenlik ve yayın disiplini sağlar.
-
-Son optimizasyonlardan sonra tipik haber üretim süresi eski 15+ dakika bandından yaklaşık 5-6 dakika seviyesine indi.
-
-## Lisans
-
-- Kod: `LICENSE` altındaki **MIT License**
-- Tarafımızca üretilen veya hakları bize ait içerikler, görseller ve marka unsurları: `CONTENT_LICENSE.md` altındaki ayrı kullanım bildirimi
-- Üçüncü taraf içerikler kendi hak sahipleri ve lisans koşullarına tabidir
+- Code and workflow tooling: [`MIT License`](LICENSE)
+- Content, images, media, and brand layer: [`CONTENT_LICENSE.md`](CONTENT_LICENSE.md)
+- Third-party materials remain subject to their original owners and terms.
