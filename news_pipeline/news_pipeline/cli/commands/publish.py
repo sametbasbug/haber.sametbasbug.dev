@@ -16,7 +16,7 @@ from news_pipeline.queue.service import QueueService
 from news_pipeline.storage.json_store import JsonStore
 
 
-MAX_SOURCE_AGE_HOURS = 72
+MAX_SOURCE_AGE_HOURS = 24
 TITLE_DUPLICATE_THRESHOLD = 88
 DESCRIPTION_DUPLICATE_THRESHOLD = 92
 COMBINED_TOPIC_DUPLICATE_THRESHOLD = 82

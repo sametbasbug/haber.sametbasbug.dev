@@ -10,7 +10,7 @@ from news_pipeline.queue.service import QueueService
 from news_pipeline.storage.json_store import JsonStore
 
 
-MAX_SOURCE_AGE_HOURS = 72
+MAX_SOURCE_AGE_HOURS = 24
 
 
 def queue_approve_command(queue_id: str, max_source_age_hours: int = MAX_SOURCE_AGE_HOURS) -> None:

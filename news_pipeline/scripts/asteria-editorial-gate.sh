@@ -130,7 +130,7 @@ Kurallar:
 - ama TechCrunch dahil hiçbir güçlü kaynağı sırf son dönemde sık kullanıldı diye otomatik dışlama; gerçekten açık ara en temiz ve güçlü aday ondaysa kullan
 - bir koşuda iki kayıt publish edeceksen mümkünse aynı kaynağa yaslanma; yeterli kalite varsa kaynakları çeşitlendir
 - aynı koşuda aynı kaynak + aynı ana aktör/kurum + aynı olay çekirdeğine sahip ikinci haberi publish etme; farklı URL olsa bile bunu duplicate say
-- son 24 saatte Bilim sıfırsa, yeterli kalite taşıyan Bilim adaylarını özellikle kontrol et ve yakın kalitedeki Siyaset/Teknoloji adaylarının önüne al
+- son 18 saatte Bilim sıfırsa, yeterli kalite taşıyan Bilim adaylarını özellikle kontrol et ve yakın kalitedeki Siyaset/Teknoloji adaylarının önüne al
 - son 3 canlı yayının kaynağıyla aynı kaynağa yeniden yaslanacaksan bunu istisna say ve ancak belirgin kalite farkı varsa yap
 - aynı şirket veya ürün kümesinden başlıklar son 10 yayında zaten iki ya da daha fazla kez görünüyorsa buna seri yığılma muamelesi yap; açık ara daha güçlü değilse alternatif şirket/konu adayını seç
 - özellikle Google, OpenAI, Anthropic, Meta, Microsoft, Nvidia, Apple ve Amazon başlıklarında konu çeşitliliğini aktif koru; aynı şirketi kısa aralıkta üst üste bindirme

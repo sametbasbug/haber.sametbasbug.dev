@@ -50,7 +50,7 @@ SPORT_TITLE_RE = re.compile(
 SPORT_SIGNAL_RE = re.compile(
     r"\b(kovdu|transfer|teknik direkt[oö]r|ma[çc]ı|maci|gol|puan|lig|kupas[ıi]|şampiyon|sampiyon|kadro)\b"
 )
-MAX_SOURCE_AGE_HOURS = 72
+MAX_SOURCE_AGE_HOURS = 24
 MAX_FUTURE_SKEW_HOURS = 6
 
 
