@@ -31,7 +31,7 @@ def queue_cleanup_command(
     keep_score: float = 0.62,
     purge_rejected_archive_hours: int = 24,
     purge_published_archive_hours: int = 72,
-    stale_source_hours: int = 24,
+    stale_source_hours: int = 18,
     low_score_reject: float = 0.50,
     low_score_grace_hours: int = 6,
     high_volume_grace_hours: int = 12,

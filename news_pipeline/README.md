@@ -199,7 +199,7 @@ Production publish şu kapılardan geçer:
 - `heroPrompt` ve `heroAlt` zorunlu
 - başlık/açıklama/fact/body Türkçe kontrolü
 - minimum gövde derinliği
-- source age: varsayılan 72 saat
+- source age: publish hard gate varsayılan 24 saat; Asteria headline board ve queue stale-source temizliği varsayılan 18 saat
 - aynı URL tekrar kontrolü
 - fuzzy title/description/topic duplicate kontrolü
 - AI hero üretimi zorunlu; stok fallback varsayılan kapalı
