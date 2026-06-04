@@ -7,7 +7,8 @@ import pytest
 import typer
 
 from news_pipeline.cli.commands.audit_content import audit_content_command
-from news_pipeline.cli.commands.heartbeat_publish_one import _select_candidate
+from news_pipeline.cli.commands import heartbeat_publish_one
+from news_pipeline.cli.commands.heartbeat_publish_one import _select_candidate, publish_one_command
 from news_pipeline.cli.commands.publish import _assert_not_duplicate_live, _assert_not_duplicate_topic, publish_command, publish_queue_item
 from news_pipeline.editorial.autonomy import is_autopublish_candidate
 from news_pipeline.models.article import NormalizedArticle
@@ -185,3 +186,37 @@ def test_manual_review_gate_behavior(tmp_path: Path) -> None:
     assert candidate is None
     assert rejections
     assert rejections[0]["reason"] == "manual-review item"
+
+
+def test_publish_one_rejects_duplicate_gate_candidate(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.chdir(tmp_path)
+    article = _article("duplicate-article", url="https://example.org/demo/duplicate")
+    item = _item(status="approved", normalized_id=article.id, url="https://example.org/demo/duplicate")
+    _save_runtime(tmp_path, item, article)
+    (tmp_path / "src/content/anlikHaber").mkdir(parents=True)
+
+    def duplicate_publish(*args, **kwargs):
+        raise typer.BadParameter("near-duplicate live topic from same source already published in existing.md")
+
+    monkeypatch.setattr(heartbeat_publish_one, "publish_queue_item", duplicate_publish)
+
+    with pytest.raises(typer.Exit) as exc:
+        publish_one_command(
+            execute=True,
+            collect_first=False,
+            json_output=True,
+            push=False,
+            build=False,
+            min_score=0.68,
+            max_source_age_hours=72,
+            commit_message="test duplicate rejection",
+            min_interval_seconds=0,
+            force=True,
+        )
+
+    assert exc.value.exit_code == 1
+    stored = JsonStore(tmp_path / "news_pipeline/data/queue", QueueItem).load(item.queue_id)
+    assert stored is not None
+    assert stored.status == "rejected"
+    assert stored.editorial_priority == 0.0
+    assert any(note.startswith("duplicate-publish-gate:") for note in stored.notes)

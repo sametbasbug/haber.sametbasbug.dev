@@ -223,6 +223,24 @@ def _mark_cycle_completed(root: Path, result: str) -> None:
     _write_state(root, state)
 
 
+def _is_duplicate_publish_error(step: dict[str, Any]) -> bool:
+    text = " ".join(str(step.get(key) or "") for key in ("error", "stdout", "stderr")).lower()
+    return "duplicate live" in text or "near-duplicate live" in text
+
+
+def _reject_duplicate_publish_candidate(service: QueueService, queue_id: str, step: dict[str, Any]) -> dict[str, Any] | None:
+    error = _compact_text(str(step.get("error") or step.get("stderr") or step.get("stdout") or "publish duplicate gate"), max_chars=500)
+    note = f"duplicate-publish-gate: {error}"
+    item = service.reject(queue_id, note=note)
+    if item is None:
+        return None
+    return {
+        "queueId": item.queue_id,
+        "status": item.status,
+        "reason": note,
+    }
+
+
 def _git_commit_and_push(message: str, *, push: bool) -> list[dict[str, Any]]:
     steps: list[dict[str, Any]] = []
     if not _git_has_changes():
@@ -346,6 +364,10 @@ def publish_one_command(
     publish_step = _run_step("publish", publish_queue_item, approved.queue_id, max_source_age_hours=max_source_age_hours)
     payload["steps"].append(_compact_step(publish_step, full_logs=full_logs))
     if not publish_step["ok"]:
+        if _is_duplicate_publish_error(publish_step):
+            rejected = _reject_duplicate_publish_candidate(service, approved.queue_id, publish_step)
+            if rejected is not None:
+                payload["duplicateRejected"] = rejected
         payload["result"] = "error"
         payload["reason"] = "publish failed"
         _mark_cycle_completed(root, payload["result"])
