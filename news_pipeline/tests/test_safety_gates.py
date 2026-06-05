@@ -9,6 +9,7 @@ import typer
 from news_pipeline.cli.commands.audit_content import audit_content_command
 from news_pipeline.cli.commands import heartbeat_publish_one
 from news_pipeline.cli.commands.heartbeat_publish_one import _select_candidate, publish_one_command
+from news_pipeline.cli.commands.heartbeat_prepare_one import _board_score, _recent_live_posts
 from news_pipeline.cli.commands.publish import _assert_not_duplicate_live, _assert_not_duplicate_topic, publish_command, publish_queue_item
 from news_pipeline.editorial.autonomy import is_autopublish_candidate
 from news_pipeline.models.article import NormalizedArticle
@@ -187,6 +188,84 @@ def test_manual_review_gate_behavior(tmp_path: Path) -> None:
     assert rejections
     assert rejections[0]["reason"] == "manual-review item"
 
+
+
+def test_headline_board_penalizes_recent_company_saturation(tmp_path: Path) -> None:
+    article = _article("claude-article", url="https://example.org/demo/claude")
+    article.title = "Claude gets a new enterprise security feature"
+    article.summary = "Anthropic is expanding Claude for enterprise customers."
+    article.tags = ["claude", "anthropic"]
+    item = _item(
+        normalized_id=article.id,
+        url="https://example.org/demo/claude",
+        priority=0.90,
+    )
+    item.draft_title = "Claude, kurumsal güvenlik özelliğini genişletiyor"
+    item.draft_description = "Anthropic, Claude için yeni kurumsal güvenlik özellikleri duyurdu."
+    _save_runtime(tmp_path, item, article)
+
+    score, reasons = _board_score(
+        tmp_path,
+        item,
+        recent_posts=[
+            {"source": "TechCrunch", "companies": "Anthropic", "title": "Anthropic story one"},
+            {"source": "CNBC Technology", "companies": "Anthropic,OpenAI", "title": "Anthropic story two"},
+        ],
+    )
+
+    assert score < item.editorial_priority
+    assert "recency_penalty:company_repeat:Anthropic:2" in reasons
+
+
+
+def test_headline_board_ignores_incidental_company_mentions_in_body(tmp_path: Path) -> None:
+    article = _article("drone-article", url="https://example.org/demo/drone")
+    article.title = "Europe expands drone defense innovation funding"
+    article.summary = "European agencies are coordinating anti-drone technology funding; a later quote mentions OpenAI incidentally."
+    item = _item(
+        normalized_id=article.id,
+        url="https://example.org/demo/drone",
+        priority=0.90,
+    )
+    item.draft_title = "Avrupa, drone savunması için inovasyon fonlarını genişletiyor"
+    item.draft_description = "Yeni program, havaalanları ve kritik altyapı çevresinde drone savunmasını hedefliyor."
+    item.draft_body = "Bu metnin sonunda yalnız alıntı bağlamında OpenAI adı geçiyor."
+    item.draft_tags = ["pipeline", "haber", "openai"]
+    _save_runtime(tmp_path, item, article)
+
+    _, reasons = _board_score(
+        tmp_path,
+        item,
+        recent_posts=[
+            {"source": "TechCrunch", "companies": "OpenAI", "title": "OpenAI story one"},
+            {"source": "Engadget", "companies": "OpenAI", "title": "OpenAI story two"},
+        ],
+    )
+
+    assert not any("company_repeat" in reason for reason in reasons)
+
+def test_recent_live_posts_detects_company_signals_beyond_title(tmp_path: Path) -> None:
+    content = tmp_path / "src/content/anlikHaber"
+    content.mkdir(parents=True)
+    (content / "memory.md").write_text(
+        """---
+title: "Yeni hafıza sistemi ücretsiz kullanıcılara açılıyor"
+description: "ChatGPT kullanıcılarına yönelik yeni hafıza mimarisi duyuruldu."
+pubDate: '2026-06-05T14:59:06+03:00'
+tags: ["openai", "chatgpt", "hafıza"]
+category: "Teknoloji"
+sources:
+  - name: "Engadget"
+    url: "https://example.org/memory"
+---
+Gövde OpenAI adını ayrıca geçiriyor.
+""",
+        encoding="utf-8",
+    )
+
+    recent = _recent_live_posts(tmp_path, limit=1)
+
+    assert recent[0]["companies"] == "OpenAI"
 
 def test_publish_one_rejects_duplicate_gate_candidate(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.chdir(tmp_path)

@@ -200,6 +200,7 @@ Production publish şu kapılardan geçer:
 - başlık/açıklama/fact/body Türkçe kontrolü
 - minimum gövde derinliği
 - source age: publish hard gate varsayılan 24 saat; Asteria headline board ve queue stale-source temizliği varsayılan 18 saat
+- Asteria headline board, son 10 canlı yayındaki aynı büyük şirket/ürün kümesi tekrarına yumuşak skor cezası uygular (`Claude → Anthropic`, `ChatGPT → OpenAI`, `Gemini → Google`)
 - aynı URL tekrar kontrolü
 - fuzzy title/description/topic duplicate kontrolü
 - AI hero üretimi zorunlu; stok fallback varsayılan kapalı

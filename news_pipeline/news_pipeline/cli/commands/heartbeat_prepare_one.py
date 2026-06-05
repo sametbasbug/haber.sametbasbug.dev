@@ -33,6 +33,10 @@ SCIENCE_SPACE_BOARD_LIMIT = 1
 RECENT_SOURCE_PENALTY_WINDOW = 5
 RECENT_SOURCE_PENALTY_PER_ITEM = 0.07
 RECENT_SOURCE_PENALTY_MAX = 0.18
+RECENT_COMPANY_PENALTY_WINDOW = 10
+RECENT_COMPANY_PENALTY_THRESHOLD = 2
+RECENT_COMPANY_PENALTY_PER_ITEM = 0.09
+RECENT_COMPANY_PENALTY_MAX = 0.27
 POLITICO_EU_BASELINE_PENALTY = 0.035
 POLITICO_EU_RECENT_EXTRA_PENALTY = 0.04
 RISKY_HEADLINE_TERMS = {
@@ -102,6 +106,16 @@ HIGH_IMPORTANCE_SPACE_TERMS = {
     "crew",
     "earth-threatening",
 }
+COMPANY_PATTERNS: dict[str, re.Pattern[str]] = {
+    "OpenAI": re.compile(r"\b(openai|chatgpt)\b", re.I),
+    "Anthropic": re.compile(r"\b(anthropic|claude)\b", re.I),
+    "Google": re.compile(r"\b(google|gemini)\b", re.I),
+    "Meta": re.compile(r"\bmeta\b", re.I),
+    "Microsoft": re.compile(r"\b(microsoft|linkedin)\b", re.I),
+    "Nvidia": re.compile(r"\bnvidia\b", re.I),
+    "Apple": re.compile(r"\bapple\b", re.I),
+    "Amazon": re.compile(r"\b(amazon|aws)\b", re.I),
+}
 
 
 def _source_name(item: Any) -> str:
@@ -111,6 +125,17 @@ def _source_name(item: Any) -> str:
 def _frontmatter_value(text: str, key: str) -> str:
     match = re.search(rf"(?m)^{re.escape(key)}:\s*[\"']?(.*?)[\"']?\s*$", text)
     return match.group(1).strip() if match else ""
+
+
+def _frontmatter_list_values(text: str, key: str) -> list[str]:
+    match = re.search(rf"(?ms)^{re.escape(key)}:\s*\[(.*?)\]", text)
+    if not match:
+        return []
+    return [value.strip().strip("\"'") for value in match.group(1).split(",") if value.strip()]
+
+
+def _company_hits(text: str) -> set[str]:
+    return {company for company, pattern in COMPANY_PATTERNS.items() if pattern.search(text or "")}
 
 
 def _live_markdown_files(root: Path) -> list[Path]:
@@ -127,10 +152,24 @@ def _recent_live_posts(root: Path, limit: int = HOT_CATEGORY_RECENT_WINDOW) -> l
         pub_date = _frontmatter_value(text, "pubDate")
         category = _frontmatter_value(text, "category")
         title = _frontmatter_value(text, "title")
+        description = _frontmatter_value(text, "description")
+        tags = " ".join(_frontmatter_list_values(text, "tags"))
         sources = re.findall(r"(?m)^\s+- name:\s*[\"']?(.*?)[\"']?\s*$", text)
         source = sources[0].strip() if sources else ""
+        companies = sorted(_company_hits(f"{title} {description} {tags}"))
         if pub_date:
-            rows.append((pub_date, {"pubDate": pub_date, "category": category, "source": source, "title": title}))
+            rows.append(
+                (
+                    pub_date,
+                    {
+                        "pubDate": pub_date,
+                        "category": category,
+                        "source": source,
+                        "title": title,
+                        "companies": ",".join(companies),
+                    },
+                )
+            )
     rows.sort(key=lambda row: row[0], reverse=True)
     return [payload for _, payload in rows[:limit]]
 
@@ -192,6 +231,22 @@ def _headline_text(root: Path, item: Any) -> str:
     return article.title if article else item.draft_title
 
 
+def _item_company_hits(root: Path, item: Any) -> set[str]:
+    normalized_store = JsonStore(root / "news_pipeline/data/normalized", NormalizedArticle)
+    article = normalized_store.load(item.normalized_id)
+    article_text = ""
+    if article:
+        article_text = article.title or ""
+    draft_text = " ".join(
+        [
+            item.draft_title or "",
+            item.draft_description or "",
+            article_text,
+        ]
+    )
+    return _company_hits(draft_text)
+
+
 def _normalized(value: str) -> str:
     return re.sub(r"\s+", " ", (value or "").strip().lower())
 
@@ -229,6 +284,20 @@ def _board_score(
             source_penalty += POLITICO_EU_RECENT_EXTRA_PENALTY
         score -= source_penalty
         reasons.append(f"recency_penalty:source_repeat:{recent_source_count}")
+    company_hits = _item_company_hits(root, item)
+    if company_hits:
+        recent_company_counts: Counter[str] = Counter()
+        for post in (recent_posts or [])[:RECENT_COMPANY_PENALTY_WINDOW]:
+            for company in (post.get("companies") or "").split(","):
+                if company:
+                    recent_company_counts[company] += 1
+        repeat_counts = {company: recent_company_counts[company] for company in company_hits if recent_company_counts[company] >= RECENT_COMPANY_PENALTY_THRESHOLD}
+        if repeat_counts:
+            strongest_repeat = max(repeat_counts.values())
+            company_penalty = min(RECENT_COMPANY_PENALTY_MAX, strongest_repeat * RECENT_COMPANY_PENALTY_PER_ITEM)
+            score -= company_penalty
+            repeated = "+".join(sorted(repeat_counts))
+            reasons.append(f"recency_penalty:company_repeat:{repeated}:{strongest_repeat}")
     for term in RISKY_HEADLINE_TERMS:
         if _headline_has_term(headline, term):
             score -= 0.10
@@ -279,7 +348,16 @@ def _select_headline_board(root: Path, items: list[Any], limit: int, max_source_
     hot_source = _hot_source(root)
     science_pressure = _science_pressure(root)
     science_space_pressure = _science_space_pressure(root)
-    recent_posts = _recent_live_posts(root, limit=max(SCIENCE_RECENT_WINDOW, SCIENCE_SPACE_RECENT_WINDOW, HOT_CATEGORY_RECENT_WINDOW, HOT_SOURCE_RECENT_WINDOW))
+    recent_posts = _recent_live_posts(
+        root,
+        limit=max(
+            SCIENCE_RECENT_WINDOW,
+            SCIENCE_SPACE_RECENT_WINDOW,
+            HOT_CATEGORY_RECENT_WINDOW,
+            HOT_SOURCE_RECENT_WINDOW,
+            RECENT_COMPANY_PENALTY_WINDOW,
+        ),
+    )
     live_urls = _live_source_urls(root)
     eligible: list[tuple[Any, float, list[str]]] = []
     skipped: list[dict[str, Any]] = []
@@ -352,6 +430,9 @@ def _select_headline_board(root: Path, items: list[Any], limit: int, max_source_
         "recentPosts": recent_posts,
         "recentCategories": [post.get("category", "") for post in recent_posts],
         "recentSources": [post.get("source", "") for post in recent_posts],
+        "recentCompanies": [post.get("companies", "") for post in recent_posts],
+        "recentCompanyPenaltyWindow": RECENT_COMPANY_PENALTY_WINDOW,
+        "recentCompanyPenaltyThreshold": RECENT_COMPANY_PENALTY_THRESHOLD,
         "hotCategory": hot_category,
         "hotCategoryRepeatThreshold": HOT_CATEGORY_REPEAT_THRESHOLD,
         "hotCategoryBoardLimit": HOT_CATEGORY_BOARD_LIMIT if hot_category else None,

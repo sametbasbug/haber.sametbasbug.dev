@@ -16,26 +16,32 @@ import re
 from collections import Counter
 
 root = Path('/Volumes/KIOXIA/haber-project/src/content/anlikHaber')
-files = sorted(root.glob('*.md'), key=lambda p: p.stat().st_mtime, reverse=True)
 source_re = re.compile(r'^\s*- name: "?(.*?)"?\s*$')
 title_re = re.compile(r'^title: "?(.*?)"?\s*$')
 category_re = re.compile(r'^category: "?(.*?)"?\s*$')
+pub_date_re = re.compile(r"^pubDate:\s*['\"]?(.*?)['\"]?\s*$")
+description_re = re.compile(r'^description: "?(.*?)"?\s*$')
+tags_re = re.compile(r'^tags:\s*\[(.*?)\]\s*$')
 company_patterns = {
-    'Google': re.compile(r'\bgoogle\b', re.I),
-    'OpenAI': re.compile(r'\bopenai\b', re.I),
-    'Anthropic': re.compile(r'\banthropic\b', re.I),
+    'Google': re.compile(r'\bgoogle|\bgemini\b', re.I),
+    'OpenAI': re.compile(r'\bopenai|\bchatgpt\b', re.I),
+    'Anthropic': re.compile(r'\banthropic|\bclaude\b', re.I),
     'Meta': re.compile(r'\bmeta\b', re.I),
     'Microsoft': re.compile(r'\bmicrosoft|linkedin\b', re.I),
     'Nvidia': re.compile(r'\bnvidia\b', re.I),
     'Apple': re.compile(r'\bapple\b', re.I),
     'Amazon': re.compile(r'\bamazon|aws\b', re.I),
 }
-rows = []
-for path in files[:20]:
+rows_with_dates = []
+for path in root.glob('*.md'):
     source = '-'
     title = path.stem
     category = '-'
-    for line in path.read_text(encoding='utf-8').splitlines():
+    pub_date = ''
+    description = ''
+    tags = ''
+    text = path.read_text(encoding='utf-8')
+    for line in text.splitlines():
         m = source_re.match(line)
         if m:
             source = m.group(1)
@@ -45,23 +51,33 @@ for path in files[:20]:
         c = category_re.match(line)
         if c:
             category = c.group(1)
-    company = '-'
+        d = pub_date_re.match(line)
+        if d:
+            pub_date = d.group(1)
+        desc = description_re.match(line)
+        if desc:
+            description = desc.group(1)
+        tg = tags_re.match(line)
+        if tg:
+            tags = tg.group(1)
+    company_hits = []
+    company_text = f'{title} {description} {tags}'
     for name, pattern in company_patterns.items():
-        if pattern.search(title):
-            company = name
-            break
-    rows.append((path.stem, source, category, title, company))
+        if pattern.search(company_text):
+            company_hits.append(name)
+    rows_with_dates.append((pub_date, (path.stem, source, category, title, company_hits)))
+rows = [row for _, row in sorted(rows_with_dates, key=lambda item: item[0], reverse=True)[:20]]
 
 last8 = rows[:8]
 source_counts = Counter(source for _, source, _, _, _ in rows)
 category_counts = Counter(category for _, _, category, _, _ in rows)
-company_counts = Counter(company for _, _, _, _, company in rows if company != '-')
-last10_company_counts = Counter(company for _, _, _, _, company in rows[:10] if company != '-')
+company_counts = Counter(company for _, _, _, _, companies in rows for company in companies)
+last10_company_counts = Counter(company for _, _, _, _, companies in rows[:10] for company in companies)
 
 out = []
 out.append('Son 8 yayın:')
-for slug, source, category, title, company in last8:
-    company_note = f' | şirket: {company}' if company != '-' else ''
+for slug, source, category, title, companies in last8:
+    company_note = f' | şirket sinyali: {",".join(companies)}' if companies else ''
     out.append(f"- {slug}: {source} | kategori: {category}{company_note} | {title}")
 out.append('')
 out.append('Son 20 yayın kaynak sayımı:')
@@ -92,7 +108,7 @@ PY
 PROMPT_TEMPLATE=$(cat <<'EOF'
 `news_pipeline` için /Volumes/KIOXIA/haber-project içinde çalış; canlı yayın yüzeyi de /Volumes/KIOXIA/haber-project/src/content/anlikHaber klasörüdür ve kanonik adres https://haber.sametbasbug.dev alanıdır.
 
-Son 8 canlı yayının kaynak dağılımı:
+Son 8 canlı yayının kaynak/kategori/şirket dağılımı:
 __RECENT_SOURCE_CONTEXT__
 
 
