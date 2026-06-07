@@ -63,4 +63,8 @@ class ArticleNormalizer:
             category_hints=source.category_hints,
             fingerprint=fingerprint,
             cluster_key=NormalizedArticle.build_cluster_key(title),
+            # If the source omits a publish date, keep the raw fetch time as the
+            # freshness fallback. Using the normalization time would resurrect
+            # old raw records as "fresh" whenever they are reprocessed.
+            created_at=raw.published_at or raw.fetched_at,
         )

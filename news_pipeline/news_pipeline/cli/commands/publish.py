@@ -21,6 +21,23 @@ TITLE_DUPLICATE_THRESHOLD = 88
 DESCRIPTION_DUPLICATE_THRESHOLD = 92
 COMBINED_TOPIC_DUPLICATE_THRESHOLD = 82
 SAME_SOURCE_TOPIC_DUPLICATE_THRESHOLD = 74
+EVENT_CORE_SHARED_TOKEN_MIN = 7
+EVENT_CORE_ACTION_TOKEN_MIN = 1
+EVENT_CORE_ENTITY_HINTS = {
+    "acquisition",
+    "almasini",
+    "anlasma",
+    "anlasmasi",
+    "anlasmasini",
+    "block",
+    "blocked",
+    "durdurdu",
+    "durdurulmasi",
+    "engelledi",
+    "satin",
+    "veto",
+    "vetoes",
+}
 DISALLOWED_LOCAL_SOURCE_NAMES = {"Diken", "Kısa Dalga", "Kisa Dalga", "Medyascope"}
 
 TOPIC_STOPWORDS = {
@@ -132,6 +149,23 @@ def _topic_tokens(value: str) -> set[str]:
     return tokens
 
 
+def _has_duplicate_event_core(item_tokens: set[str], existing_tokens: set[str], shared_tokens: set[str]) -> bool:
+    if len(shared_tokens) < EVENT_CORE_SHARED_TOKEN_MIN:
+        return False
+    shared_action_tokens = shared_tokens & EVENT_CORE_ENTITY_HINTS
+    if len(shared_action_tokens) < EVENT_CORE_ACTION_TOKEN_MIN:
+        return False
+    distinctive_shared = {
+        token
+        for token in shared_tokens
+        if len(token) >= 5 and token not in EVENT_CORE_ENTITY_HINTS and token not in {"yapay", "zeka", "teknoloji", "haber"}
+    }
+    # Require at least two non-generic shared entities/actors plus an action
+    # token. This catches same-event rewrites across different sources without
+    # turning broad category overlap into a duplicate.
+    return len(distinctive_shared) >= 2
+
+
 
 def _assert_not_duplicate_topic(
     path: Path,
@@ -156,6 +190,8 @@ def _assert_not_duplicate_topic(
 
     ratio = token_set_ratio(_collapse_text(item_text), _collapse_text(existing_topic))
     same_source_host = bool(_source_hosts(item_urls) & _source_hosts(existing_urls))
+    if _has_duplicate_event_core(item_tokens, existing_tokens, shared_tokens):
+        raise typer.BadParameter(f"near-duplicate live event already published in {path.name}")
     if ratio >= COMBINED_TOPIC_DUPLICATE_THRESHOLD:
         raise typer.BadParameter(f"near-duplicate live topic already published in {path.name}")
     if same_source_host and ratio >= SAME_SOURCE_TOPIC_DUPLICATE_THRESHOLD:

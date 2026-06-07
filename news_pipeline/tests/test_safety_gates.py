@@ -12,8 +12,11 @@ from news_pipeline.cli.commands.heartbeat_publish_one import _select_candidate, 
 from news_pipeline.cli.commands.heartbeat_prepare_one import _board_score, _recent_live_posts
 from news_pipeline.cli.commands.publish import _assert_not_duplicate_live, _assert_not_duplicate_topic, publish_command, publish_queue_item
 from news_pipeline.editorial.autonomy import is_autopublish_candidate
-from news_pipeline.models.article import NormalizedArticle
+from news_pipeline.extractors.article_text import _extract_published_at
+from news_pipeline.models.article import NormalizedArticle, RawArticle
 from news_pipeline.models.queue import DraftSource, QueueItem
+from news_pipeline.models.source import SourceConfig
+from news_pipeline.normalize.cleaner import ArticleNormalizer
 from news_pipeline.storage.json_store import JsonStore
 
 
@@ -299,3 +302,73 @@ def test_publish_one_rejects_duplicate_gate_candidate(tmp_path: Path, monkeypatc
     assert stored.status == "rejected"
     assert stored.editorial_priority == 0.0
     assert any(note.startswith("duplicate-publish-gate:") for note in stored.notes)
+
+
+def test_normalizer_uses_raw_fetch_time_when_source_date_missing() -> None:
+    fetched_at = datetime(2026, 4, 29, 19, 1, tzinfo=UTC)
+    raw = RawArticle(
+        source_id="fast-company-tech",
+        fetched_at=fetched_at,
+        url="https://www.fastcompany.com/91533167/why-manus-has-become-a-crucial-prize-in-the-global-ai-race",
+        title="Why Manus has become a crucial prize in the global AI race",
+        summary="China blocked Meta from acquiring Manus.",
+        published_at=None,
+        metadata={"article_snippet": "China blocked Meta from acquiring Manus."},
+    )
+    source = SourceConfig(
+        id="fast-company-tech",
+        name="Fast Company Tech",
+        kind="rss",
+        url="https://www.fastcompany.com/technology/rss",
+        category_hints=["Teknoloji"],
+    )
+
+    normalized = ArticleNormalizer().normalize(raw, source)
+
+    assert normalized.published_at is None
+    assert normalized.created_at == fetched_at
+
+
+def test_article_date_extraction_reads_common_news_metadata() -> None:
+    from bs4 import BeautifulSoup
+
+    soup = BeautifulSoup(
+        """
+        <html><head>
+          <meta property="article:published_time" content="2026-04-28T04:14:00+00:00" />
+          <script type="application/ld+json">
+            {"@type":"NewsArticle","datePublished":"2026-04-27T12:00:00+00:00"}
+          </script>
+        </head></html>
+        """,
+        "html.parser",
+    )
+
+    assert _extract_published_at(soup) == datetime(2026, 4, 28, 4, 14, tzinfo=UTC)
+
+
+def test_duplicate_event_core_catches_meta_manus_rewrite(tmp_path: Path) -> None:
+    content = tmp_path / "content"
+    content.mkdir()
+    existing = content / "china-vetoes-meta-s-2b-manus-deal-after-months-long-probe.md"
+    existing.write_text(
+        """---
+title: "Çin, Meta'nın 2 milyar dolarlık Manus anlaşmasını durdurdu"
+description: "Çin'in ekonomik planlama kurumu, Meta'nın Manus satın almasını engelledi. Karar, Zuckerberg'in yapay zekâ ajanları planına darbe vurabilir."
+sources:
+  - name: "TechCrunch"
+    url: "https://techcrunch.com/2026/04/27/china-vetoes-metas-2b-manus-deal-after-months-long-probe/"
+---
+Çin, Meta'nın Manus'u satın alma planını durdurdu.
+""",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(typer.BadParameter, match="near-duplicate live event"):
+        _assert_not_duplicate_live(
+            content,
+            "Çin, Meta’nın Manus yapay zekâ platformunu satın almasını engelledi",
+            "Fast Company’ye göre Pekin, Meta’nın Butterfly Effect’e ait Manus platformunu 2 milyar dolara satın alma girişimini algoritmaları teknoloji ihracat kontrolüne alarak fiilen durdurdu.",
+            {"https://www.fastcompany.com/91533167/why-manus-has-become-a-crucial-prize-in-the-global-ai-race"},
+            "cin-metanin-manus-yapay-zeka-platformunu-satin-almasini-engelledi",
+        )

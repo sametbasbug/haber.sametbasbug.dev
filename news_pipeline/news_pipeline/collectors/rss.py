@@ -6,7 +6,7 @@ from email.utils import parsedate_to_datetime
 import feedparser
 
 from news_pipeline.collectors.base import BaseCollector
-from news_pipeline.extractors.article_text import fetch_article_snippet
+from news_pipeline.extractors.article_text import fetch_article_details
 from news_pipeline.models.article import RawArticle
 from news_pipeline.utils.text import clean_text
 
@@ -38,7 +38,9 @@ class RssCollector(BaseCollector):
             should_fetch_snippet = self.source.fetch_snippets and (
                 self.source.snippet_limit is None or index < self.source.snippet_limit
             )
-            article_snippet = fetch_article_snippet(article_url) if should_fetch_snippet else ""
+            article_details = fetch_article_details(article_url) if should_fetch_snippet else None
+            article_snippet = article_details.snippet if article_details else ""
+            page_published_at = article_details.published_at if article_details else None
 
             articles.append(
                 RawArticle(
@@ -46,11 +48,12 @@ class RssCollector(BaseCollector):
                     url=article_url,
                     title=clean_text(getattr(entry, "title", "")),
                     summary=summary,
-                    published_at=published_at,
+                    published_at=published_at or page_published_at,
                     image_url=image_url,
                     metadata={
                         "feed_title": getattr(parsed.feed, "title", self.source.name),
                         "article_snippet": article_snippet,
+                        "page_published_at": page_published_at.isoformat() if page_published_at else None,
                     },
                 )
             )

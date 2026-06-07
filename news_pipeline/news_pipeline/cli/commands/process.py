@@ -35,6 +35,10 @@ def _verbose_enabled(value: bool) -> bool:
     return os.environ.get("NEWS_PIPELINE_VERBOSE", "0") in {"1", "true", "TRUE", "yes", "YES"}
 
 
+def _effective_source_time(published_at: datetime | None, fallback: datetime) -> datetime:
+    return (published_at or fallback).astimezone(UTC)
+
+
 def _purge_stale_raw(raw_root: Path, now: datetime, older_than_hours: int) -> int:
     if older_than_hours <= 0:
         return 0
@@ -42,14 +46,11 @@ def _purge_stale_raw(raw_root: Path, now: datetime, older_than_hours: int) -> in
     cutoff = now - timedelta(hours=older_than_hours)
     for path in raw_root.glob("*.json"):
         try:
-            payload = json.loads(path.read_text(encoding="utf-8"))
-            published_raw = payload.get("published_at")
-            if not published_raw:
-                continue
-            published_at = datetime.fromisoformat(str(published_raw)).astimezone(UTC)
+            raw = RawArticle.model_validate(json.loads(path.read_text(encoding="utf-8")))
+            source_time = _effective_source_time(raw.published_at, raw.fetched_at)
         except Exception:
             continue
-        if published_at < cutoff:
+        if source_time < cutoff:
             path.unlink(missing_ok=True)
             purged += 1
     return purged
@@ -80,7 +81,7 @@ def process_command(
     kept: list[NormalizedArticle] = [
         article
         for article in normalized_store.list_all()
-        if not article.published_at or now - article.published_at.astimezone(UTC) <= timedelta(hours=MAX_PROCESS_SOURCE_AGE_HOURS)
+        if now - _effective_source_time(article.published_at, article.created_at) <= timedelta(hours=MAX_PROCESS_SOURCE_AGE_HOURS)
     ]
     kept_ids = {article.id for article in kept}
     created = 0
@@ -100,7 +101,7 @@ def process_command(
         if source is None:
             skipped_missing_source += 1
             continue
-        if raw.published_at and now - raw.published_at.astimezone(UTC) > timedelta(hours=MAX_PROCESS_SOURCE_AGE_HOURS):
+        if now - _effective_source_time(raw.published_at, raw.fetched_at) > timedelta(hours=MAX_PROCESS_SOURCE_AGE_HOURS):
             skipped_stale_raw += 1
             continue
         normalized = normalizer.normalize(raw, source)
