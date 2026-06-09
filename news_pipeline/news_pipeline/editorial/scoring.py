@@ -6,12 +6,30 @@ from news_pipeline.models.article import NormalizedArticle
 
 
 SOURCE_WEIGHTS = {
+    "techcrunch": 0.34,
+    "ars-technica": 0.32,
+    "mit-tech-review": 0.33,
+    "wired": 0.32,
+    "rest-of-world": 0.33,
     "bbc-world": 0.34,
+    "guardian-world": 0.33,
+    "al-jazeera-world": 0.33,
+    "france24-world": 0.32,
+    "dw-world": 0.32,
+    "npr-world": 0.32,
     "politico-eu": 0.32,
-    "techcrunch": 0.35,
+    "guardian-business": 0.32,
+    "npr-business": 0.31,
+    "dw-business": 0.31,
+    "cnbc-world-economy": 0.30,
+    "marketwatch-top-stories": 0.29,
     "nasa-news": 0.31,
     "sciencedaily-top-science": 0.29,
     "guardian-science": 0.31,
+    "new-scientist": 0.32,
+    "physorg": 0.29,
+    "live-science": 0.29,
+    "space-com": 0.29,
 }
 
 CATEGORY_WEIGHTS = {
@@ -22,17 +40,27 @@ CATEGORY_WEIGHTS = {
 }
 
 KEYWORD_BOOSTS = {
-    "openai": 0.08,
-    "anthropic": 0.08,
+    "openai": 0.06,
+    "anthropic": 0.06,
     "google": 0.01,
-    "meta": 0.03,
+    "meta": 0.02,
     "trump": 0.02,
     "europe": 0.03,
+    "eu": 0.025,
     "turkey": 0.06,
     "türkiye": 0.06,
-    "ai": 0.04,
-    "ukraine": 0.03,
-    "russia": 0.03,
+    "ai": 0.035,
+    "ukraine": 0.04,
+    "russia": 0.04,
+    "china": 0.035,
+    "sanctions": 0.03,
+    "nato": 0.035,
+    "climate": 0.035,
+    "energy": 0.03,
+    "security": 0.03,
+    "trade": 0.025,
+    "inflation": 0.025,
+    "space": 0.025,
 }
 
 PENALTY_TERMS = {
@@ -43,6 +71,8 @@ PENALTY_TERMS = {
     "knifeman": 0.08,
     "funny": 0.05,
     "god": 0.04,
+    "world cup": 0.05,
+    "royal": 0.05,
 }
 
 

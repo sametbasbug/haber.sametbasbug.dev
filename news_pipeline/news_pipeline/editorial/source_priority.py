@@ -3,17 +3,29 @@ from __future__ import annotations
 from news_pipeline.models.queue import DraftSource, QueueItem
 
 SOURCE_NAME_WEIGHTS = {
-    "Reuters Technology": 0.93,
     "BBC World": 0.91,
-    "Reuters World": 0.90,
+    "The Guardian World": 0.90,
+    "Al Jazeera World": 0.89,
+    "France 24 World": 0.88,
+    "Deutsche Welle World": 0.87,
+    "NPR World": 0.86,
     "Politico Europe": 0.84,
+    "The Guardian Business": 0.84,
+    "NPR Business": 0.83,
+    "Deutsche Welle Business": 0.82,
     "Ars Technica": 0.87,
     "The Verge": 0.86,
     "MIT Technology Review": 0.86,
+    "Rest of World": 0.85,
+    "WIRED": 0.84,
     "Engadget": 0.84,
     "ZDNET": 0.82,
     "Fast Company Tech": 0.80,
     "TechCrunch": 0.78,
+    "New Scientist": 0.84,
+    "The Guardian Science": 0.83,
+    "NASA News": 0.82,
+    "ScienceDaily Top Science": 0.80,
 }
 
 

@@ -17,6 +17,7 @@ from news_pipeline.queue.service import QueueService
 from news_pipeline.storage.json_store import JsonStore
 
 MAX_PER_SOURCE = 3
+MIN_HEALTHY_BOARD_ELIGIBLE = 6
 HOT_CATEGORY_RECENT_WINDOW = 3
 HOT_CATEGORY_REPEAT_THRESHOLD = 2
 HOT_CATEGORY_BOARD_LIMIT = 1
@@ -409,8 +410,6 @@ def _select_headline_board(root: Path, items: list[Any], limit: int, max_source_
     for category, target in MIN_CATEGORY_TARGETS.items():
         if category == hot_category:
             continue
-        if category == "Bilim" and science_pressure:
-            continue
         for item, _, _ in eligible:
             if len(selected) >= limit or category_counts[category] >= target:
                 break
@@ -476,31 +475,33 @@ def _candidate_reason(root: Path, item: Any, min_score: float, max_source_age_ho
     return is_autopublish_candidate(item, min_score=min_score)
 
 
-def prepare_one_command(
-    collect: bool = typer.Option(True, "--collect/--no-collect", help="Run collect before preparing the editorial pack."),
-    process: bool = typer.Option(True, "--process/--no-process", help="Run process before preparing the editorial pack."),
-    cleanup: bool = typer.Option(True, "--cleanup/--no-cleanup", help="Run queue cleanup before preparing the editorial pack."),
-    full_collect: bool = typer.Option(False, "--full-collect", help="Bypass source cadence during collect."),
-    min_score: float = typer.Option(0.68, "--min-score", help="Strict publish threshold used for diagnostics."),
-    max_source_age_hours: int = typer.Option(18, "--max-source-age-hours", help="Maximum source age for headline board freshness and auto publish diagnostics."),
-    limit: int = typer.Option(20, "--limit", help="How many headline candidates to return."),
-    json_output: bool = typer.Option(False, "--json", help="Emit machine-readable JSON."),
-) -> None:
-    """Prepare a compact editorial pack for Asteria to rewrite/review before publishing.
+def _collect_step_stats(steps: list[dict[str, Any]]) -> dict[str, int] | None:
+    for step in reversed(steps):
+        if step.get("name") != "collect":
+            continue
+        text = " ".join(str(step.get(key) or "") for key in ("stdout", "stderr", "error"))
+        stats: dict[str, int] = {}
+        for key in ("sources_collected", "items", "skipped_cadence", "failed"):
+            match = re.search(rf"{key}=(\d+)", text)
+            if match:
+                stats[key] = int(match.group(1))
+        return stats or None
+    return None
 
-    This command does technical prep only. It intentionally does not publish and does
-    not replace Asteria's editorial judgment.
-    """
-    root = Path.cwd()
+
+def _run_prepare_pipeline(collect: bool, process: bool, cleanup: bool, full_collect: bool, *, suffix: str = "") -> list[dict[str, Any]]:
     steps: list[dict[str, Any]] = []
     if collect:
         args = ["collect"] + (["--full"] if full_collect else [])
-        steps.append(_run_pipeline_command("collect", args, timeout=180))
+        steps.append(_run_pipeline_command(f"collect{suffix}", args, timeout=360))
     if process:
-        steps.append(_run_pipeline_command("process", ["process"], timeout=180))
+        steps.append(_run_pipeline_command(f"process{suffix}", ["process"], timeout=420))
     if cleanup:
-        steps.append(_run_pipeline_command("queue-cleanup", ["queue", "cleanup"], timeout=90))
+        steps.append(_run_pipeline_command(f"queue-cleanup{suffix}", ["queue", "cleanup"], timeout=120))
+    return steps
 
+
+def _build_editorial_packs(root: Path, *, min_score: float, max_source_age_hours: int, limit: int) -> tuple[list[dict[str, Any]], list[dict[str, Any]], dict[str, Any]]:
     service = QueueService(root / "news_pipeline/data/queue")
     items = sorted(service.list_items(), key=lambda item: item.editorial_priority, reverse=True)
     selected, skipped, board_meta = _select_headline_board(root, items, limit, max_source_age_hours)
@@ -514,6 +515,72 @@ def prepare_one_command(
         payload["boardReasons"] = board_reasons
         payload["strictGate"] = {"passesNow": ok, "reason": reason}
         packs.append(payload)
+    return packs, skipped, board_meta
+
+
+def _full_collect_retry_reason(
+    *,
+    collect: bool,
+    full_collect: bool,
+    steps: list[dict[str, Any]],
+    packs: list[dict[str, Any]],
+    board_meta: dict[str, Any],
+) -> str | None:
+    if not collect or full_collect:
+        return None
+    stats = _collect_step_stats(steps)
+    if not stats:
+        return None
+    eligible_count = int(board_meta["diagnostics"].get("eligibleCount") or 0)
+    if stats.get("sources_collected", 0) == 0:
+        return "cadence produced zero collected sources"
+    if not packs and stats.get("skipped_cadence", 0) > 0:
+        return "no board candidates after cadence-limited collect"
+    if eligible_count < MIN_HEALTHY_BOARD_ELIGIBLE and stats.get("skipped_cadence", 0) > 0:
+        return f"thin board ({eligible_count} eligible < {MIN_HEALTHY_BOARD_ELIGIBLE}) after cadence-limited collect"
+    return None
+
+
+def prepare_one_command(
+    collect: bool = typer.Option(True, "--collect/--no-collect", help="Run collect before preparing the editorial pack."),
+    process: bool = typer.Option(True, "--process/--no-process", help="Run process before preparing the editorial pack."),
+    cleanup: bool = typer.Option(True, "--cleanup/--no-cleanup", help="Run queue cleanup before preparing the editorial pack."),
+    full_collect: bool = typer.Option(False, "--full-collect", help="Bypass source cadence during collect."),
+    min_score: float = typer.Option(0.68, "--min-score", help="Strict publish threshold used for diagnostics."),
+    max_source_age_hours: int = typer.Option(24, "--max-source-age-hours", help="Maximum source age for headline board freshness and auto publish diagnostics."),
+    limit: int = typer.Option(20, "--limit", help="How many headline candidates to return."),
+    json_output: bool = typer.Option(False, "--json", help="Emit machine-readable JSON."),
+) -> None:
+    """Prepare a compact editorial pack for Asteria to rewrite/review before publishing.
+
+    This command does technical prep only. It intentionally does not publish and does
+    not replace Asteria's editorial judgment.
+    """
+    root = Path.cwd()
+    steps = _run_prepare_pipeline(collect, process, cleanup, full_collect)
+    packs, skipped, board_meta = _build_editorial_packs(
+        root,
+        min_score=min_score,
+        max_source_age_hours=max_source_age_hours,
+        limit=limit,
+    )
+
+    retry_reason = _full_collect_retry_reason(
+        collect=collect,
+        full_collect=full_collect,
+        steps=steps,
+        packs=packs,
+        board_meta=board_meta,
+    )
+    if retry_reason:
+        retry_steps = _run_prepare_pipeline(True, process, cleanup, True, suffix="-full-retry")
+        steps.extend(retry_steps)
+        packs, skipped, board_meta = _build_editorial_packs(
+            root,
+            min_score=min_score,
+            max_source_age_hours=max_source_age_hours,
+            limit=limit,
+        )
 
     result = "ready" if packs else "no_candidates"
     payload = {
@@ -524,6 +591,11 @@ def prepare_one_command(
         "steps": steps,
         "candidates": packs,
         "board": board_meta["diagnostics"],
+        "recovery": {
+            "fullCollectRetry": bool(retry_reason),
+            "reason": retry_reason,
+            "minHealthyBoardEligible": MIN_HEALTHY_BOARD_ELIGIBLE,
+        },
         "skippedSamples": skipped,
     }
     if json_output:

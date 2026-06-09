@@ -72,7 +72,14 @@ def _last_collected_at(entry: dict[str, object] | None) -> datetime | None:
         return None
 
 
-def _is_due(source: SourceConfig, state: dict[str, dict[str, object]], now: datetime, *, full: bool) -> tuple[bool, str | None]:
+def _is_due(
+    source: SourceConfig,
+    state: dict[str, dict[str, object]],
+    now: datetime,
+    *,
+    full: bool,
+    cadence_grace_seconds: int = 0,
+) -> tuple[bool, str | None]:
     if full:
         return True, None
     cadence = _cadence_seconds(source.cadence)
@@ -82,7 +89,7 @@ def _is_due(source: SourceConfig, state: dict[str, dict[str, object]], now: date
     if last is None:
         return True, None
     age = int((now - last).total_seconds())
-    if age >= cadence:
+    if age + max(cadence_grace_seconds, 0) >= cadence:
         return True, None
     return False, f"cadence_wait:{age}s/{cadence}s"
 
@@ -90,13 +97,16 @@ def _is_due(source: SourceConfig, state: dict[str, dict[str, object]], now: date
 def collect_command(
     config_path: str = "news_pipeline/news_pipeline/config/sources.yaml",
     full: bool = typer.Option(False, "--full", help="Ignore source cadence and collect every enabled source."),
+    cadence_grace_seconds: int = typer.Option(300, "--cadence-grace-seconds", help="Treat sources as due when they are within this many seconds of their cadence window."),
     verbose: bool = typer.Option(False, "--verbose", help="Print per-source skip/collect diagnostics."),
 ) -> None:
     logger = get_logger()
     root = Path.cwd()
     raw_store = JsonStore(root / "news_pipeline/data/raw", RawArticle)
     config = load_yaml(root / config_path)
-    state = _read_state(root)
+    source_rows = config.get("sources", [])
+    configured_source_ids = {item.get("id") for item in source_rows if isinstance(item, dict) and item.get("id")}
+    state = {source_id: entry for source_id, entry in _read_state(root).items() if source_id in configured_source_ids}
     now = datetime.now(UTC)
 
     collected_sources = 0
@@ -105,8 +115,9 @@ def collect_command(
     skipped_kind = 0
     total_items = 0
     failed = 0
+    empty_sources = 0
 
-    for source_data in config.get("sources", []):
+    for source_data in source_rows:
         source = SourceConfig.model_validate(source_data)
         if not source.enabled:
             skipped_disabled += 1
@@ -118,7 +129,7 @@ def collect_command(
             if verbose:
                 logger.info(f"skip {source.id}, only rss collector is wired in v1")
             continue
-        due, reason = _is_due(source, state, now, full=full)
+        due, reason = _is_due(source, state, now, full=full, cadence_grace_seconds=cadence_grace_seconds)
         if not due:
             skipped_cadence += 1
             if verbose:
@@ -148,6 +159,9 @@ def collect_command(
             "lastCount": len(result),
             "cadence": source.cadence,
         }
+        if not result:
+            state[source.id]["lastWarning"] = "empty feed result"
+            empty_sources += 1
         collected_sources += 1
         total_items += len(result)
         if verbose:
@@ -158,5 +172,5 @@ def collect_command(
         "collect summary: "
         f"sources_collected={collected_sources}, items={total_items}, "
         f"skipped_cadence={skipped_cadence}, skipped_disabled={skipped_disabled}, "
-        f"skipped_kind={skipped_kind}, failed={failed}, full={int(full)}"
+        f"skipped_kind={skipped_kind}, failed={failed}, empty_sources={empty_sources}, full={int(full)}"
     )

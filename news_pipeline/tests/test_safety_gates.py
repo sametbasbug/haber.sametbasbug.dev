@@ -7,6 +7,7 @@ import pytest
 import typer
 
 from news_pipeline.cli.commands.audit_content import audit_content_command
+from news_pipeline.cli.commands.collect import _is_due
 from news_pipeline.cli.commands import heartbeat_publish_one
 from news_pipeline.cli.commands.heartbeat_publish_one import _select_candidate, publish_one_command
 from news_pipeline.cli.commands.heartbeat_prepare_one import _board_score, _recent_live_posts
@@ -90,6 +91,27 @@ def _item(
 def _save_runtime(root: Path, item: QueueItem, article: NormalizedArticle) -> None:
     JsonStore(root / "news_pipeline/data/queue", QueueItem).save(item.queue_id, item)
     JsonStore(root / "news_pipeline/data/normalized", NormalizedArticle).save(article.id, article)
+
+
+
+
+def test_collect_cadence_grace_handles_near_hourly_boundary() -> None:
+    now = datetime.now(UTC)
+    source = SourceConfig(
+        id="hourly-demo",
+        name="Hourly Demo",
+        kind="rss",
+        url="https://example.org/rss.xml",
+        cadence="hourly",
+    )
+    state = {"hourly-demo": {"lastCollectedAt": (now - timedelta(minutes=59)).isoformat()}}
+
+    due_without_grace, reason = _is_due(source, state, now, full=False, cadence_grace_seconds=0)
+    due_with_grace, _ = _is_due(source, state, now, full=False, cadence_grace_seconds=300)
+
+    assert due_without_grace is False
+    assert reason == "cadence_wait:3540s/3600s"
+    assert due_with_grace is True
 
 
 def test_duplicate_url_and_topic_guard(tmp_path: Path) -> None:

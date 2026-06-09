@@ -16,12 +16,22 @@ HIGH_VOLUME_SOURCE_MIN_SCORES = {
     "the-verge": 0.56,
     "fast-company-tech": 0.56,
     "marketwatch-top-stories": 0.55,
+    "dw-world": 0.54,
+    "euronews-world": 0.54,
+    "physorg": 0.53,
+    "live-science": 0.53,
+    "space-com": 0.53,
 }
 HIGH_VOLUME_ACTIVE_LIMITS = {
     "the-verge": 40,
     "fast-company-tech": 30,
     "marketwatch-top-stories": 25,
     "guardian-world": 60,
+    "dw-world": 45,
+    "euronews-world": 35,
+    "physorg": 30,
+    "live-science": 30,
+    "space-com": 25,
 }
 
 
@@ -31,7 +41,7 @@ def queue_cleanup_command(
     keep_score: float = 0.62,
     purge_rejected_archive_hours: int = 24,
     purge_published_archive_hours: int = 72,
-    stale_source_hours: int = 18,
+    stale_source_hours: int = 24,
     low_score_reject: float = 0.50,
     low_score_grace_hours: int = 6,
     high_volume_grace_hours: int = 12,

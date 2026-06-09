@@ -17,6 +17,8 @@ class RssCollector(BaseCollector):
         articles: list[RawArticle] = []
 
         entries = list(parsed.entries)
+        if getattr(parsed, "bozo", False) and not entries:
+            raise RuntimeError(f"feed parse failed: {getattr(parsed, 'bozo_exception', 'unknown parse error')}")
         if self.source.max_items is not None:
             entries = entries[: self.source.max_items]
 

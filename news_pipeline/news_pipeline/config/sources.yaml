@@ -1,4 +1,5 @@
 sources:
+  # Technology / AI / digital infrastructure
   - id: techcrunch
     name: TechCrunch
     kind: rss
@@ -7,7 +8,7 @@ sources:
     enabled: true
     cadence: hourly
     max_items: 20
-    snippet_limit: 8
+    snippet_limit: 6
 
   - id: the-verge
     name: The Verge
@@ -17,7 +18,7 @@ sources:
     enabled: true
     cadence: 3h
     max_items: 15
-    snippet_limit: 6
+    snippet_limit: 4
 
   - id: ars-technica
     name: Ars Technica
@@ -27,7 +28,7 @@ sources:
     enabled: true
     cadence: 3h
     max_items: 15
-    snippet_limit: 6
+    snippet_limit: 4
 
   - id: engadget
     name: Engadget
@@ -37,7 +38,7 @@ sources:
     enabled: true
     cadence: 3h
     max_items: 15
-    snippet_limit: 6
+    snippet_limit: 4
 
   - id: mit-tech-review
     name: MIT Technology Review
@@ -46,8 +47,8 @@ sources:
     category_hints: [Teknoloji]
     enabled: true
     cadence: 6h
-    max_items: 15
-    snippet_limit: 5
+    max_items: 12
+    snippet_limit: 3
 
   - id: zdnet
     name: ZDNET
@@ -56,8 +57,8 @@ sources:
     category_hints: [Teknoloji]
     enabled: true
     cadence: 6h
-    max_items: 15
-    snippet_limit: 5
+    max_items: 12
+    snippet_limit: 3
 
   - id: fast-company-tech
     name: Fast Company Tech
@@ -66,19 +67,40 @@ sources:
     category_hints: [Teknoloji]
     enabled: true
     cadence: 6h
-    max_items: 15
-    snippet_limit: 5
+    max_items: 12
+    snippet_limit: 2
 
-  - id: reuters-tech
-    name: Reuters Technology
+  - id: wired
+    name: WIRED
     kind: rss
-    url: https://feeds.reuters.com/reuters/technologyNews
+    url: https://www.wired.com/feed/rss
+    category_hints: [Teknoloji]
+    enabled: true
+    cadence: 3h
+    max_items: 15
+    snippet_limit: 4
+
+  - id: cnbc-tech
+    name: CNBC Technology
+    kind: rss
+    url: https://www.cnbc.com/id/19854910/device/rss/rss.html
+    category_hints: [Teknoloji, Ekonomi]
+    enabled: true
+    cadence: 3h
+    max_items: 12
+    snippet_limit: 3
+
+  - id: rest-of-world
+    name: Rest of World
+    kind: rss
+    url: https://restofworld.org/feed/latest/
     category_hints: [Teknoloji]
     enabled: true
     cadence: 6h
-    max_items: 15
-    snippet_limit: 5
+    max_items: 12
+    snippet_limit: 3
 
+  # Global politics / security / diplomacy
   - id: politico-eu
     name: Politico Europe
     kind: rss
@@ -87,7 +109,7 @@ sources:
     enabled: true
     cadence: 3h
     max_items: 15
-    snippet_limit: 6
+    snippet_limit: 4
 
   - id: bbc-world
     name: BBC World
@@ -97,26 +119,6 @@ sources:
     enabled: true
     cadence: hourly
     max_items: 20
-    snippet_limit: 8
-
-  - id: reuters-world
-    name: Reuters World
-    kind: rss
-    url: https://feeds.reuters.com/Reuters/worldNews
-    category_hints: [Siyaset]
-    enabled: true
-    cadence: 6h
-    max_items: 15
-    snippet_limit: 5
-
-  - id: associated-press-top-news
-    name: Associated Press Top News
-    kind: rss
-    url: https://apnews.com/hub/ap-top-news?output=rss
-    category_hints: [Siyaset]
-    enabled: true
-    cadence: 6h
-    max_items: 15
     snippet_limit: 5
 
   - id: guardian-world
@@ -127,28 +129,69 @@ sources:
     enabled: true
     cadence: hourly
     max_items: 20
-    snippet_limit: 8
+    snippet_limit: 5
 
-  - id: wired
-    name: WIRED
+  - id: al-jazeera-world
+    name: Al Jazeera World
     kind: rss
-    url: https://www.wired.com/feed/rss
-    category_hints: [Teknoloji]
+    url: https://www.aljazeera.com/xml/rss/all.xml
+    category_hints: [Siyaset]
+    enabled: true
+    cadence: hourly
+    max_items: 20
+    snippet_limit: 4
+
+  - id: france24-world
+    name: France 24 World
+    kind: rss
+    url: https://www.france24.com/en/rss
+    category_hints: [Siyaset]
+    enabled: true
+    cadence: hourly
+    max_items: 18
+    snippet_limit: 3
+
+  - id: dw-world
+    name: Deutsche Welle World
+    kind: rss
+    url: https://rss.dw.com/xml/rss-en-all
+    category_hints: [Siyaset]
+    enabled: true
+    cadence: hourly
+    max_items: 20
+    snippet_limit: 3
+
+  - id: npr-world
+    name: NPR World
+    kind: rss
+    url: https://feeds.npr.org/1004/rss.xml
+    category_hints: [Siyaset]
+    enabled: true
+    cadence: 3h
+    max_items: 10
+    snippet_limit: 2
+
+  - id: euronews-world
+    name: Euronews World
+    kind: rss
+    url: https://www.euronews.com/rss?level=theme&name=news
+    category_hints: [Siyaset]
     enabled: true
     cadence: 3h
     max_items: 15
-    snippet_limit: 6
+    snippet_limit: 2
 
-  - id: cnbc-tech
-    name: CNBC Technology
+  - id: sky-news-world
+    name: Sky News World
     kind: rss
-    url: https://www.cnbc.com/id/19854910/device/rss/rss.html
-    category_hints: [Teknoloji, Ekonomi]
+    url: https://feeds.skynews.com/feeds/rss/world.xml
+    category_hints: [Siyaset]
     enabled: true
     cadence: 3h
-    max_items: 15
-    snippet_limit: 6
+    max_items: 8
+    snippet_limit: 2
 
+  # Economy / markets / business
   - id: marketwatch-top-stories
     name: MarketWatch Top Stories
     kind: rss
@@ -156,9 +199,50 @@ sources:
     category_hints: [Ekonomi]
     enabled: true
     cadence: 6h
-    max_items: 15
-    snippet_limit: 5
+    max_items: 12
+    snippet_limit: 3
 
+  - id: guardian-business
+    name: The Guardian Business
+    kind: rss
+    url: https://www.theguardian.com/business/rss
+    category_hints: [Ekonomi]
+    enabled: true
+    cadence: 3h
+    max_items: 15
+    snippet_limit: 3
+
+  - id: npr-business
+    name: NPR Business
+    kind: rss
+    url: https://feeds.npr.org/1006/rss.xml
+    category_hints: [Ekonomi]
+    enabled: true
+    cadence: 6h
+    max_items: 10
+    snippet_limit: 2
+
+  - id: dw-business
+    name: Deutsche Welle Business
+    kind: rss
+    url: https://rss.dw.com/xml/rss-en-bus
+    category_hints: [Ekonomi]
+    enabled: true
+    cadence: 6h
+    max_items: 10
+    snippet_limit: 2
+
+  - id: cnbc-world-economy
+    name: CNBC World Economy
+    kind: rss
+    url: https://www.cnbc.com/id/20910258/device/rss/rss.html
+    category_hints: [Ekonomi]
+    enabled: true
+    cadence: 6h
+    max_items: 10
+    snippet_limit: 2
+
+  # Science / climate / space / research
   - id: nasa-news
     name: NASA News
     kind: rss
@@ -167,7 +251,7 @@ sources:
     enabled: true
     cadence: 6h
     max_items: 6
-    snippet_limit: 3
+    snippet_limit: 2
 
   - id: sciencedaily-top-science
     name: ScienceDaily Top Science
@@ -177,7 +261,7 @@ sources:
     enabled: true
     cadence: 12h
     max_items: 6
-    snippet_limit: 3
+    snippet_limit: 2
 
   - id: guardian-science
     name: The Guardian Science
@@ -187,4 +271,44 @@ sources:
     enabled: true
     cadence: 12h
     max_items: 6
-    snippet_limit: 3
+    snippet_limit: 2
+
+  - id: new-scientist
+    name: New Scientist
+    kind: rss
+    url: https://www.newscientist.com/feed/home/
+    category_hints: [Bilim]
+    enabled: true
+    cadence: 6h
+    max_items: 10
+    snippet_limit: 2
+
+  - id: physorg
+    name: Phys.org
+    kind: rss
+    url: https://phys.org/rss-feed/
+    category_hints: [Bilim]
+    enabled: true
+    cadence: 6h
+    max_items: 10
+    snippet_limit: 2
+
+  - id: live-science
+    name: Live Science
+    kind: rss
+    url: https://www.livescience.com/feeds/all
+    category_hints: [Bilim]
+    enabled: true
+    cadence: 6h
+    max_items: 10
+    snippet_limit: 2
+
+  - id: space-com
+    name: Space.com
+    kind: rss
+    url: https://www.space.com/feeds/all
+    category_hints: [Bilim]
+    enabled: true
+    cadence: 6h
+    max_items: 8
+    snippet_limit: 2
