@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections import defaultdict
 from datetime import datetime
 import re
+import struct
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -17,6 +18,9 @@ APPROVED_IMAGE_HOSTS = {
     "images.pexels.com",
 }
 APPROVED_LOCAL_IMAGE_PREFIXES = ("/images/generated/anlik-haber/",)
+LOCAL_GENERATED_HERO_MAX_BYTES = 400 * 1024
+LOCAL_GENERATED_HERO_WIDTH = 1200
+LOCAL_GENERATED_HERO_HEIGHT = 675
 
 # News/source CDNs are intentionally blocked for Anlık Haber hero images.
 # A live image URL is not enough: using the original publisher's RSS/OG/article
@@ -98,13 +102,83 @@ def _published_timestamp(path: Path) -> float:
         return path.stat().st_mtime
 
 
+def _webp_dimensions(path: Path) -> tuple[int, int] | None:
+    data = path.read_bytes()
+    if len(data) < 30 or data[:4] != b"RIFF" or data[8:12] != b"WEBP":
+        return None
+    offset = 12
+    while offset + 8 <= len(data):
+        chunk_type = data[offset : offset + 4]
+        chunk_size = int.from_bytes(data[offset + 4 : offset + 8], "little")
+        payload = offset + 8
+        if chunk_type == b"VP8X" and payload + 10 <= len(data):
+            width = 1 + int.from_bytes(data[payload + 4 : payload + 7], "little")
+            height = 1 + int.from_bytes(data[payload + 7 : payload + 10], "little")
+            return width, height
+        if chunk_type == b"VP8 " and payload + 10 <= len(data):
+            width = struct.unpack_from("<H", data, payload + 6)[0] & 0x3FFF
+            height = struct.unpack_from("<H", data, payload + 8)[0] & 0x3FFF
+            return width, height
+        if chunk_type == b"VP8L" and payload + 5 <= len(data):
+            bits = int.from_bytes(data[payload + 1 : payload + 5], "little")
+            width = (bits & 0x3FFF) + 1
+            height = ((bits >> 14) & 0x3FFF) + 1
+            return width, height
+        offset = payload + chunk_size + (chunk_size % 2)
+    return None
+
+
+def _local_image_type(path: Path) -> str | None:
+    with path.open("rb") as handle:
+        header = handle.read(16)
+    if header.startswith(b"RIFF") and header[8:12] == b"WEBP":
+        return "webp"
+    if header.startswith(b"\x89PNG\r\n\x1a\n"):
+        return "png"
+    if header.startswith(b"\xff\xd8\xff"):
+        return "jpeg"
+    return None
+
+
+def _local_image_dimensions(path: Path) -> tuple[int, int] | None:
+    image_type = _local_image_type(path)
+    if image_type == "webp":
+        return _webp_dimensions(path)
+    if image_type == "png":
+        with path.open("rb") as handle:
+            header = handle.read(24)
+        if len(header) >= 24 and header.startswith(b"\x89PNG\r\n\x1a\n"):
+            return int.from_bytes(header[16:20], "big"), int.from_bytes(header[20:24], "big")
+    if image_type == "jpeg":
+        # Local generated heroes are expected to be WebP. JPEG support is not
+        # needed for the current policy check, so avoid adding a dependency.
+        return None
+    return None
+
+
+def _local_generated_image_issue(path: Path) -> str | None:
+    if path.suffix.lower() != ".webp":
+        return f"local-generated-not-webp:{path.suffix.lower() or '-'}"
+    size = path.stat().st_size
+    if size > LOCAL_GENERATED_HERO_MAX_BYTES:
+        return f"local-generated-too-large:{size}"
+    dimensions = _local_image_dimensions(path)
+    if dimensions != (LOCAL_GENERATED_HERO_WIDTH, LOCAL_GENERATED_HERO_HEIGHT):
+        return f"local-generated-wrong-dimensions:{dimensions or '-'}"
+    return None
+
+
 def _is_live_image_url(client: httpx.Client, url: str) -> tuple[bool, str]:
+
     target = (url or "").strip()
     if target.startswith(APPROVED_LOCAL_IMAGE_PREFIXES):
         local_path = Path.cwd() / "public" / target.lstrip("/")
-        if local_path.exists() and local_path.stat().st_size > 1024:
-            return True, "local-file"
-        return False, "missing-local-file"
+        if not local_path.exists() or local_path.stat().st_size <= 1024:
+            return False, "missing-local-file"
+        local_issue = _local_generated_image_issue(local_path)
+        if local_issue:
+            return False, local_issue
+        return True, "local-file"
 
     parsed = urlparse(target)
     if parsed.scheme not in {"http", "https"} or not parsed.netloc:

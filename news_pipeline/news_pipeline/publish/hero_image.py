@@ -50,6 +50,7 @@ AI_HERO_RETRY_DELAY_SECONDS = 12
 AI_HERO_WIDTH = 1200
 AI_HERO_HEIGHT = 675
 AI_HERO_QUALITY = 82
+AI_HERO_MAX_BYTES = 400 * 1024
 REQUIRE_AI_HERO_DEFAULT = "1"
 _LAST_AI_HERO_ERROR: str | None = None
 STOPWORDS = {
@@ -307,8 +308,22 @@ def _normalize_ai_hero_output(path: Path, slug: str) -> Path | None:
         return None
 
     output = GENERATED_HERO_DIR / f"{slug}.webp"
-    if output.exists() and output.stat().st_size > 1024 and output.stat().st_mtime >= path.stat().st_mtime:
+    same_output = path.resolve() == output.resolve()
+    if same_output and output.stat().st_size <= AI_HERO_MAX_BYTES:
         return output
+    if (
+        not same_output
+        and output.exists()
+        and output.stat().st_size > 1024
+        and output.stat().st_size <= AI_HERO_MAX_BYTES
+        and output.stat().st_mtime >= path.stat().st_mtime
+    ):
+        return output
+
+    conversion_output = output
+    if same_output:
+        conversion_output = output.with_name(f"{output.stem}.normalized{output.suffix}")
+        conversion_output.unlink(missing_ok=True)
 
     command = [
         "magick",
@@ -323,14 +338,16 @@ def _normalize_ai_hero_output(path: Path, slug: str) -> Path | None:
         "-strip",
         "-quality",
         str(AI_HERO_QUALITY),
-        str(output),
+        str(conversion_output),
     ]
     try:
         subprocess.run(command, cwd=PROJECT_ROOT, text=True, capture_output=True, timeout=60, check=False)
     except Exception:
         return path
 
-    if output.exists() and output.stat().st_size > 1024:
+    if conversion_output.exists() and conversion_output.stat().st_size > 1024:
+        if conversion_output != output:
+            conversion_output.replace(output)
         if path != output and path.parent == GENERATED_HERO_DIR and path.name.startswith(slug):
             path.unlink(missing_ok=True)
         return output
@@ -370,7 +387,11 @@ def _ai_hero_image(item: QueueItem) -> str | None:
     output = GENERATED_HERO_DIR / f"{slug}.webp"
 
     if output.exists() and output.stat().st_size > 1024:
-        return _public_image_path(output)
+        normalized = _normalize_ai_hero_output(output, slug)
+        return _public_image_path(normalized or output)
+
+    raw_output = output.with_name(f"{slug}.raw.webp")
+    raw_output.unlink(missing_ok=True)
 
     prompt = _build_ai_hero_prompt(item)
     command = [
@@ -383,7 +404,7 @@ def _ai_hero_image(item: QueueItem) -> str | None:
         "--prompt",
         prompt,
         "--output",
-        str(output),
+        str(raw_output),
         "--size",
         "1536x1024",
         "--output-format",
@@ -407,7 +428,7 @@ def _ai_hero_image(item: QueueItem) -> str | None:
             _LAST_AI_HERO_ERROR = f"attempt {attempt}/{attempts}: {type(exc).__name__}: {exc}"
         else:
             if result.returncode == 0:
-                generated = _pick_generated_output(slug, output)
+                generated = _pick_generated_output(slug, raw_output)
                 if generated:
                     normalized = _normalize_ai_hero_output(generated, slug)
                     return _public_image_path(normalized or generated)
