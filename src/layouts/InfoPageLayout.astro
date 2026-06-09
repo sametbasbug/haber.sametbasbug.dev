@@ -1,0 +1,198 @@
+---
+import NewsLayout from './NewsLayout.astro';
+import { getAnlikHaberCategories } from '../data/anlikHaber';
+
+interface Props {
+	title: string;
+	description: string;
+	kicker?: string;
+	updatedLabel?: string;
+}
+
+const {
+	title,
+	description,
+	kicker = 'Yayın bilgileri',
+	updatedLabel = 'Son güncelleme: 9 Haziran 2026',
+} = Astro.props;
+
+const categories = getAnlikHaberCategories();
+const normalizedUpdatedLabel = updatedLabel.replace(/^Son güncelleme:\s*/i, '');
+---
+
+<NewsLayout
+	title={title}
+	description={description}
+	pageTitle={title}
+	pageDescription={description}
+	hidePageHero={true}
+	categories={categories}
+	activeCategory="Tümü"
+>
+	<article class="info-page">
+		<header class="info-page__header">
+			<div class="info-page__meta" aria-label="Sayfa bilgileri">
+				<span>{kicker}</span>
+				{normalizedUpdatedLabel && <span>{normalizedUpdatedLabel}</span>}
+			</div>
+			<h1>{title}</h1>
+			<p class="info-page__description">{description}</p>
+		</header>
+
+		<div class="info-page__body">
+			<slot />
+		</div>
+	</article>
+</NewsLayout>
+
+<style>
+	.info-page {
+		width: min(100%, 760px);
+		margin: 0 auto;
+		padding: clamp(1.05rem, 3vw, 1.65rem) 0 clamp(2rem, 5vw, 3.5rem);
+		color: var(--news-text);
+	}
+	.info-page .info-page__header {
+		position: relative;
+		padding: 0.95rem 0 1.05rem;
+		margin-bottom: 1.45rem;
+		border: 0;
+		border-top: 1px solid color-mix(in srgb, var(--news-border) 88%, transparent);
+		border-bottom: 1px solid color-mix(in srgb, var(--news-border) 88%, transparent);
+		border-radius: 0;
+		background: transparent;
+		box-shadow: none;
+		backdrop-filter: none;
+	}
+	.info-page__header::before {
+		content: '';
+		position: absolute;
+		top: -1px;
+		left: 0;
+		width: 3.2rem;
+		height: 1px;
+		background: var(--news-accent);
+	}
+	.info-page__meta {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.32rem 0.55rem;
+		margin-bottom: 0.48rem;
+		color: var(--news-muted);
+		font-size: 0.72rem;
+		font-weight: 760;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+	}
+	.info-page__meta span:first-child {
+		color: var(--news-accent-soft);
+	}
+	.info-page__meta span + span::before {
+		content: '•';
+		margin-right: 0.55rem;
+		color: color-mix(in srgb, var(--news-muted) 68%, transparent);
+	}
+	.info-page__header h1 {
+		margin: 0;
+		font-size: clamp(1.55rem, 3vw, 2.25rem);
+		line-height: 1.08;
+		font-weight: 850;
+		letter-spacing: -0.04em;
+		text-wrap: balance;
+	}
+	.info-page__description {
+		margin: 0.55rem 0 0;
+		max-width: 68ch;
+		color: var(--news-muted-strong);
+		font-size: 0.96rem;
+		line-height: 1.62;
+	}
+	.info-page__body {
+		display: grid;
+		gap: 1.2rem;
+		font-size: 1rem;
+		line-height: 1.76;
+	}
+	.info-page__body :global(section) {
+		display: grid;
+		gap: 0.55rem;
+	}
+	.info-page__body :global(h2) {
+		margin: 0.4rem 0 0;
+		font-size: 1.22rem;
+		line-height: 1.25;
+		font-weight: 850;
+		letter-spacing: -0.025em;
+	}
+	.info-page__body :global(p) {
+		margin: 0;
+		color: var(--news-muted-strong);
+	}
+	.info-page__body :global(ul) {
+		margin: 0;
+		padding-left: 1.15rem;
+		display: grid;
+		gap: 0.45rem;
+		color: var(--news-muted-strong);
+	}
+	.info-page__body :global(li::marker) {
+		color: var(--news-accent-soft);
+	}
+	.info-page__body :global(a) {
+		color: var(--news-accent-soft);
+		font-weight: 750;
+		text-decoration: underline;
+		text-decoration-color: color-mix(in srgb, var(--news-accent) 55%, transparent);
+		text-underline-offset: 0.18em;
+	}
+	.info-page__body :global(.info-note) {
+		padding: 0.95rem 1rem;
+		border: 1px solid color-mix(in srgb, var(--news-border) 82%, transparent);
+		border-radius: 1rem;
+		background: color-mix(in srgb, var(--news-panel) 92%, transparent);
+	}
+	.info-page__body :global(.info-people) {
+		display: grid;
+		gap: 0.85rem;
+		padding: 0;
+		list-style: none;
+	}
+	.info-page__body :global(.info-person) {
+		padding: 1rem;
+		border: 1px solid color-mix(in srgb, var(--news-border) 82%, transparent);
+		border-radius: 1rem;
+		background: color-mix(in srgb, var(--news-panel) 94%, transparent);
+	}
+	.info-page__body :global(.info-person strong) {
+		display: block;
+		color: var(--news-text);
+		font-size: 1rem;
+	}
+	.info-page__body :global(.info-person span) {
+		display: block;
+		margin-top: 0.12rem;
+		color: var(--news-accent-soft);
+		font-size: 0.84rem;
+		font-weight: 800;
+	}
+	.info-page__body :global(.info-person p) {
+		margin-top: 0.55rem;
+	}
+	@media (max-width: 640px) {
+		.info-page {
+			padding-top: 0.9rem;
+		}
+		.info-page__header {
+			padding-top: 0.82rem;
+			margin-bottom: 1.15rem;
+		}
+		.info-page__meta {
+			font-size: 0.66rem;
+			letter-spacing: 0.07em;
+		}
+		.info-page__body {
+			font-size: 0.98rem;
+		}
+	}
+</style>

@@ -1,0 +1,38 @@
+---
+import InfoPageLayout from '../layouts/InfoPageLayout.astro';
+
+const title = 'Yapay Zeka ve Yayın Süreci';
+const description = 'Anlık Haber’de AI desteğinin nerede kullanıldığı ve hesap verebilirliğin nasıl korunduğu.';
+---
+
+<InfoPageLayout title={title} description={description}>
+	<section>
+		<h2>AI desteği nerede kullanılır?</h2>
+		<p>Asteria AI; RSS ve açık web kaynaklarından gelen haber adaylarını tarama, adayları önem ve tekrar riskine göre değerlendirme, kısa Türkçe haber taslakları üretme ve metni yayın öncesi cilalama süreçlerinde destek sağlar.</p>
+	</section>
+
+	<section>
+		<h2>Teknik güvenlik katmanı</h2>
+		<p>Yayın akışı; kaynak URL’leri, RSS verileri, editoryal puanlama, yakın konu tekrarını azaltan kontroller, içerik auditleri ve görsel politika kontrolleriyle desteklenir. Bu katmanlar hız kazandırır, ama editoryal muhakemenin yerine geçmez.</p>
+	</section>
+
+	<section>
+		<h2>Görsel kullanımı</h2>
+		<p>Anlık Haber’de hero görselleri AI üretimli olabilir. Varsayılan yaklaşım, kaynak/RSS/OG veya haber sitesi CDN görsellerini doğrudan haber medyası olarak kullanmamaktır. Bu tercih, telif ve kaynak bağlamı risklerini azaltmak içindir.</p>
+	</section>
+
+	<section>
+		<h2>AI hata yapabilir</h2>
+		<p>AI destekli sistemler yanlış yorum, eksik bağlam veya hatalı özet üretebilir. Bu nedenle kaynak bağlantıları görünür tutulur ve hata bildirimi için <a href="/duzeltme-politikasi/">Düzeltme Politikası</a> bulunur.</p>
+	</section>
+
+	<section>
+		<h2>İnsan sahipliği</h2>
+		<p>Anlık Haber’in yayın yönü, sahipliği ve nihai hesap verebilirliği Samet Başbuğ’a aittir. AI desteği, yayın sürecini hızlandıran ve düzenleyen bir araçtır; sorumluluk devri değildir.</p>
+	</section>
+
+	<section>
+		<h2>Ne paylaşılmaz?</h2>
+		<p>Bu sayfa, okuyucuya yayın süreci hakkında şeffaf bilgi vermek içindir. Güvenlik, gizlilik ve sistem bütünlüğü nedeniyle iç promptlar, tokenlar, gizli yapılandırmalar veya hassas operasyon ayrıntıları paylaşılmaz.</p>
+	</section>
+</InfoPageLayout>

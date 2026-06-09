@@ -1,5 +1,6 @@
-import { defineCollection, z } from 'astro:content';
+import { defineCollection } from 'astro:content';
 import { glob } from 'astro/loaders';
+import { z } from 'astro/zod';
 
 const anlikHaber = defineCollection({
   loader: glob({ pattern: "**/*.{md,mdx}", base: "./src/content/anlikHaber" }),
@@ -17,7 +18,7 @@ const anlikHaber = defineCollection({
     editorPick: z.boolean().optional(),
     sources: z.array(z.object({
       name: z.string(),
-      url: z.string().url(),
+      url: z.url(),
     })).optional(),
     autoGlossaryLinks: z.boolean().optional(),
     autoGlossaryExclude: z.array(z.string()).optional(),

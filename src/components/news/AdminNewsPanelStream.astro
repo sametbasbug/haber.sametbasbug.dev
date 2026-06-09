@@ -63,7 +63,7 @@ const { entries, currentPage, totalPages, nextPageHref = '' } = Astro.props;
         if (sentinel instanceof HTMLElement) sentinel.remove();
       };
 
-      const setLoadingState = (value) => {
+      const setLoadingState = (value: boolean) => {
         loading = value;
         link.textContent = value ? 'Yeni haberler yükleniyor…' : 'Sonraki 10 haberi yükle';
       };

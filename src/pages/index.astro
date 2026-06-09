@@ -7,15 +7,46 @@ import {
 	getNewsCategoryToken,
 	getPublishedAnlikHaber,
 	slugifyNewsCategory,
+	type AnlikHaberEntry,
 } from '../data/anlikHaber';
 import { getNewsArticleHref, getNewsHomePath } from '../data/newsSite';
 
 const allEntries = await getPublishedAnlikHaber();
 const categories = getAnlikHaberCategories();
 const title = 'Anlık Haber';
-const description = "Samet Başbuğ tarafından yönetilen; Asteria AI'ın otonom veri toplama süreçleriyle anlık olarak güncellenen, yapay zeka destekli yeni nesil haber platformu.";
+const description = "Kaynaklı, kısa ve okunaklı Türkçe haber akışı. Asteria AI tarafından desteklenir, Samet Başbuğ tarafından yönetilir.";
 
-function buildPanel(entries) {
+interface FeaturedPanelItem {
+	id: string;
+	href: string;
+	title: string;
+	description: string;
+	heroImage: string;
+	category: string;
+	categoryToken: string;
+	breaking: boolean;
+	pubDateIso: string;
+	pubDateLabel: string;
+	author: string;
+}
+
+interface SidePanelItem {
+	id: string;
+	href: string;
+	title: string;
+	description: string;
+	category: string;
+	categoryToken: string;
+	pubDateIso: string;
+	pubDateLabel: string;
+}
+
+interface HomePanel {
+	featuredLeadEntries: FeaturedPanelItem[];
+	sideEntries: SidePanelItem[];
+}
+
+function buildPanel(entries: AnlikHaberEntry[]) {
 	const firstPageEntries = entries.slice(0, ANLIK_HABER_PAGE_SIZE);
 	const featuredLeadEntries = firstPageEntries.slice(0, Math.min(10, firstPageEntries.length));
 	const leadEntry = featuredLeadEntries[0];
@@ -27,7 +58,7 @@ function buildPanel(entries) {
 
 const allPanel = buildPanel(allEntries);
 
-const panels = {
+const panels: Record<string, HomePanel> = {
 	'Tümü': {
 		featuredLeadEntries: allPanel.featuredLeadEntries.map((entry) => ({
 			id: entry.id,
@@ -40,7 +71,7 @@ const panels = {
 			breaking: Boolean(entry.data.breaking),
 			pubDateIso: entry.data.pubDate.toISOString(),
 			pubDateLabel: formatNewsDate(entry.data.pubDate),
-			author: entry.data.author ?? 'Nyx AI',
+			author: entry.data.author ?? 'Asteria AI',
 		})),
 		sideEntries: allPanel.sideEntries.map((entry) => ({
 			id: entry.id,
@@ -70,7 +101,7 @@ for (const category of categories) {
 			breaking: Boolean(entry.data.breaking),
 			pubDateIso: entry.data.pubDate.toISOString(),
 			pubDateLabel: formatNewsDate(entry.data.pubDate),
-			author: entry.data.author ?? 'Nyx AI',
+			author: entry.data.author ?? 'Asteria AI',
 		})),
 		sideEntries: panel.sideEntries.map((entry) => ({
 			id: entry.id,
@@ -88,14 +119,19 @@ for (const category of categories) {
 const categorySlugMap = Object.fromEntries(categories.map((category) => [slugifyNewsCategory(category), category]));
 const newsHomePath = getNewsHomePath().replace(/\/+$/, '') || '/';
 const SIDE_SLOT_COUNT = 3;
+const newsHomeConfigJson = JSON.stringify({
+	panels,
+	categorySlugMap,
+	newsHomePath,
+	SIDE_SLOT_COUNT,
+}).replace(/</g, '\\u003c');
 ---
 
 <NewsLayout
 	title={title}
 	description={description}
-	pageTitle="Anlık Haber"
-	pageDescription="Günün gelişmelerini kısa, net ve rahat okunur bir akışta toplayan ayrı haber yüzeyi."
-	topMeta={`${allEntries.length} haber kaydı`}
+	pageTitle=""
+	pageDescription=""
 	categories={categories}
 	activeCategory="Tümü"
 >
@@ -126,7 +162,7 @@ const SIDE_SLOT_COUNT = 3;
 									<p>{entry.data.description}</p>
 									<div class="featured-meta-row">
 										<time datetime={entry.data.pubDate.toISOString()}>{formatNewsDate(entry.data.pubDate)}</time>
-										<span>{entry.data.author ?? 'Nyx AI'}</span>
+										<span>{entry.data.author ?? 'Asteria AI'}</span>
 									</div>
 								</div>
 							</a>
@@ -183,8 +219,51 @@ const SIDE_SLOT_COUNT = 3;
 	</div>
 </NewsLayout>
 
-<script define:vars={{ panels, categorySlugMap, SIDE_SLOT_COUNT }}>
-	function initFeaturedLeadCards(scope = document) {
+<script is:inline type="application/json" id="news-home-config" set:html={newsHomeConfigJson}></script>
+
+<script>
+	type ClientFeaturedPanelItem = {
+		href: string;
+		title: string;
+		description: string;
+		heroImage: string;
+		category: string;
+		categoryToken: string;
+		breaking: boolean;
+		pubDateIso: string;
+		pubDateLabel: string;
+		author: string;
+	};
+
+	type ClientSidePanelItem = {
+		href: string;
+		title: string;
+		description: string;
+		category: string;
+		categoryToken: string;
+		pubDateIso: string;
+		pubDateLabel: string;
+	};
+
+	type ClientHomePanel = {
+		featuredLeadEntries: ClientFeaturedPanelItem[];
+		sideEntries: ClientSidePanelItem[];
+	};
+
+	type NewsHomeConfig = {
+		panels: Record<string, ClientHomePanel>;
+		categorySlugMap: Record<string, string>;
+		newsHomePath: string;
+		SIDE_SLOT_COUNT: number;
+	};
+
+	const newsHomeConfigElement = document.getElementById('news-home-config');
+	const newsHomeConfig = (newsHomeConfigElement?.textContent
+		? JSON.parse(newsHomeConfigElement.textContent)
+		: { panels: {}, categorySlugMap: {}, newsHomePath: '/', SIDE_SLOT_COUNT: 3 }) as NewsHomeConfig;
+	const { panels, categorySlugMap, newsHomePath, SIDE_SLOT_COUNT } = newsHomeConfig;
+
+	function initFeaturedLeadCards(scope: ParentNode = document) {
 		scope.querySelectorAll('[data-featured-lead]').forEach((root) => {
 			if (!(root instanceof HTMLElement) || root.dataset.bound === '1') return;
 			root.dataset.bound = '1';
@@ -193,7 +272,7 @@ const SIDE_SLOT_COUNT = 3;
 			const triggers = Array.from(root.querySelectorAll('[data-featured-trigger]'));
 			if (slides.length === 0 || triggers.length === 0) return;
 
-			const setActive = (index) => {
+			const setActive = (index: number) => {
 				slides.forEach((slide, slideIndex) => {
 					if (!(slide instanceof HTMLElement)) return;
 					const active = slideIndex === index;
@@ -226,7 +305,7 @@ const SIDE_SLOT_COUNT = 3;
 			.replace(/'/g, '&#39;');
 	}
 
-	function renderLeadSlides(items) {
+	function renderLeadSlides(items: ClientFeaturedPanelItem[]) {
 		return items
 			.map((item, index) => {
 				const active = index === 0;
@@ -252,7 +331,7 @@ const SIDE_SLOT_COUNT = 3;
 			.join('');
 	}
 
-	function renderLeadNav(items) {
+	function renderLeadNav(items: ClientFeaturedPanelItem[]) {
 		if (items.length <= 1) return '';
 		return `
 			<div class="featured-lead-nav" aria-label="Öne çıkan haberler">
@@ -267,7 +346,7 @@ const SIDE_SLOT_COUNT = 3;
 		`;
 	}
 
-	function renderSideEntries(items) {
+	function renderSideEntries(items: ClientSidePanelItem[]) {
 		if (items.length === 0) return '';
 		const placeholders = Math.max(0, SIDE_SLOT_COUNT - items.length);
 		return `
@@ -297,7 +376,7 @@ const SIDE_SLOT_COUNT = 3;
 		`;
 	}
 
-	function renderPanel(name) {
+	function renderPanel(name: string) {
 		const root = document.querySelector('[data-news-home-root]');
 		if (!(root instanceof HTMLElement)) return;
 		const panel = panels[name] ?? panels['Tümü'];
@@ -324,7 +403,7 @@ const SIDE_SLOT_COUNT = 3;
 		initFeaturedLeadCards(root);
 	}
 
-	function syncNav(activeCategory) {
+	function syncNav(activeCategory: string) {
 		document.querySelectorAll('[data-news-nav] a').forEach((link) => {
 			if (!(link instanceof HTMLAnchorElement)) return;
 			const label = link.textContent?.trim() || '';
@@ -333,13 +412,13 @@ const SIDE_SLOT_COUNT = 3;
 		});
 	}
 
-	function categoryFromUrl(url) {
+	function categoryFromUrl(url: URL) {
 		const slug = url.searchParams.get('kategori');
 		if (!slug) return 'Tümü';
 		return categorySlugMap[slug] ?? 'Tümü';
 	}
 
-	function applyCategory(category, updateUrl = true) {
+	function applyCategory(category: string, updateUrl = true) {
 		renderPanel(category);
 		syncNav(category);
 		if (updateUrl) {

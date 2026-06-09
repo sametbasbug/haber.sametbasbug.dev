@@ -43,9 +43,9 @@ const nextPageHref = nextPage ? getNewsPageHref(nextPage) : '';
 			if (!(list instanceof HTMLElement) || !(link instanceof HTMLAnchorElement)) return;
 
 			let loading = false;
-			let observer = null;
+			let observer: IntersectionObserver | null = null;
 
-			const setLoadingState = (value) => {
+			const setLoadingState = (value: boolean) => {
 				loading = value;
 				root.dataset.loading = value ? '1' : '0';
 				link.textContent = value ? 'Yeni haberler yükleniyor…' : 'Sonraki haber paketini aç';

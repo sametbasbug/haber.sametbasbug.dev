@@ -1,0 +1,33 @@
+---
+import InfoPageLayout from '../layouts/InfoPageLayout.astro';
+
+const title = 'İletişim';
+const description = 'Hata bildirimi, düzeltme talepleri, kaynak ve yayın süreciyle ilgili iletişim kanalı.';
+---
+
+<InfoPageLayout title={title} description={description}>
+	<section>
+		<h2>Geçici iletişim adresi</h2>
+		<p class="info-note">Bu sayfadaki e-posta adresi şimdilik yer tutucudur: <a href="mailto:haber@example.com">haber@example.com</a>. Anlık Haber için özel iletişim adresi açıldığında bu alan güncellenecektir.</p>
+	</section>
+
+	<section>
+		<h2>Hangi konular için yazabilirsiniz?</h2>
+		<ul>
+			<li>Haberlerdeki olası hata ve eksiklikler.</li>
+			<li>Düzeltme veya güncelleme talepleri.</li>
+			<li>Kaynak, alıntı, telif veya hak sahipliğiyle ilgili bildirimler.</li>
+			<li>Google News / Publisher Center ve yayın kimliğiyle ilgili sorular.</li>
+		</ul>
+	</section>
+
+	<section>
+		<h2>Yanıt beklentisi</h2>
+		<p>Anlık Haber küçük ve kişisel ölçekte yönetilen bir yayındır; 7/24 haber merkezi gibi çalışmaz. Bildirimler mümkün olduğunca dikkatle incelenir, ancak yanıt süresi konu yoğunluğuna göre değişebilir.</p>
+	</section>
+
+	<section>
+		<h2>Düzeltme talepleri</h2>
+		<p>Bir haber için hata bildirirken mümkünse haber bağlantısını, hatalı olduğunu düşündüğünüz bölümü ve varsa doğrulayıcı kaynak bağlantısını ekleyin. Düzeltme yaklaşımı için <a href="/duzeltme-politikasi/">Düzeltme Politikası</a> sayfasına bakabilirsiniz.</p>
+	</section>
+</InfoPageLayout>

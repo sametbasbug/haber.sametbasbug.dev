@@ -1,6 +1,6 @@
 ---
 import { ClientRouter } from 'astro:transitions';
-import { getNewsHomeHref } from '../data/newsSite';
+import { getMainSiteUrl } from '../data/newsSite';
 interface Props {
 	title: string;
 	description: string;
@@ -8,6 +8,7 @@ interface Props {
 	noindex?: boolean;
 	type?: string;
 	shellLayout?: boolean;
+	hideHeader?: boolean;
 }
 
 const { 
@@ -16,7 +17,8 @@ const {
 	ogImage, 
 	noindex = false, 
 	type = 'website',
-	shellLayout = false
+	shellLayout = false,
+	hideHeader = false
 } = Astro.props;
 
 // SEO Hardening Logic
@@ -27,7 +29,10 @@ const finalOgImage = ogImage && typeof ogImage === 'string' && ogImage.trim() !=
 const canonicalURL = new URL(Astro.url.pathname, Astro.site).toString();
 const ogImageURL = new URL(finalOgImage, Astro.site).toString();
 const rssFeedURL = new URL('/rss.xml', Astro.site).toString();
-const newsHomeHref = getNewsHomeHref();
+const mainSiteURL = getMainSiteUrl();
+const publicationName = 'Anlık Haber';
+const publisherName = 'Samet Başbuğ';
+const fullTitle = title === publicationName ? publicationName : `${publicationName} | ${title}`;
 ---
 
 <html lang="tr">
@@ -40,16 +45,25 @@ const newsHomeHref = getNewsHomeHref();
 		<link rel="manifest" href="/site.webmanifest" />
 		<meta name="viewport" content="width=device-width" />
 		<meta name="generator" content={Astro.generator} />
-		<script type="application/ld+json" set:html={JSON.stringify({
+		<script is:inline type="application/ld+json" set:html={JSON.stringify({
 			"@context": "https://schema.org",
 			"@type": "WebSite",
-			name: "Samet Başbuğ",
-			alternateName: "Samet'in Blogu",
-			url: "https://sametbasbug.dev/"
+			name: publicationName,
+			url: Astro.site?.toString() ?? 'https://haber.sametbasbug.dev/',
+			publisher: {
+				"@type": "NewsMediaOrganization",
+				name: publicationName,
+				url: Astro.site?.toString() ?? 'https://haber.sametbasbug.dev/',
+				founder: {
+					"@type": "Person",
+					name: publisherName,
+					url: mainSiteURL,
+				},
+			},
 		})} />
 		
 		<!-- SEO Temel Katmanı -->
-		<title>Samet Başbuğ | {title}</title>
+		<title>{fullTitle}</title>
 		<meta name="description" content={description} />
 		<link rel="canonical" href={canonicalURL} />
 		<link rel="alternate" type="application/rss+xml" title="Anlık Haber RSS" href={rssFeedURL} />
@@ -58,16 +72,16 @@ const newsHomeHref = getNewsHomeHref();
 		<!-- Open Graph / Facebook -->
 		<meta property="og:type" content={type} />
 		<meta property="og:url" content={canonicalURL} />
-		<meta property="og:title" content={`Samet Başbuğ | ${title}`} />
+		<meta property="og:title" content={fullTitle} />
 		<meta property="og:description" content={description} />
 		<meta property="og:image" content={ogImageURL} />
 		<meta property="og:locale" content="tr_TR" />
-		<meta property="og:site_name" content="Samet Başbuğ" />
+		<meta property="og:site_name" content={publicationName} />
 
 		<!-- Twitter -->
 		<meta name="twitter:card" content="summary_large_image" />
 		<meta name="twitter:url" content={canonicalURL} />
-		<meta name="twitter:title" content={`Samet Başbuğ | ${title}`} />
+		<meta name="twitter:title" content={fullTitle} />
 		<meta name="twitter:description" content={description} />
 		<meta name="twitter:image" content={ogImageURL} />
 
@@ -103,32 +117,32 @@ const newsHomeHref = getNewsHomeHref();
 			<img id="lightbox-img" src="" alt="" />
 		</div>
 
-		<header transition:persist id="main-header">
-			<nav>
-				<div class="logo-area" id="logo-area">
-					<a href="/" class="logo"><span class="logo-text">Samet Başbuğ</span></a>
-				</div>
-				<div class="nav-right" id="nav-right">
-					<div class="links">
-						<a href="/">Ana Sayfa</a>
-						<a href={newsHomeHref}>Anlık Haber</a>
-						<a href="/bulten">Bülten</a>
-						<a href="/sozluk">Sözlük</a>
-						<a href="/yazarlar">Yazarlar</a>
-						<a href="/hakkimda">Hakkımda</a>
-						<a href="/iletisim">İletişim</a>
+		{!hideHeader && (
+			<header transition:persist id="main-header">
+				<nav>
+					<div class="logo-area" id="logo-area">
+						<a href="/" class="logo"><span class="logo-text">Samet Başbuğ</span></a>
 					</div>
-					<div class="theme-switch-wrapper" id="theme-switch-wrapper">
-						<button id="theme-toggle" class="theme-switch" aria-label="Temayı Değiştir">
-							<div class="switch-handle">
-								<span class="sun-icon">??</span>
-								<span class="moon-icon">??</span>
-							</div>
-						</button>
+					<div class="nav-right" id="nav-right">
+						<div class="links">
+							<a href="/">Ana Sayfa</a>
+							<a href="/hakkimizda/">Hakkımızda</a>
+							<a href="/yazarlar/">Yazarlar</a>
+							<a href="/iletisim/">İletişim</a>
+							<a href="/rss.xml">RSS</a>
+						</div>
+						<div class="theme-switch-wrapper" id="theme-switch-wrapper">
+							<button id="theme-toggle" class="theme-switch" aria-label="Temayı Değiştir">
+								<div class="switch-handle">
+									<span class="sun-icon">??</span>
+									<span class="moon-icon">??</span>
+								</div>
+							</button>
+						</div>
 					</div>
-				</div>
-			</nav>
-		</header>
+				</nav>
+			</header>
+		)}
 
 		<main>
 			<slot />

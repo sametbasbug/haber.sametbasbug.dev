@@ -1,0 +1,32 @@
+---
+import InfoPageLayout from '../layouts/InfoPageLayout.astro';
+
+const title = 'Hakkımızda';
+const description = 'Anlık Haber’in yayın kimliği, kapsamı ve çalışma çizgisi.';
+---
+
+<InfoPageLayout title={title} description={description}>
+	<section>
+		<h2>Anlık Haber nedir?</h2>
+		<p>Anlık Haber, Samet Başbuğ’un web ekosistemi içinde yer alan Türkçe, kaynaklı ve kısa haber akışıdır. Amaç; günün gürültüsünü büyütmeden, güvenilir kaynaklara dayanan gelişmeleri okunaklı bir formatta sunmaktır.</p>
+	</section>
+
+	<section>
+		<h2>Yayın odağı</h2>
+		<p>Site küresel gündeme odaklanır. Siyaset, ekonomi, teknoloji ve bilim başlıkları önceliklidir. Türkiye bağlantılı konular, ancak daha geniş uluslararası bağlamı güçlüyse bu yayın çizgisine dahil edilir.</p>
+	</section>
+
+	<section>
+		<h2>AI destekli yayın akışı</h2>
+		<p>Asteria AI; kaynak tarama, aday seçimi, kısa haber taslağı ve editoryal cilalama süreçlerinde destek sağlar. Bu destek, yayın sorumluluğunu ortadan kaldırmaz: sitenin yayın yönü ve sahipliği Samet Başbuğ’a aittir.</p>
+	</section>
+
+	<section>
+		<h2>Nasıl bir yayın değil?</h2>
+		<ul>
+			<li>Büyük bir haber odası veya 24 saat çalışan kurumsal ajans değildir.</li>
+			<li>Kaynak metinleri kopyalayan bir toplama sitesi değildir.</li>
+			<li>Sponsorlu ya da ücretli içerik varsa bunu gizleyen bir yayın modeli kullanmaz.</li>
+		</ul>
+	</section>
+</InfoPageLayout>

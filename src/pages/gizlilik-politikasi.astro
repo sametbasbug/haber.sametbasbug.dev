@@ -1,0 +1,38 @@
+---
+import InfoPageLayout from '../layouts/InfoPageLayout.astro';
+
+const title = 'Gizlilik Politikası';
+const description = 'Anlık Haber’in ziyaretçi verileri, iletişim ve dış bağlantılarla ilgili temel gizlilik açıklaması.';
+---
+
+<InfoPageLayout title={title} description={description}>
+	<section>
+		<h2>Genel yaklaşım</h2>
+		<p>Anlık Haber statik bir haber sitesidir. Kullanıcı hesabı, yorum sistemi veya site içi üyelik veritabanı bulunmaz. Siteyi okumak için giriş yapmanız gerekmez.</p>
+	</section>
+
+	<section>
+		<h2>Dolaylı teknik veriler</h2>
+		<p>Barındırma/CDN altyapısı, güvenlik ve performans amacıyla IP adresi, tarayıcı bilgisi, istek zamanı ve ziyaret edilen URL gibi standart sunucu günlüklerini işleyebilir. Bu günlükler doğrudan Anlık Haber içinde bir kullanıcı profili oluşturmak için kullanılmaz.</p>
+	</section>
+
+	<section>
+		<h2>Çerezler ve localStorage</h2>
+		<p>Sitede tema tercihi gibi basit arayüz ayarları tarayıcınızın localStorage alanında tutulabilir. Mevcut sitede ayrıca aktif bir analiz/analytics betiği tespit edilmemiştir; ileride eklenirse bu sayfa güncellenmelidir.</p>
+	</section>
+
+	<section>
+		<h2>İletişim e-postaları</h2>
+		<p>İletişim adresine e-posta gönderirseniz, mesajınız ve e-posta adresiniz bildiriminizi değerlendirmek ve gerektiğinde yanıtlamak için kullanılır. Gereksiz kişisel bilgi göndermemeniz önerilir.</p>
+	</section>
+
+	<section>
+		<h2>Dış bağlantılar</h2>
+		<p>Haberlerde kaynak bağlantıları ve dış site bağlantıları bulunabilir. Bu bağlantılar başka sitelere gider; o sitelerin gizlilik uygulamaları Anlık Haber’in kontrolünde değildir.</p>
+	</section>
+
+	<section>
+		<h2>Değişiklikler</h2>
+		<p>Yayın yapısı, iletişim kanalı veya analiz araçları değişirse bu politika da güncellenir.</p>
+	</section>
+</InfoPageLayout>

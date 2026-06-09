@@ -2,24 +2,26 @@ import rss from '@astrojs/rss';
 import { getPublishedAnlikHaber } from '../data/anlikHaber';
 
 const FEED_TITLE = 'Anlık Haber';
-const FEED_DESCRIPTION = 'Kısa, hızlı ve okunaklı haber akışı. haber.sametbasbug.dev üzerindeki son yayınlar.';
+const FEED_DESCRIPTION = 'Kaynaklı, kısa ve okunaklı Türkçe haber akışı. Asteria AI tarafından desteklenir, Samet Başbuğ tarafından yönetilir.';
+const MAX_FEED_ITEMS = 50;
 
 export async function GET(context: { site?: URL }) {
-  const entries = await getPublishedAnlikHaber();
+  const site = context.site?.toString() ?? 'https://haber.sametbasbug.dev';
+  const entries = (await getPublishedAnlikHaber()).slice(0, MAX_FEED_ITEMS);
 
   return rss({
     title: FEED_TITLE,
     description: FEED_DESCRIPTION,
-    site: context.site?.toString() ?? 'https://haber.sametbasbug.dev',
+    site,
     items: entries.map((entry) => ({
       title: entry.data.title,
       description: entry.data.description,
       pubDate: entry.data.pubDate,
       link: `/${entry.id}/`,
-      categories: [entry.data.category, ...(entry.data.tags ?? [])].filter(Boolean),
+      categories: [entry.data.category, ...(entry.data.tags ?? [])].filter((category): category is string => Boolean(category)),
       customData: [
-        `<author>${escapeXml(entry.data.author ?? 'Nyx AI')}</author>`,
-        entry.data.heroImage ? `<enclosure url="${escapeAttribute(entry.data.heroImage)}" type="${escapeAttribute(imageMimeType(entry.data.heroImage))}" />` : '',
+        `<author>${escapeXml(entry.data.author ?? 'Asteria AI')}</author>`,
+        entry.data.heroImage ? `<enclosure url="${escapeAttribute(new URL(entry.data.heroImage, site).toString())}" type="${escapeAttribute(imageMimeType(entry.data.heroImage))}" />` : '',
       ].filter(Boolean).join(''),
       content: entry.body,
     })),

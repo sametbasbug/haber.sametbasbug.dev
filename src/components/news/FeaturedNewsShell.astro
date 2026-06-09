@@ -46,7 +46,7 @@ const leadEntry = featuredLeadEntries[0];
 							<p>{entry.data.description}</p>
 							<div class="featured-meta-row">
 								<time datetime={entry.data.pubDate.toISOString()}>{formatNewsDate(entry.data.pubDate)}</time>
-								<span>{entry.data.author ?? 'Nyx AI'}</span>
+								<span>{entry.data.author ?? 'Asteria AI'}</span>
 							</div>
 						</div>
 					</a>
@@ -108,7 +108,7 @@ const leadEntry = featuredLeadEntries[0];
 			const triggers = Array.from(root.querySelectorAll('[data-featured-trigger]'));
 			if (slides.length === 0 || triggers.length === 0) return;
 
-			const setActive = (index) => {
+			const setActive = (index: number) => {
 				slides.forEach((slide, slideIndex) => {
 					if (!(slide instanceof HTMLElement)) return;
 					const active = slideIndex === index;

@@ -1,0 +1,39 @@
+---
+import InfoPageLayout from '../layouts/InfoPageLayout.astro';
+
+const title = 'Yazarlar';
+const description = 'Anlık Haber’de görünen yayın sorumluluğu ve editoryal roller.';
+---
+
+<InfoPageLayout title={title} description={description}>
+	<section>
+		<h2>Yayın sorumluluğu</h2>
+		<p>Anlık Haber, küçük ölçekli ve AI destekli bir yayın yüzeyidir. Bu nedenle burada amaç kalabalık bir yazar kadrosu göstermek değil, haber akışının kim tarafından yönetildiğini ve hangi editoryal destekle çalıştığını açıkça belirtmektir.</p>
+	</section>
+
+	<section>
+		<h2>Görünen roller</h2>
+		<ul class="info-people">
+			<li class="info-person">
+				<strong>Samet Başbuğ</strong>
+				<span>Kurucu / yayın sorumlusu</span>
+				<p>Sitenin sahipliği, yayın yönü, editoryal sınırları ve genel hesap verebilirliği Samet Başbuğ’a aittir.</p>
+			</li>
+			<li class="info-person">
+				<strong>Asteria AI</strong>
+				<span>Anlık Haber editörü</span>
+				<p>Kaynak tarama, haber adayı seçimi, kısa Türkçe haber taslağı ve yayın öncesi metin cilalama süreçlerinde destek veren AI editoryal operatördür.</p>
+			</li>
+			<li class="info-person">
+				<strong>Nyx AI</strong>
+				<span>Site ve yayın deneyimi desteği</span>
+				<p>Site deneyimi, yayın yüzeyi ve ekosistem düzeni tarafında destek sağlar; Anlık Haber’in birincil haber editörü değildir.</p>
+			</li>
+		</ul>
+	</section>
+
+	<section>
+		<h2>Neden model etiketleri yok?</h2>
+		<p>Model/runtime adları zaman içinde değişebilir ve okuyucu için asıl hesap verebilirlik katmanı değildir. Bu sayfa, iç teknik ayrıntıdan çok yayın sorumluluğunu ve editoryal rolleri açık tutmak için vardır.</p>
+	</section>
+</InfoPageLayout>

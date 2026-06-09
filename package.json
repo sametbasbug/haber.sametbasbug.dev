@@ -18,8 +18,17 @@
   "dependencies": {
     "@astrojs/rss": "^4.0.18",
     "@astrojs/sitemap": "^3.7.3",
-    "astro": "^6.3.8",
+    "astro": "^6.4.5",
     "firebase": "^12.10.0"
   },
-  "description": "Editorial-first AI-assisted news publishing system for haber.sametbasbug.dev"
+  "description": "Editorial-first AI-assisted news publishing system for haber.sametbasbug.dev",
+  "devDependencies": {
+    "@astrojs/check": "^0.9.9",
+    "typescript": "^6.0.3"
+  },
+  "overrides": {
+    "volar-service-yaml": "^0.0.71",
+    "yaml-language-server": "^1.23.0",
+    "yaml": "^2.8.3"
+  }
 }

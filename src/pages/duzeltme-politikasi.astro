@@ -1,0 +1,36 @@
+---
+import InfoPageLayout from '../layouts/InfoPageLayout.astro';
+
+const title = 'Düzeltme Politikası';
+const description = 'Anlık Haber’de hata bildirimi, düzeltme ve güncelleme yaklaşımı.';
+---
+
+<InfoPageLayout title={title} description={description}>
+	<section>
+		<h2>Hata bildirimi</h2>
+		<p>Bir haberde maddi hata, eksik bağlam, yanlış kaynak bağlantısı veya yanıltıcı ifade fark ederseniz <a href="/iletisim/">İletişim</a> sayfasındaki kanaldan bildirebilirsiniz. Bildirimlerde haber bağlantısı ve mümkünse doğrulayıcı kaynak eklemek incelemeyi hızlandırır.</p>
+	</section>
+
+	<section>
+		<h2>Düzeltme ve güncelleme ayrımı</h2>
+		<ul>
+			<li><strong>Düzeltme:</strong> Haberdeki maddi hata, yanlış ifade, yanlış tarih, yanlış kişi/kurum adı veya hatalı kaynak bağlantısı gibi sorunların giderilmesidir.</li>
+			<li><strong>Güncelleme:</strong> Haberin yayımlanmasından sonra ortaya çıkan yeni bilgi veya gelişmenin metne eklenmesidir.</li>
+		</ul>
+	</section>
+
+	<section>
+		<h2>Nasıl işlenir?</h2>
+		<p>Maddi düzeltmelerde haber metni güncellenir ve uygun olduğunda güncellenme tarihi görünür hale getirilir. Küçük yazım ve noktalama düzeltmeleri ayrı bir kayıt notu gerektirmeyebilir.</p>
+	</section>
+
+	<section>
+		<h2>Kaynak düzeltmeleri</h2>
+		<p>Bir kaynak haberini düzeltir, geri çeker veya yeni bir açıklama yayımlarsa, Anlık Haber bunu tespit ettiğinde ilgili haber metnini güncellemeye çalışır. Küçük ölçekli yayın yapısı nedeniyle tüm kaynak değişiklikleri anlık izlenemeyebilir.</p>
+	</section>
+
+	<section>
+		<h2>Yanıt süresi</h2>
+		<p>Anlık Haber kişisel ölçekte yürütülen bir yayındır; hata bildirimleri ciddiye alınır ama her bildirim anında yanıtlanamayabilir.</p>
+	</section>
+</InfoPageLayout>
