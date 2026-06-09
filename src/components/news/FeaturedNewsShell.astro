@@ -5,6 +5,8 @@ import { getNewsArticleHref } from '../../data/newsSite';
 interface Props {
 	entries: AnlikHaberEntry[];
 	sideEntries?: AnlikHaberEntry[];
+	sideEyebrow?: string;
+	sideTitle?: string;
 	emptyTitle?: string;
 	emptyDescription?: string;
 }
@@ -12,6 +14,8 @@ interface Props {
 const {
 	entries,
 	sideEntries = [],
+	sideEyebrow = 'Öne çıkanlar',
+	sideTitle = 'Akıştan seçilenler',
 	emptyTitle = 'Henüz yayınlanmış anlık haber yok.',
 	emptyDescription = 'İskelet hazır. İlk haber girildiğinde bu akış canlı çalışmaya başlayacak.',
 } = Astro.props;
@@ -71,10 +75,10 @@ const leadEntry = featuredLeadEntries[0];
 		</div>
 
 		{sideEntries.length > 0 && (
-			<section class="featured-side-stack" aria-label="Editörün seçtikleri">
+			<section class="featured-side-stack" aria-label={sideTitle}>
 				<div class="featured-side-header">
-					<p>Öne çıkanlar</p>
-					<h2>Editörün seçtikleri</h2>
+					<p>{sideEyebrow}</p>
+					<h2>{sideTitle}</h2>
 				</div>
 				<div class="featured-side-list" role="list">
 					{sideEntries.map((entry) => (

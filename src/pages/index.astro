@@ -44,22 +44,125 @@ interface SidePanelItem {
 interface HomePanel {
 	featuredLeadEntries: FeaturedPanelItem[];
 	sideEntries: SidePanelItem[];
+	sideEyebrow: string;
+	sideTitle: string;
 }
 
-function buildPanel(entries: AnlikHaberEntry[]) {
+const FEATURED_LEAD_COUNT = 10;
+const SIDE_SLOT_COUNT = 3;
+const RECENT_SIGNAL_HOURS = 48;
+const STALE_SIGNAL_HOURS = 24 * 7;
+const GLOBAL_SIGNAL_TERMS = [
+	'ab',
+	'abd',
+	'avrupa',
+	'avrupa birliği',
+	'birleşmiş milletler',
+	'çin',
+	'rusya',
+	'ukrayna',
+	'israil',
+	'iran',
+	'nato',
+	'fed',
+	'ecb',
+	'avrupa merkez bankası',
+	'openai',
+	'google',
+	'microsoft',
+	'apple',
+	'nvidia',
+	'nasa',
+	'who',
+	'dünya sağlık örgütü',
+];
+
+function hoursSince(date: Date) {
+	return Math.max(0, (Date.now() - date.valueOf()) / 36e5);
+}
+
+function escapeRegExp(value: string) {
+	return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function hasGlobalSignal(entry: AnlikHaberEntry) {
+	const haystack = [entry.data.title, entry.data.description, ...(entry.data.tags ?? [])]
+		.join(' ')
+		.toLocaleLowerCase('tr-TR');
+	return GLOBAL_SIGNAL_TERMS.some((term) => new RegExp(`(^|[^\\p{L}\\p{N}])${escapeRegExp(term)}([^\\p{L}\\p{N}]|$)`, 'u').test(haystack));
+}
+
+function scoreSignalEntry(entry: AnlikHaberEntry) {
+	const ageHours = hoursSince(entry.data.pubDate);
+	const sourceCount = entry.data.sources?.length ?? 0;
+	let score = 0;
+
+	if (entry.data.editorPick) score += ageHours <= STALE_SIGNAL_HOURS ? 40 : 4;
+	if (entry.data.breaking) score += 28;
+	if (sourceCount > 1) score += Math.min(18, 8 + sourceCount * 4);
+	else if (sourceCount === 1) score += 4;
+	if (hasGlobalSignal(entry)) score += 14;
+
+	if (ageHours <= 6) score += 26;
+	else if (ageHours <= 24) score += 18;
+	else if (ageHours <= RECENT_SIGNAL_HOURS) score += 12;
+	else if (ageHours <= STALE_SIGNAL_HOURS) score += 5;
+	else score -= Math.min(45, Math.floor((ageHours - STALE_SIGNAL_HOURS) / 24) * 2);
+
+	return score;
+}
+
+function selectSideEntries(entries: AnlikHaberEntry[], options: { diversifyCategories: boolean }) {
+	const rankedEntries = [...entries].sort((a, b) => {
+		const scoreDelta = scoreSignalEntry(b) - scoreSignalEntry(a);
+		if (scoreDelta !== 0) return scoreDelta;
+		return b.data.pubDate.valueOf() - a.data.pubDate.valueOf();
+	});
+
+	if (!options.diversifyCategories) return rankedEntries.slice(0, SIDE_SLOT_COUNT);
+
+	const selected: AnlikHaberEntry[] = [];
+	const selectedCategories = new Set<string>();
+
+	for (const entry of rankedEntries) {
+		const category = entry.data.category ?? 'default';
+		if (selectedCategories.has(category)) continue;
+		selected.push(entry);
+		selectedCategories.add(category);
+		if (selected.length === SIDE_SLOT_COUNT) return selected;
+	}
+
+	for (const entry of rankedEntries) {
+		if (selected.some((selectedEntry) => selectedEntry.id === entry.id)) continue;
+		selected.push(entry);
+		if (selected.length === SIDE_SLOT_COUNT) return selected;
+	}
+
+	return selected;
+}
+
+function buildPanel(entries: AnlikHaberEntry[], options: { category?: string; diversifyCategories?: boolean } = {}) {
 	const firstPageEntries = entries.slice(0, ANLIK_HABER_PAGE_SIZE);
-	const featuredLeadEntries = firstPageEntries.slice(0, Math.min(10, firstPageEntries.length));
+	const featuredLeadEntries = firstPageEntries.slice(0, Math.min(FEATURED_LEAD_COUNT, firstPageEntries.length));
 	const leadEntry = featuredLeadEntries[0];
 	const nonFeaturedEntries = entries.filter((entry) => !featuredLeadEntries.some((featured) => featured.id === entry.id));
-	const editorPickEntries = nonFeaturedEntries.filter((entry) => entry.data.editorPick);
-	const sideEntries = (editorPickEntries.length > 0 ? editorPickEntries : nonFeaturedEntries).slice(0, 3);
-	return { firstPageEntries, featuredLeadEntries, leadEntry, sideEntries };
+	const sideEntries = selectSideEntries(nonFeaturedEntries, { diversifyCategories: Boolean(options.diversifyCategories) });
+	return {
+		firstPageEntries,
+		featuredLeadEntries,
+		leadEntry,
+		sideEntries,
+		sideEyebrow: 'Öne çıkanlar',
+		sideTitle: options.category && options.category !== 'Tümü' ? `${options.category} akışından` : 'Akıştan seçilenler',
+	};
 }
 
-const allPanel = buildPanel(allEntries);
+const allPanel = buildPanel(allEntries, { category: 'Tümü', diversifyCategories: true });
 
 const panels: Record<string, HomePanel> = {
 	'Tümü': {
+		sideEyebrow: allPanel.sideEyebrow,
+		sideTitle: allPanel.sideTitle,
 		featuredLeadEntries: allPanel.featuredLeadEntries.map((entry) => ({
 			id: entry.id,
 			href: getNewsArticleHref(entry.id),
@@ -88,8 +191,10 @@ const panels: Record<string, HomePanel> = {
 
 for (const category of categories) {
 	const categoryEntries = allEntries.filter((entry) => entry.data.category === category);
-	const panel = buildPanel(categoryEntries);
+	const panel = buildPanel(categoryEntries, { category, diversifyCategories: false });
 	panels[category] = {
+		sideEyebrow: panel.sideEyebrow,
+		sideTitle: panel.sideTitle,
 		featuredLeadEntries: panel.featuredLeadEntries.map((entry) => ({
 			id: entry.id,
 			href: getNewsArticleHref(entry.id),
@@ -118,7 +223,6 @@ for (const category of categories) {
 
 const categorySlugMap = Object.fromEntries(categories.map((category) => [slugifyNewsCategory(category), category]));
 const newsHomePath = getNewsHomePath().replace(/\/+$/, '') || '/';
-const SIDE_SLOT_COUNT = 3;
 const newsHomeConfigJson = JSON.stringify({
 	panels,
 	categorySlugMap,
@@ -187,10 +291,10 @@ const newsHomeConfigJson = JSON.stringify({
 				</div>
 
 				{allPanel.sideEntries.length > 0 && (
-					<section class="featured-side-stack" aria-label="Editörün seçtikleri">
+					<section class="featured-side-stack" aria-label={allPanel.sideTitle}>
 						<div class="featured-side-header">
-							<p>Öne çıkanlar</p>
-							<h2>Editörün seçtikleri</h2>
+							<p>{allPanel.sideEyebrow}</p>
+							<h2>{allPanel.sideTitle}</h2>
 						</div>
 						<div class="featured-side-list" role="list">
 							{allPanel.sideEntries.map((entry) => (
@@ -248,6 +352,8 @@ const newsHomeConfigJson = JSON.stringify({
 	type ClientHomePanel = {
 		featuredLeadEntries: ClientFeaturedPanelItem[];
 		sideEntries: ClientSidePanelItem[];
+		sideEyebrow: string;
+		sideTitle: string;
 	};
 
 	type NewsHomeConfig = {
@@ -346,14 +452,15 @@ const newsHomeConfigJson = JSON.stringify({
 		`;
 	}
 
-	function renderSideEntries(items: ClientSidePanelItem[]) {
+	function renderSideEntries(panel: ClientHomePanel) {
+		const { sideEntries: items } = panel;
 		if (items.length === 0) return '';
 		const placeholders = Math.max(0, SIDE_SLOT_COUNT - items.length);
 		return `
-			<section class="featured-side-stack" aria-label="Editörün seçtikleri">
+			<section class="featured-side-stack" aria-label="${escapeHtml(panel.sideTitle)}">
 				<div class="featured-side-header">
-					<p>Öne çıkanlar</p>
-					<h2>Editörün seçtikleri</h2>
+					<p>${escapeHtml(panel.sideEyebrow)}</p>
+					<h2>${escapeHtml(panel.sideTitle)}</h2>
 				</div>
 				<div class="featured-side-list" role="list">
 					${items
@@ -396,7 +503,7 @@ const newsHomeConfigJson = JSON.stringify({
 					${renderLeadSlides(panel.featuredLeadEntries)}
 					${renderLeadNav(panel.featuredLeadEntries)}
 				</div>
-				${renderSideEntries(panel.sideEntries)}
+				${renderSideEntries(panel)}
 			</section>
 		`;
 
