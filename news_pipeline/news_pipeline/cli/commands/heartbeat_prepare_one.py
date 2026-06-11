@@ -140,7 +140,7 @@ def _company_hits(text: str) -> set[str]:
 
 
 def _live_markdown_files(root: Path) -> list[Path]:
-    return list((root / "src/content/anlikHaber").glob("*.md"))
+    return list((root / "src/content/equinoxHaber").glob("*.md"))
 
 
 def _recent_live_posts(root: Path, limit: int = HOT_CATEGORY_RECENT_WINDOW) -> list[dict[str, str]]:

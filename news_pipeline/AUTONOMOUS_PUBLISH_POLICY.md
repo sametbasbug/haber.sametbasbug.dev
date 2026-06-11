@@ -1,6 +1,6 @@
 # Autonomous Publish Policy
 
-This document defines the current autonomy boundary for the Anlık Haber pipeline.
+This document defines the current autonomy boundary for the Equinox Haber pipeline.
 
 The historical direct-autopublish path is **disabled**. The production model is now the Asteria/heartbeat/manual-review model: Python prepares and verifies the technical rail; Asteria provides the editorial handoff; sensitive or weak items stay out of production.
 

@@ -1,6 +1,6 @@
 ---
 import NewsLayout from './NewsLayout.astro';
-import { getAnlikHaberCategories } from '../data/anlikHaber';
+import { getEquinoxHaberCategories } from '../data/equinoxHaber';
 
 interface Props {
 	title: string;
@@ -16,7 +16,7 @@ const {
 	updatedLabel = 'Son güncelleme: 9 Haziran 2026',
 } = Astro.props;
 
-const categories = getAnlikHaberCategories();
+const categories = getEquinoxHaberCategories();
 const normalizedUpdatedLabel = updatedLabel.replace(/^Son güncelleme:\s*/i, '');
 ---
 

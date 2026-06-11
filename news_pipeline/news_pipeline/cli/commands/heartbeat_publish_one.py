@@ -246,10 +246,10 @@ def _git_commit_and_push(message: str, *, push: bool) -> list[dict[str, Any]]:
     if not _git_has_changes():
         steps.append({"name": "git", "ok": True, "stdout": "no changes"})
         return steps
-    steps.append(_run_shell("git-add", ["git", "add", "news_pipeline", "src/content/anlikHaber", "public/images/generated/anlik-haber"], timeout=60))
+    steps.append(_run_shell("git-add", ["git", "add", "news_pipeline", "src/content/equinoxHaber", "public/images/generated/equinox-haber"], timeout=60))
     if not steps[-1]["ok"]:
         return steps
-    lock_path = Path("src/content/anlikHaber/.hero-image.lock")
+    lock_path = Path("src/content/equinoxHaber/.hero-image.lock")
     if lock_path.exists():
         lock_path.unlink(missing_ok=True)
     subprocess.run(["git", "rm", "--cached", "--ignore-unmatch", str(lock_path)], text=True, capture_output=True, check=False)
@@ -382,7 +382,7 @@ def publish_one_command(
 
     audit_steps = (
         ("audit-images", lambda: audit_images_command()),
-        ("audit-content", lambda: audit_content_command(content_dir=root / "src/content/anlikHaber")),
+        ("audit-content", lambda: audit_content_command(content_dir=root / "src/content/equinoxHaber")),
     )
     for name, func in audit_steps:
         step = _run_step(name, func)

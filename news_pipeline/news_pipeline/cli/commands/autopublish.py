@@ -12,7 +12,7 @@ def autopublish_command() -> None:
     """
     typer.echo(
         "DEPRECATED: `news-pipeline autopublish` is disabled.\n"
-        "Do not use this command for Anlık Haber. It bypasses Asteria's editorial handoff.\n"
+        "Do not use this command for Equinox Haber. It bypasses Asteria's editorial handoff.\n"
         "Use instead:\n"
         "  news-pipeline heartbeat prepare-one --json\n"
         "  news-pipeline queue polish <QUEUE_ID> ... --json\n"

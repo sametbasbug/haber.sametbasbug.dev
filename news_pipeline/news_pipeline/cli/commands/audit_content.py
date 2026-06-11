@@ -5,7 +5,7 @@ from pathlib import Path
 
 import typer
 
-ARTICLE_DIR = Path("src/content/anlikHaber")
+ARTICLE_DIR = Path("src/content/equinoxHaber")
 INTERNAL_NOTE_RE = re.compile(
     r"(?im)^(##\s*Editoryal not\b|\s*-\s*(?:manual-review|source-profile|autopublish-withdrawn|manual-publish):)"
 )
@@ -43,7 +43,7 @@ def _looks_like_untranslated_title(title: str) -> bool:
 def audit_content_command(
     content_dir: Path = typer.Option(ARTICLE_DIR, "--content-dir", help="Article directory to audit."),
 ) -> None:
-    """Audit published Anlık Haber markdown for reader-facing editorial leaks."""
+    """Audit published Equinox Haber markdown for reader-facing editorial leaks."""
     failures: list[str] = []
     for path in sorted(content_dir.glob("*.md")):
         text = path.read_text(encoding="utf-8", errors="ignore")

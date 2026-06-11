@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for taking a look at Anlık Haber.
+Thanks for taking a look at Equinox Haber.
 
 This repository is a working publishing system, so contribution discipline matters more than speed. The safest contributions are small, reviewable, and focused on the reusable code/workflow layer.
 

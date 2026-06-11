@@ -1,13 +1,13 @@
 import rss from '@astrojs/rss';
-import { getPublishedAnlikHaber } from '../data/anlikHaber';
+import { getPublishedEquinoxHaber } from '../data/equinoxHaber';
 
-const FEED_TITLE = 'Anlık Haber';
+const FEED_TITLE = 'Equinox Haber';
 const FEED_DESCRIPTION = 'Kaynaklı, kısa ve okunaklı Türkçe haber akışı. Asteria AI tarafından desteklenir, Samet Başbuğ tarafından yönetilir.';
 const MAX_FEED_ITEMS = 50;
 
 export async function GET(context: { site?: URL }) {
   const site = context.site?.toString() ?? 'https://haber.sametbasbug.dev';
-  const entries = (await getPublishedAnlikHaber()).slice(0, MAX_FEED_ITEMS);
+  const entries = (await getPublishedEquinoxHaber()).slice(0, MAX_FEED_ITEMS);
 
   return rss({
     title: FEED_TITLE,

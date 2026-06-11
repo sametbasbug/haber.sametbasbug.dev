@@ -1,10 +1,10 @@
 ---
-import { formatNewsDate, getNewsCategoryToken, type AnlikHaberEntry } from '../../data/anlikHaber';
+import { formatNewsDate, getNewsCategoryToken, type EquinoxHaberEntry } from '../../data/equinoxHaber';
 import { getNewsArticleHref } from '../../data/newsSite';
 
 interface Props {
-	entries: AnlikHaberEntry[];
-	sideEntries?: AnlikHaberEntry[];
+	entries: EquinoxHaberEntry[];
+	sideEntries?: EquinoxHaberEntry[];
 	sideEyebrow?: string;
 	sideTitle?: string;
 	emptyTitle?: string;
@@ -16,7 +16,7 @@ const {
 	sideEntries = [],
 	sideEyebrow = 'Öne çıkanlar',
 	sideTitle = 'Akıştan seçilenler',
-	emptyTitle = 'Henüz yayınlanmış anlık haber yok.',
+	emptyTitle = 'Henüz yayınlanmış haber yok.',
 	emptyDescription = 'İskelet hazır. İlk haber girildiğinde bu akış canlı çalışmaya başlayacak.',
 } = Astro.props;
 

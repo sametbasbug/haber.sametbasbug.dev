@@ -46,7 +46,7 @@ def demo_walkthrough_command() -> None:
     typer.echo(
         "\n".join(
             [
-                "Provider-free Anlık Haber demo walkthrough:",
+                "Provider-free Equinox Haber demo walkthrough:",
                 "",
                 "  news-pipeline demo seed --force",
                 "  news-pipeline queue summary",

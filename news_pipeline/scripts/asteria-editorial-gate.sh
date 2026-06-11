@@ -15,7 +15,7 @@ from pathlib import Path
 import re
 from collections import Counter
 
-root = Path('/Volumes/KIOXIA/haber-project/src/content/anlikHaber')
+root = Path('/Volumes/KIOXIA/haber-project/src/content/equinoxHaber')
 source_re = re.compile(r'^\s*- name: "?(.*?)"?\s*$')
 title_re = re.compile(r'^title: "?(.*?)"?\s*$')
 category_re = re.compile(r'^category: "?(.*?)"?\s*$')
@@ -106,7 +106,7 @@ PY
 )
 
 PROMPT_TEMPLATE=$(cat <<'EOF'
-`news_pipeline` için /Volumes/KIOXIA/haber-project içinde çalış; canlı yayın yüzeyi de /Volumes/KIOXIA/haber-project/src/content/anlikHaber klasörüdür ve kanonik adres https://haber.sametbasbug.dev alanıdır.
+`news_pipeline` için /Volumes/KIOXIA/haber-project içinde çalış; canlı yayın yüzeyi de /Volumes/KIOXIA/haber-project/src/content/equinoxHaber klasörüdür ve kanonik adres https://haber.sametbasbug.dev alanıdır.
 
 Son 8 canlı yayının kaynak/kategori/şirket dağılımı:
 __RECENT_SOURCE_CONTEXT__
@@ -121,9 +121,9 @@ Görevin:
 Kurallar:
 - direct autopublish kapalı, editoryal kapı sensin
 - geçici güvenlik modu: bir koşuda en fazla 2 kayıt publish et
-- yalnızca Anlık Haber alanında çalış
+- yalnızca Equinox Haber alanında çalış
 - pipeline işlemleri ve canlı publish yüzeyi `/Volumes/KIOXIA/haber-project` içinde olmalı
-- publish sonrası yalnız ilgili `src/content/anlikHaber` ve gerekliyse buna yakın dar değişikliklerle sınırlı dar kapsamlı git add, commit ve push varsayılan adımdır
+- publish sonrası yalnız ilgili `src/content/equinoxHaber` ve gerekliyse buna yakın dar değişikliklerle sınırlı dar kapsamlı git add, commit ve push varsayılan adımdır
 - commit/push öncesi `news_pipeline/.venv/bin/news-pipeline audit-content`, `news_pipeline/.venv/bin/news-pipeline audit-images` ve `npm run build` çalıştır; İngilizce kalmış başlık/description, iç editoryal not sızıntısı, görsel politika hatası veya build hatası varsa düzeltmeden push yapma
 - alakasız dosya, geniş repo diff'i, teknik blokaj veya riskli içerik görürsen push yapma; bunlar yoksa publish'i commit/push olmadan bırakma
 - mümkünse kısa ve net çalış, gereksiz repo değişikliği yapma

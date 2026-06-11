@@ -1,16 +1,16 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import AdminNewsPanelStream from '../../components/news/AdminNewsPanelStream.astro';
-import { getPublishedAnlikHaber } from '../../data/anlikHaber';
+import { getPublishedEquinoxHaber } from '../../data/equinoxHaber';
 import { getNewsPanelHref } from '../../data/newsSite';
 
 const PAGE_SIZE = 10;
-const entries = await getPublishedAnlikHaber();
+const entries = await getPublishedEquinoxHaber();
 const initialEntries = entries.slice(0, PAGE_SIZE);
 const totalPages = Math.max(1, Math.ceil(entries.length / PAGE_SIZE));
 const nextPageHref = totalPages > 1 ? getNewsPanelHref(2) : '';
-const title = 'Anlık Haber İçerik Paneli';
-const description = 'Anlık Haber içeriklerini hızlıca gözden geçirmek için gizli iç panel.';
+const title = 'Equinox Haber İçerik Paneli';
+const description = 'Equinox Haber içeriklerini hızlıca gözden geçirmek için gizli iç panel.';
 ---
 
 <BaseLayout shellLayout={true} title={title} description={description} noindex={true}>
@@ -18,7 +18,7 @@ const description = 'Anlık Haber içeriklerini hızlıca gözden geçirmek içi
     <div class="panel-head">
       <div>
         <p class="panel-kicker">Gizli iç panel</p>
-        <h1>Anlık Haber İçerik Paneli</h1>
+        <h1>Equinox Haber İçerik Paneli</h1>
         <p class="panel-summary">Tüm haberleri başlık, açıklama, görsel ve tarih ile tek yerde görmen için sade iç ekran.</p>
       </div>
       <div class="panel-meta">

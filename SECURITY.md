@@ -35,6 +35,6 @@ Do not commit:
 - cookies/session files;
 - `.env` files;
 - local queue/runtime data under `news_pipeline/data/`;
-- generated drafts under `src/content/anlikHaber/_drafts/`.
+- generated drafts under `src/content/equinoxHaber/_drafts/`.
 
 The repository intentionally keeps runtime data ignored except placeholder/docs files.

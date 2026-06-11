@@ -11,26 +11,26 @@ interface Props {
 	hideHeader?: boolean;
 }
 
-const { 
-	title, 
-	description, 
-	ogImage, 
-	noindex = false, 
+const {
+	title,
+	description,
+	ogImage,
+	noindex = false,
 	type = 'website',
 	shellLayout = false,
 	hideHeader = false
 } = Astro.props;
 
 // SEO Hardening Logic
-const finalOgImage = ogImage && typeof ogImage === 'string' && ogImage.trim() !== '' 
-	? ogImage 
+const finalOgImage = ogImage && typeof ogImage === 'string' && ogImage.trim() !== ''
+	? ogImage
 	: '/og-default.jpg';
 
 const canonicalURL = new URL(Astro.url.pathname, Astro.site).toString();
 const ogImageURL = new URL(finalOgImage, Astro.site).toString();
 const rssFeedURL = new URL('/rss.xml', Astro.site).toString();
 const mainSiteURL = getMainSiteUrl();
-const publicationName = 'Anlık Haber';
+const publicationName = 'Equinox Haber';
 const publisherName = 'Samet Başbuğ';
 const fullTitle = title === publicationName ? publicationName : `${publicationName} | ${title}`;
 ---
@@ -61,12 +61,12 @@ const fullTitle = title === publicationName ? publicationName : `${publicationNa
 				},
 			},
 		})} />
-		
+
 		<!-- SEO Temel Katmanı -->
 		<title>{fullTitle}</title>
 		<meta name="description" content={description} />
 		<link rel="canonical" href={canonicalURL} />
-		<link rel="alternate" type="application/rss+xml" title="Anlık Haber RSS" href={rssFeedURL} />
+		<link rel="alternate" type="application/rss+xml" title="Equinox Haber RSS" href={rssFeedURL} />
 		<meta name="robots" content={noindex ? 'noindex, nofollow' : 'index, follow, max-image-preview:large'} />
 
 		<!-- Open Graph / Facebook -->
@@ -106,12 +106,12 @@ const fullTitle = title === publicationName ? publicationName : `${publicationNa
 	</head>
 	<body class={shellLayout ? 'app-shell-layout' : undefined}>
 		<div id="progress-bar"></div>
-		
+
 		<!-- Back to Top Button -->
 		<button id="back-to-top" class="back-to-top" aria-label="Başa Dön">
 			<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15l-6-6-6 6"/></svg>
 		</button>
-		
+
 		<!-- Lightbox Overlay -->
 		<div id="lightbox" class="lightbox">
 			<img id="lightbox-img" src="" alt="" />
@@ -199,7 +199,7 @@ const fullTitle = title === publicationName ? publicationName : `${publicationNa
 			function handleScroll() {
 				const header = document.getElementById('main-header');
 				const backToTop = document.getElementById('back-to-top');
-				
+
 				if (header) {
 					if (window.scrollY > 20) {
 						header.classList.add('scrolled');
@@ -449,11 +449,11 @@ const fullTitle = title === publicationName ? publicationName : `${publicationNa
 
 			header.scrolled { background: rgba(var(--card-bg-rgb), 0.8); max-width: 850px; margin-top: 0.5rem; }
 			nav { display: flex; justify-content: space-between; align-items: center; width: 100%; gap: 1rem; }
-			
+
 			.logo-area { display: inline-flex; align-items: center; gap: 0.7rem; flex-shrink: 0; }
 			.nav-right { display: flex; align-items: center; gap: 1.5rem; min-width: 0; }
 			.links { display: flex; align-items: center; gap: 0.5rem; }
-			
+
 			.links a, .dropbtn {
 				text-decoration: none; color: var(--secondary); font-weight: 500; font-size: 0.95rem;
 				transition: all 0.2s; padding: 0.5rem 0.75rem; border-radius: 0.5rem;
@@ -533,7 +533,7 @@ const fullTitle = title === publicationName ? publicationName : `${publicationNa
 			.switch-handle .sun-icon { display: block; } .switch-handle .moon-icon { display: none; }
 			[data-theme="dark"] .switch-handle { left: calc(100% - 1.6rem); background: #1e293b; }
 			[data-theme="dark"] .switch-handle .sun-icon { display: none; } [data-theme="dark"] .switch-handle .moon-icon { display: block; }
-			
+
 			@media (prefers-color-scheme: dark) {
 				:root:not([data-theme="light"]) .switch-handle { left: calc(100% - 1.6rem); background: #1e293b; }
 				:root:not([data-theme="light"]) .switch-handle .sun-icon { display: none; }

@@ -17,12 +17,12 @@ APPROVED_IMAGE_HOSTS = {
     "images.unsplash.com",
     "images.pexels.com",
 }
-APPROVED_LOCAL_IMAGE_PREFIXES = ("/images/generated/anlik-haber/",)
+APPROVED_LOCAL_IMAGE_PREFIXES = ("/images/generated/equinox-haber/",)
 LOCAL_GENERATED_HERO_MAX_BYTES = 400 * 1024
 LOCAL_GENERATED_HERO_WIDTH = 1200
 LOCAL_GENERATED_HERO_HEIGHT = 675
 
-# News/source CDNs are intentionally blocked for Anlık Haber hero images.
+# News/source CDNs are intentionally blocked for Equinox Haber hero images.
 # A live image URL is not enough: using the original publisher's RSS/OG/article
 # image creates licensing and editorial reuse risk.
 BLOCKED_SOURCE_IMAGE_HOSTS = {
@@ -203,7 +203,7 @@ def _is_live_image_url(client: httpx.Client, url: str) -> tuple[bool, str]:
 
 
 def audit_images_command(
-    content_dir: str = "src/content/anlikHaber",
+    content_dir: str = "src/content/equinoxHaber",
     timeout: float = 12.0,
     recent_duplicate_limit: int = 10,
 ) -> None:

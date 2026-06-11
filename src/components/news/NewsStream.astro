@@ -1,9 +1,9 @@
 ---
 import NewsCard from './NewsCard.astro';
-import { getNewsPageHref, type AnlikHaberEntry } from '../../data/anlikHaber';
+import { getNewsPageHref, type EquinoxHaberEntry } from '../../data/equinoxHaber';
 
 interface Props {
-	entries: AnlikHaberEntry[];
+	entries: EquinoxHaberEntry[];
 	currentPage: number;
 	totalPages: number;
 }
@@ -89,7 +89,7 @@ const nextPageHref = nextPage ? getNewsPageHref(nextPage) : '';
 						stop();
 					}
 				} catch (error) {
-					console.error('Anlık haber paketi yüklenemedi:', error);
+					console.error('Haber paketi yüklenemedi:', error);
 					link.textContent = 'Yükleme başarısız, dokunup yeniden dene';
 				} finally {
 					setLoadingState(false);

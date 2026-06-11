@@ -9,4 +9,4 @@ editorial:
   max_summary_length: 240
 
 publish:
-  content_dir: src/content/anlikHaber
+  content_dir: src/content/equinoxHaber

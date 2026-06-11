@@ -28,7 +28,7 @@ def queue_approve_command(queue_id: str, max_source_age_hours: int = MAX_SOURCE_
         source_age = datetime.now(UTC) - (normalized.published_at or normalized.created_at).astimezone(UTC)
         if source_age > timedelta(hours=max_source_age_hours):
             raise typer.BadParameter(
-                f"source item is too old for Anlık Haber: {source_age.total_seconds() / 3600:.1f}h > {max_source_age_hours}h"
+                f"source item is too old for Equinox Haber: {source_age.total_seconds() / 3600:.1f}h > {max_source_age_hours}h"
             )
 
     if existing.status == "approved":

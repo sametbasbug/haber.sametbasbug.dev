@@ -1,6 +1,6 @@
 # Roadmap
 
-Anlık Haber is already a working publishing system. The roadmap below focuses on making the open-source parts easier to inspect, test, and reuse without weakening editorial safety.
+Equinox Haber is already a working publishing system. The roadmap below focuses on making the open-source parts easier to inspect, test, and reuse without weakening editorial safety.
 
 ## Completed recently
 

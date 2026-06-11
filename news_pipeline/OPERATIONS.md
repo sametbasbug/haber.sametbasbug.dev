@@ -1,6 +1,6 @@
 # News Pipeline Operations
 
-This is the canonical production operations guide for Anlık Haber.
+This is the canonical production operations guide for Equinox Haber.
 
 The current production model is **Asteria/heartbeat/manual-review**. Direct autopublish is disabled; production publishing goes through the heartbeat board, Asteria editorial polish, and the guarded `heartbeat publish-one` rail.
 

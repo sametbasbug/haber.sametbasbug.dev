@@ -1,6 +1,6 @@
 # Heartbeat Runbook
 
-Concise runbook for the current Anlık Haber heartbeat.
+Concise runbook for the current Equinox Haber heartbeat.
 
 For full operations details, use `news_pipeline/OPERATIONS.md`. This file intentionally mirrors the same canonical flow.
 

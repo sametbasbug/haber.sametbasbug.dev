@@ -3,20 +3,20 @@ import { render } from 'astro:content';
 import NewsLayout from '../layouts/NewsLayout.astro';
 import NewsCard from '../components/news/NewsCard.astro';
 import { findAuthorByName } from '../data/authors';
-import { formatNewsDate, getAnlikHaberCategories, getNewsCategoryToken, getPublishedAnlikHaber, normalizeNewsCategory } from '../data/anlikHaber';
+import { formatNewsDate, getEquinoxHaberCategories, getNewsCategoryToken, getPublishedEquinoxHaber, normalizeNewsCategory } from '../data/equinoxHaber';
 import { getNewsArticleHref, getNewsCanonicalUrl, getNewsHomeHref } from '../data/newsSite';
 
 export async function getStaticPaths() {
-	const entries = await getPublishedAnlikHaber();
+	const entries = await getPublishedEquinoxHaber();
 	return entries.map((entry) => ({ params: { slug: entry.id } }));
 }
 
 const routeSlug = Astro.params.slug;
-const allEntries = await getPublishedAnlikHaber();
+const allEntries = await getPublishedEquinoxHaber();
 const entry = allEntries.find((item) => item.id === routeSlug);
 
 if (!entry) {
-	throw new Error(`Anlık haber bulunamadı: ${routeSlug}`);
+	throw new Error(`Haber bulunamadı: ${routeSlug}`);
 }
 
 const { Content } = await render(entry);
@@ -38,7 +38,7 @@ const relatedEntries = allEntries
 	.slice(0, 3)
 	.map((item) => item.entry);
 const authorProfile = findAuthorByName(entry.data.author);
-const categories = getAnlikHaberCategories();
+const categories = getEquinoxHaberCategories();
 const categoryToken = getNewsCategoryToken(entry.data.category);
 const hasInlineSourcesSection = /^##\s+Kaynaklar\b/m.test(entry.body ?? '');
 
@@ -65,7 +65,7 @@ const newsArticleSchema = {
 	},
 	publisher: {
 		'@type': 'NewsMediaOrganization',
-		name: 'Anlık Haber',
+		name: 'Equinox Haber',
 		founder: {
 			'@type': 'Person',
 			name: 'Samet Başbuğ',
@@ -92,7 +92,7 @@ const breadcrumbSchema = {
 		{
 			'@type': 'ListItem',
 			position: 2,
-			name: 'Anlık Haber',
+			name: 'Equinox Haber',
 			item: new URL(getNewsHomeHref(), siteUrl).toString(),
 		},
 		{
@@ -111,7 +111,7 @@ const newsStructuredData = [newsArticleSchema, breadcrumbSchema];
 <NewsLayout
 	title={title}
 	description={description}
-	pageTitle={entry.data.breaking ? 'Son Dakika' : 'Anlık Haber'}
+	pageTitle={entry.data.breaking ? 'Son Dakika' : 'Equinox Haber'}
 	pageDescription={entry.data.description}
 	categories={categories}
 	activeCategory={normalizeNewsCategory(entry.data.category) ?? 'Tümü'}

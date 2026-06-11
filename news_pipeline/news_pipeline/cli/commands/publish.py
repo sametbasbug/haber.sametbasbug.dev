@@ -204,7 +204,7 @@ def _assert_not_duplicate_live(content_root: Path, item_title: str, item_descrip
     item_topic_text = f"{item_title} {item_description}"
     for path in sorted(content_root.glob("*.md")):
         if path.stem == target_slug:
-            raise typer.BadParameter(f"target slug already exists in Anlık Haber: {path.name}")
+            raise typer.BadParameter(f"target slug already exists in Equinox Haber: {path.name}")
         text = path.read_text(encoding="utf-8", errors="ignore")
         frontmatter = _frontmatter(text)
         existing_urls = _frontmatter_source_urls(frontmatter)
@@ -221,7 +221,7 @@ def _assert_not_duplicate_live(content_root: Path, item_title: str, item_descrip
         _assert_not_duplicate_topic(path, text, item_topic_text, item_urls, existing_urls)
 
 
-def publish_queue_item(queue_id: str, publish_dir: str = "src/content/anlikHaber", max_source_age_hours: int = MAX_SOURCE_AGE_HOURS) -> None:
+def publish_queue_item(queue_id: str, publish_dir: str = "src/content/equinoxHaber", max_source_age_hours: int = MAX_SOURCE_AGE_HOURS) -> None:
     root = Path.cwd()
     service = QueueService(root / "news_pipeline/data/queue")
     item = service.store.load(queue_id)
@@ -238,12 +238,12 @@ def publish_queue_item(queue_id: str, publish_dir: str = "src/content/anlikHaber
         source_age = datetime.now(UTC) - (normalized.published_at or normalized.created_at).astimezone(UTC)
         if source_age > timedelta(hours=max_source_age_hours):
             raise typer.BadParameter(
-                f"source item is too old for Anlık Haber: {source_age.total_seconds() / 3600:.1f}h > {max_source_age_hours}h"
+                f"source item is too old for Equinox Haber: {source_age.total_seconds() / 3600:.1f}h > {max_source_age_hours}h"
             )
 
     disallowed_sources = {source.name for source in [*item.draft_sources, *item.supporting_sources]} & DISALLOWED_LOCAL_SOURCE_NAMES
     if disallowed_sources:
-        raise typer.BadParameter(f"local Turkey source is no longer publishable for global Anlık Haber: {sorted(disallowed_sources)[0]}")
+        raise typer.BadParameter(f"local Turkey source is no longer publishable for global Equinox Haber: {sorted(disallowed_sources)[0]}")
 
     content_root = root / publish_dir
     target_slug = slugify(item.draft_title, lowercase=True)

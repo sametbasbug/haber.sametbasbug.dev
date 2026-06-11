@@ -58,7 +58,7 @@ def should_keep_article(article: NormalizedArticle) -> FilterDecision:
     if article.published_at:
         source_age = datetime.now(UTC) - article.published_at.astimezone(UTC)
         if source_age > timedelta(hours=MAX_SOURCE_AGE_HOURS):
-            return FilterDecision(False, f"source item too old for Anlık Haber: older than {MAX_SOURCE_AGE_HOURS}h")
+            return FilterDecision(False, f"source item too old for Equinox Haber: older than {MAX_SOURCE_AGE_HOURS}h")
         if source_age < -timedelta(hours=MAX_FUTURE_SKEW_HOURS):
             return FilterDecision(False, "source publish date is implausibly in the future")
 

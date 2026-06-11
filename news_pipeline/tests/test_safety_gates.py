@@ -168,7 +168,7 @@ def test_source_age_rejection_blocks_publish(tmp_path: Path, monkeypatch: pytest
     )
     item = _item(normalized_id=old_article.id, status="approved", url="https://example.org/demo/old")
     _save_runtime(tmp_path, item, old_article)
-    (tmp_path / "src/content/anlikHaber").mkdir(parents=True)
+    (tmp_path / "src/content/equinoxHaber").mkdir(parents=True)
 
     with pytest.raises(typer.BadParameter, match="source item is too old"):
         publish_queue_item(item.queue_id, max_source_age_hours=72)
@@ -270,7 +270,7 @@ def test_headline_board_ignores_incidental_company_mentions_in_body(tmp_path: Pa
     assert not any("company_repeat" in reason for reason in reasons)
 
 def test_recent_live_posts_detects_company_signals_beyond_title(tmp_path: Path) -> None:
-    content = tmp_path / "src/content/anlikHaber"
+    content = tmp_path / "src/content/equinoxHaber"
     content.mkdir(parents=True)
     (content / "memory.md").write_text(
         """---
@@ -297,7 +297,7 @@ def test_publish_one_rejects_duplicate_gate_candidate(tmp_path: Path, monkeypatc
     article = _article("duplicate-article", url="https://example.org/demo/duplicate")
     item = _item(status="approved", normalized_id=article.id, url="https://example.org/demo/duplicate")
     _save_runtime(tmp_path, item, article)
-    (tmp_path / "src/content/anlikHaber").mkdir(parents=True)
+    (tmp_path / "src/content/equinoxHaber").mkdir(parents=True)
 
     def duplicate_publish(*args, **kwargs):
         raise typer.BadParameter("near-duplicate live topic from same source already published in existing.md")

@@ -1,6 +1,6 @@
 # News Pipeline
 
-`news_pipeline`, Anlık Haber’in Python tabanlı teknik rayıdır.
+`news_pipeline`, Equinox Haber’in Python tabanlı teknik rayıdır.
 
 Bu katman haber toplar, normalize eder, tekrarları azaltır, başlık panosu üretir, kuyruk tutar, kalite kapılarını çalıştırır, AI hero görselini üretir ve Astro markdown yayınına güvenli geçiş sağlar.
 
@@ -217,7 +217,7 @@ Varsayılan çıktı:
 - `1200×675`
 - `WebP`
 - kalite `82`
-- `public/images/generated/anlik-haber/`
+- `public/images/generated/equinox-haber/`
 
 AI provider geçici olarak doluysa `hero_image.py` birkaç kez yeniden dener ve son provider/CLI hatasını raporlar. `NEWS_PIPELINE_AI_HERO_ATTEMPTS` ile deneme sayısı ayarlanabilir; stok fallback yalnız açık acil override ile kullanılmalıdır.
 

@@ -1,19 +1,19 @@
 ---
 import NewsLayout from '../layouts/NewsLayout.astro';
 import {
-	ANLIK_HABER_PAGE_SIZE,
+	EQUINOX_HABER_PAGE_SIZE,
 	formatNewsDate,
-	getAnlikHaberCategories,
+	getEquinoxHaberCategories,
 	getNewsCategoryToken,
-	getPublishedAnlikHaber,
+	getPublishedEquinoxHaber,
 	slugifyNewsCategory,
-	type AnlikHaberEntry,
-} from '../data/anlikHaber';
+	type EquinoxHaberEntry,
+} from '../data/equinoxHaber';
 import { getNewsArticleHref, getNewsHomePath } from '../data/newsSite';
 
-const allEntries = await getPublishedAnlikHaber();
-const categories = getAnlikHaberCategories();
-const title = 'Anlık Haber';
+const allEntries = await getPublishedEquinoxHaber();
+const categories = getEquinoxHaberCategories();
+const title = 'Equinox Haber';
 const description = "Kaynaklı, kısa ve okunaklı Türkçe haber akışı. Asteria AI tarafından desteklenir, Samet Başbuğ tarafından yönetilir.";
 
 interface FeaturedPanelItem {
@@ -85,14 +85,14 @@ function escapeRegExp(value: string) {
 	return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-function hasGlobalSignal(entry: AnlikHaberEntry) {
+function hasGlobalSignal(entry: EquinoxHaberEntry) {
 	const haystack = [entry.data.title, entry.data.description, ...(entry.data.tags ?? [])]
 		.join(' ')
 		.toLocaleLowerCase('tr-TR');
 	return GLOBAL_SIGNAL_TERMS.some((term) => new RegExp(`(^|[^\\p{L}\\p{N}])${escapeRegExp(term)}([^\\p{L}\\p{N}]|$)`, 'u').test(haystack));
 }
 
-function scoreSignalEntry(entry: AnlikHaberEntry) {
+function scoreSignalEntry(entry: EquinoxHaberEntry) {
 	const ageHours = hoursSince(entry.data.pubDate);
 	const sourceCount = entry.data.sources?.length ?? 0;
 	let score = 0;
@@ -112,7 +112,7 @@ function scoreSignalEntry(entry: AnlikHaberEntry) {
 	return score;
 }
 
-function selectSideEntries(entries: AnlikHaberEntry[], options: { diversifyCategories: boolean }) {
+function selectSideEntries(entries: EquinoxHaberEntry[], options: { diversifyCategories: boolean }) {
 	const rankedEntries = [...entries].sort((a, b) => {
 		const scoreDelta = scoreSignalEntry(b) - scoreSignalEntry(a);
 		if (scoreDelta !== 0) return scoreDelta;
@@ -121,7 +121,7 @@ function selectSideEntries(entries: AnlikHaberEntry[], options: { diversifyCateg
 
 	if (!options.diversifyCategories) return rankedEntries.slice(0, SIDE_SLOT_COUNT);
 
-	const selected: AnlikHaberEntry[] = [];
+	const selected: EquinoxHaberEntry[] = [];
 	const selectedCategories = new Set<string>();
 
 	for (const entry of rankedEntries) {
@@ -141,8 +141,8 @@ function selectSideEntries(entries: AnlikHaberEntry[], options: { diversifyCateg
 	return selected;
 }
 
-function buildPanel(entries: AnlikHaberEntry[], options: { category?: string; diversifyCategories?: boolean } = {}) {
-	const firstPageEntries = entries.slice(0, ANLIK_HABER_PAGE_SIZE);
+function buildPanel(entries: EquinoxHaberEntry[], options: { category?: string; diversifyCategories?: boolean } = {}) {
+	const firstPageEntries = entries.slice(0, EQUINOX_HABER_PAGE_SIZE);
 	const featuredLeadEntries = firstPageEntries.slice(0, Math.min(FEATURED_LEAD_COUNT, firstPageEntries.length));
 	const leadEntry = featuredLeadEntries[0];
 	const nonFeaturedEntries = entries.filter((entry) => !featuredLeadEntries.some((featured) => featured.id === entry.id));
@@ -316,7 +316,7 @@ const newsHomeConfigJson = JSON.stringify({
 			</section>
 		) : (
 			<div class="news-empty-state">
-				<h2>Henüz yayınlanmış anlık haber yok.</h2>
+				<h2>Henüz yayınlanmış haber yok.</h2>
 				<p>İskelet hazır. İlk haber girildiğinde bu akış canlı çalışmaya başlayacak.</p>
 			</div>
 		)}

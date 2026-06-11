@@ -1,6 +1,6 @@
 ---
 import BaseLayout from './BaseLayout.astro';
-import { getNewsCategoryHref } from '../data/anlikHaber';
+import { getNewsCategoryHref } from '../data/equinoxHaber';
 import { getMainSiteUrl, getNewsHomePath, getNewsHomeHref, isNewsSubdomainEnabled } from '../data/newsSite';
 
 interface Props {
@@ -44,8 +44,7 @@ const blogHomeHref = isNewsSubdomainEnabled() ? getMainSiteUrl() : '/';
 						<a href={newsHomeHref} class="news-brand">
 							<span class="news-brand-mark"></span>
 							<div class="news-brand-copy">
-								<span class="news-brand-kicker">Samet Başbuğ</span>
-								<strong>Anlık Haber</strong>
+								<strong>Equinox Haber</strong>
 							</div>
 						</a>
 
@@ -60,7 +59,7 @@ const blogHomeHref = isNewsSubdomainEnabled() ? getMainSiteUrl() : '/';
 					{showCategoryNav && (
 						<div class="news-nav-row" data-news-nav-row>
 							<button class="news-nav-edge news-nav-edge-left" type="button" aria-label="Kategorilerin başına git" data-news-nav-jump="start">‹</button>
-							<nav class="news-nav" aria-label="Anlık haber kategorileri" data-news-nav>
+							<nav class="news-nav" aria-label="Equinox Haber kategorileri" data-news-nav>
 								{navCategories.map((category) => (
 									<a
 										href={getNewsCategoryHref(category)}
@@ -100,10 +99,10 @@ const blogHomeHref = isNewsSubdomainEnabled() ? getMainSiteUrl() : '/';
 		</div>
 
 		{showFooter && (
-			<footer class="news-footer" aria-label="Anlık Haber alt bağlantıları">
+			<footer class="news-footer" aria-label="Equinox Haber alt bağlantıları">
 				<div class="news-footer-inner">
 					<div class="news-footer-brand">
-						<span class="news-footer-kicker">Anlık Haber</span>
+						<span class="news-footer-kicker">Equinox Haber</span>
 						<p>Kaynaklı, kısa ve okunaklı Türkçe haber akışı. Asteria AI tarafından desteklenir, Samet Başbuğ tarafından yönetilir.</p>
 					</div>
 					<div class="news-footer-grid">
@@ -294,17 +293,10 @@ const blogHomeHref = isNewsSubdomainEnabled() ? getMainSiteUrl() : '/';
 	}
 	.news-brand-copy {
 		display: flex;
-		align-items: baseline;
-		gap: 0.38rem;
-	}
-	.news-brand-kicker {
-		font-size: 0.52rem;
-		letter-spacing: 0.14em;
-		text-transform: uppercase;
-		color: var(--news-muted);
+		align-items: center;
 	}
 	.news-brand strong {
-		font-size: 0.98rem;
+		font-size: 1rem;
 		font-weight: 800;
 		letter-spacing: -0.03em;
 		line-height: 1;
@@ -623,17 +615,9 @@ const blogHomeHref = isNewsSubdomainEnabled() ? getMainSiteUrl() : '/';
 		}
 		.news-brand-copy {
 			min-width: 0;
-			gap: 0.24rem;
-			flex-direction: column;
-			align-items: flex-start;
-		}
-		.news-brand-kicker {
-			font-size: 0.44rem;
-			letter-spacing: 0.12em;
-			line-height: 1.1;
 		}
 		.news-brand strong {
-			font-size: 0.92rem;
+			font-size: 0.96rem;
 			white-space: nowrap;
 			line-height: 1;
 		}

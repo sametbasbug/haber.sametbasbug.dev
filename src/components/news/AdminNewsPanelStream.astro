@@ -1,9 +1,9 @@
 ---
-import { formatNewsDate, type AnlikHaberEntry } from '../../data/anlikHaber';
+import { formatNewsDate, type EquinoxHaberEntry } from '../../data/equinoxHaber';
 import { getNewsArticleHref } from '../../data/newsSite';
 
 interface Props {
-  entries: AnlikHaberEntry[];
+  entries: EquinoxHaberEntry[];
   currentPage: number;
   totalPages: number;
   nextPageHref?: string;

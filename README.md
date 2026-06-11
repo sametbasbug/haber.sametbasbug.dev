@@ -1,10 +1,10 @@
-# Anlık Haber
+# Equinox Haber
 
 [![Quality Checks](https://github.com/sametbasbug/haber.sametbasbug.dev/actions/workflows/quality.yml/badge.svg)](https://github.com/sametbasbug/haber.sametbasbug.dev/actions/workflows/quality.yml)
 [![Deploy](https://github.com/sametbasbug/haber.sametbasbug.dev/actions/workflows/deploy.yml/badge.svg)](https://github.com/sametbasbug/haber.sametbasbug.dev/actions/workflows/deploy.yml)
 [![License: MIT](https://img.shields.io/badge/code%20license-MIT-blue.svg)](LICENSE)
 
-Anlık Haber is an editorial-first, AI-assisted Turkish news publishing system for [`haber.sametbasbug.dev`](https://haber.sametbasbug.dev/).
+Equinox Haber is an editorial-first, AI-assisted Turkish news publishing system for [`haber.sametbasbug.dev`](https://haber.sametbasbug.dev/).
 
 The project explores a practical question: can a small public news surface stay fast, readable, transparent, and auditable when software handles ingestion, deduplication, queueing, audits, image generation, static builds, and deployment discipline — while an editorial agent/human-in-the-loop keeps the final news judgment?
 
@@ -30,7 +30,7 @@ Most small publishing projects eventually hit the same maintenance wall:
 - image generation needs strict size/licensing/visual guardrails;
 - publishing needs boring safeguards: audits, build checks, narrow commits, CI, and rollback-friendly history.
 
-Anlık Haber is a working experiment around those constraints.
+Equinox Haber is a working experiment around those constraints.
 
 ## Why this matters for OSS maintainers
 
@@ -93,7 +93,7 @@ The repository has two main parts:
 haber-project/
   src/
     components/news/          # News UI components
-    content/anlikHaber/       # Published markdown news items
+    content/equinoxHaber/       # Published markdown news items
     data/                     # Site/category helpers
     layouts/                  # News/article/info page shells
     pages/                    # Astro routes, RSS, news sitemap
@@ -197,7 +197,7 @@ The public release includes the surfaces expected by news/feed consumers:
 
 Generated hero images are intentionally local and normalized:
 
-- final path: `public/images/generated/anlik-haber/<slug>.webp`
+- final path: `public/images/generated/equinox-haber/<slug>.webp`
 - dimensions: `1200×675`
 - format: `WebP`
 - default quality target: `82`
@@ -205,7 +205,7 @@ Generated hero images are intentionally local and normalized:
 
 The image generator writes to a raw temporary output first; the pipeline then resizes, crops, strips metadata, and writes the final WebP. This prevents provider output dimensions from silently bloating the site.
 
-Source/RSS/OG images from publishers are intentionally blocked for Anlık Haber hero use because they create licensing and editorial reuse risk.
+Source/RSS/OG images from publishers are intentionally blocked for Equinox Haber hero use because they create licensing and editorial reuse risk.
 
 ## Installation
 
@@ -267,7 +267,7 @@ npm run test:pipeline
 
 ## Current status
 
-This is a working public project, not a polished framework package. It powers the live Anlık Haber site and contains real operational history.
+This is a working public project, not a polished framework package. It powers the live Equinox Haber site and contains real operational history.
 
 The current maintenance priority is to keep the production surface boringly reliable:
 

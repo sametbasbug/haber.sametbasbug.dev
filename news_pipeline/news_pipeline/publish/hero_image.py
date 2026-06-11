@@ -40,9 +40,9 @@ DEFAULT_HERO_IMAGES = {
 FALLBACK_CATEGORY = "Teknoloji"
 PEXELS_SEARCH_URL = "https://api.pexels.com/v1/search"
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
-NEWS_CONTENT_DIR = PROJECT_ROOT / "src" / "content" / "anlikHaber"
-GENERATED_HERO_DIR = PROJECT_ROOT / "public" / "images" / "generated" / "anlik-haber"
-GENERATED_HERO_PUBLIC_PREFIX = "/images/generated/anlik-haber"
+NEWS_CONTENT_DIR = PROJECT_ROOT / "src" / "content" / "equinoxHaber"
+GENERATED_HERO_DIR = PROJECT_ROOT / "public" / "images" / "generated" / "equinox-haber"
+GENERATED_HERO_PUBLIC_PREFIX = "/images/generated/equinox-haber"
 AI_HERO_DEFAULT_MODEL = "openai/gpt-image-2"
 AI_HERO_TIMEOUT_MS = 180_000
 AI_HERO_ATTEMPTS = 3
@@ -249,7 +249,7 @@ def _build_ai_hero_prompt(item: QueueItem) -> str:
     category = item.draft_category or FALLBACK_CATEGORY
     if item.hero_prompt.strip():
         return f"""
-Create a 16:9 modern editorial hero image for a Turkish global news site named Anlık Haber.
+Create a 16:9 modern editorial hero image for a Turkish global news site named Equinox Haber.
 
 Asteria editorial visual brief:
 {item.hero_prompt.strip()}
@@ -273,7 +273,7 @@ Hard rules:
     tags = ", ".join(item.draft_tags[:8])
     source_names = ", ".join(source.name for source in item.draft_sources[:2])
     return f"""
-Create a 16:9 modern editorial hero image for a Turkish global news site named Anlık Haber.
+Create a 16:9 modern editorial hero image for a Turkish global news site named Equinox Haber.
 
 Article category: {category}
 Visual direction: {_category_visual_direction(category)}
@@ -382,7 +382,7 @@ def _ai_hero_image(item: QueueItem) -> str | None:
     except ValueError:
         attempts = AI_HERO_ATTEMPTS
 
-    slug = slugify(item.draft_title, lowercase=True) or "anlik-haber"
+    slug = slugify(item.draft_title, lowercase=True) or "equinox-haber"
     GENERATED_HERO_DIR.mkdir(parents=True, exist_ok=True)
     output = GENERATED_HERO_DIR / f"{slug}.webp"
 

@@ -1,6 +1,6 @@
-import { getPublishedAnlikHaber } from '../data/anlikHaber';
+import { getPublishedEquinoxHaber } from '../data/equinoxHaber';
 
-const PUBLICATION_NAME = 'Anlık Haber';
+const PUBLICATION_NAME = 'Equinox Haber';
 const PUBLICATION_LANGUAGE = 'tr';
 const NEWS_WINDOW_MS = 1000 * 60 * 60 * 24 * 2;
 const MAX_ITEMS = 1000;
@@ -8,7 +8,7 @@ const MAX_ITEMS = 1000;
 export async function GET(context: { site?: URL }) {
   const site = context.site?.toString() ?? 'https://haber.sametbasbug.dev';
   const now = Date.now();
-  const entries = (await getPublishedAnlikHaber())
+  const entries = (await getPublishedEquinoxHaber())
     .filter((entry) => now - entry.data.pubDate.getTime() <= NEWS_WINDOW_MS)
     .slice(0, MAX_ITEMS);
 
