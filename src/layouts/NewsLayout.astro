@@ -14,6 +14,7 @@ interface Props {
 	categoryNavForceReload?: boolean;
 	showCategoryNav?: boolean;
 	showFooter?: boolean;
+	noindex?: boolean;
 }
 
 const {
@@ -27,6 +28,7 @@ const {
 	categoryNavForceReload = false,
 	showCategoryNav = true,
 	showFooter = true,
+	noindex = false,
 } = Astro.props;
 
 const navCategories = showCategoryNav ? ['Tümü', ...categories.filter(Boolean)] : [];
@@ -35,7 +37,7 @@ const newsHomePath = getNewsHomePath();
 const blogHomeHref = isNewsSubdomainEnabled() ? getMainSiteUrl() : '/';
 ---
 
-<BaseLayout title={title} description={description} hideHeader={true}>
+<BaseLayout title={title} description={description} hideHeader={true} noindex={noindex}>
 	<section class="news-app-shell" data-news-home-path={newsHomePath}>
 		<header class="news-masthead">
 			<div class="news-masthead-wrap">
