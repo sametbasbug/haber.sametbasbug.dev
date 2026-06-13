@@ -294,7 +294,7 @@ Gövde.
 
     score, reasons = _board_score(tmp_path, item, recent_posts=[])
 
-    assert score <= item.editorial_priority - 0.30
+    assert score <= item.editorial_priority - 0.20
     assert "recency_penalty:topic_family_repeat:Ukraine/Russia war:2" in reasons
 
 

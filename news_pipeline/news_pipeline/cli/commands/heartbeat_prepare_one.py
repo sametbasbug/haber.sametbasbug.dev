@@ -39,9 +39,9 @@ RECENT_COMPANY_PENALTY_WINDOW = 10
 RECENT_COMPANY_PENALTY_THRESHOLD = 2
 RECENT_COMPANY_PENALTY_PER_ITEM = 0.09
 RECENT_COMPANY_PENALTY_MAX = 0.27
-RECENT_TOPIC_FAMILY_WINDOW = 5
-RECENT_TOPIC_FAMILY_PENALTY_THRESHOLD = 2
-RECENT_TOPIC_FAMILY_PENALTY_PER_ITEM = 0.16
+RECENT_TOPIC_FAMILY_WINDOW = 8
+RECENT_TOPIC_FAMILY_PENALTY_THRESHOLD = 1
+RECENT_TOPIC_FAMILY_PENALTY_PER_ITEM = 0.12
 RECENT_TOPIC_FAMILY_PENALTY_MAX = 0.48
 MAX_BOARD_ITEMS_PER_TOPIC_FAMILY = 1
 POLITICO_EU_BASELINE_PENALTY = 0.035
@@ -52,6 +52,9 @@ RISKY_HEADLINE_TERMS = {
     "sues",
     "alleged",
     "allegations",
+    "arrests",
+    "suspected",
+    "spying",
     "epstein",
 }
 BLOCKED_BOARD_TERMS = {
@@ -375,7 +378,7 @@ def _passes_basic_board_filter(root: Path, item: Any, max_source_age_hours: int,
     if any(note.startswith(EXCLUDED_NOTE_PREFIXES) for note in item.notes):
         return False, "excluded by editorial note"
     headline = _normalized(_headline_text(root, item))
-    if any(term in headline for term in {"podcast", "newsletter", "live updates", "puzzle", "quiz"}):
+    if any(term in headline for term in {"podcast", "newsletter", "live updates", "latest news bulletin", "puzzle", "quiz"}):
         return False, "blocked headline format"
     if any(term in headline for term in BLOCKED_BOARD_TERMS):
         return False, "blocked low-signal headline"

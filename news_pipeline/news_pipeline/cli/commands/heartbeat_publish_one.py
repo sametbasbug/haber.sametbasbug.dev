@@ -145,7 +145,14 @@ def _candidate_snapshot(item: QueueItem, reason: str | None = None) -> dict[str,
 def _is_excluded_source_format(item: QueueItem) -> bool:
     text = f"{item.draft_title} {item.draft_description}".lower()
     urls = " ".join(str(source.url).lower() for source in item.draft_sources)
-    return "podcast" in urls or "/live/" in urls or " live" in text or "live:" in text
+    return (
+        "podcast" in urls
+        or "/live/" in urls
+        or "/video/" in urls
+        or "/videos/" in urls
+        or " live" in text
+        or "live:" in text
+    )
 
 
 def _has_asteria_polish(item: QueueItem) -> bool:
