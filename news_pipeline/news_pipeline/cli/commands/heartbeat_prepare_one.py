@@ -517,13 +517,19 @@ def _article_payload(root: Path, item: Any) -> dict[str, Any]:
     }
 
 
-def _candidate_reason(root: Path, item: Any, min_score: float, max_source_age_hours: int) -> tuple[bool, str | None]:
+def _candidate_reason(root: Path, item: Any, min_score: float, max_source_age_hours: int, board_score: float | None = None) -> tuple[bool, str | None]:
     if _is_excluded_source_format(item):
         return False, "excluded source format (podcast/liveblog)"
     fresh, stale_reason = _source_is_fresh(root, item, max_source_age_hours)
     if not fresh:
         return False, stale_reason
-    return is_autopublish_candidate(item, min_score=min_score)
+    # The headline board applies deliberate editorial boosts/penalties for
+    # recency, source mix, topic-family saturation and signal strength. If the
+    # board-adjusted score clears the publish threshold, tell Asteria the item
+    # needs editorial polish instead of mislabeling it as score-blocked. The
+    # final publish gate remains unchanged: unpolished items still cannot go out.
+    effective_min_score = 0.0 if board_score is not None and board_score >= min_score else min_score
+    return is_autopublish_candidate(item, min_score=effective_min_score)
 
 
 def _collect_step_stats(steps: list[dict[str, Any]]) -> dict[str, int] | None:
@@ -559,9 +565,9 @@ def _build_editorial_packs(root: Path, *, min_score: float, max_source_age_hours
     score_map = board_meta["scores"]
     packs: list[dict[str, Any]] = []
     for item in selected:
-        ok, reason = _candidate_reason(root, item, min_score, max_source_age_hours)
         payload = _article_payload(root, item)
         board_score, board_reasons = score_map.get(item.queue_id, (round(float(item.editorial_priority), 3), []))
+        ok, reason = _candidate_reason(root, item, min_score, max_source_age_hours, board_score=board_score)
         payload["boardScore"] = board_score
         payload["boardReasons"] = board_reasons
         payload["strictGate"] = {"passesNow": ok, "reason": reason}
