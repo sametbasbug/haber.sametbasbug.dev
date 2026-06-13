@@ -12,6 +12,7 @@ from rapidfuzz.fuzz import token_set_ratio
 
 from news_pipeline.cli.commands.heartbeat_publish_one import _is_excluded_source_format, _run_pipeline_command, _source_is_fresh
 from news_pipeline.editorial.autonomy import is_autopublish_candidate
+from news_pipeline.editorial.topic_family import describe_family, recent_live_topic_family_counts, topic_families_for_text
 from news_pipeline.models.article import NormalizedArticle
 from news_pipeline.queue.service import QueueService
 from news_pipeline.storage.json_store import JsonStore
@@ -38,6 +39,11 @@ RECENT_COMPANY_PENALTY_WINDOW = 10
 RECENT_COMPANY_PENALTY_THRESHOLD = 2
 RECENT_COMPANY_PENALTY_PER_ITEM = 0.09
 RECENT_COMPANY_PENALTY_MAX = 0.27
+RECENT_TOPIC_FAMILY_WINDOW = 5
+RECENT_TOPIC_FAMILY_PENALTY_THRESHOLD = 2
+RECENT_TOPIC_FAMILY_PENALTY_PER_ITEM = 0.16
+RECENT_TOPIC_FAMILY_PENALTY_MAX = 0.48
+MAX_BOARD_ITEMS_PER_TOPIC_FAMILY = 1
 POLITICO_EU_BASELINE_PENALTY = 0.035
 POLITICO_EU_RECENT_EXTRA_PENALTY = 0.04
 RISKY_HEADLINE_TERMS = {
@@ -78,7 +84,6 @@ POSITIVE_HEADLINE_TERMS = {
     "market",
     "eu",
     "europe",
-    "ukraine",
 }
 SCIENCE_SPACE_TERMS = {
     "nasa",
@@ -248,6 +253,22 @@ def _item_company_hits(root: Path, item: Any) -> set[str]:
     return _company_hits(draft_text)
 
 
+def _item_topic_family_hits(root: Path, item: Any) -> set[str]:
+    normalized_store = JsonStore(root / "news_pipeline/data/normalized", NormalizedArticle)
+    article = normalized_store.load(item.normalized_id)
+    text = " ".join(
+        [
+            item.draft_title or "",
+            item.draft_description or "",
+            " ".join(item.draft_tags or []),
+            article.title if article else "",
+            article.summary if article else "",
+            " ".join(article.tags) if article else "",
+        ]
+    )
+    return topic_families_for_text(text)
+
+
 def _normalized(value: str) -> str:
     return re.sub(r"\s+", " ", (value or "").strip().lower())
 
@@ -299,6 +320,23 @@ def _board_score(
             score -= company_penalty
             repeated = "+".join(sorted(repeat_counts))
             reasons.append(f"recency_penalty:company_repeat:{repeated}:{strongest_repeat}")
+    family_hits = _item_topic_family_hits(root, item)
+    if family_hits:
+        recent_family_counts = recent_live_topic_family_counts(
+            root / "src/content/equinoxHaber",
+            limit=RECENT_TOPIC_FAMILY_WINDOW,
+        )
+        repeat_counts = {
+            family: recent_family_counts[family]
+            for family in family_hits
+            if recent_family_counts[family] >= RECENT_TOPIC_FAMILY_PENALTY_THRESHOLD
+        }
+        if repeat_counts:
+            strongest_repeat = max(repeat_counts.values())
+            family_penalty = min(RECENT_TOPIC_FAMILY_PENALTY_MAX, strongest_repeat * RECENT_TOPIC_FAMILY_PENALTY_PER_ITEM)
+            score -= family_penalty
+            repeated = "+".join(describe_family(family) for family in sorted(repeat_counts))
+            reasons.append(f"recency_penalty:topic_family_repeat:{repeated}:{strongest_repeat}")
     for term in RISKY_HEADLINE_TERMS:
         if _headline_has_term(headline, term):
             score -= 0.10
@@ -377,6 +415,7 @@ def _select_headline_board(root: Path, items: list[Any], limit: int, max_source_
     selected_headlines: list[str] = []
     source_counts: Counter[str] = Counter()
     category_counts: Counter[str] = Counter()
+    family_counts: Counter[str] = Counter()
 
     def add(item: Any) -> bool:
         if item.queue_id in selected_ids:
@@ -393,6 +432,9 @@ def _select_headline_board(root: Path, items: list[Any], limit: int, max_source_
             return False
         if science_pressure and item.draft_category == "Bilim" and category_counts["Bilim"] >= SCIENCE_BOARD_LIMIT:
             return False
+        item_families = _item_topic_family_hits(root, item)
+        if item_families and any(family_counts[family] >= MAX_BOARD_ITEMS_PER_TOPIC_FAMILY for family in item_families):
+            return False
         headline = _normalized(_headline_text(root, item))
         is_space_science = item.draft_category == "Bilim" and (
             any(_headline_has_term(headline, term) for term in SCIENCE_SPACE_TERMS)
@@ -405,6 +447,7 @@ def _select_headline_board(root: Path, items: list[Any], limit: int, max_source_
         selected_headlines.append(headline)
         source_counts[source] += 1
         category_counts[item.draft_category or "-"] += 1
+        family_counts.update(item_families)
         return True
 
     for category, target in MIN_CATEGORY_TARGETS.items():
@@ -426,12 +469,17 @@ def _select_headline_board(root: Path, items: list[Any], limit: int, max_source_
         "eligibleCount": len(eligible),
         "sourceCounts": dict(source_counts),
         "categoryCounts": dict(category_counts),
+        "topicFamilyCounts": dict(family_counts),
+        "maxBoardItemsPerTopicFamily": MAX_BOARD_ITEMS_PER_TOPIC_FAMILY,
         "recentPosts": recent_posts,
         "recentCategories": [post.get("category", "") for post in recent_posts],
         "recentSources": [post.get("source", "") for post in recent_posts],
         "recentCompanies": [post.get("companies", "") for post in recent_posts],
         "recentCompanyPenaltyWindow": RECENT_COMPANY_PENALTY_WINDOW,
         "recentCompanyPenaltyThreshold": RECENT_COMPANY_PENALTY_THRESHOLD,
+        "recentTopicFamilyCounts": dict(recent_live_topic_family_counts(root / "src/content/equinoxHaber", limit=RECENT_TOPIC_FAMILY_WINDOW)),
+        "recentTopicFamilyWindow": RECENT_TOPIC_FAMILY_WINDOW,
+        "recentTopicFamilyPenaltyThreshold": RECENT_TOPIC_FAMILY_PENALTY_THRESHOLD,
         "hotCategory": hot_category,
         "hotCategoryRepeatThreshold": HOT_CATEGORY_REPEAT_THRESHOLD,
         "hotCategoryBoardLimit": HOT_CATEGORY_BOARD_LIMIT if hot_category else None,

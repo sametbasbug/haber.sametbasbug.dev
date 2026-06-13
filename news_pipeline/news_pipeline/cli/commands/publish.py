@@ -10,6 +10,7 @@ import typer
 from rapidfuzz.fuzz import token_set_ratio, token_sort_ratio
 from slugify import slugify
 
+from news_pipeline.editorial.topic_family import describe_family, recent_live_topic_family_counts, topic_families_for_text
 from news_pipeline.models.article import NormalizedArticle
 from news_pipeline.publish.markdown_writer import write_live
 from news_pipeline.queue.service import QueueService
@@ -23,6 +24,8 @@ COMBINED_TOPIC_DUPLICATE_THRESHOLD = 82
 SAME_SOURCE_TOPIC_DUPLICATE_THRESHOLD = 74
 EVENT_CORE_SHARED_TOKEN_MIN = 7
 EVENT_CORE_ACTION_TOKEN_MIN = 1
+RECENT_TOPIC_FAMILY_LIVE_WINDOW = 5
+RECENT_TOPIC_FAMILY_BLOCK_THRESHOLD = 2
 EVENT_CORE_ENTITY_HINTS = {
     "acquisition",
     "almasini",
@@ -198,10 +201,28 @@ def _assert_not_duplicate_topic(
         raise typer.BadParameter(f"near-duplicate live topic from same source already published in {path.name}")
 
 
+def _assert_not_topic_family_saturated(content_root: Path, item_text: str) -> None:
+    item_families = topic_families_for_text(item_text)
+    if not item_families:
+        return
+    recent_counts = recent_live_topic_family_counts(content_root, limit=RECENT_TOPIC_FAMILY_LIVE_WINDOW)
+    saturated = {
+        family: recent_counts[family]
+        for family in item_families
+        if recent_counts[family] >= RECENT_TOPIC_FAMILY_BLOCK_THRESHOLD
+    }
+    if saturated:
+        family, count = max(saturated.items(), key=lambda row: row[1])
+        raise typer.BadParameter(
+            f"topic-family saturation guard: {describe_family(family)} already appears {count} times in the last {RECENT_TOPIC_FAMILY_LIVE_WINDOW} live posts"
+        )
+
+
 def _assert_not_duplicate_live(content_root: Path, item_title: str, item_description: str, item_urls: set[str], target_slug: str) -> None:
     title = _collapse_text(item_title)
     description = _collapse_text(item_description)
     item_topic_text = f"{item_title} {item_description}"
+    _assert_not_topic_family_saturated(content_root, item_topic_text)
     for path in sorted(content_root.glob("*.md")):
         if path.stem == target_slug:
             raise typer.BadParameter(f"target slug already exists in Equinox Haber: {path.name}")

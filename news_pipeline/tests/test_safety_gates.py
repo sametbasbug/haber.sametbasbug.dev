@@ -10,7 +10,7 @@ from news_pipeline.cli.commands.audit_content import audit_content_command
 from news_pipeline.cli.commands.collect import _is_due
 from news_pipeline.cli.commands import heartbeat_publish_one
 from news_pipeline.cli.commands.heartbeat_publish_one import _select_candidate, publish_one_command
-from news_pipeline.cli.commands.heartbeat_prepare_one import _board_score, _recent_live_posts
+from news_pipeline.cli.commands.heartbeat_prepare_one import _board_score, _recent_live_posts, _select_headline_board
 from news_pipeline.cli.commands.publish import _assert_not_duplicate_live, _assert_not_duplicate_topic, publish_command, publish_queue_item
 from news_pipeline.editorial.autonomy import is_autopublish_candidate
 from news_pipeline.extractors.article_text import _extract_published_at
@@ -159,6 +159,42 @@ Demo kent yönetimi ulaşım uyarıları için yapay zeka güvenlik panosu başl
         )
 
 
+def test_publish_blocks_recent_topic_family_saturation(tmp_path: Path) -> None:
+    content = tmp_path / "content"
+    content.mkdir()
+    for index, title in enumerate(
+        [
+            "Putin Ukrayna saldırılarının ekonomiye zarar verdiğini kabul etti",
+            "Bulgaristan Ukrayna için devlet stoklarından sevkiyatı durdurdu",
+        ],
+        start=1,
+    ):
+        (content / f"recent-ukraine-{index}.md").write_text(
+            f"""---
+title: "{title}"
+description: "Ukrayna ve Rusya savaşına ilişkin yeni gelişme aktarıldı."
+pubDate: '2026-06-13T1{index}:00:00+03:00'
+tags: ["Ukrayna", "Rusya", "savaş"]
+sources:
+  - name: "Demo Source"
+    url: "https://example.org/recent-ukraine-{index}"
+---
+Gövde.
+""",
+            encoding="utf-8",
+        )
+
+    with pytest.raises(typer.BadParameter, match="topic-family saturation guard: Ukraine/Russia war"):
+        _assert_not_duplicate_live(
+            content,
+            "Ukrayna, AB üyelik görüşmelerinde yeni aşamaya geçti",
+            "Avrupa Birliği, Ukrayna ve Moldova ile üyelik sürecinde yeni başlık açmaya hazırlanıyor.",
+            {"https://example.org/new-ukraine"},
+            "ukrayna-ab-uyelik-gorusmeleri",
+        )
+
+
+
 def test_source_age_rejection_blocks_publish(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.chdir(tmp_path)
     old_article = _article(
@@ -215,6 +251,54 @@ def test_manual_review_gate_behavior(tmp_path: Path) -> None:
 
 
 
+def test_headline_board_penalizes_recent_topic_family_saturation(tmp_path: Path) -> None:
+    content = tmp_path / "src/content/equinoxHaber"
+    content.mkdir(parents=True)
+    for index, title in enumerate(
+        [
+            "Ukrayna saldırıları Rus enerji altyapısını hedef aldı",
+            "Bulgaristan, Ukrayna için yeni savunma kararını açıkladı",
+        ],
+        start=1,
+    ):
+        (content / f"ukraine-{index}.md").write_text(
+            f"""---
+title: "{title}"
+description: "Ukrayna ve Rusya savaşına ilişkin yeni gelişme duyuruldu."
+pubDate: '2026-06-13T1{index}:00:00+03:00'
+tags: ["Ukrayna", "Rusya", "savaş"]
+category: "Siyaset"
+sources:
+  - name: "Demo Source"
+    url: "https://example.org/ukraine-{index}"
+---
+Gövde.
+""",
+            encoding="utf-8",
+        )
+
+    article = _article("ukraine-article", url="https://example.org/demo/ukraine")
+    article.title = "Ukraine reports new diplomatic talks with allies"
+    article.summary = "Ukraine and Russia remain central to the war diplomacy track."
+    article.tags = ["ukraine", "russia", "war"]
+    item = _item(
+        normalized_id=article.id,
+        url="https://example.org/demo/ukraine",
+        priority=0.90,
+    )
+    item.draft_title = "Ukrayna, müttefiklerle yeni diplomasi görüşmeleri yürütüyor"
+    item.draft_description = "Ukrayna savaşı çevresindeki diplomasi trafiği yeni görüşmelerle devam ediyor."
+    item.draft_category = "Siyaset"
+    item.draft_tags = ["Ukrayna", "Rusya", "diplomasi"]
+    _save_runtime(tmp_path, item, article)
+
+    score, reasons = _board_score(tmp_path, item, recent_posts=[])
+
+    assert score <= item.editorial_priority - 0.30
+    assert "recency_penalty:topic_family_repeat:Ukraine/Russia war:2" in reasons
+
+
+
 def test_headline_board_penalizes_recent_company_saturation(tmp_path: Path) -> None:
     article = _article("claude-article", url="https://example.org/demo/claude")
     article.title = "Claude gets a new enterprise security feature"
@@ -240,6 +324,34 @@ def test_headline_board_penalizes_recent_company_saturation(tmp_path: Path) -> N
 
     assert score < item.editorial_priority
     assert "recency_penalty:company_repeat:Anthropic:2" in reasons
+
+
+
+def test_headline_board_limits_same_topic_family_in_selected_board(tmp_path: Path) -> None:
+    item_one_article = _article("anthropic-one", url="https://example.org/demo/anthropic-one")
+    item_one_article.title = "Anthropic disables Fable 5 after government order"
+    item_one_article.summary = "Anthropic and Claude model access are affected."
+    item_one_article.tags = ["anthropic", "claude", "fable"]
+    item_one = _item("anthropic-one", normalized_id=item_one_article.id, url="https://example.org/demo/anthropic-one", priority=0.91)
+    item_one.draft_title = "Anthropic, Fable 5 erişimini hükümet kararı sonrası kapatıyor"
+    item_one.draft_description = "Claude model ailesindeki erişim değişikliği yeni kısıtlamalarla bağlantılı."
+    item_one.draft_tags = ["Anthropic", "Claude", "Fable"]
+
+    item_two_article = _article("anthropic-two", url="https://example.org/demo/anthropic-two")
+    item_two_article.title = "Claude users lose access to Mythos 5"
+    item_two_article.summary = "Anthropic is also changing Mythos access."
+    item_two_article.tags = ["anthropic", "claude", "mythos"]
+    item_two = _item("anthropic-two", normalized_id=item_two_article.id, url="https://example.org/demo/anthropic-two", priority=0.89)
+    item_two.draft_title = "Claude kullanıcıları Mythos 5 erişimini kaybediyor"
+    item_two.draft_description = "Anthropic, model erişiminde ikinci bir kısıtlama daha uyguluyor."
+    item_two.draft_tags = ["Anthropic", "Claude", "Mythos"]
+
+    _save_runtime(tmp_path, item_one, item_one_article)
+    _save_runtime(tmp_path, item_two, item_two_article)
+    selected, _, meta = _select_headline_board(tmp_path, [item_one, item_two], limit=10, max_source_age_hours=72)
+
+    assert [item.queue_id for item in selected] == ["anthropic-one"]
+    assert meta["diagnostics"]["topicFamilyCounts"] == {"anthropic_models": 1}
 
 
 
