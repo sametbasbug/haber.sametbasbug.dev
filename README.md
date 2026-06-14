@@ -10,6 +10,22 @@ The project explores a practical question: can a small public news surface stay 
 
 The reusable part is the workflow. The live output is a global-focused Turkish news stream.
 
+## Quick evaluation
+
+If you want to inspect the reusable workflow layer without touching providers or production data:
+
+```bash
+python3 -m venv news_pipeline/.venv
+source news_pipeline/.venv/bin/activate
+pip install -e "news_pipeline[test]"
+npm install
+npm run quality
+news-pipeline demo seed --force
+news-pipeline demo walkthrough
+```
+
+The demo path uses synthetic data and is intended for provider-free review.
+
 ## What is open source here?
 
 This repository is intentionally split into two layers:
