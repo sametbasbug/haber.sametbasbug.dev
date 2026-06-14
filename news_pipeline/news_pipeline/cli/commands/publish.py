@@ -41,6 +41,26 @@ EVENT_CORE_ENTITY_HINTS = {
     "veto",
     "vetoes",
 }
+EVENT_CORE_GENERIC_SHARED_TOKENS = {
+    "acikladi",
+    "açıkladı",
+    "gerekcesiyle",
+    "gerekçesiyle",
+    "istedi",
+    "karar",
+    "modellerine",
+    "ulusal",
+}
+EVENT_CORE_DISTINCTIVE_ENTITY_TOKENS = {
+    "anthropic",
+    "claude",
+    "fable",
+    "manus",
+    "meta",
+    "mythos",
+    "openai",
+    "zuckerberg",
+}
 DISALLOWED_LOCAL_SOURCE_NAMES = {"Diken", "Kısa Dalga", "Kisa Dalga", "Medyascope"}
 
 TOPIC_STOPWORDS = {
@@ -161,12 +181,16 @@ def _has_duplicate_event_core(item_tokens: set[str], existing_tokens: set[str], 
     distinctive_shared = {
         token
         for token in shared_tokens
-        if len(token) >= 5 and token not in EVENT_CORE_ENTITY_HINTS and token not in {"yapay", "zeka", "teknoloji", "haber"}
+        if len(token) >= 5
+        and token not in EVENT_CORE_ENTITY_HINTS
+        and token not in EVENT_CORE_GENERIC_SHARED_TOKENS
+        and token not in {"yapay", "zeka", "teknoloji", "haber"}
     }
     # Require at least two non-generic shared entities/actors plus an action
     # token. This catches same-event rewrites across different sources without
     # turning broad category overlap into a duplicate.
-    return len(distinctive_shared) >= 2
+    distinctive_entities = distinctive_shared & EVENT_CORE_DISTINCTIVE_ENTITY_TOKENS
+    return len(distinctive_shared) >= 2 and bool(distinctive_entities)
 
 
 

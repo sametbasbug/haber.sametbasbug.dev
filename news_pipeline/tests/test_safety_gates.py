@@ -159,6 +159,31 @@ Demo kent yönetimi ulaşım uyarıları için yapay zeka güvenlik panosu başl
         )
 
 
+def test_duplicate_event_guard_allows_distinct_ai_policy_events(tmp_path: Path) -> None:
+    content = tmp_path / "content"
+    content.mkdir()
+    (content / "china-vetoes-meta-manus.md").write_text(
+        """---
+title: "Çin, Meta'nın 2 milyar dolarlık Manus anlaşmasını durdurdu"
+description: "Çin'in ekonomik planlama kurumu, Meta'nın Manus satın almasını engelledi. Karar, Zuckerberg'in yapay zekâ ajanları planına darbe vurabilir."
+sources:
+  - name: "TechCrunch"
+    url: "https://techcrunch.com/2026/04/27/china-vetoes-metas-2b-manus-deal-after-months-long-probe/"
+---
+Çin, Meta'nın Manus'u satın alma planını durdurdu. Böylece şirketin yapay zekâ ajanları alanındaki genişleme hamlesi önemli bir engelle karşılaştı.
+""",
+        encoding="utf-8",
+    )
+
+    _assert_not_duplicate_live(
+        content,
+        "ABD, Anthropic’in en yeni yapay zekâ modellerine yabancı erişimini durdurmasını istedi",
+        "Anthropic, ABD hükümetinin ulusal güvenlik gerekçesiyle Fable 5 ve Mythos 5 modellerine yabancı uyrukluların erişimini askıya almasını istediğini açıkladı; karar, gelişmiş yapay zekâda ihracat kontrolü tartışmasını büyüttü.",
+        {"https://www.aljazeera.com/news/2026/6/14/us-asks-anthropic-to-block-global-access-to-top-ai-models-why-it-matters"},
+        "abd-anthropic-yabanci-erisim",
+    )
+
+
 def test_publish_blocks_recent_topic_family_saturation(tmp_path: Path) -> None:
     content = tmp_path / "content"
     content.mkdir()
