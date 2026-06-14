@@ -250,6 +250,25 @@ def test_manual_review_gate_behavior(tmp_path: Path) -> None:
     assert rejections[0]["reason"] == "manual-review item"
 
 
+def test_asteria_polish_does_not_bypass_low_importance_score_floor(tmp_path: Path) -> None:
+    low_article = _article("low-importance", url="https://example.org/demo/low-importance")
+    low_item = _item(
+        "low-importance",
+        normalized_id=low_article.id,
+        url="https://example.org/demo/low-importance",
+        priority=0.59,
+        notes=["asteria-editorial-polish"],
+    )
+    _save_runtime(tmp_path, low_item, low_article)
+
+    candidate, rejections = _select_candidate(tmp_path, min_score=0.68, max_source_age_hours=72)
+
+    assert candidate is None
+    assert rejections
+    assert rejections[0]["queueId"] == "low-importance"
+    assert rejections[0]["reason"] == "score below threshold (0.590)"
+
+
 
 def test_body_english_gate_allows_turkish_body_with_english_source_name() -> None:
     body = "\n\n".join(
@@ -375,6 +394,27 @@ def test_headline_board_does_not_boost_localized_kidnapping_as_security_signal(t
     assert "signal_boost:security" not in reasons
 
 
+def test_headline_board_does_not_boost_social_security_as_security_signal(tmp_path: Path) -> None:
+    article = _article("social-security", url="https://example.org/demo/social-security")
+    article.title = "Social Security’s COLA could rise as inflation hits a three-year high"
+    article.summary = "Retirement benefit estimates changed with inflation data."
+    item = _item(
+        "social-security",
+        normalized_id=article.id,
+        url="https://example.org/demo/social-security",
+        priority=0.621,
+    )
+    item.draft_title = "Social Security’s COLA could rise as inflation hits a three-year high"
+    item.draft_description = "ABD emeklilik ödemelerine ilişkin teknik bir enflasyon hesabı aktarılıyor."
+    item.draft_category = "Ekonomi"
+    _save_runtime(tmp_path, item, article)
+
+    score, reasons = _board_score(tmp_path, item, recent_posts=[])
+
+    assert score == pytest.approx(0.621)
+    assert "signal_boost:security" not in reasons
+
+
 
 def test_headline_board_limits_same_topic_family_in_selected_board(tmp_path: Path) -> None:
     item_one_article = _article("anthropic-one", url="https://example.org/demo/anthropic-one")
@@ -401,6 +441,34 @@ def test_headline_board_limits_same_topic_family_in_selected_board(tmp_path: Pat
 
     assert [item.queue_id for item in selected] == ["anthropic-one"]
     assert meta["diagnostics"]["topicFamilyCounts"] == {"anthropic_models": 1}
+
+
+def test_headline_board_keeps_low_score_category_fill_behind_stronger_global_item(tmp_path: Path) -> None:
+    science_article = _article("peatlands", url="https://example.org/demo/peatlands")
+    science_article.title = "Damaged boreal peatlands may triple methane emissions, reshaping climate risk"
+    science_article.summary = "A climate study reports higher methane emissions from damaged peatlands."
+    science_item = _item("peatlands", normalized_id=science_article.id, url="https://example.org/demo/peatlands", priority=0.59)
+    science_item.draft_title = "Hasarlı kuzey turbalıkları metan salımını üç kata çıkarabilir"
+    science_item.draft_description = "Bilimsel çalışma, sismik hatların turbalıklarda metan salımını artırdığını bildiriyor."
+    science_item.draft_category = "Bilim"
+    science_item.draft_tags = ["iklim", "metan", "turbalık"]
+
+    ukraine_article = _article("ukraine-energy", url="https://example.org/demo/ukraine-energy")
+    ukraine_article.title = "Ukraine to keep targeting Russian energy after hitting sea terminal"
+    ukraine_article.summary = "Ukraine says Russian energy infrastructure will remain a target after a sea terminal strike."
+    ukraine_item = _item("ukraine-energy", normalized_id=ukraine_article.id, url="https://example.org/demo/ukraine-energy", priority=0.758)
+    ukraine_item.draft_title = "Ukrayna, Rus enerji altyapısını hedef almaya devam edecek"
+    ukraine_item.draft_description = "Kiev, deniz terminali saldırısından sonra Rus enerji altyapısının hedefte kalacağını söylüyor."
+    ukraine_item.draft_category = "Ekonomi"
+    ukraine_item.draft_tags = ["Ukrayna", "Rusya", "enerji"]
+
+    _save_runtime(tmp_path, science_item, science_article)
+    _save_runtime(tmp_path, ukraine_item, ukraine_article)
+
+    selected, _, meta = _select_headline_board(tmp_path, [science_item, ukraine_item], limit=10, max_source_age_hours=72)
+
+    assert [item.queue_id for item in selected] == ["ukraine-energy", "peatlands"]
+    assert meta["diagnostics"]["minCategoryTargetScore"] == 0.68
 
 
 

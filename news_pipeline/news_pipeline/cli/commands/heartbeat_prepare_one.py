@@ -25,6 +25,7 @@ HOT_CATEGORY_BOARD_LIMIT = 1
 HOT_SOURCE_RECENT_WINDOW = 3
 HOT_SOURCE_BOARD_LIMIT = 1
 MIN_CATEGORY_TARGETS = {"Siyaset": 3, "Ekonomi": 3, "Teknoloji": 3, "Bilim": 1}
+MIN_CATEGORY_TARGET_SCORE = 0.68
 SCIENCE_RECENT_WINDOW = 8
 SCIENCE_RECENT_THRESHOLD = 2
 SCIENCE_BOARD_LIMIT = 1
@@ -66,6 +67,9 @@ LOCALIZED_CRIME_TERMS = {
     "kaçırıldı",
     "kaçırılma",
     "kaçırılan",
+}
+NON_SECURITY_SIGNAL_PHRASES = {
+    "social security",
 }
 BLOCKED_BOARD_TERMS = {
     "celebrity",
@@ -356,11 +360,12 @@ def _board_score(
             reasons.append(f"risk_penalty:{term}")
             break
     localized_crime = any(_headline_has_term(headline, term) for term in LOCALIZED_CRIME_TERMS)
+    incidental_security = any(phrase in headline for phrase in NON_SECURITY_SIGNAL_PHRASES)
     if localized_crime:
         score -= 0.06
         reasons.append("risk_penalty:localized_crime")
     for term in POSITIVE_HEADLINE_TERMS:
-        if _headline_has_term(headline, term) and not (term == "security" and localized_crime):
+        if _headline_has_term(headline, term) and not (term == "security" and (localized_crime or incidental_security)):
             score += 0.035
             reasons.append(f"signal_boost:{term}")
             break
@@ -470,10 +475,10 @@ def _select_headline_board(root: Path, items: list[Any], limit: int, max_source_
     for category, target in MIN_CATEGORY_TARGETS.items():
         if category == hot_category:
             continue
-        for item, _, _ in eligible:
+        for item, board_score, _ in eligible:
             if len(selected) >= limit or category_counts[category] >= target:
                 break
-            if item.draft_category == category:
+            if item.draft_category == category and board_score >= MIN_CATEGORY_TARGET_SCORE:
                 add(item)
 
     for item, _, _ in eligible:
@@ -482,6 +487,7 @@ def _select_headline_board(root: Path, items: list[Any], limit: int, max_source_
         add(item)
 
     score_map = {item.queue_id: (score, reasons) for item, score, reasons in eligible}
+    selected.sort(key=lambda item: score_map.get(item.queue_id, (round(float(item.editorial_priority), 3), []))[0], reverse=True)
     diagnostics = {
         "eligibleCount": len(eligible),
         "sourceCounts": dict(source_counts),
@@ -507,6 +513,7 @@ def _select_headline_board(root: Path, items: list[Any], limit: int, max_source_
         "scienceSpacePressure": science_space_pressure,
         "scienceSpaceBoardLimit": SCIENCE_SPACE_BOARD_LIMIT if science_space_pressure else None,
         "maxPerSource": MAX_PER_SOURCE,
+        "minCategoryTargetScore": MIN_CATEGORY_TARGET_SCORE,
     }
     return selected, skipped, {"scores": score_map, "diagnostics": diagnostics}
 

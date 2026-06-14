@@ -23,7 +23,7 @@ from news_pipeline.storage.json_store import JsonStore
 
 
 DEFAULT_MIN_SCORE = 0.68
-ASTERIA_POLISHED_MIN_SCORE = 0.0
+ASTERIA_POLISHED_MIN_SCORE = 0.68
 DEFAULT_MAX_SOURCE_AGE_HOURS = 24
 DEFAULT_MIN_INTERVAL_SECONDS = 900
 STATE_PATH = Path("news_pipeline/data/state/heartbeat-publish-one.json")
@@ -161,9 +161,12 @@ def _has_asteria_polish(item: QueueItem) -> bool:
 
 def _candidate_sort_key(item: QueueItem) -> tuple[int, float]:
     # Asteria-polished candidates are intentional editorial selections and must be
-    # checked before raw high-score queue items. Their original RSS score is only
-    # a headline-board signal, not a publish gate after Asteria has read/edited it.
-    return (1 if _has_asteria_polish(item) else 0, float(item.editorial_priority))
+    # checked before raw high-score queue items only when they still clear the
+    # publish-quality score floor. Otherwise a polished but low-importance item can
+    # jump ahead of stronger global-news candidates just because it was easier to
+    # write.
+    polish_rank = 1 if _has_asteria_polish(item) and float(item.editorial_priority) >= ASTERIA_POLISHED_MIN_SCORE else 0
+    return (polish_rank, float(item.editorial_priority))
 
 
 def _select_candidate(root: Path, min_score: float, max_source_age_hours: int, limit_rejections: int = 8) -> tuple[QueueItem | None, list[dict[str, Any]]]:
