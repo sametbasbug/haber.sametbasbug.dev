@@ -27,6 +27,7 @@ EVENT_CORE_ACTION_TOKEN_MIN = 1
 RECENT_TOPIC_FAMILY_LIVE_WINDOW = 8
 RECENT_TOPIC_FAMILY_BLOCK_THRESHOLD = 2
 EVENT_CORE_ENTITY_HINTS = {
+    "access",
     "acquisition",
     "almasini",
     "anlasma",
@@ -37,7 +38,16 @@ EVENT_CORE_ENTITY_HINTS = {
     "durdurdu",
     "durdurulmasi",
     "engelledi",
+    "erisim",
+    "erisimi",
+    "erisimini",
+    "halted",
+    "halting",
+    "restricted",
+    "restriction",
     "satin",
+    "suspend",
+    "suspended",
     "veto",
     "vetoes",
 }

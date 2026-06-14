@@ -184,6 +184,32 @@ sources:
     )
 
 
+def test_duplicate_event_guard_blocks_same_ai_access_restriction_from_different_angle(tmp_path: Path) -> None:
+    content = tmp_path / "content"
+    content.mkdir()
+    (content / "anthropic-europe-sovereignty.md").write_text(
+        """---
+title: "Anthropic kararı Avrupa’da egemen yapay zekâ tartışmasını büyüttü"
+description: "ABD yönetiminin talimatı sonrası Anthropic’in bazı üst seviye modellerine yabancı kullanıcı erişimini durdurması, Avrupa’da teknoloji bağımlılığı ve yerli yapay zekâ yatırımları tartışmasını yeniden öne çıkardı."
+sources:
+  - name: "Euronews World"
+    url: "https://www.euronews.com/2026/06/13/wake-up-call-europe-reacts-to-anthropic-halting-access-to-its-fable-5-and-mythos-5-ai-mode"
+---
+ABD merkezli Anthropic’in Fable 5 ve Mythos 5 modellerine yabancı kullanıcı erişimini durdurması, Avrupa’da yapay zekâ egemenliği tartışmasını sertleştirdi.
+""",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(typer.BadParameter, match="near-duplicate live event"):
+        _assert_not_duplicate_live(
+            content,
+            "ABD, Anthropic’in en yeni yapay zekâ modellerine yabancı erişimini durdurmasını istedi",
+            "Anthropic, ABD hükümetinin ulusal güvenlik gerekçesiyle Fable 5 ve Mythos 5 modellerine yabancı uyrukluların erişimini askıya almasını istediğini açıkladı; karar, gelişmiş yapay zekâda ihracat kontrolü tartışmasını büyüttü.",
+            {"https://www.aljazeera.com/news/2026/6/14/us-asks-anthropic-to-block-global-access-to-top-ai-models-why-it-matters"},
+            "abd-anthropic-yabanci-erisim",
+        )
+
+
 def test_publish_blocks_recent_topic_family_saturation(tmp_path: Path) -> None:
     content = tmp_path / "content"
     content.mkdir()
