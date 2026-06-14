@@ -114,6 +114,34 @@ def looks_too_english(text: str) -> bool:
     return hits >= 2
 
 
+def body_looks_too_english(text: str) -> bool:
+    """Return True when an editorial body still looks mostly English.
+
+    Full Turkish articles can legitimately mention English proper nouns such as
+    "Institute for the Study of War" in source attribution. The generic short-
+    text heuristic is intentionally strict for titles/descriptions/facts, but it
+    is too brittle for long bodies where a single source name can contain
+    multiple English stop words. For bodies, keep the strict rejection unless the
+    text has strong Turkish character/morphology evidence and only a small number
+    of English-marker hits.
+    """
+    if not looks_too_english(text):
+        return False
+
+    lowered = f" {text.strip().lower()} "
+    marker_hits = sum(1 for marker in ENGLISH_MARKERS if marker in lowered)
+    regex_hits = len(re.findall(r"\b(?:the|and|of|to|over|everyone)\b", lowered))
+    english_hits = marker_hits + regex_hits
+    turkish_marker_hits = sum(1 for marker in TURKISH_MARKERS if marker in lowered)
+    morphology_hits = len(TURKISH_MORPHOLOGY_RE.findall(lowered))
+    has_turkish_chars = bool(re.search(r"[çğıöşü]", lowered))
+    turkish_signal = turkish_marker_hits + min(morphology_hits, 4) + (1 if has_turkish_chars else 0)
+
+    if len(text) >= MIN_AUTOPUBLISH_BODY_LENGTH and turkish_signal >= 5 and english_hits <= 4:
+        return False
+    return True
+
+
 def has_strong_turkish_signal(text: str) -> bool:
     lowered = f" {text.strip().lower()} "
     turkish_hits = sum(1 for marker in TURKISH_MARKERS if marker in lowered)
@@ -169,7 +197,7 @@ def has_publishable_body_depth(item: QueueItem) -> bool:
     body = item.draft_body.strip() or build_body(item)
     if len(body) < MIN_AUTOPUBLISH_BODY_LENGTH:
         return False
-    if looks_too_english(body):
+    if body_looks_too_english(body):
         return False
     return True
 

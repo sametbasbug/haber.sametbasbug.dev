@@ -12,7 +12,7 @@ from news_pipeline.cli.commands import heartbeat_publish_one
 from news_pipeline.cli.commands.heartbeat_publish_one import _select_candidate, publish_one_command
 from news_pipeline.cli.commands.heartbeat_prepare_one import _board_score, _recent_live_posts, _select_headline_board
 from news_pipeline.cli.commands.publish import _assert_not_duplicate_live, _assert_not_duplicate_topic, publish_command, publish_queue_item
-from news_pipeline.editorial.autonomy import is_autopublish_candidate
+from news_pipeline.editorial.autonomy import body_looks_too_english, is_autopublish_candidate
 from news_pipeline.extractors.article_text import _extract_published_at
 from news_pipeline.models.article import NormalizedArticle, RawArticle
 from news_pipeline.models.queue import DraftSource, QueueItem
@@ -248,6 +248,32 @@ def test_manual_review_gate_behavior(tmp_path: Path) -> None:
     assert candidate is None
     assert rejections
     assert rejections[0]["reason"] == "manual-review item"
+
+
+
+def test_body_english_gate_allows_turkish_body_with_english_source_name() -> None:
+    body = "\n\n".join(
+        [
+            "Rusya’nın Ukrayna’daki kara taarruzu, aylardır süren yoğun bombardımana rağmen cephede yavaşlama işaretleri veriyor. France 24’ün AFP ve Institute for the Study of War verilerine dayandırdığı değerlendirmeye göre Rusya Savunma Bakanlığı’nın yeni yerleşim yeri ele geçirme açıklamaları daha seyrek hale geldi.",
+            "AFP’nin ISW verileri üzerinden yaptığı analize göre Rus ordusu nisan ve mayıs aylarında Ukrayna’da kazandığından daha fazla toprak kaybetti. Bu değişim cephe hattını tek başına dönüştürecek büyüklükte değil, ancak Moskova’nın sayı ve teçhizat üstünlüğüne rağmen hızlı ilerleme üretemediğini gösteren önemli bir işaret sayılıyor.",
+            "Askerî uzmanlar yavaşlamada drone savaşının belirleyici hale gelmesine dikkat çekiyor. Cephe hattının iki yanında yoğunlaşan insansız hava araçları, birlik hareketlerini zorlaştıran geniş bir ölü bölge yaratıyor.",
+        ]
+    )
+
+    assert body_looks_too_english(body) is False
+
+
+
+def test_body_english_gate_still_blocks_english_body() -> None:
+    body = " ".join(
+        [
+            "The ministry said the plan will continue after the conference and officials are talking with allies.",
+            "Everyone is focused on violations over the border and the exchange of intelligence through the new process.",
+            "The report says the military is planning a broader campaign with partners and more announcements are expected.",
+        ]
+    )
+
+    assert body_looks_too_english(body) is True
 
 
 
