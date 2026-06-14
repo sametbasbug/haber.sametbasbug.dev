@@ -39,6 +39,7 @@
   "overrides": {
     "volar-service-yaml": "^0.0.71",
     "yaml-language-server": "^1.23.0",
-    "yaml": "^2.8.3"
+    "yaml": "^2.8.3",
+    "esbuild": "^0.28.1"
   }
 }
