@@ -266,6 +266,7 @@ npm run test:pipeline
 - [`news_pipeline/HEARTBEAT_RUNBOOK.md`](news_pipeline/HEARTBEAT_RUNBOOK.md) — heartbeat cycle notes
 - [`news_pipeline/AUTONOMOUS_PUBLISH_POLICY.md`](news_pipeline/AUTONOMOUS_PUBLISH_POLICY.md) — autonomy boundaries
 - [`news_pipeline/news_pipeline/demo/synthetic/README.md`](news_pipeline/news_pipeline/demo/synthetic/README.md) — tiny provider-free demo dataset
+- [`docs/environment.md`](docs/environment.md) — documented public/optional environment variables
 - [`CONTRIBUTING.md`](CONTRIBUTING.md) — contribution guidelines
 - [`ROADMAP.md`](ROADMAP.md) — maintainability roadmap
 - [`SECURITY.md`](SECURITY.md) — security reporting and scope

@@ -19,6 +19,7 @@ pnpm-debug.log*
 
 # macOS-specific files
 .DS_Store
+**/.DS_Store
 
 # jetbrains setting folder
 .idea/
@@ -40,4 +41,4 @@ news_pipeline/data/*
 !news_pipeline/data/published/.gitkeep
 
 # auto-generated news drafts
-src/content/anlikHaber/_drafts/
+src/content/equinoxHaber/_drafts/
