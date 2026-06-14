@@ -35,11 +35,16 @@ HIGH_VOLUME_ACTIVE_LIMITS = {
 }
 
 
+def _reject_with_note(service: QueueService, queue_id: str, note: str):
+    """Reject through QueueService so audit evidence such as pre-reject score is preserved."""
+    return service.reject(queue_id, note=note)
+
+
 def queue_cleanup_command(
     stale_hours: int = 36,
     archive_terminal_hours: int = 24,
     keep_score: float = 0.62,
-    purge_rejected_archive_hours: int = 24,
+    purge_rejected_archive_hours: int = 168,
     purge_published_archive_hours: int = 72,
     stale_source_hours: int = 24,
     low_score_reject: float = 0.50,
@@ -79,13 +84,9 @@ def queue_cleanup_command(
             and age >= timedelta(hours=low_score_grace_hours)
             and item.editorial_priority < low_score_reject
         ):
-            item.status = "rejected"
-            item.editorial_priority = 0.0
             note = f"low-score-auto-reject: score below {low_score_reject:.2f} after {low_score_grace_hours}h"
-            if note not in item.notes:
-                item.notes.append(note)
-            service.save(item)
-            rejected_low_score += 1
+            if _reject_with_note(service, item.queue_id, note) is not None:
+                rejected_low_score += 1
             continue
 
         normalized = normalized_store.load(item.normalized_id)
@@ -98,22 +99,14 @@ def queue_cleanup_command(
                 and source_age >= timedelta(hours=high_volume_grace_hours)
                 and item.editorial_priority < source_min_score
             ):
-                item.status = "rejected"
-                item.editorial_priority = 0.0
                 note = f"high-volume-source-low-score-auto-reject: {normalized.source_id} score below {source_min_score:.2f} after {high_volume_grace_hours}h"
-                if note not in item.notes:
-                    item.notes.append(note)
-                service.save(item)
-                rejected_high_volume_low_score += 1
+                if _reject_with_note(service, item.queue_id, note) is not None:
+                    rejected_high_volume_low_score += 1
                 continue
             if source_age >= timedelta(hours=stale_source_hours):
-                item.status = "rejected"
-                item.editorial_priority = 0.0
                 stale_source_note = f"source-stale-auto-reject: source published older than {stale_source_hours}h"
-                if stale_source_note not in item.notes:
-                    item.notes.append(stale_source_note)
-                service.save(item)
-                if service.archive(item.queue_id, archive_root):
+                rejected_item = _reject_with_note(service, item.queue_id, stale_source_note)
+                if rejected_item is not None and service.archive(item.queue_id, archive_root):
                     archived_source_stale += 1
                 continue
 
@@ -131,13 +124,9 @@ def queue_cleanup_command(
             kept_stale += 1
             continue
 
-        item.status = "rejected"
-        item.editorial_priority = 0.0
         stale_reject_note = f"stale-auto-reject: older than {stale_hours}h"
-        if stale_reject_note not in item.notes:
-            item.notes.append(stale_reject_note)
-        service.save(item)
-        if service.archive(item.queue_id, archive_root):
+        rejected_item = _reject_with_note(service, item.queue_id, stale_reject_note)
+        if rejected_item is not None and service.archive(item.queue_id, archive_root):
             archived_stale += 1
 
     active_by_source: dict[str, list[tuple[object, datetime]]] = {}
@@ -155,13 +144,9 @@ def queue_cleanup_command(
         limit = HIGH_VOLUME_ACTIVE_LIMITS[source_id]
         rows.sort(key=lambda row: (row[0].editorial_priority, row[1]), reverse=True)
         for item, _ in rows[limit:]:
-            item.status = "rejected"
-            item.editorial_priority = 0.0
             note = f"source-overflow-auto-reject: {source_id} active new limit {limit}"
-            if note not in item.notes:
-                item.notes.append(note)
-            service.save(item)
-            rejected_source_overflow += 1
+            if _reject_with_note(service, item.queue_id, note) is not None:
+                rejected_source_overflow += 1
 
     for path in sorted(archive_root.glob("*.json")):
         item = service.store.model_cls.model_validate_json(path.read_text(encoding="utf-8"))

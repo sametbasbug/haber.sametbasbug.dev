@@ -198,8 +198,9 @@ Production publish şu kapılardan geçer:
 - Asteria polish notu zorunlu
 - `heroPrompt` ve `heroAlt` zorunlu
 - başlık/açıklama/fact/body Türkçe kontrolü
-- minimum gövde derinliği
-- source age: publish hard gate varsayılan 24 saat; Asteria headline board ve queue stale-source temizliği varsayılan 18 saat
+- minimum gövde derinliği: 520 karakterlik kalite kapısıdır; bu 5 paragraf kotası değildir
+- minimum editorial score: raw `editorial_priority` / `score` normalde en az 0.68 olmalıdır; `boardScore` yalnız sıralama/sinyal bağlamıdır, score-floor bypass değildir
+- source age: publish hard gate, Asteria headline board ve queue stale-source temizliği varsayılan 24 saat
 - Asteria headline board, son 10 canlı yayındaki aynı büyük şirket/ürün kümesi tekrarına yumuşak skor cezası uygular (`Claude → Anthropic`, `ChatGPT → OpenAI`, `Gemini → Google`)
 - aynı URL tekrar kontrolü
 - fuzzy title/description/topic duplicate kontrolü

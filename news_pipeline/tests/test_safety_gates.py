@@ -9,8 +9,12 @@ import typer
 from news_pipeline.cli.commands.audit_content import audit_content_command
 from news_pipeline.cli.commands.collect import _is_due
 from news_pipeline.cli.commands import heartbeat_publish_one
+from news_pipeline.cli.commands.process import process_command
+from news_pipeline.cli.commands.queue_approve import queue_approve_command
+from news_pipeline.cli.commands.queue_cleanup import queue_cleanup_command
+from news_pipeline.cli.commands.queue_polish import queue_polish_command
 from news_pipeline.cli.commands.heartbeat_publish_one import _select_candidate, publish_one_command
-from news_pipeline.cli.commands.heartbeat_prepare_one import _board_score, _recent_live_posts, _select_headline_board
+from news_pipeline.cli.commands.heartbeat_prepare_one import _board_score, _build_editorial_packs, _candidate_reason, _recent_live_posts, _select_headline_board
 from news_pipeline.cli.commands.publish import _assert_not_duplicate_live, _assert_not_duplicate_topic, publish_command, publish_queue_item
 from news_pipeline.editorial.autonomy import body_looks_too_english, is_autopublish_candidate
 from news_pipeline.extractors.article_text import _extract_published_at
@@ -18,6 +22,7 @@ from news_pipeline.models.article import NormalizedArticle, RawArticle
 from news_pipeline.models.queue import DraftSource, QueueItem
 from news_pipeline.models.source import SourceConfig
 from news_pipeline.normalize.cleaner import ArticleNormalizer
+from news_pipeline.queue.service import QueueService
 from news_pipeline.storage.json_store import JsonStore
 
 
@@ -210,6 +215,87 @@ ABD merkezli Anthropic’in Fable 5 ve Mythos 5 modellerine yabancı kullanıcı
         )
 
 
+def test_duplicate_event_guard_blocks_same_shadow_fleet_tanker_from_different_source(tmp_path: Path) -> None:
+    content = tmp_path / "content"
+    content.mkdir()
+    (content / "britanya-rusyanin-golge-filosu-ile-baglantili-tankeri-mansta-alikoydu.md").write_text(
+        """---
+title: "Britanya, Rusya’nın “gölge filosu” ile bağlantılı tankeri Manş’ta alıkoydu"
+description: "Britanya Savunma Bakanlığı, yaptırım listesinde yer alan Smyrtos adlı petrol tankerinin Manş Denizi’nde durdurulduğunu ve Rusya’ya yönelik yaptırımların ihlali şüphesiyle inceleneceğini açıkladı."
+sources:
+  - name: "Al Jazeera World"
+    url: "https://www.aljazeera.com/news/2026/6/14/uk-detains-shadow-fleet-tanker-in-channel"
+---
+Britanya, Rusya'nın petrol yaptırımlarını aşmak için kullandığı belirtilen gölge filo ile bağlantılı olduğundan şüphelenilen Smyrtos adlı tankeri Manş Denizi'nde alıkoydu.
+
+Başbakan Keir Starmer, yaptırım kapsamındaki geminin Rusya'nın Ukrayna'daki savaşını finanse eden akışlara yönelik yeni bir darbe olduğunu söyledi.
+
+Savunma Bakanlığı, Smyrtos'un İngiltere'nin güney kıyısı açıklarında tutulacağını ve soruşturma süresince izleneceğini açıkladı.
+""",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(typer.BadParameter, match="near-duplicate live event"):
+        _assert_not_duplicate_live(
+            content,
+            "İngiltere seizes suspected Russian shadow fleet tanker",
+            "The İngiltere Ministry of Defence on Sunday issued a press release announcing that Royal Marine Commandos had captured a sanctioned Russian tanker in the Channel in what it called the latest blow to Russia's war economy.",
+            {"https://www.dw.com/en/uk-seizes-suspected-russian-shadow-fleet-tanker/a-77545832"},
+            "ingiltere-golge-filo-tanker",
+        )
+
+
+def test_duplicate_event_guard_allows_distinct_ukraine_russia_energy_update(tmp_path: Path) -> None:
+    content = tmp_path / "content"
+    content.mkdir()
+    (content / "ukrayna-rus-enerji-terminalini-vurdu.md").write_text(
+        """---
+title: "Ukrayna, Rusya’nın deniz terminalini vurduğunu açıkladı"
+description: "Kiev, Rus enerji altyapısına yönelik saldırıda bir deniz terminalinin hedef alındığını bildirdi."
+sources:
+  - name: "Demo Source"
+    url: "https://example.org/ukraine-terminal"
+---
+Ukrayna, Rusya'nın enerji altyapısına yönelik ayrı bir saldırıyı duyurdu.
+""",
+        encoding="utf-8",
+    )
+
+    _assert_not_duplicate_live(
+        content,
+        "Ukrayna, Rus sanayi tesislerine geniş çaplı saldırı düzenlediğini duyurdu",
+        "Kiev, farklı bölgelerdeki Rus sanayi tesislerinin yeni bir drone saldırısıyla hedef alındığını açıkladı.",
+        {"https://example.org/ukraine-industrial-strike"},
+        "ukrayna-rus-sanayi-tesisleri",
+    )
+
+
+def test_duplicate_live_source_url_canonicalizes_tracking_and_www(tmp_path: Path) -> None:
+    content = tmp_path / "content"
+    content.mkdir()
+    (content / "existing.md").write_text(
+        """---
+title: "Mevcut haber"
+description: "Mevcut haber açıklaması"
+sources:
+  - name: "Demo"
+    url: "https://example.org/news/story?utm_source=rss&utm_medium=feed"
+---
+Gövde.
+""",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(typer.BadParameter, match="duplicate live source URL"):
+        _assert_not_duplicate_live(
+            content,
+            "Yeni haber",
+            "Yeni haber açıklaması",
+            {"http://www.example.org/news/story/?utm_campaign=social"},
+            "new-story",
+        )
+
+
 def test_publish_blocks_recent_topic_family_saturation(tmp_path: Path) -> None:
     content = tmp_path / "content"
     content.mkdir()
@@ -318,6 +404,443 @@ def test_asteria_polish_does_not_bypass_low_importance_score_floor(tmp_path: Pat
     assert rejections
     assert rejections[0]["queueId"] == "low-importance"
     assert rejections[0]["reason"] == "score below threshold (0.590)"
+
+
+def test_prepare_diagnostic_does_not_claim_board_boosted_low_raw_score_passes(tmp_path: Path) -> None:
+    article = _article("ipo-ai", url="https://example.org/demo/ipo-ai")
+    article.title = "AI companies race to go public as markets heat up"
+    article.summary = "Technology market investors are watching artificial intelligence listings."
+    item = _item("ipo-ai", normalized_id=article.id, url="https://example.org/demo/ipo-ai", priority=0.669)
+    item.draft_title = "Yapay zekâ şirketleri halka arz yarışında sermaye baskısını artırıyor"
+    item.draft_description = "Teknoloji piyasaları, yapay zekâ şirketlerinin halka arz planlarına odaklanıyor."
+    item.draft_category = "Teknoloji"
+    _save_runtime(tmp_path, item, article)
+
+    board_score, reasons = _board_score(tmp_path, item, recent_posts=[])
+    ok, reason = _candidate_reason(tmp_path, item, min_score=0.68, max_source_age_hours=72, board_score=board_score)
+
+    assert board_score >= 0.68
+    assert any(reason.startswith("signal_boost:") for reason in reasons)
+    assert ok is False
+    assert reason == "score below threshold (0.669)"
+
+
+def test_prepare_board_excludes_raw_score_floor_failures_even_when_board_boosted(tmp_path: Path) -> None:
+    article = _article("ipo-ai-board", url="https://example.org/demo/ipo-ai-board")
+    article.title = "AI companies race to go public as markets heat up"
+    article.summary = "Technology market investors are watching artificial intelligence listings."
+    item = _item("ipo-ai-board", normalized_id=article.id, url="https://example.org/demo/ipo-ai-board", priority=0.669)
+    item.draft_title = "Yapay zekâ şirketleri halka arz yarışında sermaye baskısını artırıyor"
+    item.draft_description = "Teknoloji piyasaları, yapay zekâ şirketlerinin halka arz planlarına odaklanıyor."
+    item.draft_category = "Teknoloji"
+    _save_runtime(tmp_path, item, article)
+
+    packs, skipped, _ = _build_editorial_packs(tmp_path, min_score=0.68, max_source_age_hours=72, limit=20)
+
+    assert packs == []
+    assert any(row["queueId"] == item.queue_id and row["reason"] == "score below threshold (0.669)" for row in skipped)
+
+
+def test_prepare_board_excludes_near_duplicate_live_events_before_asteria_polish(tmp_path: Path) -> None:
+    content = tmp_path / "src/content/equinoxHaber"
+    content.mkdir(parents=True)
+    (content / "britanya-rusyanin-golge-filosu-ile-baglantili-tankeri-mansta-alikoydu.md").write_text(
+        """---
+title: "Britanya, Rusya’nın “gölge filosu” ile bağlantılı tankeri Manş’ta alıkoydu"
+description: "Britanya Savunma Bakanlığı, yaptırım listesinde yer alan Smyrtos adlı petrol tankerinin Manş Denizi’nde durdurulduğunu ve Rusya’ya yönelik yaptırımların ihlali şüphesiyle inceleneceğini açıkladı."
+sources:
+  - name: "Al Jazeera World"
+    url: "https://www.aljazeera.com/news/2026/6/14/uk-detains-shadow-fleet-tanker-in-channel"
+---
+Britanya, Rusya'nın petrol yaptırımlarını aşmak için kullandığı belirtilen gölge filo ile bağlantılı olduğundan şüphelenilen Smyrtos adlı tankeri Manş Denizi'nde alıkoydu.
+
+Başbakan Keir Starmer, yaptırım kapsamındaki geminin Rusya'nın Ukrayna'daki savaşını finanse eden akışlara yönelik yeni bir darbe olduğunu söyledi.
+
+Savunma Bakanlığı, Smyrtos'un İngiltere'nin güney kıyısı açıklarında tutulacağını ve soruşturma süresince izleneceğini açıkladı.
+""",
+        encoding="utf-8",
+    )
+    article = _article("shadow-fleet-dupe", url="https://www.dw.com/en/uk-seizes-suspected-russian-shadow-fleet-tanker/a-77545832")
+    item = _item("shadow-fleet-dupe", normalized_id=article.id, url=str(article.canonical_url), priority=0.91)
+    item.draft_title = "İngiltere seizes suspected Russian shadow fleet tanker"
+    item.draft_description = "The İngiltere Ministry of Defence announced that Royal Marine Commandos had captured a sanctioned Russian tanker in the Channel."
+    item.draft_category = "Siyaset"
+    _save_runtime(tmp_path, item, article)
+
+    packs, skipped, _ = _build_editorial_packs(tmp_path, min_score=0.68, max_source_age_hours=72, limit=20)
+
+    assert packs == []
+    assert any(row["queueId"] == item.queue_id and row["reason"] == "near-duplicate live event" for row in skipped)
+
+
+def test_prepare_board_keeps_clean_candidate_that_only_needs_asteria_polish(tmp_path: Path) -> None:
+    article = _article("clean-polish-needed", url="https://example.org/demo/clean-polish-needed")
+    article.title = "European regulators approve major AI infrastructure plan"
+    article.summary = "Regulators approved a large artificial intelligence infrastructure investment plan."
+    item = _item("clean-polish-needed", normalized_id=article.id, url=str(article.canonical_url), priority=0.82, notes=[])
+    item.draft_title = "Avrupalı düzenleyiciler büyük yapay zekâ altyapı planını onayladı"
+    item.draft_description = "Karar, veri merkezi ve çip kapasitesini büyütmeyi hedefleyen yeni planı kapsıyor."
+    item.draft_category = "Teknoloji"
+    _save_runtime(tmp_path, item, article)
+
+    packs, skipped, _ = _build_editorial_packs(tmp_path, min_score=0.68, max_source_age_hours=72, limit=20)
+
+    assert [pack["queueId"] for pack in packs] == [item.queue_id]
+    assert packs[0]["strictGate"] == {"passesNow": False, "reason": "missing Asteria editorial polish"}
+    assert not any(row.get("queueId") == item.queue_id for row in skipped)
+
+
+def test_duplicate_publish_gate_note_excludes_candidate_from_publish_and_board(tmp_path: Path) -> None:
+    article = _article("duplicate-note", url="https://example.org/demo/duplicate-note")
+    item = _item(
+        "duplicate-note",
+        normalized_id=article.id,
+        url="https://example.org/demo/duplicate-note",
+        priority=0.91,
+        notes=["asteria-editorial-polish", "duplicate-publish-gate: near-duplicate live event already published in existing.md"],
+    )
+    _save_runtime(tmp_path, item, article)
+
+    candidate, rejections = _select_candidate(tmp_path, min_score=0.68, max_source_age_hours=72)
+    selected, skipped, _ = _select_headline_board(tmp_path, [item], limit=10, max_source_age_hours=72)
+
+    assert candidate is None
+    assert rejections[0]["reason"] == "duplicate-publish-gate item"
+    assert selected == []
+    assert skipped[0]["reason"] == "excluded by editorial note"
+
+
+def test_missing_normalized_article_blocks_publish_and_board_selection(tmp_path: Path) -> None:
+    item = _item("missing-normalized", normalized_id="missing-normalized", url="https://example.org/demo/missing-normalized", priority=0.91)
+    JsonStore(tmp_path / "news_pipeline/data/queue", QueueItem).save(item.queue_id, item)
+
+    candidate, rejections = _select_candidate(tmp_path, min_score=0.68, max_source_age_hours=72)
+    selected, skipped, _ = _select_headline_board(tmp_path, [item], limit=10, max_source_age_hours=72)
+
+    assert candidate is None
+    assert rejections[0]["reason"] == "missing normalized article"
+    assert selected == []
+    assert skipped[0]["reason"] == "missing normalized article"
+
+
+def test_direct_publish_refuses_missing_normalized_article(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.chdir(tmp_path)
+    item = _item("missing-normalized-publish", normalized_id="missing-normalized-publish", url="https://example.org/demo/missing-normalized-publish", priority=0.91)
+    item.status = "approved"  # type: ignore[assignment]
+    JsonStore(tmp_path / "news_pipeline/data/queue", QueueItem).save(item.queue_id, item)
+
+    with pytest.raises(typer.BadParameter, match="normalized article missing"):
+        publish_queue_item(item.queue_id)
+
+
+def test_tv_show_source_format_is_excluded_from_publish_and_board(tmp_path: Path) -> None:
+    article = _article(
+        "tv-show-format",
+        url="https://www.france24.com/en/tv-shows/tech-24/20260614-tech-24-takes-to-the-skies",
+    )
+    item = _item("tv-show-format", normalized_id=article.id, url=str(article.canonical_url), priority=0.91)
+    item.draft_title = "Tech 24 takes to the skies as VivaTech takes over the Champs-Elysées"
+    item.draft_description = "France's biggest geek get-together started with a bang this year."
+    _save_runtime(tmp_path, item, article)
+
+    candidate, rejections = _select_candidate(tmp_path, min_score=0.68, max_source_age_hours=72)
+    selected, skipped, _ = _select_headline_board(tmp_path, [item], limit=10, max_source_age_hours=72)
+
+    assert candidate is None
+    assert rejections[0]["reason"] == "excluded source format (podcast/liveblog)"
+    assert selected == []
+    assert skipped[0]["reason"] == "excluded source format (podcast/liveblog)"
+
+
+def test_publish_one_retries_next_candidate_after_duplicate_publish_gate(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.chdir(tmp_path)
+    first_article = _article("dup-first", url="https://example.org/demo/dup-first")
+    second_article = _article("clean-second", url="https://example.org/demo/clean-second")
+    first = _item("dup-first", normalized_id=first_article.id, url="https://example.org/demo/dup-first", priority=0.93)
+    second = _item("clean-second", normalized_id=second_article.id, url="https://example.org/demo/clean-second", priority=0.91)
+    _save_runtime(tmp_path, first, first_article)
+    _save_runtime(tmp_path, second, second_article)
+    calls: list[str] = []
+
+    def fake_publish(queue_id: str, **_: object) -> None:
+        calls.append(queue_id)
+        if queue_id == first.queue_id:
+            raise typer.BadParameter("near-duplicate live event already published in existing.md")
+        print("published: src/content/equinoxHaber/clean-second.md")
+
+    monkeypatch.setattr(heartbeat_publish_one, "publish_queue_item", fake_publish)
+    monkeypatch.setattr(heartbeat_publish_one, "audit_images_command", lambda: None)
+    monkeypatch.setattr(heartbeat_publish_one, "audit_content_command", lambda **_: None)
+    monkeypatch.setattr(heartbeat_publish_one, "_git_commit_and_push", lambda message, push: [{"name": "git", "ok": True, "stdout": "no changes"}])
+    monkeypatch.setattr(heartbeat_publish_one, "_run_shell", lambda *args, **kwargs: {"name": args[0], "ok": True, "stdout": "build ok", "stderr": ""})
+    monkeypatch.setattr(heartbeat_publish_one, "_mark_cycle_completed", lambda root, result: None)
+    monkeypatch.setattr(heartbeat_publish_one, "_recent_cycle_guard", lambda root, min_interval_seconds, force: (True, {"forced": True}))
+
+    publish_one_command(execute=True, json_output=True, push=False, collect_first=False, build=False, duplicate_retry_limit=1)
+
+    assert calls == [first.queue_id, second.queue_id]
+    stored_first = JsonStore(tmp_path / "news_pipeline/data/queue", QueueItem).load(first.queue_id)
+    assert stored_first is not None
+    assert stored_first.status == "rejected"
+    assert any(note.startswith("duplicate-publish-gate:") for note in stored_first.notes)
+
+
+def test_queue_polish_requires_explicit_retry_for_duplicate_rejected_item(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.chdir(tmp_path)
+    article = _article("dup-polish", url="https://example.org/demo/dup-polish")
+    item = _item(
+        "dup-polish",
+        normalized_id=article.id,
+        url="https://example.org/demo/dup-polish",
+        notes=["duplicate-publish-gate: near-duplicate live event already published in existing.md"],
+    )
+    _save_runtime(tmp_path, item, article)
+
+    with pytest.raises(typer.BadParameter, match="duplicate-publish-gate"):
+        queue_polish_command(
+            item.queue_id,
+            title=item.draft_title,
+            description=item.draft_description,
+            category="Teknoloji",
+            facts_json='["Birinci Türkçe gerçek cümlesi yayıma uygun bağlam taşıyor.", "İkinci Türkçe gerçek cümlesi kaynak kararını açıklıyor."]',
+            body=item.draft_body,
+            hero_prompt=item.hero_prompt,
+            hero_alt=item.hero_alt,
+            tags_json='["demo"]',
+            json_output=True,
+        )
+
+
+def test_queue_polish_explicit_duplicate_retry_clears_blocking_note(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.chdir(tmp_path)
+    article = _article("dup-polish-reset", url="https://example.org/demo/dup-polish-reset")
+    item = _item(
+        "dup-polish-reset",
+        normalized_id=article.id,
+        url="https://example.org/demo/dup-polish-reset",
+        priority=0.91,
+        notes=["duplicate-publish-gate: near-duplicate live event already published in existing.md"],
+    )
+    _save_runtime(tmp_path, item, article)
+
+    queue_polish_command(
+        item.queue_id,
+        title=item.draft_title,
+        description=item.draft_description,
+        category="Teknoloji",
+        facts_json='["Birinci Türkçe gerçek cümlesi yayıma uygun bağlam taşıyor.", "İkinci Türkçe gerçek cümlesi kaynak kararını açıklıyor."]',
+        body=item.draft_body,
+        hero_prompt=item.hero_prompt,
+        hero_alt=item.hero_alt,
+        tags_json='["demo"]',
+        allow_duplicate_retry=True,
+        json_output=True,
+    )
+
+    stored = JsonStore(tmp_path / "news_pipeline/data/queue", QueueItem).load(item.queue_id)
+    assert stored is not None
+    assert not any(note.startswith("duplicate-publish-gate:") for note in stored.notes)
+    assert any(note.startswith("duplicate-retry-reset:") for note in stored.notes)
+
+
+def test_process_preserves_rejected_polished_item_instead_of_rewriting_or_resurrecting(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.chdir(tmp_path)
+    config = tmp_path / "news_pipeline/news_pipeline/config"
+    config.mkdir(parents=True)
+    (config / "sources.yaml").write_text(
+        "sources:\n  - id: demo-source\n    name: Demo Source\n    kind: rss\n    url: https://example.org/rss.xml\n    category_hints: [Teknoloji]\n",
+        encoding="utf-8",
+    )
+    raw = RawArticle(
+        source_id="demo-source",
+        fetched_at=datetime.now(UTC),
+        url="https://example.org/demo/process-overwrite",
+        title="English source title should not overwrite rejected polish",
+        summary="English summary should not overwrite Asteria's Turkish polish.",
+        published_at=datetime.now(UTC),
+        metadata={},
+    )
+    raw_store = JsonStore(tmp_path / "news_pipeline/data/raw", RawArticle)
+    raw_store.save("raw-process-overwrite", raw)
+
+    normalized = ArticleNormalizer().normalize(
+        raw,
+        SourceConfig(id="demo-source", name="Demo Source", kind="rss", url="https://example.org/rss.xml", category_hints=["Teknoloji"]),
+    )
+    item = _item(
+        "process-overwrite",
+        normalized_id=normalized.id,
+        status="rejected",
+        url="https://example.org/demo/process-overwrite",
+        notes=["asteria-editorial-polish", "duplicate-publish-gate: near-duplicate live event already published in existing.md"],
+    )
+    item.draft_title = "Asteria'nın Türkçe başlığı korunmalı"
+    item.draft_description = "Asteria'nın Türkçe açıklaması yeniden işleme sırasında ezilmemeli."
+    _save_runtime(tmp_path, item, normalized)
+
+    process_command(config_path="news_pipeline/news_pipeline/config/sources.yaml", verbose=False, reprocess_all=False, purge_stale_raw_hours=0)
+
+    stored = JsonStore(tmp_path / "news_pipeline/data/queue", QueueItem).load(item.queue_id)
+    assert stored is not None
+    assert stored.status == "rejected"
+    assert stored.draft_title == "Asteria'nın Türkçe başlığı korunmalı"
+    assert stored.draft_description == "Asteria'nın Türkçe açıklaması yeniden işleme sırasında ezilmemeli."
+
+
+def test_process_reprocess_all_preserves_active_rejected_terminal_item(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.chdir(tmp_path)
+    config = tmp_path / "news_pipeline/news_pipeline/config"
+    config.mkdir(parents=True)
+    (config / "sources.yaml").write_text(
+        "sources:\n  - id: demo-source\n    name: Demo Source\n    kind: rss\n    url: https://example.org/rss.xml\n    category_hints: [Teknoloji]\n",
+        encoding="utf-8",
+    )
+    raw = RawArticle(
+        source_id="demo-source",
+        fetched_at=datetime.now(UTC),
+        url="https://example.org/demo/process-reprocess-terminal",
+        title="English source title should not overwrite rejected terminal",
+        summary="English summary should not overwrite terminal queue evidence.",
+        published_at=datetime.now(UTC),
+        metadata={},
+    )
+    raw_store = JsonStore(tmp_path / "news_pipeline/data/raw", RawArticle)
+    raw_store.save("raw-process-reprocess-terminal", raw)
+    normalized = ArticleNormalizer().normalize(
+        raw,
+        SourceConfig(id="demo-source", name="Demo Source", kind="rss", url="https://example.org/rss.xml", category_hints=["Teknoloji"]),
+    )
+    item = _item("process-reprocess-terminal", normalized_id=normalized.id, status="rejected", url="https://example.org/demo/process-reprocess-terminal")
+    item.draft_title = "Terminal Türkçe başlık korunmalı"
+    item.draft_description = "Terminal açıklama yeniden işleme sırasında ezilmemeli."
+    _save_runtime(tmp_path, item, normalized)
+
+    process_command(config_path="news_pipeline/news_pipeline/config/sources.yaml", verbose=False, reprocess_all=True, purge_stale_raw_hours=0)
+
+    stored = JsonStore(tmp_path / "news_pipeline/data/queue", QueueItem).load(item.queue_id)
+    assert stored is not None
+    assert stored.status == "rejected"
+    assert stored.draft_title == "Terminal Türkçe başlık korunmalı"
+    assert stored.draft_description == "Terminal açıklama yeniden işleme sırasında ezilmemeli."
+
+
+def test_queue_reject_preserves_pre_reject_priority(tmp_path: Path) -> None:
+    article = _article("reject-score", url="https://example.org/demo/reject-score")
+    item = _item("reject-score", normalized_id=article.id, url="https://example.org/demo/reject-score", priority=0.734)
+    _save_runtime(tmp_path, item, article)
+    service = QueueService(tmp_path / "news_pipeline/data/queue")
+
+    rejected = service.reject(item.queue_id, note="manual test reject")
+
+    assert rejected is not None
+    assert rejected.editorial_priority == 0.0
+    assert "pre-reject-priority: 0.734" in rejected.notes
+    assert "manual test reject" in rejected.notes
+
+
+def test_queue_cleanup_auto_reject_preserves_pre_reject_priority(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.chdir(tmp_path)
+    article = _article("cleanup-reject-score", url="https://example.org/demo/cleanup-reject-score")
+    item = _item("cleanup-reject-score", normalized_id=article.id, url="https://example.org/demo/cleanup-reject-score", priority=0.49)
+    _save_runtime(tmp_path, item, article)
+
+    queue_cleanup_command(
+        low_score_reject=0.50,
+        low_score_grace_hours=0,
+        archive_terminal_hours=999,
+        stale_source_hours=999,
+        purge_rejected_archive_hours=999,
+        purge_published_archive_hours=999,
+    )
+
+    stored = JsonStore(tmp_path / "news_pipeline/data/queue", QueueItem).load(item.queue_id)
+    assert stored is not None
+    assert stored.status == "rejected"
+    assert stored.editorial_priority == 0.0
+    assert "pre-reject-priority: 0.490" in stored.notes
+    assert any(note.startswith("low-score-auto-reject:") for note in stored.notes)
+
+
+def test_process_does_not_resurrect_archived_terminal_item(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.chdir(tmp_path)
+    config = tmp_path / "news_pipeline/news_pipeline/config"
+    config.mkdir(parents=True)
+    (config / "sources.yaml").write_text(
+        "sources:\n  - id: demo-source\n    name: Demo Source\n    kind: rss\n    url: https://example.org/rss.xml\n    category_hints: [Teknoloji]\n",
+        encoding="utf-8",
+    )
+    raw = RawArticle(
+        source_id="demo-source",
+        fetched_at=datetime.now(UTC),
+        url="https://example.org/demo/archive-resurrection",
+        title="Archived terminal story should not return",
+        summary="The same raw article reappeared after it had already been archived.",
+        published_at=datetime.now(UTC),
+        metadata={},
+    )
+    raw_store = JsonStore(tmp_path / "news_pipeline/data/raw", RawArticle)
+    raw_store.save("raw-archive-resurrection", raw)
+
+    normalized = ArticleNormalizer().normalize(
+        raw,
+        SourceConfig(id="demo-source", name="Demo Source", kind="rss", url="https://example.org/rss.xml", category_hints=["Teknoloji"]),
+    )
+    archived = _item(
+        "archive-resurrection",
+        normalized_id=normalized.id,
+        status="published",
+        url="https://example.org/demo/archive-resurrection",
+        notes=["asteria-editorial-polish"],
+    )
+    JsonStore(tmp_path / "news_pipeline/data/normalized", NormalizedArticle).save(normalized.id, normalized)
+    JsonStore(tmp_path / "news_pipeline/data/queue_archive", QueueItem).save(archived.queue_id, archived)
+
+    process_command(config_path="news_pipeline/news_pipeline/config/sources.yaml", verbose=False, reprocess_all=False, purge_stale_raw_hours=0)
+
+    active_items = JsonStore(tmp_path / "news_pipeline/data/queue", QueueItem).list_all()
+    assert active_items == []
+
+
+def test_process_reprocess_all_still_does_not_resurrect_archived_terminal_item(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.chdir(tmp_path)
+    config = tmp_path / "news_pipeline/news_pipeline/config"
+    config.mkdir(parents=True)
+    (config / "sources.yaml").write_text(
+        "sources:\n  - id: demo-source\n    name: Demo Source\n    kind: rss\n    url: https://example.org/rss.xml\n    category_hints: [Teknoloji]\n",
+        encoding="utf-8",
+    )
+    raw = RawArticle(
+        source_id="demo-source",
+        fetched_at=datetime.now(UTC),
+        url="https://example.org/demo/archive-reprocess-all",
+        title="Archived terminal story should not return under reprocess all",
+        summary="The same raw article reappeared after it had already been archived.",
+        published_at=datetime.now(UTC),
+        metadata={},
+    )
+    raw_store = JsonStore(tmp_path / "news_pipeline/data/raw", RawArticle)
+    raw_store.save("raw-archive-reprocess-all", raw)
+    normalized = ArticleNormalizer().normalize(
+        raw,
+        SourceConfig(id="demo-source", name="Demo Source", kind="rss", url="https://example.org/rss.xml", category_hints=["Teknoloji"]),
+    )
+    archived = _item("archive-reprocess-all", normalized_id=normalized.id, status="published", url="https://example.org/demo/archive-reprocess-all")
+    JsonStore(tmp_path / "news_pipeline/data/normalized", NormalizedArticle).save(normalized.id, normalized)
+    JsonStore(tmp_path / "news_pipeline/data/queue_archive", QueueItem).save(archived.queue_id, archived)
+
+    process_command(config_path="news_pipeline/news_pipeline/config/sources.yaml", verbose=False, reprocess_all=True, purge_stale_raw_hours=0)
+
+    assert JsonStore(tmp_path / "news_pipeline/data/queue", QueueItem).list_all() == []
+
+
+def test_queue_approve_refuses_rejected_item_without_explicit_recovery(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.chdir(tmp_path)
+    article = _article("approve-rejected", url="https://example.org/demo/approve-rejected")
+    item = _item("approve-rejected", normalized_id=article.id, url="https://example.org/demo/approve-rejected", status="rejected")
+    _save_runtime(tmp_path, item, article)
+
+    with pytest.raises(typer.BadParameter, match="queue item is rejected"):
+        queue_approve_command(item.queue_id)
 
 
 
@@ -494,7 +1017,7 @@ def test_headline_board_limits_same_topic_family_in_selected_board(tmp_path: Pat
     assert meta["diagnostics"]["topicFamilyCounts"] == {"anthropic_models": 1}
 
 
-def test_headline_board_keeps_low_score_category_fill_behind_stronger_global_item(tmp_path: Path) -> None:
+def test_headline_board_excludes_low_score_category_fill_even_behind_stronger_global_item(tmp_path: Path) -> None:
     science_article = _article("peatlands", url="https://example.org/demo/peatlands")
     science_article.title = "Damaged boreal peatlands may triple methane emissions, reshaping climate risk"
     science_article.summary = "A climate study reports higher methane emissions from damaged peatlands."
@@ -516,9 +1039,10 @@ def test_headline_board_keeps_low_score_category_fill_behind_stronger_global_ite
     _save_runtime(tmp_path, science_item, science_article)
     _save_runtime(tmp_path, ukraine_item, ukraine_article)
 
-    selected, _, meta = _select_headline_board(tmp_path, [science_item, ukraine_item], limit=10, max_source_age_hours=72)
+    selected, skipped, meta = _select_headline_board(tmp_path, [science_item, ukraine_item], limit=10, max_source_age_hours=72)
 
-    assert [item.queue_id for item in selected] == ["ukraine-energy", "peatlands"]
+    assert [item.queue_id for item in selected] == ["ukraine-energy"]
+    assert any(row["queueId"] == "peatlands" and row["reason"] == "score below threshold (0.590)" for row in skipped)
     assert meta["diagnostics"]["minCategoryTargetScore"] == 0.68
 
 

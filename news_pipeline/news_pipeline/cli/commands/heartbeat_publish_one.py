@@ -122,7 +122,7 @@ def _source_is_fresh(root: Path, item: QueueItem, max_source_age_hours: int) -> 
     normalized_store = JsonStore(root / "news_pipeline/data/normalized", NormalizedArticle)
     normalized = normalized_store.load(item.normalized_id)
     if normalized is None:
-        return True, None
+        return False, "missing normalized article"
     source_time = (normalized.published_at or normalized.created_at).astimezone(UTC)
     age_hours = (datetime.now(UTC) - source_time).total_seconds() / 3600
     if age_hours > max_source_age_hours:
@@ -148,8 +148,10 @@ def _is_excluded_source_format(item: QueueItem) -> bool:
     return (
         "podcast" in urls
         or "/live/" in urls
+        or "/tv-shows/" in urls
         or "/video/" in urls
         or "/videos/" in urls
+        or " tv show" in text
         or " live" in text
         or "live:" in text
     )
@@ -177,6 +179,8 @@ def _select_candidate(root: Path, min_score: float, max_source_age_hours: int, l
         if item.status not in {"new", "approved"}:
             continue
         if _is_excluded_source_format(item):
+            if len(rejections) < limit_rejections:
+                rejections.append(_candidate_snapshot(item, "excluded source format (podcast/liveblog)"))
             continue
         fresh, stale_reason = _source_is_fresh(root, item, max_source_age_hours)
         if not fresh:
@@ -296,6 +300,7 @@ def publish_one_command(
     commit_message: str = typer.Option("Publish one heartbeat news item", "--commit-message", help="Git commit message."),
     min_interval_seconds: int = typer.Option(DEFAULT_MIN_INTERVAL_SECONDS, "--min-interval-seconds", help="Skip if another heartbeat publish-one cycle started recently."),
     force: bool = typer.Option(False, "--force", help="Bypass the recent-cycle guard."),
+    duplicate_retry_limit: int = typer.Option(3, "--duplicate-retry-limit", help="Try this many replacement candidates when the live duplicate gate rejects a selected item."),
     full_logs: bool = typer.Option(False, "--full-logs", help="Keep full stdout/stderr in JSON output instead of compacting step logs."),
 ) -> None:
     """Run one low-noise heartbeat publish cycle with strict quality gates.
@@ -306,6 +311,34 @@ def publish_one_command(
     all clean. Otherwise it returns a compact manual_review/skip report for
     Asteria instead of making her stitch ten shell commands together.
     """
+    # Internal tests/callers invoke this function directly, where Typer option
+    # defaults arrive as OptionInfo objects. Normalize them so safety gates and
+    # retry limits behave the same outside the CLI parser.
+    if not isinstance(execute, bool):
+        execute = False
+    if not isinstance(json_output, bool):
+        json_output = False
+    if not isinstance(push, bool):
+        push = True
+    if not isinstance(collect_first, bool):
+        collect_first = True
+    if not isinstance(build, bool):
+        build = True
+    if not isinstance(min_score, int | float):
+        min_score = DEFAULT_MIN_SCORE
+    if not isinstance(max_source_age_hours, int):
+        max_source_age_hours = DEFAULT_MAX_SOURCE_AGE_HOURS
+    if not isinstance(commit_message, str):
+        commit_message = "Publish one heartbeat news item"
+    if not isinstance(min_interval_seconds, int):
+        min_interval_seconds = DEFAULT_MIN_INTERVAL_SECONDS
+    if not isinstance(force, bool):
+        force = False
+    if not isinstance(duplicate_retry_limit, int):
+        duplicate_retry_limit = 3
+    if not isinstance(full_logs, bool):
+        full_logs = False
+
     root = Path.cwd()
     payload: dict[str, Any] = {
         "schemaVersion": 1,
@@ -315,6 +348,7 @@ def publish_one_command(
         "result": "unknown",
         "steps": [],
         "rejectedCandidates": [],
+        "duplicateRejectedCandidates": [],
     }
 
     if execute:
@@ -344,42 +378,51 @@ def publish_one_command(
                 _emit(payload, json_output)
                 raise typer.Exit(code=1)
 
-    candidate, rejections = _select_candidate(root, min_score=min_score, max_source_age_hours=max_source_age_hours)
-    payload["rejectedCandidates"] = rejections
-
-    if candidate is None:
-        payload["result"] = "manual_review"
-        payload["reason"] = "no candidate passed strict publish-one gates"
-        if execute:
-            _mark_cycle_completed(root, payload["result"])
-        _emit(payload, json_output)
-        return
-
-    payload["candidate"] = _candidate_snapshot(candidate)
-    if not execute:
-        payload["result"] = "dry_run_ready"
-        payload["reason"] = "candidate passed strict gates; rerun with --execute to publish"
-        _emit(payload, json_output)
-        return
-
     service = QueueService(root / "news_pipeline/data/queue")
-    approved = service.approve(candidate.queue_id)
-    if approved is None:
-        payload["result"] = "error"
-        payload["reason"] = "candidate disappeared before approve"
-        _mark_cycle_completed(root, payload["result"])
-        _emit(payload, json_output)
-        raise typer.Exit(code=1)
+    publish_step: dict[str, Any] | None = None
+    approved: QueueItem | None = None
+    duplicate_attempts = 0
+    while True:
+        candidate, rejections = _select_candidate(root, min_score=min_score, max_source_age_hours=max_source_age_hours)
+        payload["rejectedCandidates"] = rejections
 
-    publish_step = _run_step("publish", publish_queue_item, approved.queue_id, max_source_age_hours=max_source_age_hours)
-    payload["steps"].append(_compact_step(publish_step, full_logs=full_logs))
-    if not publish_step["ok"]:
+        if candidate is None:
+            payload["result"] = "manual_review"
+            payload["reason"] = "no candidate passed strict publish-one gates"
+            if execute:
+                _mark_cycle_completed(root, payload["result"])
+            _emit(payload, json_output)
+            return
+
+        payload["candidate"] = _candidate_snapshot(candidate)
+        if not execute:
+            payload["result"] = "dry_run_ready"
+            payload["reason"] = "candidate passed strict gates; rerun with --execute to publish"
+            _emit(payload, json_output)
+            return
+
+        approved = service.approve(candidate.queue_id)
+        if approved is None:
+            payload["result"] = "error"
+            payload["reason"] = "candidate disappeared before approve"
+            _mark_cycle_completed(root, payload["result"])
+            _emit(payload, json_output)
+            raise typer.Exit(code=1)
+
+        publish_step = _run_step("publish", publish_queue_item, approved.queue_id, max_source_age_hours=max_source_age_hours)
+        payload["steps"].append(_compact_step(publish_step, full_logs=full_logs))
+        if publish_step["ok"]:
+            break
         if _is_duplicate_publish_error(publish_step):
             rejected = _reject_duplicate_publish_candidate(service, approved.queue_id, publish_step)
             if rejected is not None:
+                payload["duplicateRejectedCandidates"].append(rejected)
                 payload["duplicateRejected"] = rejected
+            duplicate_attempts += 1
+            if duplicate_attempts <= duplicate_retry_limit:
+                continue
             payload["result"] = "manual_review"
-            payload["reason"] = "duplicate publish gate rejected the selected candidate; choose another candidate instead of ending the heartbeat"
+            payload["reason"] = "duplicate publish gate rejected all retry candidates"
             _mark_cycle_completed(root, payload["result"])
             _emit(payload, json_output)
             return
@@ -388,6 +431,9 @@ def publish_one_command(
         _mark_cycle_completed(root, payload["result"])
         _emit(payload, json_output)
         raise typer.Exit(code=1)
+
+    assert publish_step is not None
+    assert approved is not None
 
     published_path = None
     for line in (publish_step.get("stdout") or "").splitlines():

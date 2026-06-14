@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 import re
-from urllib.parse import urlparse
+from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 import unicodedata
 
 import typer
@@ -51,6 +51,22 @@ EVENT_CORE_ENTITY_HINTS = {
     "veto",
     "vetoes",
 }
+EVENT_CORE_ACTION_GROUPS = (
+    {"access", "erisim", "erisimi", "erisimini", "halted", "halting", "restricted", "restriction", "suspend", "suspended"},
+    {"acquisition", "almasini", "anlasma", "anlasmasi", "anlasmasini", "block", "blocked", "durdurdu", "durdurulmasi", "engelledi", "satin", "veto", "vetoes"},
+    {"durdurdu", "durduruldu", "durduruldugunu", "intercept", "intercepted", "intercepts", "seize", "seized", "seizes", "alikoydu", "alikoydugunu", "alıkoydu"},
+)
+EVENT_CORE_OBJECT_HINTS = {
+    "fleet",
+    "filosu",
+    "filosuyla",
+    "golge",
+    "mans",
+    "shadow",
+    "smyrtos",
+    "tanker",
+    "tankeri",
+}
 EVENT_CORE_GENERIC_SHARED_TOKENS = {
     "acikladi",
     "açıkladı",
@@ -72,6 +88,8 @@ EVENT_CORE_DISTINCTIVE_ENTITY_TOKENS = {
     "zuckerberg",
 }
 DISALLOWED_LOCAL_SOURCE_NAMES = {"Diken", "Kısa Dalga", "Kisa Dalga", "Medyascope"}
+TRACKING_QUERY_PREFIXES = ("utm_",)
+TRACKING_QUERY_KEYS = {"fbclid", "gclid", "igshid", "mc_cid", "mc_eid", "ref", "ref_src"}
 
 TOPIC_STOPWORDS = {
     "abd",
@@ -150,6 +168,27 @@ def _frontmatter_source_urls(frontmatter: str) -> set[str]:
     return urls
 
 
+def _canonical_source_url(url: str) -> str:
+    parsed = urlparse(url.strip())
+    if not parsed.netloc:
+        return url.strip().rstrip("/")
+    host = parsed.netloc.lower()
+    if host.startswith("www."):
+        host = host[4:]
+    path = parsed.path.rstrip("/") or "/"
+    query_pairs = []
+    for key, value in parse_qsl(parsed.query, keep_blank_values=True):
+        lower_key = key.lower()
+        if lower_key in TRACKING_QUERY_KEYS or any(lower_key.startswith(prefix) for prefix in TRACKING_QUERY_PREFIXES):
+            continue
+        query_pairs.append((key, value))
+    return urlunparse(("https", host, path, "", urlencode(query_pairs, doseq=True), ""))
+
+
+def _canonical_source_urls(urls: set[str]) -> set[str]:
+    return {_canonical_source_url(url) for url in urls if url}
+
+
 def _source_hosts(urls: set[str]) -> set[str]:
     hosts: set[str] = set()
     for url in urls:
@@ -183,10 +222,18 @@ def _topic_tokens(value: str) -> set[str]:
 
 
 def _has_duplicate_event_core(item_tokens: set[str], existing_tokens: set[str], shared_tokens: set[str]) -> bool:
-    if len(shared_tokens) < EVENT_CORE_SHARED_TOKEN_MIN:
-        return False
     shared_action_tokens = shared_tokens & EVENT_CORE_ENTITY_HINTS
-    if len(shared_action_tokens) < EVENT_CORE_ACTION_TOKEN_MIN:
+    action_group_match = any(group & item_tokens and group & existing_tokens for group in EVENT_CORE_ACTION_GROUPS)
+    if len(shared_tokens) < EVENT_CORE_SHARED_TOKEN_MIN:
+        # Some same-event rewrites translate the action verb, so the shared
+        # token count can be lower than normal even though both texts describe
+        # the same concrete incident. Permit a narrower object-heavy path for
+        # cases like the same sanctioned shadow-fleet tanker seizure from two
+        # sources. Broad geopolitical themes still lack these concrete object
+        # hints and fall through as distinct stories.
+        if not (len(shared_tokens) >= 5 and action_group_match and len(shared_tokens & EVENT_CORE_OBJECT_HINTS) >= 3):
+            return False
+    if len(shared_action_tokens) < EVENT_CORE_ACTION_TOKEN_MIN and not action_group_match:
         return False
     distinctive_shared = {
         token
@@ -200,7 +247,15 @@ def _has_duplicate_event_core(item_tokens: set[str], existing_tokens: set[str], 
     # token. This catches same-event rewrites across different sources without
     # turning broad category overlap into a duplicate.
     distinctive_entities = distinctive_shared & EVENT_CORE_DISTINCTIVE_ENTITY_TOKENS
-    return len(distinctive_shared) >= 2 and bool(distinctive_entities)
+    if len(distinctive_shared) >= 2 and distinctive_entities:
+        return True
+    # Not every recurring event has a durable company/model entity token. For
+    # physical-world incidents, allow a duplicate event match when both texts
+    # share several distinctive actor/place/object tokens and at least one
+    # concrete event object. This catches cases like the same Russian shadow
+    # fleet tanker seizure appearing from different wires, while avoiding broad
+    # theme matches such as unrelated Ukraine/Russia war updates.
+    return len(distinctive_shared) >= 4 and bool(distinctive_shared & EVENT_CORE_OBJECT_HINTS)
 
 
 
@@ -256,6 +311,7 @@ def _assert_not_duplicate_live(content_root: Path, item_title: str, item_descrip
     title = _collapse_text(item_title)
     description = _collapse_text(item_description)
     item_topic_text = f"{item_title} {item_description}"
+    canonical_item_urls = _canonical_source_urls(item_urls)
     _assert_not_topic_family_saturated(content_root, item_topic_text)
     for path in sorted(content_root.glob("*.md")):
         if path.stem == target_slug:
@@ -263,7 +319,7 @@ def _assert_not_duplicate_live(content_root: Path, item_title: str, item_descrip
         text = path.read_text(encoding="utf-8", errors="ignore")
         frontmatter = _frontmatter(text)
         existing_urls = _frontmatter_source_urls(frontmatter)
-        shared_urls = item_urls & existing_urls
+        shared_urls = canonical_item_urls & _canonical_source_urls(existing_urls)
         if shared_urls:
             raise typer.BadParameter(f"duplicate live source URL already published in {path.name}: {sorted(shared_urls)[0]}")
 
@@ -289,6 +345,8 @@ def publish_queue_item(queue_id: str, publish_dir: str = "src/content/equinoxHab
 
     normalized_store = JsonStore(root / "news_pipeline/data/normalized", NormalizedArticle)
     normalized = normalized_store.load(item.normalized_id)
+    if normalized is None:
+        raise typer.BadParameter(f"normalized article missing for queue item: {queue_id}")
     if max_source_age_hours > 0 and normalized:
         source_age = datetime.now(UTC) - (normalized.published_at or normalized.created_at).astimezone(UTC)
         if source_age > timedelta(hours=max_source_age_hours):

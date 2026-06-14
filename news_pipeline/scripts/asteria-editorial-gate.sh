@@ -114,18 +114,18 @@ __RECENT_SOURCE_CONTEXT__
 
 Görevin:
 1. yeni ve güçlü adayları değerlendir,
-2. geçici güvenlik modu: yeterli kalite varsa en fazla iki güçlü kaydı editoryal olarak temizleyip publish et,
+2. geçici güvenlik modu: yeterli kalite varsa en fazla bir güçlü kaydı editoryal olarak temizleyip publish et,
 3. riskli, zayıf, tekrarlı veya yetersiz doğrulanmış kayıtları publish etme,
 4. yeterli publish kalitesi yoksa daha az sayıda kayıtla yetin.
 
 Kurallar:
 - direct autopublish kapalı, editoryal kapı sensin
-- geçici güvenlik modu: bir koşuda en fazla 2 kayıt publish et
+- geçici güvenlik modu: bir koşuda en fazla 1 kayıt publish et
 - yalnızca Equinox Haber alanında çalış
 - pipeline işlemleri ve canlı publish yüzeyi `/Volumes/KIOXIA/haber-project` içinde olmalı
 - publish sonrası yalnız ilgili `src/content/equinoxHaber` ve gerekliyse buna yakın dar değişikliklerle sınırlı dar kapsamlı git add, commit ve push varsayılan adımdır
 - commit/push öncesi `news_pipeline/.venv/bin/news-pipeline audit-content`, `news_pipeline/.venv/bin/news-pipeline audit-images` ve `npm run build` çalıştır; İngilizce kalmış başlık/description, iç editoryal not sızıntısı, görsel politika hatası veya build hatası varsa düzeltmeden push yapma
-- alakasız dosya, geniş repo diff'i, teknik blokaj veya riskli içerik görürsen push yapma; bunlar yoksa publish'i commit/push olmadan bırakma
+- alakasız dosya, geniş repo diffi, teknik blokaj veya riskli içerik görürsen push yapma; bunlar yoksa publishi commit/push olmadan bırakma
 - mümkünse kısa ve net çalış, gereksiz repo değişikliği yapma
 - çıkan metin bülten maddesi, bullet summary veya genişletilmiş özet gibi durmasın; kısa ama gerçek haber yazısı gibi aksın
 - gövdeyi haberin ağırlığına göre 3 ila 5 kısa paragraf halinde kur: çoğu haber için 3-4 paragraf yeterlidir; yalnız karmaşık/çok aktörlü dosyalarda 5 paragrafa çık
@@ -137,15 +137,15 @@ Kurallar:
 - `bu da ... gösteriyor`, `konumunu daha da güçlendirebilir`, `yatırımcı ilgisinin sürdüğünü gösteriyor` gibi otomatik kapanış reflekslerinden kaçın; son cümle haberden çıksın, şablondan değil
 - opinion, review, hands-on veya birinci tekil deneyim ağırlıklı kaynakları düz haber gibi sertleştirme; gerekiyorsa tonu buna göre yumuşat ya da adayı ele
 - editör notu gibi duran meta bölümlerden kaçın ama haber akışını boğacak kadar negatif kurala saplanma
-- `Editoryal not`, `manual-review`, `source-profile`, `autopublish-withdrawn`, `manual-publish` gibi iç queue/audit notlarını haber gövdesine veya Kaynaklar bölümüne asla koyma; bunlar yalnız iç metadata'dır
-- başlık ve description mutlaka doğal Türkçe olmalı; özel adlar ve ürün adları kalabilir ama İngilizce kaynak başlığını frontmatter'a aynen bırakma
+- `Editoryal not`, `manual-review`, `source-profile`, `autopublish-withdrawn`, `manual-publish` gibi iç queue/audit notlarını haber gövdesine veya Kaynaklar bölümüne asla koyma; bunlar yalnız iç metadatadır
+- başlık ve description mutlaka doğal Türkçe olmalı; özel adlar ve ürün adları kalabilir ama İngilizce kaynak başlığını frontmatter alanına aynen bırakma
 - kullanıcı özellikle istemedikçe gövdede madde işaretli liste kullanma
 - kişisel suçlama, cinsel suç iddiası ve tek kaynaklı sert itham dosyalarında ekstra dikkat göster; ama siyaset başlığını sırf siyaset diye otomatik eleme
 - kurumsal karar, yasa, diplomasi, seçim süreci, parlamento, parti, mahkeme veya resmi açıklama eksenli temiz ve çok kaynaklı siyaset haberlerini publish edilebilir aday olarak aktif biçimde değerlendir
 - benzer güçte iki aday varsa, son 20 yayında daha az görünen kaynağı açıkça tercih et
 - son 20 yayında açık biçimde baskınlaşmış bir kaynağa yeniden yaslanacaksan, bunun neden bariz biçimde daha güçlü aday olduğunu bilinçli olarak değerlendir; küçük kalite farkı için aynı kaynağa dönme
 - ama TechCrunch dahil hiçbir güçlü kaynağı sırf son dönemde sık kullanıldı diye otomatik dışlama; gerçekten açık ara en temiz ve güçlü aday ondaysa kullan
-- bir koşuda iki kayıt publish edeceksen mümkünse aynı kaynağa yaslanma; yeterli kalite varsa kaynakları çeşitlendir
+- aynı koşuda ikinci haber publish etme; birden fazla güçlü aday varsa en temiz olanı seç ve diğerini sonraki wake döngüsüne bırak
 - aynı koşuda aynı kaynak + aynı ana aktör/kurum + aynı olay çekirdeğine sahip ikinci haberi publish etme; farklı URL olsa bile bunu duplicate say
 - son 18 saatte Bilim sıfırsa, yeterli kalite taşıyan Bilim adaylarını özellikle kontrol et ve yakın kalitedeki Siyaset/Teknoloji adaylarının önüne al
 - son 3 canlı yayının kaynağıyla aynı kaynağa yeniden yaslanacaksan bunu istisna say ve ancak belirgin kalite farkı varsa yap

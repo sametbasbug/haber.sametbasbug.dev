@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+import shutil
 from pathlib import Path
 
 from slugify import slugify
@@ -54,7 +55,12 @@ class QueueService:
             return False
         archive_root.mkdir(parents=True, exist_ok=True)
         target = archive_root / path.name
-        path.replace(target)
+        if target.exists():
+            # Keep terminal audit evidence instead of silently overwriting a
+            # previous archive record with the same queue_id.
+            suffix = datetime.now(UTC).strftime("%Y%m%d%H%M%S")
+            target = archive_root / f"{path.stem}-{suffix}{path.suffix}"
+        shutil.move(str(path), str(target))
         return True
 
     def find_cluster_mates(self, cluster_key: str, exclude_queue_id: str | None = None) -> list[QueueItem]:
@@ -95,6 +101,8 @@ class QueueService:
         item = self.store.load(queue_id)
         if item is None:
             return None
+        if item.editorial_priority and not any(existing_note.startswith("pre-reject-priority:") for existing_note in item.notes):
+            item.notes.append(f"pre-reject-priority: {item.editorial_priority:.3f}")
         item.status = "rejected"
         item.editorial_priority = 0.0
         if note and note not in item.notes:

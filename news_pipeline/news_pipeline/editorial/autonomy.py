@@ -102,6 +102,10 @@ def has_manual_review(item: QueueItem) -> bool:
     return any(note.startswith("manual-review:") for note in item.notes)
 
 
+def has_duplicate_publish_rejection(item: QueueItem) -> bool:
+    return any(note.startswith("duplicate-publish-gate:") for note in item.notes)
+
+
 def has_withdrawn_flag(item: QueueItem) -> bool:
     return any(note.startswith("autopublish-withdrawn:") for note in item.notes)
 
@@ -209,6 +213,8 @@ def is_autopublish_candidate(item: QueueItem, min_score: float = 0.68) -> tuple[
         return False, "status is not new or approved"
     if has_manual_review(item):
         return False, "manual-review item"
+    if has_duplicate_publish_rejection(item):
+        return False, "duplicate-publish-gate item"
     if has_withdrawn_flag(item):
         return False, "withdrawn item"
     if item.editorial_priority < min_score:

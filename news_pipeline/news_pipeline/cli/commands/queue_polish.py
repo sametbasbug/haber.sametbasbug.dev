@@ -36,9 +36,20 @@ def queue_polish_command(
     hero_alt: str = typer.Option(..., "--hero-alt", help="Short Turkish alt text for the generated hero image."),
     tags_json: str | None = typer.Option(None, "--tags-json", help="Optional JSON array of tags."),
     note: str = typer.Option("asteria-editorial-polish", "--note", help="Editorial note to attach to the queue item."),
+    allow_duplicate_retry: bool = typer.Option(False, "--allow-duplicate-retry", help="Explicitly allow polishing an item previously rejected by the live duplicate gate."),
     json_output: bool = typer.Option(False, "--json", help="Emit JSON result."),
 ) -> None:
     """Apply Asteria's editorial rewrite to a queue item before publish-one."""
+    # Typer injects real values through the CLI, but tests and internal callers
+    # call the function directly. In that path, omitted typer.Option defaults are
+    # OptionInfo objects; never let those leak into queue JSON.
+    if not isinstance(note, str):
+        note = "asteria-editorial-polish"
+    if not isinstance(allow_duplicate_retry, bool):
+        allow_duplicate_retry = False
+    if not isinstance(json_output, bool):
+        json_output = False
+
     logger = get_logger()
     root = Path.cwd()
     service = QueueService(root / "news_pipeline/data/queue")
@@ -47,6 +58,14 @@ def queue_polish_command(
         raise typer.BadParameter(f"queue item not found: {queue_id}")
     if item.status not in {"new", "reviewing", "approved"}:
         raise typer.BadParameter(f"queue item status is not editable: {item.status}")
+    has_duplicate_rejection = any(existing_note.startswith("duplicate-publish-gate:") for existing_note in item.notes)
+    if has_duplicate_rejection and not allow_duplicate_retry:
+        raise typer.BadParameter("queue item has duplicate-publish-gate note; choose another candidate or explicitly reset with --allow-duplicate-retry")
+    if has_duplicate_rejection and allow_duplicate_retry:
+        item.notes = [existing_note for existing_note in item.notes if not existing_note.startswith("duplicate-publish-gate:")]
+        reset_note = "duplicate-retry-reset: duplicate-publish-gate cleared by explicit queue polish retry"
+        if reset_note not in item.notes:
+            item.notes.append(reset_note)
     if category not in VALID_CATEGORIES:
         raise typer.BadParameter(f"invalid category: {category}")
 

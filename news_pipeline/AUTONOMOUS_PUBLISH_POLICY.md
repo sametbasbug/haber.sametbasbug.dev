@@ -28,6 +28,7 @@ Asteria may advance a story when all of these are true:
 - `manual-review:` notes are absent;
 - Asteria has read the selected source URL directly;
 - `queue polish` has supplied Turkish title, description, facts, body, tags, `heroPrompt`, and `heroAlt`;
+- the item clears the current production score floor, normally raw `editorial_priority` / `score` >= 0.68;
 - the item passes freshness, duplicate, Turkish-language, body-depth, hero, image audit, content audit, and build gates.
 
 In the cautious production mode, at most one clean item should normally be published per heartbeat cycle unless Samet explicitly changes the operating mode.

@@ -11,6 +11,7 @@ import typer
 from rapidfuzz.fuzz import token_set_ratio
 
 from news_pipeline.cli.commands.heartbeat_publish_one import _is_excluded_source_format, _run_pipeline_command, _source_is_fresh
+from news_pipeline.cli.commands.publish import _assert_not_duplicate_live
 from news_pipeline.editorial.autonomy import is_autopublish_candidate
 from news_pipeline.editorial.topic_family import describe_family, recent_live_topic_family_counts, topic_families_for_text
 from news_pipeline.models.article import NormalizedArticle
@@ -89,6 +90,7 @@ EXCLUDED_NOTE_PREFIXES = (
     "unpublished:",
     "autopublish-withdrawn:",
     "manual-review:",
+    "duplicate-publish-gate:",
 )
 POSITIVE_HEADLINE_TERMS = {
     "climate",
@@ -396,11 +398,23 @@ def _passes_basic_board_filter(root: Path, item: Any, max_source_age_hours: int,
         return False, stale_reason
     if any(note.startswith(EXCLUDED_NOTE_PREFIXES) for note in item.notes):
         return False, "excluded by editorial note"
+    if round(float(item.editorial_priority), 3) < MIN_CATEGORY_TARGET_SCORE:
+        return False, f"score below threshold ({float(item.editorial_priority):.3f})"
     headline = _normalized(_headline_text(root, item))
     if any(term in headline for term in {"podcast", "newsletter", "live updates", "latest news bulletin", "puzzle", "quiz"}):
         return False, "blocked headline format"
     if any(term in headline for term in BLOCKED_BOARD_TERMS):
         return False, "blocked low-signal headline"
+    try:
+        _assert_not_duplicate_live(
+            root / "src/content/equinoxHaber",
+            item.draft_title,
+            item.draft_description,
+            {str(source.url) for source in item.draft_sources + item.supporting_sources},
+            f"prepare-probe-{item.queue_id}",
+        )
+    except typer.BadParameter:
+        return False, "near-duplicate live event"
     return True, None
 
 
@@ -429,6 +443,16 @@ def _select_headline_board(root: Path, items: list[Any], limit: int, max_source_
                 skipped.append({"queueId": item.queue_id, "score": round(float(item.editorial_priority), 3), "title": item.draft_title, "reason": reason})
             continue
         board_score, reasons = _board_score(root, item, science_pressure=science_pressure, science_space_pressure=science_space_pressure, recent_posts=recent_posts)
+        if board_score < MIN_CATEGORY_TARGET_SCORE:
+            if len(skipped) < 12:
+                skipped.append({
+                    "queueId": item.queue_id,
+                    "score": round(float(item.editorial_priority), 3),
+                    "boardScore": board_score,
+                    "title": item.draft_title,
+                    "reason": f"board score below threshold ({board_score:.3f})",
+                })
+            continue
         eligible.append((item, board_score, reasons))
 
     eligible.sort(key=lambda row: row[1], reverse=True)
@@ -544,13 +568,11 @@ def _candidate_reason(root: Path, item: Any, min_score: float, max_source_age_ho
     fresh, stale_reason = _source_is_fresh(root, item, max_source_age_hours)
     if not fresh:
         return False, stale_reason
-    # The headline board applies deliberate editorial boosts/penalties for
-    # recency, source mix, topic-family saturation and signal strength. If the
-    # board-adjusted score clears the publish threshold, tell Asteria the item
-    # needs editorial polish instead of mislabeling it as score-blocked. The
-    # final publish gate remains unchanged: unpolished items still cannot go out.
-    effective_min_score = 0.0 if board_score is not None and board_score >= min_score else min_score
-    return is_autopublish_candidate(item, min_score=effective_min_score)
+    # Keep the headline-board diagnostic aligned with the actual publish rail.
+    # Board score is useful ranking context, but the final gate still enforces
+    # the raw editorial score floor. Do not tell Asteria a low-raw-score item
+    # "passes now" just because a board boost made it look attractive.
+    return is_autopublish_candidate(item, min_score=min_score)
 
 
 def _collect_step_stats(steps: list[dict[str, Any]]) -> dict[str, int] | None:
@@ -589,6 +611,15 @@ def _build_editorial_packs(root: Path, *, min_score: float, max_source_age_hours
         payload = _article_payload(root, item)
         board_score, board_reasons = score_map.get(item.queue_id, (round(float(item.editorial_priority), 3), []))
         ok, reason = _candidate_reason(root, item, min_score, max_source_age_hours, board_score=board_score)
+        if not ok and reason and reason.startswith("score below threshold"):
+            skipped.append({
+                "queueId": item.queue_id,
+                "headline": payload.get("headline", ""),
+                "score": round(float(item.editorial_priority), 3),
+                "boardScore": board_score,
+                "reason": reason,
+            })
+            continue
         payload["boardScore"] = board_score
         payload["boardReasons"] = board_reasons
         payload["strictGate"] = {"passesNow": ok, "reason": reason}

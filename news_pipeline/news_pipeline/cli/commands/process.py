@@ -10,14 +10,14 @@ import typer
 
 from news_pipeline.config.loader import load_yaml
 from news_pipeline.dedupe.similarity import are_probably_duplicates, are_probably_related
-from news_pipeline.editorial.autonomy import has_withdrawn_flag
+from news_pipeline.editorial.autonomy import has_asteria_editorial_polish
 from news_pipeline.editorial.filtering import should_keep_article
 from news_pipeline.editorial.merge import merge_related_note, merge_supporting_source
 from news_pipeline.editorial.rewrite import build_rewrite
 from news_pipeline.editorial.scoring import score_article
 from news_pipeline.editorial.source_priority import rebalance_sources
 from news_pipeline.models.article import NormalizedArticle, RawArticle
-from news_pipeline.models.queue import DraftSource
+from news_pipeline.models.queue import DraftSource, QueueItem
 from news_pipeline.models.source import SourceConfig
 from news_pipeline.normalize.cleaner import ArticleNormalizer
 from news_pipeline.queue.service import QueueService
@@ -33,6 +33,10 @@ def _verbose_enabled(value: bool) -> bool:
     if value:
         return True
     return os.environ.get("NEWS_PIPELINE_VERBOSE", "0") in {"1", "true", "TRUE", "yes", "YES"}
+
+
+def _should_preserve_editorial_polish(item) -> bool:
+    return has_asteria_editorial_polish(item)
 
 
 def _effective_source_time(published_at: datetime | None, fallback: datetime) -> datetime:
@@ -69,6 +73,7 @@ def process_command(
     purged_stale_raw = _purge_stale_raw(raw_root, now, purge_stale_raw_hours)
     raw_store = JsonStore(raw_root, RawArticle)
     normalized_store = JsonStore(root / "news_pipeline/data/normalized", NormalizedArticle)
+    archive_store = JsonStore(root / "news_pipeline/data/queue_archive", QueueItem)
     queue_service = QueueService(root / "news_pipeline/data/queue")
     normalizer = ArticleNormalizer()
     verbose_logs = _verbose_enabled(verbose)
@@ -77,6 +82,7 @@ def process_command(
     sources = {item["id"]: SourceConfig.model_validate(item) for item in config.get("sources", [])}
     queue_items = queue_service.list_items()
     queue_by_normalized_id = {item.normalized_id: item for item in queue_items}
+    archive_by_normalized_id = {item.normalized_id: item for item in archive_store.list_all()}
 
     kept: list[NormalizedArticle] = [
         article
@@ -91,6 +97,8 @@ def process_command(
     skipped_stale_raw = 0
     skipped_unchanged = 0
     skipped_duplicate = 0
+    skipped_rejected_existing = 0
+    skipped_archived_terminal = 0
     filter_skips: Counter[str] = Counter()
     related_links = 0
     supporting_merges = 0
@@ -106,6 +114,24 @@ def process_command(
             continue
         normalized = normalizer.normalize(raw, source)
         existing_item = queue_by_normalized_id.get(normalized.id)
+        archived_item = archive_by_normalized_id.get(normalized.id)
+
+        if archived_item is not None and existing_item is None:
+            # Archived terminal records are tombstones. Without this check,
+            # collect/process can recreate the same normalized article as a new
+            # active queue item after it was already rejected, manually reviewed,
+            # polished, or published in a previous cycle.
+            skipped_archived_terminal += 1
+            continue
+
+        if existing_item is not None and existing_item.status == "rejected":
+            # A rejected queue item is an editorial/guard decision, not a draft
+            # cache miss. Reprocessing used to rewrite rejected Asteria-polished
+            # items back to raw/RSS text and even resurrect them as ``new``.
+            # Even explicit --reprocess-all must not mutate terminal evidence.
+            skipped_rejected_existing += 1
+            continue
+
         decision = should_keep_article(normalized)
         if not decision.keep:
             reason = decision.reason or "filtered out"
@@ -146,16 +172,15 @@ def process_command(
             updated += 1
 
         item.cluster_key = normalized.cluster_key
-        item.draft_title = rewritten_title
-        item.draft_description = rewritten_description[:240]
-        item.draft_category = rewritten_category
-        item.draft_tags = rewritten_tags
-        item.draft_facts = rewritten_facts
+        preserve_editorial_polish = _should_preserve_editorial_polish(item)
+        if not preserve_editorial_polish:
+            item.draft_title = rewritten_title
+            item.draft_description = rewritten_description[:240]
+            item.draft_category = rewritten_category
+            item.draft_tags = rewritten_tags
+            item.draft_facts = rewritten_facts
         item.draft_sources = [DraftSource(name=normalized.source_name, url=normalized.canonical_url)]
         item.editorial_priority = score_article(normalized)
-        if item.status == "rejected" and not has_withdrawn_flag(item):
-            item.status = "new"
-
         related_items = []
         for other in kept:
             if other.id == normalized.id:
@@ -199,6 +224,7 @@ def process_command(
         "process summary: "
         f"created={created}, updated={updated}, rejected={rejected}, "
         f"stale_raw_purged={purged_stale_raw}, stale_raw_skipped={skipped_stale_raw}, unchanged_skipped={skipped_unchanged}, "
+        f"rejected_existing_skipped={skipped_rejected_existing}, archived_terminal_skipped={skipped_archived_terminal}, "
         f"dedupe_skipped={skipped_duplicate}, missing_source_skipped={skipped_missing_source}, "
         f"filter_skipped={sum(filter_skips.values())}, related_links={related_links}, "
         f"supporting_merges={supporting_merges}, notes_added={notes_added}"
