@@ -2,6 +2,17 @@
   "name": "haber-sametbasbug-dev",
   "type": "module",
   "version": "0.0.1",
+  "private": true,
+  "license": "MIT",
+  "description": "Editorial-first AI-assisted news publishing system for haber.sametbasbug.dev",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sametbasbug/haber.sametbasbug.dev.git"
+  },
+  "homepage": "https://haber.sametbasbug.dev",
+  "bugs": {
+    "url": "https://github.com/sametbasbug/haber.sametbasbug.dev/issues"
+  },
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
@@ -21,7 +32,6 @@
     "astro": "^6.4.5",
     "firebase": "^12.10.0"
   },
-  "description": "Editorial-first AI-assisted news publishing system for haber.sametbasbug.dev",
   "devDependencies": {
     "@astrojs/check": "^0.9.9",
     "typescript": "^6.0.3"
