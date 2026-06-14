@@ -465,21 +465,19 @@ def test_publish_one_rejects_duplicate_gate_candidate(tmp_path: Path, monkeypatc
 
     monkeypatch.setattr(heartbeat_publish_one, "publish_queue_item", duplicate_publish)
 
-    with pytest.raises(typer.Exit) as exc:
-        publish_one_command(
-            execute=True,
-            collect_first=False,
-            json_output=True,
-            push=False,
-            build=False,
-            min_score=0.68,
-            max_source_age_hours=72,
-            commit_message="test duplicate rejection",
-            min_interval_seconds=0,
-            force=True,
-        )
+    publish_one_command(
+        execute=True,
+        collect_first=False,
+        json_output=True,
+        push=False,
+        build=False,
+        min_score=0.68,
+        max_source_age_hours=72,
+        commit_message="test duplicate rejection",
+        min_interval_seconds=0,
+        force=True,
+    )
 
-    assert exc.value.exit_code == 1
     stored = JsonStore(tmp_path / "news_pipeline/data/queue", QueueItem).load(item.queue_id)
     assert stored is not None
     assert stored.status == "rejected"

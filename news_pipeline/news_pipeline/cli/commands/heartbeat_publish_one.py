@@ -375,6 +375,11 @@ def publish_one_command(
             rejected = _reject_duplicate_publish_candidate(service, approved.queue_id, publish_step)
             if rejected is not None:
                 payload["duplicateRejected"] = rejected
+            payload["result"] = "manual_review"
+            payload["reason"] = "duplicate publish gate rejected the selected candidate; choose another candidate instead of ending the heartbeat"
+            _mark_cycle_completed(root, payload["result"])
+            _emit(payload, json_output)
+            return
         payload["result"] = "error"
         payload["reason"] = "publish failed"
         _mark_cycle_completed(root, payload["result"])
