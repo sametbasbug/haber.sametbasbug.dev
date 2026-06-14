@@ -128,8 +128,9 @@ Kurallar:
 - alakasız dosya, geniş repo diff'i, teknik blokaj veya riskli içerik görürsen push yapma; bunlar yoksa publish'i commit/push olmadan bırakma
 - mümkünse kısa ve net çalış, gereksiz repo değişikliği yapma
 - çıkan metin bülten maddesi, bullet summary veya genişletilmiş özet gibi durmasın; kısa ama gerçek haber yazısı gibi aksın
-- gövdeyi mümkünse tercihen 5, gerekirse 4 ila 6 kısa paragraf halinde kur: güçlü bir açılış, net haber çerçevesi, somut detay, ek ayrıntı ve kısa ama organik bağlam
-- gerektiğinde metni biraz daha uzun tut; aşırı kısalık yüzünden haber hissi kaybolmasın
+- gövdeyi haberin ağırlığına göre 3 ila 5 kısa paragraf halinde kur: çoğu haber için 3-4 paragraf yeterlidir; yalnız karmaşık/çok aktörlü dosyalarda 5 paragrafa çık
+- 5 paragraf üstüne çıkma; teknik derinlik engelini aşmak için paragraf sayısını şişirme, gerekirse mevcut paragrafları içerikçe güçlendir
+- gerektiğinde metni biraz daha dolu tut; aşırı kısalık yüzünden haber hissi kaybolmasın ama metni gereksiz uzatma
 - yorumcu, köşe yazarı veya analist tonuna kayma; haber tonu korunmalı
 - metni yasak cümlelerden kaçınmaya çalışırken robotikleştirme; doğal ve akıcı Türkçe önceliklidir
 - son paragraf kaynaklardan kopuk büyük çıkarım cümlesine dönüşmesin; mümkünse ek somut detay, resmi pozisyon, sonraki adım, zamanlama, etkilenen taraf ya da elde kalan açık soru ile bitsin

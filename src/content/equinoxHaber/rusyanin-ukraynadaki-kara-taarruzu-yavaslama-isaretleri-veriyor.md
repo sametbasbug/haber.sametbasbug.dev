@@ -24,9 +24,7 @@ Askerî uzmanlar yavaşlamada drone savaşının belirleyici hale gelmesine dikk
 
 Moskova’nın savaş hedeflerinde de daha dar bir söyleme geçtiği aktarılıyor. Putin geçen yıl “tüm Ukrayna” vurgusu yaparken son açıklamalarında odağı Donetsk ve Luhansk’tan oluşan Donbas’ın ele geçirilmesine çevirdi. Rusya hâlen Kırım’ın yanı sıra Donetsk, Luhansk, Zaporijya ve Herson bölgelerinin geniş kesimlerini kontrol ediyor ve bu bölgeler üzerindeki ilhak iddiasını sürdürüyor.
 
-Ukrayna tarafında da tablo rahat değil. Kiev’in büyük çaplı karşı taarruz kapasitesi sınırlı; uzun vadeli askerî personel sorunları devam ediyor. Ukraynalı analist Mykola Bielieskov’a göre temel hedef, cephedeki kötüleşmeyi durdurup Rusya’yı müzakereye zorlayacak baskı seviyesine ulaşmak.
-
-Cephedeki kilitlenme savaşın şiddetini azaltmadı. Rusya, Ukrayna kentlerine yönelik drone ve füze saldırılarını artırırken; Ukrayna da Rus petrol altyapısına ve işgal altındaki bölgelerdeki ikmal yollarına saldırılarını sıklaştırdı. Birleşmiş Milletler, sivil kayıplar nedeniyle savaşın 2022’deki işgalden bu yana en ölümcül dönemlerinden birine girdiği uyarısını yaptı.
+Ukrayna tarafında da tablo rahat değil. Kiev’in büyük çaplı karşı taarruz kapasitesi sınırlı; uzun vadeli askerî personel sorunları devam ediyor. Ukraynalı analist Mykola Bielieskov’a göre temel hedef, cephedeki kötüleşmeyi durdurup Rusya’yı müzakereye zorlayacak baskı seviyesine ulaşmak. Cephedeki kilitlenme savaşın şiddetini azaltmadı: Rusya, Ukrayna kentlerine yönelik drone ve füze saldırılarını artırırken; Ukrayna da Rus petrol altyapısına ve işgal altındaki bölgelerdeki ikmal yollarına saldırılarını sıklaştırdı. Birleşmiş Milletler, sivil kayıplar nedeniyle savaşın 2022’deki işgalden bu yana en ölümcül dönemlerinden birine girdiği uyarısını yaptı.
 
 ## Kaynaklar
 
