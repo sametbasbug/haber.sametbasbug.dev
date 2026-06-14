@@ -57,6 +57,16 @@ RISKY_HEADLINE_TERMS = {
     "spying",
     "epstein",
 }
+LOCALIZED_CRIME_TERMS = {
+    "abducted",
+    "abduction",
+    "kidnap",
+    "kidnapped",
+    "kidnapping",
+    "kaçırıldı",
+    "kaçırılma",
+    "kaçırılan",
+}
 BLOCKED_BOARD_TERMS = {
     "celebrity",
     "rod stewart",
@@ -345,8 +355,12 @@ def _board_score(
             score -= 0.10
             reasons.append(f"risk_penalty:{term}")
             break
+    localized_crime = any(_headline_has_term(headline, term) for term in LOCALIZED_CRIME_TERMS)
+    if localized_crime:
+        score -= 0.06
+        reasons.append("risk_penalty:localized_crime")
     for term in POSITIVE_HEADLINE_TERMS:
-        if _headline_has_term(headline, term):
+        if _headline_has_term(headline, term) and not (term == "security" and localized_crime):
             score += 0.035
             reasons.append(f"signal_boost:{term}")
             break

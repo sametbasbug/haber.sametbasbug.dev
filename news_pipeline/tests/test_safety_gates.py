@@ -352,6 +352,29 @@ def test_headline_board_penalizes_recent_company_saturation(tmp_path: Path) -> N
     assert "recency_penalty:company_repeat:Anthropic:2" in reasons
 
 
+def test_headline_board_does_not_boost_localized_kidnapping_as_security_signal(tmp_path: Path) -> None:
+    article = _article("haiti-kidnap", url="https://example.org/demo/haiti-kidnap")
+    article.title = "Armed men kidnap high-ranking security official in Haiti"
+    article.summary = "A senior official was abducted in Port-au-Prince amid gang violence."
+    item = _item(
+        "haiti-kidnap",
+        normalized_id=article.id,
+        url="https://example.org/demo/haiti-kidnap",
+        priority=0.692,
+    )
+    item.draft_title = "Haiti’de üst düzey güvenlik yetkilisi silahlı kişilerce kaçırıldı"
+    item.draft_description = "Savunma bakanlığına yakın bir güvenlik yetkilisinin kaçırılması çete şiddeti bağlamında aktarılıyor."
+    item.draft_category = "Siyaset"
+    item.draft_tags = ["Haiti", "güvenlik", "kaçırılma"]
+    _save_runtime(tmp_path, item, article)
+
+    score, reasons = _board_score(tmp_path, item, recent_posts=[])
+
+    assert score == pytest.approx(0.632)
+    assert "risk_penalty:localized_crime" in reasons
+    assert "signal_boost:security" not in reasons
+
+
 
 def test_headline_board_limits_same_topic_family_in_selected_board(tmp_path: Path) -> None:
     item_one_article = _article("anthropic-one", url="https://example.org/demo/anthropic-one")
