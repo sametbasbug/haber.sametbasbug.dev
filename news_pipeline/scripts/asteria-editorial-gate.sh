@@ -172,6 +172,6 @@ echo "session_id=${SESSION_ID}"
 openclaw agent \
   --agent asteria \
   --session-id "$SESSION_ID" \
-  --thinking high \
+  --thinking medium \
   --timeout 1800 \
   --message "$PROMPT"
