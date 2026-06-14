@@ -215,6 +215,57 @@ ABD merkezli Anthropic’in Fable 5 ve Mythos 5 modellerine yabancı kullanıcı
         )
 
 
+def test_duplicate_event_guard_does_not_match_ai_lab_policy_without_shared_product(tmp_path: Path) -> None:
+    content = tmp_path / "content"
+    content.mkdir()
+    (content / "anthropic-dod-blacklist.md").write_text(
+        """---
+title: "Anthropic ile ABD Savunma Bakanlığı kara liste davasında karşı karşıya geliyor"
+description: "Washington’daki temyiz mahkemesi, Pentagon’un Anthropic’i tedarik zinciri riski ilan etmesine karşı açılan davada tarafları dinleyecek."
+sources:
+  - name: "CNBC Technology"
+    url: "https://www.cnbc.com/2026/05/19/anthropic-dod-blacklist-court-opening-arguments.html"
+---
+Dosyanın merkezinde, Pentagon ile şirket arasında aylar süren müzakerelerin çökmesi var. Bakanlık Anthropic modellerine tüm yasal amaçlar için sınırsız erişim isterken, şirket teknolojisinin tamamen otonom silahlarda veya ülke içinde kitlesel gözetimde kullanılmayacağına dair güvence aradı.
+""",
+        encoding="utf-8",
+    )
+
+    _assert_not_duplicate_live(
+        content,
+        "ABD’nin Anthropic kararı, Avrupa’da yapay zekâ bağımlılığı tartışmasını büyüttü",
+        "Washington’ın Anthropic’in en yeni modellerine yabancı erişimini durdurma emri, Avrupa’da yapay zekâ altyapısında ABD’ye bağımlılık tartışmasını yeniden öne çıkardı.",
+        {"https://www.politico.eu/article/us-anthropic-order-exposes-eu-ai-dependency/"},
+        "abd-anthropic-avrupa-bagimlilik",
+    )
+
+
+def test_duplicate_event_guard_matches_ai_access_story_with_shared_models(tmp_path: Path) -> None:
+    content = tmp_path / "content"
+    content.mkdir()
+    (content / "anthropic-europe-sovereignty.md").write_text(
+        """---
+title: "Anthropic kararı Avrupa’da egemen yapay zekâ tartışmasını büyüttü"
+description: "ABD yönetiminin talimatı sonrası Anthropic’in bazı üst seviye modellerine yabancı kullanıcı erişimini durdurması, Avrupa’da teknoloji bağımlılığı ve yerli yapay zekâ yatırımları tartışmasını yeniden öne çıkardı."
+sources:
+  - name: "Euronews World"
+    url: "https://www.euronews.com/2026/06/13/wake-up-call-europe-reacts-to-anthropic-halting-access-to-its-fable-5-and-mythos-5-ai-mode"
+---
+ABD merkezli Anthropic’in Fable 5 ve Mythos 5 modellerine yabancı kullanıcı erişimini durdurması, Avrupa’da yapay zekâ egemenliği tartışmasını sertleştirdi.
+""",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(typer.BadParameter, match="near-duplicate live event"):
+        _assert_not_duplicate_live(
+            content,
+            "US’s Anthropic order exposes EU’s AI dependency",
+            "Washington's export controls on Anthropic spark renewed calls for Europe to accelerate development of its own cutting-edge AI models. The net effect of this order is that we must abruptly disable Fable 5 and Mythos 5 for all our customers to ensure compliance, Anthropic said.",
+            {"https://www.politico.eu/article/us-anthropic-order-exposes-eu-ai-dependency/"},
+            "us-anthropic-order-eu-ai-dependency",
+        )
+
+
 def test_duplicate_event_guard_blocks_same_shadow_fleet_tanker_from_different_source(tmp_path: Path) -> None:
     content = tmp_path / "content"
     content.mkdir()
@@ -465,6 +516,37 @@ Savunma Bakanlığı, Smyrtos'un İngiltere'nin güney kıyısı açıklarında 
     item.draft_title = "İngiltere seizes suspected Russian shadow fleet tanker"
     item.draft_description = "The İngiltere Ministry of Defence announced that Royal Marine Commandos had captured a sanctioned Russian tanker in the Channel."
     item.draft_category = "Siyaset"
+    _save_runtime(tmp_path, item, article)
+
+    packs, skipped, _ = _build_editorial_packs(tmp_path, min_score=0.68, max_source_age_hours=72, limit=20)
+
+    assert packs == []
+    assert any(row["queueId"] == item.queue_id and row["reason"] == "near-duplicate live event" for row in skipped)
+
+
+def test_prepare_board_excludes_ai_access_duplicate_using_normalized_context(tmp_path: Path) -> None:
+    content = tmp_path / "src/content/equinoxHaber"
+    content.mkdir(parents=True)
+    (content / "anthropic-karari-avrupada-egemen-yapay-zeka-tartismasini-buyuttu.md").write_text(
+        """---
+title: "Anthropic kararı Avrupa’da egemen yapay zekâ tartışmasını büyüttü"
+description: "ABD yönetiminin talimatı sonrası Anthropic’in bazı üst seviye modellerine yabancı kullanıcı erişimini durdurması, Avrupa’da teknoloji bağımlılığı ve yerli yapay zekâ yatırımları tartışmasını yeniden öne çıkardı."
+sources:
+  - name: "Euronews World"
+    url: "https://www.euronews.com/2026/06/13/wake-up-call-europe-reacts-to-anthropic-halting-access-to-its-fable-5-and-mythos-5-ai-mode"
+---
+ABD merkezli Anthropic’in Fable 5 ve Mythos 5 modellerine yabancı kullanıcı erişimini durdurması, Avrupa’da yapay zekâ egemenliği tartışmasını sertleştirdi.
+""",
+        encoding="utf-8",
+    )
+    article = _article("anthropic-eu-dependency", url="https://www.politico.eu/article/us-anthropic-order-exposes-eu-ai-dependency/")
+    article.title = "US’s Anthropic order exposes EU’s AI dependency"
+    article.summary = "Washington's export controls on Anthropic spark renewed calls for Europe to accelerate development of its own cutting-edge AI models"
+    article.content_snippet = "The net effect of this order is that we must abruptly disable Fable 5 and Mythos 5 for all our customers to ensure compliance, Anthropic said."
+    item = _item("anthropic-eu-dependency", normalized_id=article.id, url=str(article.canonical_url), priority=0.91)
+    item.draft_title = "US’s Anthropic order exposes EU’s AI dependency"
+    item.draft_description = article.summary
+    item.draft_category = "Teknoloji"
     _save_runtime(tmp_path, item, article)
 
     packs, skipped, _ = _build_editorial_packs(tmp_path, min_score=0.68, max_source_age_hours=72, limit=20)

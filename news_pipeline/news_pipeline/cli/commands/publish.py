@@ -35,7 +35,11 @@ EVENT_CORE_ENTITY_HINTS = {
     "anlasmasini",
     "block",
     "blocked",
+    "devre",
+    "disable",
+    "disabled",
     "durdurdu",
+    "durdurma",
     "durdurulmasi",
     "engelledi",
     "erisim",
@@ -52,10 +56,26 @@ EVENT_CORE_ENTITY_HINTS = {
     "vetoes",
 }
 EVENT_CORE_ACTION_GROUPS = (
-    {"access", "erisim", "erisimi", "erisimini", "halted", "halting", "restricted", "restriction", "suspend", "suspended"},
-    {"acquisition", "almasini", "anlasma", "anlasmasi", "anlasmasini", "block", "blocked", "durdurdu", "durdurulmasi", "engelledi", "satin", "veto", "vetoes"},
+    {"access", "devre", "disable", "disabled", "erisim", "erisimi", "erisimini", "halted", "halting", "restricted", "restriction", "suspend", "suspended"},
+    {"acquisition", "almasini", "anlasma", "anlasmasi", "anlasmasini", "block", "blocked", "durdurdu", "durdurma", "durdurulmasi", "engelledi", "satin", "veto", "vetoes"},
     {"durdurdu", "durduruldu", "durduruldugunu", "intercept", "intercepted", "intercepts", "seize", "seized", "seizes", "alikoydu", "alikoydugunu", "alıkoydu"},
 )
+EVENT_CORE_AI_LAB_TOKENS = {
+    "anthropic",
+    "google",
+    "meta",
+    "microsoft",
+    "openai",
+}
+EVENT_CORE_AI_PRODUCT_TOKENS = {
+    "chatgpt",
+    "claude",
+    "fable",
+    "gemini",
+    "manus",
+    "mythos",
+    "opus",
+}
 EVENT_CORE_OBJECT_HINTS = {
     "fleet",
     "filosu",
@@ -224,7 +244,15 @@ def _topic_tokens(value: str) -> set[str]:
 def _has_duplicate_event_core(item_tokens: set[str], existing_tokens: set[str], shared_tokens: set[str]) -> bool:
     shared_action_tokens = shared_tokens & EVENT_CORE_ENTITY_HINTS
     action_group_match = any(group & item_tokens and group & existing_tokens for group in EVENT_CORE_ACTION_GROUPS)
+    shared_ai_labs = shared_tokens & EVENT_CORE_AI_LAB_TOKENS
+    shared_ai_products = shared_tokens & EVENT_CORE_AI_PRODUCT_TOKENS
     if len(shared_tokens) < EVENT_CORE_SHARED_TOKEN_MIN:
+        # AI access/export-control stories often translate the same event into
+        # different policy angles. Catch those before Asteria spends polish
+        # tokens, but only when a concrete shared model/product is present; a
+        # company name plus generic "access/security" language is too broad.
+        if shared_ai_labs and len(shared_ai_products) >= 2 and action_group_match:
+            return True
         # Some same-event rewrites translate the action verb, so the shared
         # token count can be lower than normal even though both texts describe
         # the same concrete incident. Permit a narrower object-heavy path for
@@ -247,6 +275,8 @@ def _has_duplicate_event_core(item_tokens: set[str], existing_tokens: set[str], 
     # token. This catches same-event rewrites across different sources without
     # turning broad category overlap into a duplicate.
     distinctive_entities = distinctive_shared & EVENT_CORE_DISTINCTIVE_ENTITY_TOKENS
+    if shared_ai_labs and action_group_match and not shared_ai_products and distinctive_entities <= shared_ai_labs:
+        return False
     if len(distinctive_shared) >= 2 and distinctive_entities:
         return True
     # Not every recurring event has a durable company/model entity token. For

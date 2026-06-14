@@ -256,6 +256,18 @@ def _headline_text(root: Path, item: Any) -> str:
     return article.title if article else item.draft_title
 
 
+def _duplicate_probe_text(root: Path, item: Any) -> tuple[str, str]:
+    normalized_store = JsonStore(root / "news_pipeline/data/normalized", NormalizedArticle)
+    article = normalized_store.load(item.normalized_id)
+    title_parts = [item.draft_title or ""]
+    description_parts = [item.draft_description or ""]
+    if article:
+        title_parts.append(article.title or "")
+        description_parts.extend([article.summary or "", article.content_snippet or ""])
+    description_parts.extend(item.draft_facts or [])
+    return " ".join(part for part in title_parts if part), " ".join(part for part in description_parts if part)
+
+
 def _item_company_hits(root: Path, item: Any) -> set[str]:
     normalized_store = JsonStore(root / "news_pipeline/data/normalized", NormalizedArticle)
     article = normalized_store.load(item.normalized_id)
@@ -406,10 +418,11 @@ def _passes_basic_board_filter(root: Path, item: Any, max_source_age_hours: int,
     if any(term in headline for term in BLOCKED_BOARD_TERMS):
         return False, "blocked low-signal headline"
     try:
+        probe_title, probe_description = _duplicate_probe_text(root, item)
         _assert_not_duplicate_live(
             root / "src/content/equinoxHaber",
-            item.draft_title,
-            item.draft_description,
+            probe_title,
+            probe_description,
             {str(source.url) for source in item.draft_sources + item.supporting_sources},
             f"prepare-probe-{item.queue_id}",
         )
