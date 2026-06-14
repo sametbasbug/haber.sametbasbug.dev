@@ -168,10 +168,15 @@ The pipeline is designed to reduce common publishing failure modes:
 
 - source age checks;
 - URL/title/description/topic duplicate guards;
+- event-core duplicate checks for same-event/different-angle coverage;
 - recent repeated-company/product signal penalties;
+- raw editorial score floor for publish candidates; board/display score is not a bypass;
 - manual-review separation for sensitive legal/political/personal-risk stories;
+- rejected/archive tombstone handling so terminal queue states are not silently resurrected;
+- explicit retry flags for duplicate-gate resets and rejected-item approval;
 - required Asteria editorial polish before production publish;
 - Turkish title/body/fact checks;
+- minimum body-depth gate without encouraging overlong articles;
 - required hero prompt and alt text;
 - AI hero generation with WebP normalization;
 - generated local hero guard: `.webp`, `1200×675`, max `400 KB`;
