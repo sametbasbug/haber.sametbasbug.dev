@@ -120,7 +120,7 @@ Bu komut Asteria’ya şu tür bilgiler verir:
 - skor/sinyal
 - `strictGate.reason`
 - son yayımlanan haberler (`board.recentPosts`)
-- sıcak kategori/kaynak sinyali (`hotCategory`, `hotSource`)
+- sıcak kategori/kaynak sinyali (`hotCategory`, `hotSource`); `Siyaset` ve `Ekonomi` ana haber damarları olduğu için hot-category throttle’dan muaftır
 
 ### Queue inceleme
 
@@ -202,6 +202,7 @@ Production publish şu kapılardan geçer:
 - minimum editorial score: raw `editorial_priority` / `score` normalde en az 0.68 olmalıdır; `boardScore` yalnız sıralama/sinyal bağlamıdır, score-floor bypass değildir
 - source age: publish hard gate, Asteria headline board ve queue stale-source temizliği varsayılan 24 saat
 - Asteria headline board, son 10 canlı yayındaki aynı büyük şirket/ürün kümesi tekrarına yumuşak skor cezası uygular (`Claude → Anthropic`, `ChatGPT → OpenAI`, `Gemini → Google`)
+- Asteria headline board’da tekrar sinyalleri seçim alanını daraltmak için kullanılır; `Siyaset` ve `Ekonomi` hot-category sayılmaz, çünkü global haber akışının çoğu doğal olarak bu iki kategoriye düşer
 - aynı URL tekrar kontrolü
 - fuzzy title/description/topic duplicate kontrolü
 - AI hero üretimi zorunlu; stok fallback varsayılan kapalı

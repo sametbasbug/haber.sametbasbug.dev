@@ -185,7 +185,7 @@ The pipeline is designed to reduce common publishing failure modes:
 - source age checks;
 - URL/title/description/topic duplicate guards;
 - event-core duplicate checks for same-event/different-angle coverage;
-- recent repeated-company/product signal penalties;
+- headline-board diversity controls that down-rank repeated sources, companies, topic families, and non-core hot categories without hiding core global news categories (`Siyaset`, `Ekonomi`) from Asteria’s candidate view;
 - raw editorial score floor for publish candidates; board/display score is not a bypass;
 - manual-review separation for sensitive legal/political/personal-risk stories;
 - rejected/archive tombstone handling so terminal queue states are not silently resurrected;
