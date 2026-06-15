@@ -337,12 +337,21 @@ def _assert_not_topic_family_saturated(content_root: Path, item_text: str) -> No
         )
 
 
-def _assert_not_duplicate_live(content_root: Path, item_title: str, item_description: str, item_urls: set[str], target_slug: str) -> None:
+def _assert_not_duplicate_live(
+    content_root: Path,
+    item_title: str,
+    item_description: str,
+    item_urls: set[str],
+    target_slug: str,
+    *,
+    enforce_topic_family_saturation: bool = True,
+) -> None:
     title = _collapse_text(item_title)
     description = _collapse_text(item_description)
     item_topic_text = f"{item_title} {item_description}"
     canonical_item_urls = _canonical_source_urls(item_urls)
-    _assert_not_topic_family_saturated(content_root, item_topic_text)
+    if enforce_topic_family_saturation:
+        _assert_not_topic_family_saturated(content_root, item_topic_text)
     for path in sorted(content_root.glob("*.md")):
         if path.stem == target_slug:
             raise typer.BadParameter(f"target slug already exists in Equinox Haber: {path.name}")

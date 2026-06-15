@@ -382,6 +382,41 @@ Gövde.
         )
 
 
+def test_prepare_duplicate_probe_can_skip_topic_family_saturation(tmp_path: Path) -> None:
+    content = tmp_path / "content"
+    content.mkdir()
+    for index, title in enumerate(
+        [
+            "Putin Ukrayna saldırılarının ekonomiye zarar verdiğini kabul etti",
+            "Bulgaristan Ukrayna için devlet stoklarından sevkiyatı durdurdu",
+        ],
+        start=1,
+    ):
+        (content / f"recent-ukraine-{index}.md").write_text(
+            f"""---
+title: "{title}"
+description: "Ukrayna ve Rusya savaşına ilişkin yeni gelişme aktarıldı."
+pubDate: '2026-06-13T1{index}:00:00+03:00'
+tags: ["Ukrayna", "Rusya", "savaş"]
+sources:
+  - name: "Demo Source"
+    url: "https://example.org/recent-ukraine-{index}"
+---
+Gövde.
+""",
+            encoding="utf-8",
+        )
+
+    _assert_not_duplicate_live(
+        content,
+        "Ukrayna, AB üyelik görüşmelerinde yeni aşamaya geçti",
+        "Avrupa Birliği, Ukrayna ve Moldova ile üyelik sürecinde yeni başlık açmaya hazırlanıyor.",
+        {"https://example.org/new-ukraine"},
+        "ukrayna-ab-uyelik-gorusmeleri",
+        enforce_topic_family_saturation=False,
+    )
+
+
 
 def test_source_age_rejection_blocks_publish(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.chdir(tmp_path)
@@ -1126,6 +1161,77 @@ def test_headline_board_excludes_low_score_category_fill_even_behind_stronger_gl
     assert [item.queue_id for item in selected] == ["ukraine-energy"]
     assert any(row["queueId"] == "peatlands" and row["reason"] == "score below threshold (0.590)" for row in skipped)
     assert meta["diagnostics"]["minCategoryTargetScore"] == 0.68
+
+
+def test_hot_category_is_downranked_without_starving_board_fill(tmp_path: Path) -> None:
+    content = tmp_path / "src/content/equinoxHaber"
+    content.mkdir(parents=True)
+    for index, title in enumerate(
+        [
+            "G7 liderleri yeni güvenlik gündemiyle toplandı",
+            "Avrupa başkentleri savunma planlarını güncelledi",
+            "Asya-Pasifik zirvesi yeni diplomasi başlıkları açtı",
+        ],
+        start=1,
+    ):
+        (content / f"recent-politics-{index}.md").write_text(
+            f"""---
+title: "{title}"
+description: "Son siyasi gelişmeler küresel gündemde izleniyor."
+pubDate: '2026-06-15T1{index}:00:00+03:00'
+category: "Siyaset"
+tags: ["siyaset", "diplomasi"]
+sources:
+  - name: "Recent Source {index}"
+    url: "https://example.org/recent-politics-{index}"
+---
+Gövde.
+""",
+            encoding="utf-8",
+        )
+
+    politics_one_article = _article("global-education", url="https://example.org/demo/global-education")
+    politics_one_article.title = "Attacks on education rise globally, monitoring study says"
+    politics_one_article.summary = "A monitoring group reports attacks on schools and teachers in multiple regions."
+    politics_one = _item("global-education", normalized_id=politics_one_article.id, url="https://example.org/demo/global-education", priority=0.73)
+    politics_one.draft_title = "Attacks on education, pupils and staff around the world up by 40%, says study"
+    politics_one.draft_description = "A monitoring group reports a global rise in attacks affecting schools, pupils and education staff."
+    politics_one.draft_category = "Siyaset"
+    politics_one.draft_sources = [DraftSource(name="Global Monitor", url="https://example.org/demo/global-education")]
+
+    politics_two_article = _article("china-church", url="https://example.org/demo/china-church")
+    politics_two_article.title = "China detains two leaders of influential underground church"
+    politics_two_article.summary = "Authorities detained religious leaders in a case watched by rights groups."
+    politics_two = _item("china-church", normalized_id=politics_two_article.id, url="https://example.org/demo/china-church", priority=0.71)
+    politics_two.draft_title = "China detains two leaders of influential underground church"
+    politics_two.draft_description = "Rights groups say the detentions add pressure on an influential underground church network."
+    politics_two.draft_category = "Siyaset"
+    politics_two.draft_sources = [DraftSource(name="Rights Wire", url="https://example.org/demo/china-church")]
+
+    tech_article = _article("ai-security", url="https://example.org/demo/ai-security")
+    tech_article.title = "New AI security framework targets espionage risks"
+    tech_article.summary = "Governments are updating security guidance for artificial intelligence tools."
+    tech_item = _item("ai-security", normalized_id=tech_article.id, url="https://example.org/demo/ai-security", priority=0.72)
+    tech_item.draft_title = "New AI security framework targets espionage risks"
+    tech_item.draft_description = "The framework asks agencies to assess AI systems against espionage and data leak risks."
+    tech_item.draft_category = "Teknoloji"
+    tech_item.draft_sources = [DraftSource(name="Tech Policy Wire", url="https://example.org/demo/ai-security")]
+
+    for item, article in ((politics_one, politics_one_article), (politics_two, politics_two_article), (tech_item, tech_article)):
+        _save_runtime(tmp_path, item, article)
+
+    selected, _, meta = _select_headline_board(
+        tmp_path,
+        [politics_one, politics_two, tech_item],
+        limit=10,
+        max_source_age_hours=72,
+    )
+
+    selected_ids = {item.queue_id for item in selected}
+    assert {"global-education", "china-church", "ai-security"} <= selected_ids
+    assert meta["diagnostics"]["hotCategory"] == "Siyaset"
+    assert meta["diagnostics"]["hotCategoryPolicy"] == "skip_target_fill_only"
+    assert meta["diagnostics"]["hotCategoryBoardLimit"] is None
 
 
 

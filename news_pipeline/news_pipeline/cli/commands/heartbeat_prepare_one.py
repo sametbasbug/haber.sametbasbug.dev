@@ -22,7 +22,7 @@ MAX_PER_SOURCE = 3
 MIN_HEALTHY_BOARD_ELIGIBLE = 6
 HOT_CATEGORY_RECENT_WINDOW = 3
 HOT_CATEGORY_REPEAT_THRESHOLD = 2
-HOT_CATEGORY_BOARD_LIMIT = 1
+HOT_CATEGORY_POLICY = "skip_target_fill_only"
 HOT_SOURCE_RECENT_WINDOW = 3
 HOT_SOURCE_BOARD_LIMIT = 1
 MIN_CATEGORY_TARGETS = {"Siyaset": 3, "Ekonomi": 3, "Teknoloji": 3, "Bilim": 1}
@@ -425,6 +425,7 @@ def _passes_basic_board_filter(root: Path, item: Any, max_source_age_hours: int,
             probe_description,
             {str(source.url) for source in item.draft_sources + item.supporting_sources},
             f"prepare-probe-{item.queue_id}",
+            enforce_topic_family_saturation=False,
         )
     except typer.BadParameter:
         return False, "near-duplicate live event"
@@ -474,8 +475,6 @@ def _select_headline_board(root: Path, items: list[Any], limit: int, max_source_
             return False
         source = _source_name(item)
         if source_counts[source] >= MAX_PER_SOURCE:
-            return False
-        if hot_category and item.draft_category == hot_category and category_counts[hot_category] >= HOT_CATEGORY_BOARD_LIMIT:
             return False
         if hot_source and source == hot_source and source_counts[hot_source] >= HOT_SOURCE_BOARD_LIMIT:
             return False
@@ -532,7 +531,8 @@ def _select_headline_board(root: Path, items: list[Any], limit: int, max_source_
         "recentTopicFamilyPenaltyThreshold": RECENT_TOPIC_FAMILY_PENALTY_THRESHOLD,
         "hotCategory": hot_category,
         "hotCategoryRepeatThreshold": HOT_CATEGORY_REPEAT_THRESHOLD,
-        "hotCategoryBoardLimit": HOT_CATEGORY_BOARD_LIMIT if hot_category else None,
+        "hotCategoryBoardLimit": None,
+        "hotCategoryPolicy": HOT_CATEGORY_POLICY if hot_category else None,
         "hotSource": hot_source,
         "hotSourceBoardLimit": HOT_SOURCE_BOARD_LIMIT if hot_source else None,
         "sciencePressure": science_pressure,
