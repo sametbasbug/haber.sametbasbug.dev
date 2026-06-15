@@ -23,6 +23,7 @@ MIN_HEALTHY_BOARD_ELIGIBLE = 6
 HOT_CATEGORY_RECENT_WINDOW = 3
 HOT_CATEGORY_REPEAT_THRESHOLD = 2
 HOT_CATEGORY_POLICY = "skip_target_fill_only"
+HOT_CATEGORY_EXEMPT_CATEGORIES = {"Siyaset", "Ekonomi"}
 HOT_SOURCE_RECENT_WINDOW = 3
 HOT_SOURCE_BOARD_LIMIT = 1
 MIN_CATEGORY_TARGETS = {"Siyaset": 3, "Ekonomi": 3, "Teknoloji": 3, "Bilim": 1}
@@ -208,6 +209,8 @@ def _hot_category(root: Path) -> str | None:
     if len(categories) < HOT_CATEGORY_RECENT_WINDOW:
         return None
     category, count = Counter(categories).most_common(1)[0]
+    if category in HOT_CATEGORY_EXEMPT_CATEGORIES:
+        return None
     return category if count >= HOT_CATEGORY_REPEAT_THRESHOLD else None
 
 
@@ -531,6 +534,7 @@ def _select_headline_board(root: Path, items: list[Any], limit: int, max_source_
         "recentTopicFamilyPenaltyThreshold": RECENT_TOPIC_FAMILY_PENALTY_THRESHOLD,
         "hotCategory": hot_category,
         "hotCategoryRepeatThreshold": HOT_CATEGORY_REPEAT_THRESHOLD,
+        "hotCategoryExemptCategories": sorted(HOT_CATEGORY_EXEMPT_CATEGORIES),
         "hotCategoryBoardLimit": None,
         "hotCategoryPolicy": HOT_CATEGORY_POLICY if hot_category else None,
         "hotSource": hot_source,

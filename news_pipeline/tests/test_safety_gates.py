@@ -14,7 +14,7 @@ from news_pipeline.cli.commands.queue_approve import queue_approve_command
 from news_pipeline.cli.commands.queue_cleanup import queue_cleanup_command
 from news_pipeline.cli.commands.queue_polish import queue_polish_command
 from news_pipeline.cli.commands.heartbeat_publish_one import _is_excluded_source_format, _select_candidate, publish_one_command
-from news_pipeline.cli.commands.heartbeat_prepare_one import _board_score, _build_editorial_packs, _candidate_reason, _recent_live_posts, _select_headline_board
+from news_pipeline.cli.commands.heartbeat_prepare_one import _board_score, _build_editorial_packs, _candidate_reason, _hot_category, _recent_live_posts, _select_headline_board
 from news_pipeline.cli.commands.publish import _assert_not_duplicate_live, _assert_not_duplicate_topic, publish_command, publish_queue_item
 from news_pipeline.editorial.autonomy import body_looks_too_english, is_autopublish_candidate
 from news_pipeline.extractors.article_text import _extract_published_at
@@ -1163,7 +1163,7 @@ def test_headline_board_excludes_low_score_category_fill_even_behind_stronger_gl
     assert meta["diagnostics"]["minCategoryTargetScore"] == 0.68
 
 
-def test_hot_category_is_downranked_without_starving_board_fill(tmp_path: Path) -> None:
+def test_politics_is_not_treated_as_hot_category(tmp_path: Path) -> None:
     content = tmp_path / "src/content/equinoxHaber"
     content.mkdir(parents=True)
     for index, title in enumerate(
@@ -1184,6 +1184,66 @@ tags: ["siyaset", "diplomasi"]
 sources:
   - name: "Recent Source {index}"
     url: "https://example.org/recent-politics-{index}"
+---
+Gövde.
+""",
+            encoding="utf-8",
+        )
+
+    assert _hot_category(tmp_path) is None
+
+
+def test_economy_is_not_treated_as_hot_category(tmp_path: Path) -> None:
+    content = tmp_path / "src/content/equinoxHaber"
+    content.mkdir(parents=True)
+    for index, title in enumerate(
+        [
+            "Enerji fiyatları Avrupa sanayisi üzerinde baskı kuruyor",
+            "Petrol piyasaları yeni arz beklentisiyle geriledi",
+            "Merkez bankaları büyüme tahminlerini güncelledi",
+        ],
+        start=1,
+    ):
+        (content / f"recent-economy-{index}.md").write_text(
+            f"""---
+title: "{title}"
+description: "Küresel ekonomi gündeminde yeni gelişme izleniyor."
+pubDate: '2026-06-15T1{index}:00:00+03:00'
+category: "Ekonomi"
+tags: ["ekonomi", "piyasa"]
+sources:
+  - name: "Recent Economy Source {index}"
+    url: "https://example.org/recent-economy-{index}"
+---
+Gövde.
+""",
+            encoding="utf-8",
+        )
+
+    assert _hot_category(tmp_path) is None
+
+
+def test_non_core_category_can_still_be_hot_without_starving_board_fill(tmp_path: Path) -> None:
+    content = tmp_path / "src/content/equinoxHaber"
+    content.mkdir(parents=True)
+    for index, title in enumerate(
+        [
+            "Yeni yapay zeka güvenlik standardı açıklandı",
+            "Çip üreticileri veri merkezi talebiyle büyüyor",
+            "Robotik yazılım pazarı yeni yatırımlarla genişledi",
+        ],
+        start=1,
+    ):
+        (content / f"recent-tech-{index}.md").write_text(
+            f"""---
+title: "{title}"
+description: "Teknoloji sektöründe yeni gelişme izleniyor."
+pubDate: '2026-06-15T1{index}:00:00+03:00'
+category: "Teknoloji"
+tags: ["teknoloji", "yapay zeka"]
+sources:
+  - name: "Recent Tech Source {index}"
+    url: "https://example.org/recent-tech-{index}"
 ---
 Gövde.
 """,
@@ -1229,9 +1289,10 @@ Gövde.
 
     selected_ids = {item.queue_id for item in selected}
     assert {"global-education", "china-church", "ai-security"} <= selected_ids
-    assert meta["diagnostics"]["hotCategory"] == "Siyaset"
+    assert meta["diagnostics"]["hotCategory"] == "Teknoloji"
     assert meta["diagnostics"]["hotCategoryPolicy"] == "skip_target_fill_only"
     assert meta["diagnostics"]["hotCategoryBoardLimit"] is None
+    assert meta["diagnostics"]["hotCategoryExemptCategories"] == ["Ekonomi", "Siyaset"]
 
 
 
