@@ -42,7 +42,7 @@ RECENT_COMPANY_PENALTY_THRESHOLD = 2
 RECENT_COMPANY_PENALTY_PER_ITEM = 0.09
 RECENT_COMPANY_PENALTY_MAX = 0.27
 RECENT_TOPIC_FAMILY_WINDOW = 8
-RECENT_TOPIC_FAMILY_PENALTY_THRESHOLD = 1
+RECENT_TOPIC_FAMILY_PENALTY_THRESHOLD = 2
 RECENT_TOPIC_FAMILY_PENALTY_PER_ITEM = 0.12
 RECENT_TOPIC_FAMILY_PENALTY_MAX = 0.48
 MAX_BOARD_ITEMS_PER_TOPIC_FAMILY = 1
@@ -456,16 +456,6 @@ def _select_headline_board(root: Path, items: list[Any], limit: int, max_source_
                 skipped.append({"queueId": item.queue_id, "score": round(float(item.editorial_priority), 3), "title": item.draft_title, "reason": reason})
             continue
         board_score, reasons = _board_score(root, item, science_pressure=science_pressure, science_space_pressure=science_space_pressure, recent_posts=recent_posts)
-        if board_score < MIN_CATEGORY_TARGET_SCORE:
-            if len(skipped) < 12:
-                skipped.append({
-                    "queueId": item.queue_id,
-                    "score": round(float(item.editorial_priority), 3),
-                    "boardScore": board_score,
-                    "title": item.draft_title,
-                    "reason": f"board score below threshold ({board_score:.3f})",
-                })
-            continue
         eligible.append((item, board_score, reasons))
 
     eligible.sort(key=lambda row: row[1], reverse=True)

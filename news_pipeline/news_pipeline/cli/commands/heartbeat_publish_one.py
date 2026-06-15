@@ -147,10 +147,14 @@ def _is_excluded_source_format(item: QueueItem) -> bool:
     urls = " ".join(str(source.url).lower() for source in item.draft_sources)
     return (
         "podcast" in urls
+        or "/commentisfree/" in urls
+        or "/opinion/" in urls
         or "/live/" in urls
         or "/tv-shows/" in urls
         or "/video/" in urls
         or "/videos/" in urls
+        or " opinion " in f" {text} "
+        or " commentary " in f" {text} "
         or " tv show" in text
         or " live" in text
         or "live:" in text

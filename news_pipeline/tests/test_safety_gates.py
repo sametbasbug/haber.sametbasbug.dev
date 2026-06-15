@@ -13,7 +13,7 @@ from news_pipeline.cli.commands.process import process_command
 from news_pipeline.cli.commands.queue_approve import queue_approve_command
 from news_pipeline.cli.commands.queue_cleanup import queue_cleanup_command
 from news_pipeline.cli.commands.queue_polish import queue_polish_command
-from news_pipeline.cli.commands.heartbeat_publish_one import _select_candidate, publish_one_command
+from news_pipeline.cli.commands.heartbeat_publish_one import _is_excluded_source_format, _select_candidate, publish_one_command
 from news_pipeline.cli.commands.heartbeat_prepare_one import _board_score, _build_editorial_packs, _candidate_reason, _recent_live_posts, _select_headline_board
 from news_pipeline.cli.commands.publish import _assert_not_duplicate_live, _assert_not_duplicate_topic, publish_command, publish_queue_item
 from news_pipeline.editorial.autonomy import body_looks_too_english, is_autopublish_candidate
@@ -1154,6 +1154,49 @@ def test_headline_board_ignores_incidental_company_mentions_in_body(tmp_path: Pa
     )
 
     assert not any("company_repeat" in reason for reason in reasons)
+
+
+def test_prepare_board_keeps_single_recent_topic_family_as_ranking_signal(tmp_path: Path) -> None:
+    content = tmp_path / "src/content/equinoxHaber"
+    content.mkdir(parents=True)
+    (content / "ukraine-existing.md").write_text(
+        """---
+title: "Putin ve Zelenskiy, G7 öncesi Trump’la ayrı ayrı görüştü"
+description: "Ukrayna savaşı G7 gündeminde kalıyor."
+pubDate: '2026-06-15T10:00:00+03:00'
+category: "Siyaset"
+tags: ["ukrayna", "rusya", "g7"]
+sources:
+  - name: "France 24 World"
+    url: "https://example.org/existing-ukraine"
+---
+Gövde.
+""",
+        encoding="utf-8",
+    )
+    article = _article("ukraine-cathedral", url="https://example.org/demo/ukraine-cathedral")
+    article.title = "Russian strikes damage historic Kyiv cathedral in Ukraine"
+    article.summary = "Russian attacks across Ukraine damaged a Kyiv cathedral and killed civilians."
+    item = _item("ukraine-cathedral", normalized_id=article.id, url="https://example.org/demo/ukraine-cathedral", priority=0.734)
+    item.draft_title = "Russian strikes kill nine in Ukraine and damage historic cathedral, officials say"
+    item.draft_description = "Officials said Russian strikes damaged a historic Kyiv cathedral and killed civilians."
+    item.draft_category = "Siyaset"
+    item.draft_tags = ["Ukraine", "Russia", "Kyiv"]
+    _save_runtime(tmp_path, item, article)
+
+    selected, skipped, meta = _select_headline_board(tmp_path, [item], limit=10, max_source_age_hours=72)
+
+    assert [row.queue_id for row in selected] == ["ukraine-cathedral"]
+    assert not any(row.get("queueId") == "ukraine-cathedral" for row in skipped)
+    assert meta["diagnostics"]["recentTopicFamilyPenaltyThreshold"] == 2
+
+
+def test_opinion_urls_are_excluded_source_format() -> None:
+    item = _item(url="https://www.theguardian.com/commentisfree/2026/jun/15/europe-us-big-tech")
+    item.draft_title = "Europe is breaking up with US big tech | Comment"
+
+    assert _is_excluded_source_format(item) is True
+
 
 def test_recent_live_posts_detects_company_signals_beyond_title(tmp_path: Path) -> None:
     content = tmp_path / "src/content/equinoxHaber"
