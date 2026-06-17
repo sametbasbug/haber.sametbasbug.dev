@@ -14,7 +14,7 @@ from news_pipeline.cli.commands.queue_approve import queue_approve_command
 from news_pipeline.cli.commands.queue_cleanup import queue_cleanup_command
 from news_pipeline.cli.commands.queue_polish import queue_polish_command
 from news_pipeline.cli.commands.heartbeat_publish_one import _is_excluded_source_format, _select_candidate, publish_one_command
-from news_pipeline.cli.commands.heartbeat_prepare_one import _board_score, _build_editorial_packs, _candidate_reason, _hot_category, _recent_live_posts, _select_headline_board
+from news_pipeline.cli.commands.heartbeat_prepare_one import _board_score, _build_editorial_packs, _candidate_reason, _hot_category, _recent_live_posts, _select_headline_board, _selection_policy
 from news_pipeline.cli.commands.publish import _assert_not_duplicate_live, _assert_not_duplicate_topic, publish_command, publish_queue_item
 from news_pipeline.editorial.autonomy import body_looks_too_english, is_autopublish_candidate
 from news_pipeline.extractors.article_text import _extract_published_at
@@ -1356,6 +1356,18 @@ Gövde.
     assert [row.queue_id for row in selected] == ["ukraine-cathedral"]
     assert not any(row.get("queueId") == "ukraine-cathedral" for row in skipped)
     assert meta["diagnostics"]["recentTopicFamilyPenaltyThreshold"] == 2
+
+
+def test_prepare_selection_policy_makes_diversity_a_tiebreaker_not_veto() -> None:
+    policy = _selection_policy(0.68)
+
+    brake = policy["emptyCycleBrake"]
+    assert brake["enabled"] is True
+    assert "raw score >= 0.68" in brake["minimumCandidate"]
+    assert "tie-breaker, not a veto" in brake["diversityOverride"]
+    assert "solely because recent posts" in brake["diversityOverride"]
+    assert "hard veto" in policy["manualReviewRequires"]
+    assert "missing Asteria editorial polish' is not a rejection reason" in policy["strictGateInterpretation"]
 
 
 def test_opinion_urls_are_excluded_source_format() -> None:

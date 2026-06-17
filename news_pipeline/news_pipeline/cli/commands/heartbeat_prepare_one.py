@@ -87,6 +87,20 @@ BLOCKED_BOARD_TERMS = {
     "music museum",
     "father ted",
 }
+
+
+def _selection_policy(min_score: float) -> dict[str, Any]:
+    return {
+        "manualReviewRequires": "Manual_review is allowed only when every candidate that needs only Asteria polish has a hard veto: duplicate live/topic, unreadable or stale source, excluded source format (live/podcast/opinion/video), fragile single-source personal accusation, or clearly low public value.",
+        "strictGateInterpretation": "On prepare-one, strictGate.reason='missing Asteria editorial polish' is not a rejection reason; it means Asteria must read the source, write Turkish title/description/body/facts/hero brief, run queue polish, then publish-one. Treat these as polishable candidates, not failed candidates.",
+        "emptyCycleBrake": {
+            "enabled": True,
+            "trigger": "If the previous active heartbeat/manual_review turn published nothing, do not wait for a perfect story on this turn.",
+            "minimumCandidate": f"Publish the first readable, non-duplicate, non-excluded candidate with raw score >= {min_score:.2f} and reasonable public value after Asteria writes/polishes it.",
+            "diversityOverride": "When the empty-cycle brake is active, recent category/source repetition is a tie-breaker, not a veto. Do not reject a clean Siyaset/Ekonomi item solely because recent posts were also Siyaset/Ekonomi or from the same broad source family.",
+        },
+        "diversityRole": "Category/source diversity is a ranking and tie-break signal. It must not override strictGate.passesNow candidates unless a hard veto is also present.",
+    }
 EXCLUDED_NOTE_PREFIXES = (
     "unpublished:",
     "autopublish-withdrawn:",
@@ -707,6 +721,7 @@ def prepare_one_command(
         "steps": steps,
         "candidates": packs,
         "board": board_meta["diagnostics"],
+        "selectionPolicy": _selection_policy(min_score),
         "recovery": {
             "fullCollectRetry": bool(retry_reason),
             "reason": retry_reason,
