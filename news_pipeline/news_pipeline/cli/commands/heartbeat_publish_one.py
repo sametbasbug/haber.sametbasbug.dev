@@ -28,6 +28,7 @@ DEFAULT_MAX_SOURCE_AGE_HOURS = 24
 DEFAULT_MIN_INTERVAL_SECONDS = 900
 STATE_PATH = Path("news_pipeline/data/state/heartbeat-publish-one.json")
 MAX_STEP_LOG_CHARS = 900
+MAX_ERROR_STEP_LOG_CHARS = 1200
 
 
 def _compact_text(value: str, max_chars: int = MAX_STEP_LOG_CHARS) -> str:
@@ -47,10 +48,14 @@ def _compact_step(step: dict[str, Any], *, full_logs: bool = False) -> dict[str,
     stderr = str(compact.get("stderr") or "")
     if stdout or stderr:
         compact["logChars"] = {"stdout": len(stdout), "stderr": len(stderr)}
+    if compact.get("ok"):
+        compact.pop("stdout", None)
+        compact.pop("stderr", None)
+        return compact
     if stdout:
-        compact["stdout"] = _compact_text(stdout)
+        compact["stdout"] = _compact_text(stdout, max_chars=MAX_ERROR_STEP_LOG_CHARS)
     if stderr:
-        compact["stderr"] = _compact_text(stderr)
+        compact["stderr"] = _compact_text(stderr, max_chars=MAX_ERROR_STEP_LOG_CHARS)
     return compact
 
 

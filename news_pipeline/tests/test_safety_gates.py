@@ -702,6 +702,42 @@ def test_publish_one_retries_next_candidate_after_duplicate_publish_gate(tmp_pat
     assert any(note.startswith("duplicate-publish-gate:") for note in stored_first.notes)
 
 
+def test_publish_one_compacts_success_step_logs_without_echoing_stdout() -> None:
+    compact = heartbeat_publish_one._compact_step(
+        {
+            "name": "npm-build",
+            "ok": True,
+            "stdout": "build output\n" * 200,
+            "stderr": "",
+            "durationMs": 1234,
+        }
+    )
+
+    assert compact["ok"] is True
+    assert compact["logChars"]["stdout"] == len("build output\n" * 200)
+    assert "stdout" not in compact
+    assert "stderr" not in compact
+
+
+def test_publish_one_keeps_limited_error_logs() -> None:
+    compact = heartbeat_publish_one._compact_step(
+        {
+            "name": "npm-build",
+            "ok": False,
+            "stdout": "build output\n" * 200,
+            "stderr": "error output\n" * 200,
+            "durationMs": 1234,
+        }
+    )
+
+    assert compact["ok"] is False
+    assert compact["logChars"]["stdout"] == len("build output\n" * 200)
+    assert "stdout" in compact
+    assert "stderr" in compact
+    assert len(compact["stdout"]) < len("build output\n" * 200)
+    assert len(compact["stderr"]) < len("error output\n" * 200)
+
+
 def test_queue_polish_requires_explicit_retry_for_duplicate_rejected_item(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.chdir(tmp_path)
     article = _article("dup-polish", url="https://example.org/demo/dup-polish")
