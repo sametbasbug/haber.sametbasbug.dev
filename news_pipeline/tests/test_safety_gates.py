@@ -13,6 +13,7 @@ from news_pipeline.cli.commands.process import process_command
 from news_pipeline.cli.commands.queue_approve import queue_approve_command
 from news_pipeline.cli.commands.queue_cleanup import queue_cleanup_command
 from news_pipeline.cli.commands.queue_polish import queue_polish_command
+from news_pipeline.cli.commands import queue_source_text
 from news_pipeline.cli.commands.heartbeat_publish_one import _is_excluded_source_format, _select_candidate, publish_one_command
 from news_pipeline.cli.commands.heartbeat_prepare_one import _board_score, _build_editorial_packs, _candidate_reason, _hot_category, _recent_live_posts, _select_headline_board, _selection_policy
 from news_pipeline.cli.commands.publish import _assert_not_duplicate_live, _assert_not_duplicate_topic, publish_command, publish_queue_item
@@ -1043,6 +1044,25 @@ def test_autopublish_allows_turkish_fact_with_english_source_name() -> None:
     ]
 
     assert is_autopublish_candidate(item) == (True, None)
+
+
+def test_queue_source_text_returns_bounded_extracted_text(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
+    monkeypatch.chdir(tmp_path)
+    article = _article("source-text", url="https://example.org/demo/source-text")
+    item = _item("source-text", normalized_id=article.id, url="https://example.org/demo/source-text")
+    _save_runtime(tmp_path, item, article)
+
+    monkeypatch.setattr(
+        queue_source_text,
+        "fetch_article_details",
+        lambda *_, **__: queue_source_text.ArticleDetails(snippet="Temiz kaynak metni.", published_at=None),
+    )
+
+    queue_source_text.queue_source_text_command(item.queue_id, json_output=True)
+    output = capsys.readouterr().out
+
+    assert '"queueId": "source-text"' in output
+    assert '"text": "Temiz kaynak metni."' in output
 
 
 

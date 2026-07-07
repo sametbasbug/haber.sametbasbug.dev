@@ -17,6 +17,7 @@ from news_pipeline.cli.commands.queue_reject import queue_reject_command
 from news_pipeline.cli.commands.queue_review import queue_review_command
 from news_pipeline.cli.commands.queue_summary import queue_summary_command
 from news_pipeline.cli.commands.queue_polish import queue_polish_command
+from news_pipeline.cli.commands.queue_source_text import queue_source_text_command
 from news_pipeline.cli.commands.heartbeat_prepare_one import prepare_one_command
 from news_pipeline.cli.commands.heartbeat_publish_one import publish_one_command
 
@@ -39,6 +40,7 @@ queue_app.command("review")(queue_review_command)
 queue_app.command("summary")(queue_summary_command)
 queue_app.command("cleanup")(queue_cleanup_command)
 queue_app.command("polish")(queue_polish_command)
+queue_app.command("source-text")(queue_source_text_command)
 heartbeat_app.command("prepare-one")(prepare_one_command)
 heartbeat_app.command("publish-one")(publish_one_command)
 demo_app.command("seed")(demo_seed_command)
