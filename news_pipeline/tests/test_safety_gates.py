@@ -16,7 +16,7 @@ from news_pipeline.cli.commands.queue_polish import queue_polish_command
 from news_pipeline.cli.commands.heartbeat_publish_one import _is_excluded_source_format, _select_candidate, publish_one_command
 from news_pipeline.cli.commands.heartbeat_prepare_one import _board_score, _build_editorial_packs, _candidate_reason, _hot_category, _recent_live_posts, _select_headline_board, _selection_policy
 from news_pipeline.cli.commands.publish import _assert_not_duplicate_live, _assert_not_duplicate_topic, publish_command, publish_queue_item
-from news_pipeline.editorial.autonomy import body_looks_too_english, is_autopublish_candidate
+from news_pipeline.editorial.autonomy import body_looks_too_english, fact_looks_too_english, is_autopublish_candidate
 from news_pipeline.extractors.article_text import _extract_published_at
 from news_pipeline.models.article import NormalizedArticle, RawArticle
 from news_pipeline.models.queue import DraftSource, QueueItem
@@ -1020,6 +1020,29 @@ def test_body_english_gate_still_blocks_english_body() -> None:
     )
 
     assert body_looks_too_english(body) is True
+
+
+def test_fact_english_gate_allows_turkish_fact_with_english_source_name() -> None:
+    fact = "Institute for the Study of War, Rusya’nın ocak-temmuz dönemindeki net kazanımını 97 kilometrekare olarak hesapladı."
+
+    assert fact_looks_too_english(fact) is False
+
+
+def test_fact_english_gate_still_blocks_english_fact() -> None:
+    fact = "The ministry said the plan will continue after the conference and officials are talking with allies."
+
+    assert fact_looks_too_english(fact) is True
+
+
+def test_autopublish_allows_turkish_fact_with_english_source_name() -> None:
+    item = _item()
+    item.draft_facts = [
+        "Al Jazeera, Kremlin’in Ukrayna savaşını giderek daha sık NATO ile çatışma çerçevesinde anlattığını aktardı.",
+        "Rusya Genelkurmay Başkanı Valery Gerasimov, Ukrayna’nın Batılı destekçilerini sahadaki tabloyu farklı göstermeye çalışmakla suçladı.",
+        "Institute for the Study of War, Rusya’nın ocak-temmuz dönemindeki net kazanımını 97 kilometrekare olarak hesapladı.",
+    ]
+
+    assert is_autopublish_candidate(item) == (True, None)
 
 
 

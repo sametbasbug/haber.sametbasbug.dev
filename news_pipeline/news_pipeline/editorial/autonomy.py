@@ -146,6 +146,26 @@ def body_looks_too_english(text: str) -> bool:
     return True
 
 
+def fact_looks_too_english(text: str) -> bool:
+    """Allow Turkish fact sentences to name English-language institutions.
+
+    Facts are short enough that names like "Institute for the Study of War" can
+    trip the generic English marker heuristic even when the sentence itself is
+    clean Turkish. Keep blocking genuinely English facts, but do not reject a
+    Turkish fact only because it contains an English proper noun.
+    """
+    if not looks_too_english(text):
+        return False
+
+    lowered = f" {text.strip().lower()} "
+    marker_hits = sum(1 for marker in ENGLISH_MARKERS if marker in lowered)
+    regex_hits = len(re.findall(r"\b(?:the|and|of|to|over|everyone)\b", lowered))
+    english_hits = marker_hits + regex_hits
+    if has_strong_turkish_signal(text) and english_hits <= 4:
+        return False
+    return True
+
+
 def has_strong_turkish_signal(text: str) -> bool:
     lowered = f" {text.strip().lower()} "
     turkish_hits = sum(1 for marker in TURKISH_MARKERS if marker in lowered)
@@ -179,7 +199,7 @@ def has_enough_fact_depth(item: QueueItem) -> bool:
     if len(facts) < MIN_AUTOPUBLISH_FACTS:
         return False
     for fact in facts[:3]:
-        if looks_too_english(fact):
+        if fact_looks_too_english(fact):
             return False
         if not has_strong_turkish_signal(fact):
             return False
