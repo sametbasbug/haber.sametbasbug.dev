@@ -663,6 +663,8 @@ def _full_collect_retry_reason(
         return None
     eligible_count = int(board_meta["diagnostics"].get("eligibleCount") or 0)
     if stats.get("sources_collected", 0) == 0:
+        if packs and eligible_count >= MIN_HEALTHY_BOARD_ELIGIBLE:
+            return None
         return "cadence produced zero collected sources"
     if not packs and stats.get("skipped_cadence", 0) > 0:
         return "no board candidates after cadence-limited collect"

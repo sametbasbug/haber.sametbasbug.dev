@@ -1104,6 +1104,44 @@ def test_prepare_one_compacts_success_step_logs_in_json_payload(monkeypatch: pyt
     assert "large stderr" not in output
 
 
+def test_prepare_one_does_not_full_collect_retry_when_existing_board_is_healthy() -> None:
+    reason = heartbeat_prepare_one._full_collect_retry_reason(
+        collect=True,
+        full_collect=False,
+        steps=[
+            {
+                "name": "collect",
+                "ok": True,
+                "stdout": "sources_collected=0 items=0 skipped_cadence=14 failed=0",
+                "stderr": "",
+            }
+        ],
+        packs=[{"queueId": f"candidate-{index}"} for index in range(6)],
+        board_meta={"diagnostics": {"eligibleCount": heartbeat_prepare_one.MIN_HEALTHY_BOARD_ELIGIBLE}},
+    )
+
+    assert reason is None
+
+
+def test_prepare_one_full_collect_retry_still_runs_when_cadence_board_is_thin() -> None:
+    reason = heartbeat_prepare_one._full_collect_retry_reason(
+        collect=True,
+        full_collect=False,
+        steps=[
+            {
+                "name": "collect",
+                "ok": True,
+                "stdout": "sources_collected=0 items=0 skipped_cadence=14 failed=0",
+                "stderr": "",
+            }
+        ],
+        packs=[{"queueId": "candidate-1"}],
+        board_meta={"diagnostics": {"eligibleCount": heartbeat_prepare_one.MIN_HEALTHY_BOARD_ELIGIBLE - 1}},
+    )
+
+    assert reason == "cadence produced zero collected sources"
+
+
 
 def test_headline_board_penalizes_recent_topic_family_saturation(tmp_path: Path) -> None:
     content = tmp_path / "src/content/equinoxHaber"
