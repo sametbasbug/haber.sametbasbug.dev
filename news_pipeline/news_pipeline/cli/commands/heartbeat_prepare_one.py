@@ -10,7 +10,7 @@ from typing import Any
 import typer
 from rapidfuzz.fuzz import token_set_ratio
 
-from news_pipeline.cli.commands.heartbeat_publish_one import _is_excluded_source_format, _run_pipeline_command, _source_is_fresh
+from news_pipeline.cli.commands.heartbeat_publish_one import _compact_step, _is_excluded_source_format, _run_pipeline_command, _source_is_fresh
 from news_pipeline.cli.commands.publish import _assert_not_duplicate_live
 from news_pipeline.editorial.autonomy import is_autopublish_candidate
 from news_pipeline.editorial.topic_family import describe_family, recent_live_topic_family_counts, topic_families_for_text
@@ -718,7 +718,7 @@ def prepare_one_command(
         "command": "heartbeat prepare-one",
         "result": result,
         "instruction": "Headline board only. Asteria must choose promising headlines, fetch/read the selected article herself, write Turkish title/description/body/facts plus heroPrompt/heroAlt, apply them with `queue polish`, then run `heartbeat publish-one --execute --no-collect --json`. Python summaries and drafts are intentionally hidden to avoid anchoring.",
-        "steps": steps,
+        "steps": [_compact_step(step) for step in steps],
         "candidates": packs,
         "board": board_meta["diagnostics"],
         "selectionPolicy": _selection_policy(min_score),

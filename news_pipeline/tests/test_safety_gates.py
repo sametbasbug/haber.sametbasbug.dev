@@ -8,7 +8,7 @@ import typer
 
 from news_pipeline.cli.commands.audit_content import audit_content_command
 from news_pipeline.cli.commands.collect import _is_due
-from news_pipeline.cli.commands import heartbeat_publish_one
+from news_pipeline.cli.commands import heartbeat_prepare_one, heartbeat_publish_one
 from news_pipeline.cli.commands.process import process_command
 from news_pipeline.cli.commands.queue_approve import queue_approve_command
 from news_pipeline.cli.commands.queue_cleanup import queue_cleanup_command
@@ -1063,6 +1063,45 @@ def test_queue_source_text_returns_bounded_extracted_text(tmp_path: Path, monkey
 
     assert '"queueId": "source-text"' in output
     assert '"text": "Temiz kaynak metni."' in output
+
+
+def test_prepare_one_compacts_success_step_logs_in_json_payload(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
+    monkeypatch.setattr(
+        heartbeat_prepare_one,
+        "_run_prepare_pipeline",
+        lambda *_, **__: [
+            {
+                "name": "collect",
+                "ok": True,
+                "code": 0,
+                "stdout": "large stdout\n" * 200,
+                "stderr": "large stderr\n" * 200,
+                "durationMs": 10,
+            }
+        ],
+    )
+    monkeypatch.setattr(
+        heartbeat_prepare_one,
+        "_build_editorial_packs",
+        lambda *_, **__: ([], [], {"scores": {}, "diagnostics": {}}),
+    )
+
+    heartbeat_prepare_one.prepare_one_command(
+        collect=False,
+        process=False,
+        cleanup=False,
+        full_collect=False,
+        min_score=0.68,
+        max_source_age_hours=24,
+        limit=20,
+        json_output=True,
+    )
+    output = capsys.readouterr().out
+
+    assert '"name": "collect"' in output
+    assert '"logChars"' in output
+    assert "large stdout" not in output
+    assert "large stderr" not in output
 
 
 
