@@ -1152,6 +1152,42 @@ Gövde.
     assert "recency_penalty:topic_family_repeat:Ukraine/Russia war:2" in reasons
 
 
+def test_headline_board_penalizes_single_recent_topic_family_repeat(tmp_path: Path) -> None:
+    content = tmp_path / "src/content/equinoxHaber"
+    content.mkdir(parents=True)
+    (content / "recent-ukraine.md").write_text(
+        """---
+title: "Ukrayna, Rus saldırılarının ardından NATO’dan savunma desteği isteyecek"
+description: "Ukrayna ve Rusya savaşına ilişkin yeni gelişme aktarıldı."
+pubDate: '2026-06-13T12:00:00+03:00'
+tags: ["Ukrayna", "Rusya", "savaş"]
+category: "Siyaset"
+sources:
+  - name: "Demo Source"
+    url: "https://example.org/recent-ukraine"
+---
+Gövde.
+""",
+        encoding="utf-8",
+    )
+
+    article = _article("ukraine-repeat", url="https://example.org/demo/ukraine-repeat")
+    article.title = "Russia frames Ukraine war as a NATO conflict"
+    article.summary = "Russia and Ukraine remain central to the NATO war narrative."
+    article.tags = ["ukraine", "russia", "nato"]
+    item = _item("ukraine-repeat", normalized_id=article.id, url="https://example.org/demo/ukraine-repeat", priority=0.90)
+    item.draft_title = "Rusya, Ukrayna savaşını NATO anlatısıyla yeniden çerçeveliyor"
+    item.draft_description = "Moskova, Ukrayna savaşının uzamasını Batı desteğiyle açıklayan mesajlarını artırıyor."
+    item.draft_category = "Siyaset"
+    item.draft_tags = ["Ukrayna", "Rusya", "NATO"]
+    _save_runtime(tmp_path, item, article)
+
+    score, reasons = _board_score(tmp_path, item, recent_posts=[])
+
+    assert score <= item.editorial_priority - 0.10
+    assert "recency_penalty:topic_family_repeat:Ukraine/Russia war:1" in reasons
+
+
 
 def test_headline_board_penalizes_recent_company_saturation(tmp_path: Path) -> None:
     article = _article("claude-article", url="https://example.org/demo/claude")
@@ -1473,7 +1509,7 @@ Gövde.
 
     assert [row.queue_id for row in selected] == ["ukraine-cathedral"]
     assert not any(row.get("queueId") == "ukraine-cathedral" for row in skipped)
-    assert meta["diagnostics"]["recentTopicFamilyPenaltyThreshold"] == 2
+    assert meta["diagnostics"]["recentTopicFamilyPenaltyThreshold"] == 1
 
 
 def test_prepare_selection_policy_makes_diversity_a_tiebreaker_not_veto() -> None:
