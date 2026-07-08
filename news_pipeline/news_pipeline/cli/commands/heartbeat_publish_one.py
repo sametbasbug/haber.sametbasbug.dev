@@ -29,6 +29,23 @@ DEFAULT_MIN_INTERVAL_SECONDS = 900
 STATE_PATH = Path("news_pipeline/data/state/heartbeat-publish-one.json")
 MAX_STEP_LOG_CHARS = 900
 MAX_ERROR_STEP_LOG_CHARS = 1200
+BUILD_SUSPICION_TERMS = (
+    "warning",
+    "warn",
+    "error",
+    "failed",
+    "failure",
+    "invalid",
+    "missing",
+    "schema",
+    "frontmatter",
+)
+CONTENT_ONLY_CHANGE_PREFIXES = (
+    "news_pipeline/data/queue/",
+    "news_pipeline/data/state/",
+    "public/images/generated/equinox-haber/",
+    "src/content/equinoxHaber/",
+)
 
 
 def _compact_text(value: str, max_chars: int = MAX_STEP_LOG_CHARS) -> str:
@@ -210,6 +227,47 @@ def _git_has_changes() -> bool:
     return bool(result.stdout.strip())
 
 
+def _git_changed_paths() -> list[str]:
+    result = subprocess.run(["git", "status", "--porcelain"], text=True, capture_output=True, check=False)
+    paths: list[str] = []
+    for line in result.stdout.splitlines():
+        if not line.strip():
+            continue
+        path = line[3:].strip()
+        if " -> " in path:
+            path = path.split(" -> ", 1)[1].strip()
+        if path:
+            paths.append(path)
+    return paths
+
+
+def _is_content_only_publish_change(path: str) -> bool:
+    return path.startswith(CONTENT_ONLY_CHANGE_PREFIXES)
+
+
+def _audit_step_is_suspicious(step: dict[str, Any]) -> bool:
+    stderr = str(step.get("stderr") or "").strip()
+    if stderr:
+        return True
+    stdout = str(step.get("stdout") or "").strip().lower()
+    return any(term in stdout for term in BUILD_SUSPICION_TERMS)
+
+
+def _build_decision(build: bool | None, audit_steps: list[dict[str, Any]]) -> tuple[bool, str]:
+    if build is True:
+        return True, "forced"
+    if build is False:
+        return False, "disabled"
+    suspicious_audit = next((step["name"] for step in audit_steps if _audit_step_is_suspicious(step)), None)
+    if suspicious_audit is not None:
+        return True, f"suspicious audit output: {suspicious_audit}"
+    changed_paths = _git_changed_paths()
+    unexpected = [path for path in changed_paths if not _is_content_only_publish_change(path)]
+    if unexpected:
+        return True, f"unexpected changed paths: {', '.join(unexpected[:5])}"
+    return False, "clean content-only publish"
+
+
 def _read_state(root: Path) -> dict[str, Any]:
     path = root / STATE_PATH
     try:
@@ -303,7 +361,7 @@ def publish_one_command(
     json_output: bool = typer.Option(False, "--json", help="Emit a machine-readable JSON report."),
     push: bool = typer.Option(True, "--push/--no-push", help="Push after a successful commit."),
     collect_first: bool = typer.Option(True, "--collect/--no-collect", help="Refresh RSS/raw data before selecting."),
-    build: bool = typer.Option(True, "--build/--no-build", help="Run npm build before committing."),
+    build: bool | None = typer.Option(None, "--build/--no-build", help="Run npm build before committing. Default: auto; clean content-only publishes skip it."),
     min_score: float = typer.Option(DEFAULT_MIN_SCORE, "--min-score", help="Minimum editorial score."),
     max_source_age_hours: int = typer.Option(DEFAULT_MAX_SOURCE_AGE_HOURS, "--max-source-age-hours", help="Reject stale source material."),
     commit_message: str = typer.Option("Publish one heartbeat news item", "--commit-message", help="Git commit message."),
@@ -316,8 +374,9 @@ def publish_one_command(
 
     This is deliberately not a blind autopublisher. It only publishes a single
     item when the existing editorial autonomy checks say the title, description,
-    fact depth, body, source age, duplicate guards, AI hero, audits and build are
-    all clean. Otherwise it returns a compact manual_review/skip report for
+    fact depth, body, source age, duplicate guards, AI hero and audits are all
+    clean. Build runs only when forced or when the publish looks suspicious.
+    Otherwise it returns a compact manual_review/skip report for
     Asteria instead of making her stitch ten shell commands together.
     """
     # Internal tests/callers invoke this function directly, where Typer option
@@ -332,7 +391,7 @@ def publish_one_command(
     if not isinstance(collect_first, bool):
         collect_first = True
     if not isinstance(build, bool):
-        build = True
+        build = None
     if not isinstance(min_score, int | float):
         min_score = DEFAULT_MIN_SCORE
     if not isinstance(max_source_age_hours, int):
@@ -454,8 +513,10 @@ def publish_one_command(
         ("audit-images", lambda: audit_images_command()),
         ("audit-content", lambda: audit_content_command(content_dir=root / "src/content/equinoxHaber")),
     )
+    raw_audit_steps: list[dict[str, Any]] = []
     for name, func in audit_steps:
         step = _run_step(name, func)
+        raw_audit_steps.append(step)
         payload["steps"].append(_compact_step(step, full_logs=full_logs))
         if not step["ok"]:
             payload["result"] = "error"
@@ -464,7 +525,9 @@ def publish_one_command(
             _emit(payload, json_output)
             raise typer.Exit(code=1)
 
-    if build:
+    should_build, build_reason = _build_decision(build, raw_audit_steps)
+    payload["build"] = {"mode": "force" if build is True else "disabled" if build is False else "auto", "run": should_build, "reason": build_reason}
+    if should_build:
         build_step = _run_shell("npm-build", ["npm", "run", "build"], timeout=240)
         payload["steps"].append(_compact_step(build_step, full_logs=full_logs))
         if not build_step["ok"]:

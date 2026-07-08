@@ -739,6 +739,55 @@ def test_publish_one_keeps_limited_error_logs() -> None:
     assert len(compact["stderr"]) < len("error output\n" * 200)
 
 
+def test_publish_one_auto_build_skips_clean_content_only_publish(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        heartbeat_publish_one,
+        "_git_changed_paths",
+        lambda: [
+            "news_pipeline/data/queue/demo.json",
+            "news_pipeline/data/state/heartbeat-publish-one.json",
+            "src/content/equinoxHaber/demo.md",
+            "public/images/generated/equinox-haber/demo.webp",
+        ],
+    )
+
+    should_build, reason = heartbeat_publish_one._build_decision(
+        None,
+        [
+            {"name": "audit-images", "ok": True, "stdout": "ok", "stderr": ""},
+            {"name": "audit-content", "ok": True, "stdout": "ok", "stderr": ""},
+        ],
+    )
+
+    assert should_build is False
+    assert reason == "clean content-only publish"
+
+
+def test_publish_one_auto_build_runs_on_suspicious_audit(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(heartbeat_publish_one, "_git_changed_paths", lambda: ["src/content/equinoxHaber/demo.md"])
+
+    should_build, reason = heartbeat_publish_one._build_decision(
+        None,
+        [{"name": "audit-content", "ok": True, "stdout": "warning: frontmatter changed", "stderr": ""}],
+    )
+
+    assert should_build is True
+    assert reason == "suspicious audit output: audit-content"
+
+
+def test_publish_one_auto_build_runs_on_unexpected_change(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        heartbeat_publish_one,
+        "_git_changed_paths",
+        lambda: ["src/content/equinoxHaber/demo.md", "src/layouts/BaseLayout.astro"],
+    )
+
+    should_build, reason = heartbeat_publish_one._build_decision(None, [{"name": "audit-content", "ok": True, "stdout": "ok", "stderr": ""}])
+
+    assert should_build is True
+    assert reason == "unexpected changed paths: src/layouts/BaseLayout.astro"
+
+
 def test_queue_polish_requires_explicit_retry_for_duplicate_rejected_item(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.chdir(tmp_path)
     article = _article("dup-polish", url="https://example.org/demo/dup-polish")
