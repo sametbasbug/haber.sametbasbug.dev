@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
+import json
 from pathlib import Path
 
 import pytest
@@ -1112,6 +1113,51 @@ def test_queue_source_text_returns_bounded_extracted_text(tmp_path: Path, monkey
 
     assert '"queueId": "source-text"' in output
     assert '"text": "Temiz kaynak metni."' in output
+
+
+def test_board_prewarm_writes_atomic_artifact(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.chdir(tmp_path)
+    article = _article("prewarm-article", url="https://example.org/demo/prewarm")
+    item = _item("prewarm-demo", normalized_id=article.id, url="https://example.org/demo/prewarm")
+    _save_runtime(tmp_path, item, article)
+
+    output = Path("news_pipeline/data/heartbeat/prepared-board.json")
+    heartbeat_prepare_one.board_prewarm_command(
+        collect=False,
+        process=False,
+        cleanup=False,
+        full_collect=False,
+        min_score=0.68,
+        max_source_age_hours=72,
+        limit=6,
+        output=output,
+        max_age_minutes=15,
+        json_output=False,
+    )
+
+    artifact = tmp_path / output
+    payload = json.loads(artifact.read_text(encoding="utf-8"))
+
+    assert payload["schemaVersion"] == 1
+    assert payload["command"] == "heartbeat board-prewarm"
+    assert payload["result"] == "ready"
+    assert payload["candidates"][0]["queueId"] == "prewarm-demo"
+    assert payload["prewarm"]["artifactPath"] == str(artifact)
+    assert payload["prewarm"]["maxAgeMinutes"] == 15
+    assert not list(artifact.parent.glob("*.tmp"))
+
+    read_payload = heartbeat_prepare_one._board_read_payload(artifact, max_age_minutes=15)
+    assert read_payload["command"] == "heartbeat board-prewarm"
+    assert read_payload["consumerRead"]["fresh"] is True
+    assert read_payload["candidates"][0]["queueId"] == "prewarm-demo"
+
+
+def test_board_read_reports_missing_artifact(tmp_path: Path) -> None:
+    payload = heartbeat_prepare_one._board_read_payload(tmp_path / "missing-board.json", max_age_minutes=15)
+
+    assert payload["command"] == "heartbeat board-read"
+    assert payload["result"] == "missing"
+    assert payload["fresh"] is False
 
 
 def test_prepare_one_compacts_success_step_logs_in_json_payload(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:

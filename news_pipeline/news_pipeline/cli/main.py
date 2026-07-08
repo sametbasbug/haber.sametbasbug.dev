@@ -18,7 +18,7 @@ from news_pipeline.cli.commands.queue_review import queue_review_command
 from news_pipeline.cli.commands.queue_summary import queue_summary_command
 from news_pipeline.cli.commands.queue_polish import queue_polish_command
 from news_pipeline.cli.commands.queue_source_text import queue_source_text_command
-from news_pipeline.cli.commands.heartbeat_prepare_one import prepare_one_command
+from news_pipeline.cli.commands.heartbeat_prepare_one import board_prewarm_command, board_read_command, prepare_one_command
 from news_pipeline.cli.commands.heartbeat_publish_one import publish_one_command
 
 app = typer.Typer(help="Editorial-first news pipeline CLI")
@@ -42,6 +42,8 @@ queue_app.command("cleanup")(queue_cleanup_command)
 queue_app.command("polish")(queue_polish_command)
 queue_app.command("source-text")(queue_source_text_command)
 heartbeat_app.command("prepare-one")(prepare_one_command)
+heartbeat_app.command("board-prewarm")(board_prewarm_command)
+heartbeat_app.command("board-read")(board_read_command)
 heartbeat_app.command("publish-one")(publish_one_command)
 demo_app.command("seed")(demo_seed_command)
 demo_app.command("walkthrough")(demo_walkthrough_command)

@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 from collections import Counter
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 import json
+import os
 from pathlib import Path
 import re
 from typing import Any
@@ -19,6 +20,7 @@ from news_pipeline.queue.service import QueueService
 from news_pipeline.storage.json_store import JsonStore
 
 MAX_PER_SOURCE = 3
+DEFAULT_PREWARM_BOARD_PATH = "news_pipeline/data/heartbeat/prepared-board.json"
 MIN_HEALTHY_BOARD_ELIGIBLE = 6
 HOT_CATEGORY_RECENT_WINDOW = 3
 HOT_CATEGORY_REPEAT_THRESHOLD = 2
@@ -673,22 +675,18 @@ def _full_collect_retry_reason(
     return None
 
 
-def prepare_one_command(
-    collect: bool = typer.Option(True, "--collect/--no-collect", help="Run collect before preparing the editorial pack."),
-    process: bool = typer.Option(True, "--process/--no-process", help="Run process before preparing the editorial pack."),
-    cleanup: bool = typer.Option(True, "--cleanup/--no-cleanup", help="Run queue cleanup before preparing the editorial pack."),
-    full_collect: bool = typer.Option(False, "--full-collect", help="Bypass source cadence during collect."),
-    min_score: float = typer.Option(0.68, "--min-score", help="Strict publish threshold used for diagnostics."),
-    max_source_age_hours: int = typer.Option(24, "--max-source-age-hours", help="Maximum source age for headline board freshness and auto publish diagnostics."),
-    limit: int = typer.Option(20, "--limit", help="How many headline candidates to return."),
-    json_output: bool = typer.Option(False, "--json", help="Emit machine-readable JSON."),
-) -> None:
-    """Prepare a compact editorial pack for Asteria to rewrite/review before publishing.
-
-    This command does technical prep only. It intentionally does not publish and does
-    not replace Asteria's editorial judgment.
-    """
-    root = Path.cwd()
+def _prepare_one_payload(
+    root: Path,
+    *,
+    collect: bool,
+    process: bool,
+    cleanup: bool,
+    full_collect: bool,
+    min_score: float,
+    max_source_age_hours: int,
+    limit: int,
+    command: str = "heartbeat prepare-one",
+) -> dict[str, Any]:
     steps = _run_prepare_pipeline(collect, process, cleanup, full_collect)
     packs, skipped, board_meta = _build_editorial_packs(
         root,
@@ -715,9 +713,9 @@ def prepare_one_command(
         )
 
     result = "ready" if packs else "no_candidates"
-    payload = {
+    return {
         "schemaVersion": 1,
-        "command": "heartbeat prepare-one",
+        "command": command,
         "result": result,
         "instruction": "Headline board only. Asteria must choose promising headlines, fetch/read the selected article herself, write Turkish title/description/body/facts plus heroPrompt/heroAlt, apply them with `queue polish`, then run `heartbeat publish-one --execute --no-collect --json`. Python summaries and drafts are intentionally hidden to avoid anchoring.",
         "steps": [_compact_step(step) for step in steps],
@@ -731,7 +729,171 @@ def prepare_one_command(
         },
         "skippedSamples": skipped,
     }
+
+
+def _atomic_write_json(path: Path, payload: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp_path = path.with_name(f".{path.name}.{os.getpid()}.tmp")
+    tmp_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    tmp_path.replace(path)
+
+
+def _parse_datetime(value: Any) -> datetime | None:
+    if not isinstance(value, str) or not value.strip():
+        return None
+    try:
+        parsed = datetime.fromisoformat(value)
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        return parsed.replace(tzinfo=UTC)
+    return parsed.astimezone(UTC)
+
+
+def _board_read_payload(path: Path, *, max_age_minutes: int) -> dict[str, Any]:
+    now = datetime.now(UTC)
+    base: dict[str, Any] = {
+        "schemaVersion": 1,
+        "command": "heartbeat board-read",
+        "artifactPath": str(path),
+        "readAt": now.isoformat(),
+        "fresh": False,
+    }
+    if not path.exists():
+        return {**base, "result": "missing", "reason": "prewarm board artifact not found"}
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        return {**base, "result": "invalid", "reason": f"invalid JSON: {exc.msg}"}
+    if not isinstance(payload, dict):
+        return {**base, "result": "invalid", "reason": "prewarm board artifact is not a JSON object"}
+    if payload.get("command") != "heartbeat board-prewarm":
+        return {**base, "result": "invalid", "reason": f"unexpected command: {payload.get('command')}"}
+
+    prewarm = payload.get("prewarm") if isinstance(payload.get("prewarm"), dict) else {}
+    generated_at = _parse_datetime(prewarm.get("generatedAt") if prewarm else None)
+    expires_at = _parse_datetime(prewarm.get("expiresAt") if prewarm else None)
+    if generated_at is None:
+        return {**base, "result": "invalid", "reason": "missing prewarm.generatedAt"}
+    if now - generated_at > timedelta(minutes=max_age_minutes):
+        return {
+            **base,
+            "result": "stale",
+            "reason": f"prewarm board older than {max_age_minutes}m",
+            "generatedAt": generated_at.isoformat(),
+        }
+    if expires_at is not None and now > expires_at:
+        return {
+            **base,
+            "result": "stale",
+            "reason": "prewarm board expired",
+            "generatedAt": generated_at.isoformat(),
+            "expiresAt": expires_at.isoformat(),
+        }
+
+    payload["consumerRead"] = {
+        "command": "heartbeat board-read",
+        "readAt": now.isoformat(),
+        "fresh": True,
+        "maxAgeMinutes": max_age_minutes,
+    }
+    return payload
+
+
+def prepare_one_command(
+    collect: bool = typer.Option(True, "--collect/--no-collect", help="Run collect before preparing the editorial pack."),
+    process: bool = typer.Option(True, "--process/--no-process", help="Run process before preparing the editorial pack."),
+    cleanup: bool = typer.Option(True, "--cleanup/--no-cleanup", help="Run queue cleanup before preparing the editorial pack."),
+    full_collect: bool = typer.Option(False, "--full-collect", help="Bypass source cadence during collect."),
+    min_score: float = typer.Option(0.68, "--min-score", help="Strict publish threshold used for diagnostics."),
+    max_source_age_hours: int = typer.Option(24, "--max-source-age-hours", help="Maximum source age for headline board freshness and auto publish diagnostics."),
+    limit: int = typer.Option(20, "--limit", help="How many headline candidates to return."),
+    json_output: bool = typer.Option(False, "--json", help="Emit machine-readable JSON."),
+) -> None:
+    """Prepare a compact editorial pack for Asteria to rewrite/review before publishing.
+
+    This command does technical prep only. It intentionally does not publish and does
+    not replace Asteria's editorial judgment.
+    """
+    root = Path.cwd()
+    payload = _prepare_one_payload(
+        root,
+        collect=collect,
+        process=process,
+        cleanup=cleanup,
+        full_collect=full_collect,
+        min_score=min_score,
+        max_source_age_hours=max_source_age_hours,
+        limit=limit,
+    )
     if json_output:
         typer.echo(json.dumps(payload, ensure_ascii=False, indent=2))
     else:
-        typer.echo(f"{result}: {len(packs)} candidate(s) prepared")
+        typer.echo(f"{payload['result']}: {len(payload['candidates'])} candidate(s) prepared")
+
+
+def board_read_command(
+    input_path: Path = typer.Option(Path(DEFAULT_PREWARM_BOARD_PATH), "--input", "-i", help="Prewarmed board artifact path."),
+    max_age_minutes: int = typer.Option(15, "--max-age-minutes", min=1, help="Maximum acceptable board age."),
+    json_output: bool = typer.Option(False, "--json", help="Emit machine-readable JSON."),
+) -> None:
+    """Read a prewarmed board only when it is fresh enough for Asteria."""
+    root = Path.cwd()
+    path = input_path if input_path.is_absolute() else root / input_path
+    payload = _board_read_payload(path, max_age_minutes=max_age_minutes)
+    if json_output:
+        typer.echo(json.dumps(payload, ensure_ascii=False, indent=2))
+        return
+    if payload.get("fresh"):
+        typer.echo(f"{payload.get('result')}: {len(payload.get('candidates') or [])} fresh candidate(s) from {path}")
+    else:
+        typer.echo(f"{payload.get('result')}: {payload.get('reason')} ({path})")
+
+
+def board_prewarm_command(
+    collect: bool = typer.Option(True, "--collect/--no-collect", help="Run collect before preparing the prewarmed board."),
+    process: bool = typer.Option(True, "--process/--no-process", help="Run process before preparing the prewarmed board."),
+    cleanup: bool = typer.Option(True, "--cleanup/--no-cleanup", help="Run queue cleanup before preparing the prewarmed board."),
+    full_collect: bool = typer.Option(False, "--full-collect", help="Bypass source cadence during collect."),
+    min_score: float = typer.Option(0.68, "--min-score", help="Strict publish threshold used for diagnostics."),
+    max_source_age_hours: int = typer.Option(24, "--max-source-age-hours", help="Maximum source age for headline board freshness and auto publish diagnostics."),
+    limit: int = typer.Option(6, "--limit", help="How many headline candidates to return."),
+    output: Path = typer.Option(Path(DEFAULT_PREWARM_BOARD_PATH), "--output", "-o", help="Prewarmed board artifact path."),
+    max_age_minutes: int = typer.Option(15, "--max-age-minutes", min=1, help="Freshness window consumers should enforce."),
+    json_output: bool = typer.Option(False, "--json", help="Emit the written payload as JSON."),
+) -> None:
+    """Precompute Asteria's headline board outside the model session.
+
+    The output is written atomically so the scheduled Asteria run never consumes
+    a partially-written board.
+    """
+    root = Path.cwd()
+    started_at = datetime.now(UTC)
+    payload = _prepare_one_payload(
+        root,
+        collect=collect,
+        process=process,
+        cleanup=cleanup,
+        full_collect=full_collect,
+        min_score=min_score,
+        max_source_age_hours=max_source_age_hours,
+        limit=limit,
+        command="heartbeat board-prewarm",
+    )
+    generated_at = datetime.now(UTC)
+    expires_at = generated_at + timedelta(minutes=max_age_minutes)
+    output_path = output if output.is_absolute() else root / output
+    payload["prewarm"] = {
+        "artifactPath": str(output_path),
+        "startedAt": started_at.isoformat(),
+        "generatedAt": generated_at.isoformat(),
+        "expiresAt": expires_at.isoformat(),
+        "maxAgeMinutes": max_age_minutes,
+        "consumer": "Asteria isolated cron",
+    }
+    _atomic_write_json(output_path, payload)
+
+    if json_output:
+        typer.echo(json.dumps(payload, ensure_ascii=False, indent=2))
+    else:
+        typer.echo(f"{payload['result']}: wrote {len(payload['candidates'])} candidate(s) to {output_path}")
