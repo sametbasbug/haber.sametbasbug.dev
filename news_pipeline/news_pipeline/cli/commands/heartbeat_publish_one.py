@@ -24,7 +24,7 @@ from news_pipeline.storage.json_store import JsonStore
 
 DEFAULT_MIN_SCORE = 0.68
 ASTERIA_POLISHED_MIN_SCORE = 0.68
-DEFAULT_MAX_SOURCE_AGE_HOURS = 24
+DEFAULT_MAX_SOURCE_AGE_HOURS = 30
 DEFAULT_MIN_INTERVAL_SECONDS = 3000
 STATE_PATH = Path("news_pipeline/data/state/heartbeat-publish-one.json")
 MAX_STEP_LOG_CHARS = 900

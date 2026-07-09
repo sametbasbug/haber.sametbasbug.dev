@@ -20,9 +20,12 @@ from news_pipeline.models.article import NormalizedArticle
 from news_pipeline.queue.service import QueueService
 from news_pipeline.storage.json_store import JsonStore
 
-MAX_PER_SOURCE = 3
+MAX_PER_SOURCE = 2
+DEFAULT_MAX_SOURCE_AGE_HOURS = 30
 DEFAULT_PREWARM_BOARD_PATH = "news_pipeline/data/heartbeat/prepared-board.json"
 MIN_HEALTHY_BOARD_ELIGIBLE = 6
+MIN_THIN_SOURCE_TEXT_CHARS = 500
+MIN_BOARD_FILL_SCORE = 0.50
 HOT_CATEGORY_RECENT_WINDOW = 3
 HOT_CATEGORY_REPEAT_THRESHOLD = 2
 HOT_CATEGORY_POLICY = "skip_target_fill_only"
@@ -94,6 +97,10 @@ BLOCKED_BOARD_TERMS = {
     "red card controversy",
     "football chiefs",
     "training grounds",
+    "gifted by erdogan",
+    "pistols with ammunition",
+    "revolver gifted",
+    "parting gift",
 }
 SPONSORED_URL_MARKERS = {
     "/sponsored-content/",
@@ -152,6 +159,8 @@ LOW_PUBLIC_VALUE_ODDITY_TERMS = {
     "football chiefs",
     "red card",
     "infantino",
+    "revolver gifted",
+    "parting gift",
 }
 
 
@@ -237,6 +246,10 @@ def _source_host(item: Any) -> str:
     return host[4:] if host.startswith("www.") else host
 
 
+def _normalized_article(root: Path, item: Any) -> NormalizedArticle | None:
+    return JsonStore(root / "news_pipeline/data/normalized", NormalizedArticle).load(item.normalized_id)
+
+
 def _is_sponsored_source(item: Any) -> bool:
     url = _source_url(item).lower()
     return any(marker in url for marker in SPONSORED_URL_MARKERS)
@@ -244,6 +257,20 @@ def _is_sponsored_source(item: Any) -> bool:
 
 def _has_known_unreadable_primary_source(item: Any) -> bool:
     return _source_host(item) in UNREADABLE_PRIMARY_HOSTS
+
+
+def _source_text_quality_rejection(root: Path, item: Any) -> str | None:
+    article = _normalized_article(root, item)
+    if article is None:
+        return "missing normalized article"
+    source = _normalized(_source_name(item))
+    text = _normalized(" ".join(part for part in [article.summary or "", article.content_snippet or ""] if part))
+    text_len = len(text)
+    if source == "france 24 world" and re.search(r"\bfrance 24'?s\b.*\b(reports|tells us|explains)\b", text):
+        return "thin France 24 video/report fallback"
+    if source == "politico europe" and text_len < MIN_THIN_SOURCE_TEXT_CHARS:
+        return f"thin Politico snippet ({text_len} chars < {MIN_THIN_SOURCE_TEXT_CHARS})"
+    return None
 
 
 def _frontmatter_value(text: str, key: str) -> str:
@@ -352,14 +379,12 @@ def _live_source_urls(root: Path) -> set[str]:
 
 
 def _headline_text(root: Path, item: Any) -> str:
-    normalized_store = JsonStore(root / "news_pipeline/data/normalized", NormalizedArticle)
-    article = normalized_store.load(item.normalized_id)
+    article = _normalized_article(root, item)
     return article.title if article else item.draft_title
 
 
 def _duplicate_probe_text(root: Path, item: Any) -> tuple[str, str]:
-    normalized_store = JsonStore(root / "news_pipeline/data/normalized", NormalizedArticle)
-    article = normalized_store.load(item.normalized_id)
+    article = _normalized_article(root, item)
     title_parts = [item.draft_title or ""]
     description_parts = [item.draft_description or ""]
     if article:
@@ -370,8 +395,7 @@ def _duplicate_probe_text(root: Path, item: Any) -> tuple[str, str]:
 
 
 def _item_company_hits(root: Path, item: Any) -> set[str]:
-    normalized_store = JsonStore(root / "news_pipeline/data/normalized", NormalizedArticle)
-    article = normalized_store.load(item.normalized_id)
+    article = _normalized_article(root, item)
     article_text = ""
     if article:
         article_text = article.title or ""
@@ -386,8 +410,7 @@ def _item_company_hits(root: Path, item: Any) -> set[str]:
 
 
 def _item_topic_family_hits(root: Path, item: Any) -> set[str]:
-    normalized_store = JsonStore(root / "news_pipeline/data/normalized", NormalizedArticle)
-    article = normalized_store.load(item.normalized_id)
+    article = _normalized_article(root, item)
     text = " ".join(
         [
             item.draft_title or "",
@@ -412,8 +435,7 @@ def _headline_has_term(headline: str, term: str) -> bool:
 
 
 def _public_value_text(root: Path, item: Any) -> str:
-    normalized_store = JsonStore(root / "news_pipeline/data/normalized", NormalizedArticle)
-    article = normalized_store.load(item.normalized_id)
+    article = _normalized_article(root, item)
     parts = [
         item.draft_title or "",
         item.draft_description or "",
@@ -548,6 +570,9 @@ def _passes_basic_board_filter(root: Path, item: Any, max_source_age_hours: int,
         return False, "sponsored or paid content"
     if _has_known_unreadable_primary_source(item):
         return False, "known unreadable primary source"
+    source_quality_reason = _source_text_quality_rejection(root, item)
+    if source_quality_reason:
+        return False, source_quality_reason
     fresh, stale_reason = _source_is_fresh(root, item, max_source_age_hours)
     if not fresh:
         return False, stale_reason
@@ -614,7 +639,9 @@ def _select_headline_board(root: Path, items: list[Any], limit: int, max_source_
     def add(item: Any) -> bool:
         if item.queue_id in selected_ids:
             return False
-        _, board_reasons = score_map.get(item.queue_id, (round(float(item.editorial_priority), 3), []))
+        board_score, board_reasons = score_map.get(item.queue_id, (round(float(item.editorial_priority), 3), []))
+        if board_score < MIN_BOARD_FILL_SCORE:
+            return False
         if _has_board_hard_veto(board_reasons):
             return False
         headline = _normalized(_headline_text(root, item))
@@ -688,13 +715,13 @@ def _select_headline_board(root: Path, items: list[Any], limit: int, max_source_
         "scienceSpaceBoardLimit": SCIENCE_SPACE_BOARD_LIMIT if science_space_pressure else None,
         "maxPerSource": MAX_PER_SOURCE,
         "minCategoryTargetScore": MIN_CATEGORY_TARGET_SCORE,
+        "minBoardFillScore": MIN_BOARD_FILL_SCORE,
     }
     return selected, skipped, {"scores": score_map, "diagnostics": diagnostics}
 
 
 def _article_payload(root: Path, item: Any) -> dict[str, Any]:
-    normalized_store = JsonStore(root / "news_pipeline/data/normalized", NormalizedArticle)
-    article = normalized_store.load(item.normalized_id)
+    article = _normalized_article(root, item)
     source_age_hours = None
     if article and article.published_at:
         source_age_hours = round((datetime.now(UTC) - article.published_at.astimezone(UTC)).total_seconds() / 3600, 2)
@@ -791,14 +818,15 @@ def _full_collect_retry_reason(
     if not stats:
         return None
     eligible_count = int(board_meta["diagnostics"].get("eligibleCount") or 0)
+    pack_count = len(packs)
     if stats.get("sources_collected", 0) == 0:
-        if packs and eligible_count >= MIN_HEALTHY_BOARD_ELIGIBLE:
+        if pack_count >= MIN_HEALTHY_BOARD_ELIGIBLE and eligible_count >= MIN_HEALTHY_BOARD_ELIGIBLE:
             return None
         return "cadence produced zero collected sources"
     if not packs and stats.get("skipped_cadence", 0) > 0:
         return "no board candidates after cadence-limited collect"
-    if eligible_count < MIN_HEALTHY_BOARD_ELIGIBLE and stats.get("skipped_cadence", 0) > 0:
-        return f"thin board ({eligible_count} eligible < {MIN_HEALTHY_BOARD_ELIGIBLE}) after cadence-limited collect"
+    if (pack_count < MIN_HEALTHY_BOARD_ELIGIBLE or eligible_count < MIN_HEALTHY_BOARD_ELIGIBLE) and stats.get("skipped_cadence", 0) > 0:
+        return f"thin board ({pack_count} selected, {eligible_count} eligible; target {MIN_HEALTHY_BOARD_ELIGIBLE}) after cadence-limited collect"
     return None
 
 
@@ -933,7 +961,7 @@ def prepare_one_command(
     cleanup: bool = typer.Option(True, "--cleanup/--no-cleanup", help="Run queue cleanup before preparing the editorial pack."),
     full_collect: bool = typer.Option(False, "--full-collect", help="Bypass source cadence during collect."),
     min_score: float = typer.Option(0.68, "--min-score", help="Strict publish threshold used for diagnostics."),
-    max_source_age_hours: int = typer.Option(24, "--max-source-age-hours", help="Maximum source age for headline board freshness and auto publish diagnostics."),
+    max_source_age_hours: int = typer.Option(DEFAULT_MAX_SOURCE_AGE_HOURS, "--max-source-age-hours", help="Maximum source age for headline board freshness and auto publish diagnostics."),
     limit: int = typer.Option(20, "--limit", help="How many headline candidates to return."),
     json_output: bool = typer.Option(False, "--json", help="Emit machine-readable JSON."),
 ) -> None:
@@ -983,7 +1011,7 @@ def board_prewarm_command(
     cleanup: bool = typer.Option(True, "--cleanup/--no-cleanup", help="Run queue cleanup before preparing the prewarmed board."),
     full_collect: bool = typer.Option(False, "--full-collect", help="Bypass source cadence during collect."),
     min_score: float = typer.Option(0.68, "--min-score", help="Strict publish threshold used for diagnostics."),
-    max_source_age_hours: int = typer.Option(24, "--max-source-age-hours", help="Maximum source age for headline board freshness and auto publish diagnostics."),
+    max_source_age_hours: int = typer.Option(DEFAULT_MAX_SOURCE_AGE_HOURS, "--max-source-age-hours", help="Maximum source age for headline board freshness and auto publish diagnostics."),
     limit: int = typer.Option(6, "--limit", help="How many headline candidates to return."),
     output: Path = typer.Option(Path(DEFAULT_PREWARM_BOARD_PATH), "--output", "-o", help="Prewarmed board artifact path."),
     max_age_minutes: int = typer.Option(15, "--max-age-minutes", min=1, help="Freshness window consumers should enforce."),

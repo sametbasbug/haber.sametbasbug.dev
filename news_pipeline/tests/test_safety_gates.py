@@ -712,6 +712,65 @@ def test_prepare_board_excludes_sponsored_content_url(tmp_path: Path) -> None:
     assert skipped[0]["reason"] == "sponsored or paid content"
 
 
+def test_prepare_board_excludes_thin_france24_video_report_fallback(tmp_path: Path) -> None:
+    article = _article(
+        "france24-video-report",
+        url="https://www.france24.com/en/trump-says-will-cut-off-all-trade-with-spain-over-nato-contribution-row",
+    )
+    article.source_id = "france24-world"
+    article.source_name = "France 24 World"
+    article.title = "Trump says will cut off all trade with Spain over NATO contribution row"
+    article.summary = "US President Donald Trump threatened to halt trade with Spain over NATO spending. FRANCE 24's Monte Francis reports."
+    article.content_snippet = article.summary
+    item = _item("france24-video-report", normalized_id=article.id, url=str(article.canonical_url), priority=0.74)
+    item.draft_sources = [DraftSource(name="France 24 World", url=str(article.canonical_url))]
+    _save_runtime(tmp_path, item, article)
+
+    selected, skipped, _ = _select_headline_board(tmp_path, [item], limit=10, max_source_age_hours=72)
+
+    assert selected == []
+    assert skipped[0]["reason"] == "thin France 24 video/report fallback"
+
+
+def test_prepare_board_excludes_thin_politico_snippet(tmp_path: Path) -> None:
+    article = _article(
+        "politico-thin-snippet",
+        url="https://www.politico.eu/article/nato-ankara-summit-wasted-opportunity/",
+    )
+    article.source_id = "politico-eu"
+    article.source_name = "Politico Europe"
+    article.title = "NATO's Ankara summit was a wasted opportunity"
+    article.summary = "Europe could have used the meeting to show the U.S. how it will take the lead."
+    article.content_snippet = "The U.S. may have the strongest military in the world."
+    item = _item("politico-thin-snippet", normalized_id=article.id, url=str(article.canonical_url), priority=0.72)
+    item.draft_sources = [DraftSource(name="Politico Europe", url=str(article.canonical_url))]
+    _save_runtime(tmp_path, item, article)
+
+    selected, skipped, _ = _select_headline_board(tmp_path, [item], limit=10, max_source_age_hours=72)
+
+    assert selected == []
+    assert skipped[0]["reason"] == "thin Politico snippet (133 chars < 500)"
+
+
+def test_prepare_board_keeps_readable_cnbc_even_with_short_normalized_snippet(tmp_path: Path) -> None:
+    article = _article("cnbc-readable-short", url="https://www.cnbc.com/2026/07/09/meta-ai-coding-market.html")
+    article.source_id = "cnbc-tech"
+    article.source_name = "CNBC Technology"
+    article.title = "Meta jumps into AI coding market in effort to chase Anthropic and OpenAI"
+    article.summary = "Meta is upgrading its artificial intelligence coding model."
+    article.content_snippet = "Meta is rolling out a major update as it attempts to compete with OpenAI and Anthropic in critical areas of the AI coding market."
+    item = _item("cnbc-readable-short", normalized_id=article.id, url=str(article.canonical_url), priority=0.706)
+    item.draft_title = article.title
+    item.draft_description = article.content_snippet
+    item.draft_category = "Teknoloji"
+    item.draft_sources = [DraftSource(name="CNBC Technology", url=str(article.canonical_url))]
+    _save_runtime(tmp_path, item, article)
+
+    selected, _, _ = _select_headline_board(tmp_path, [item], limit=10, max_source_age_hours=72)
+
+    assert [item.queue_id for item in selected] == ["cnbc-readable-short"]
+
+
 def test_prepare_board_penalizes_low_public_value_oddity_below_board_floor(tmp_path: Path) -> None:
     article = _article("snake-flood", url="https://example.org/world/snakes-flood")
     article.source_id = "guardian-world"
@@ -731,6 +790,23 @@ def test_prepare_board_penalizes_low_public_value_oddity_below_board_floor(tmp_p
     score, reasons = meta["scores"][item.queue_id]
     assert score < heartbeat_prepare_one.MIN_CATEGORY_TARGET_SCORE
     assert "public_value_penalty:oddity_or_entertainment" in reasons
+
+
+def test_prepare_board_excludes_low_public_value_ceremonial_gift_story(tmp_path: Path) -> None:
+    article = _article("nato-gift", url="https://example.org/demo/nato-gift")
+    article.title = "Newly released footage shows revolver gifted by Erdogan to NATO leaders"
+    article.summary = "Images show a revolver and bullets given as a parting gift after the NATO summit."
+    item = _item("nato-gift", normalized_id=article.id, url=str(article.canonical_url), priority=0.712)
+    item.draft_title = article.title
+    item.draft_description = article.summary
+    item.draft_category = "Siyaset"
+    item.draft_sources = [DraftSource(name="Euronews World", url=str(article.canonical_url))]
+    _save_runtime(tmp_path, item, article)
+
+    selected, skipped, _ = _select_headline_board(tmp_path, [item], limit=10, max_source_age_hours=72)
+
+    assert selected == []
+    assert skipped[0]["reason"] == "blocked low-signal headline"
 
 
 def test_publish_one_retries_next_candidate_after_duplicate_publish_gate(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -1353,6 +1429,25 @@ def test_prepare_one_full_collect_retry_still_runs_when_cadence_board_is_thin() 
     assert reason == "cadence produced zero collected sources"
 
 
+def test_prepare_one_full_collect_retry_when_selected_board_is_thin_even_if_eligible_exists() -> None:
+    reason = heartbeat_prepare_one._full_collect_retry_reason(
+        collect=True,
+        full_collect=False,
+        steps=[
+            {
+                "name": "collect",
+                "ok": True,
+                "stdout": "sources_collected=4 items=4 skipped_cadence=14 failed=0",
+                "stderr": "",
+            }
+        ],
+        packs=[{"queueId": f"candidate-{index}"} for index in range(5)],
+        board_meta={"diagnostics": {"eligibleCount": 14}},
+    )
+
+    assert reason == "thin board (5 selected, 14 eligible; target 6) after cadence-limited collect"
+
+
 
 def test_headline_board_penalizes_recent_topic_family_saturation(tmp_path: Path) -> None:
     content = tmp_path / "src/content/equinoxHaber"
@@ -1564,6 +1659,45 @@ def test_headline_board_excludes_low_score_category_fill_even_behind_stronger_gl
     assert [item.queue_id for item in selected] == ["ukraine-energy"]
     assert any(row["queueId"] == "peatlands" and row["reason"] == "score below threshold (0.590)" for row in skipped)
     assert meta["diagnostics"]["minCategoryTargetScore"] == 0.68
+
+
+def test_headline_board_does_not_fill_with_very_low_board_score_repeat(tmp_path: Path) -> None:
+    content = tmp_path / "src/content/equinoxHaber"
+    content.mkdir(parents=True)
+    for index in range(2):
+        (content / f"recent-openai-{index}.md").write_text(
+            f"""---
+title: "OpenAI, yeni ChatGPT sürümünü duyurdu {index}"
+description: "OpenAI ve ChatGPT gündemi işlendi."
+pubDate: '2026-06-15T1{index}:00:00+03:00'
+category: "Teknoloji"
+tags: ["OpenAI", "ChatGPT"]
+sources:
+  - name: "Tech Source"
+    url: "https://example.org/recent-openai-{index}"
+---
+Gövde.
+""",
+            encoding="utf-8",
+        )
+    article = _article("openai-repeat", url="https://example.org/demo/openai-repeat")
+    article.title = "OpenAI rolls out GPT-5.6 after government greenlight"
+    article.summary = "OpenAI and ChatGPT remain central to the product announcement."
+    article.tags = ["OpenAI", "ChatGPT"]
+    item = _item("openai-repeat", normalized_id=article.id, url=str(article.canonical_url), priority=0.68)
+    item.draft_title = article.title
+    item.draft_description = article.summary
+    item.draft_category = "Teknoloji"
+    item.draft_tags = ["OpenAI", "ChatGPT"]
+    item.draft_sources = [DraftSource(name="The Verge", url=str(article.canonical_url))]
+    _save_runtime(tmp_path, item, article)
+
+    selected, _, meta = _select_headline_board(tmp_path, [item], limit=10, max_source_age_hours=72)
+
+    assert selected == []
+    score, _ = meta["scores"][item.queue_id]
+    assert score < heartbeat_prepare_one.MIN_BOARD_FILL_SCORE
+    assert meta["diagnostics"]["minBoardFillScore"] == 0.50
 
 
 def test_politics_is_not_treated_as_hot_category(tmp_path: Path) -> None:
