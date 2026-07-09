@@ -740,6 +740,39 @@ def test_publish_one_keeps_limited_error_logs() -> None:
     assert len(compact["stderr"]) < len("error output\n" * 200)
 
 
+def test_publish_one_recent_cycle_guard_blocks_old_retry_window(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    state_path = tmp_path / "news_pipeline/data/state/heartbeat-publish-one.json"
+    state_path.parent.mkdir(parents=True)
+    state_path.write_text('{"last_started_at": 1000}\n', encoding="utf-8")
+    monkeypatch.setattr(heartbeat_publish_one.time, "time", lambda: 1915)
+
+    allowed, info = heartbeat_publish_one._recent_cycle_guard(
+        tmp_path,
+        heartbeat_publish_one.DEFAULT_MIN_INTERVAL_SECONDS,
+        False,
+    )
+
+    assert allowed is False
+    assert info["ageSeconds"] == 915
+    assert info["minIntervalSeconds"] == 3000
+
+
+def test_publish_one_recent_cycle_guard_allows_next_hour(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    state_path = tmp_path / "news_pipeline/data/state/heartbeat-publish-one.json"
+    state_path.parent.mkdir(parents=True)
+    state_path.write_text('{"last_started_at": 1000}\n', encoding="utf-8")
+    monkeypatch.setattr(heartbeat_publish_one.time, "time", lambda: 4100)
+
+    allowed, info = heartbeat_publish_one._recent_cycle_guard(
+        tmp_path,
+        heartbeat_publish_one.DEFAULT_MIN_INTERVAL_SECONDS,
+        False,
+    )
+
+    assert allowed is True
+    assert info["ageSeconds"] == 3100
+
+
 def test_publish_one_auto_build_skips_clean_content_only_publish(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         heartbeat_publish_one,
