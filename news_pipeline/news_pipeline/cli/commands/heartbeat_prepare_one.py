@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 import re
 from typing import Any
+from urllib.parse import urlparse
 
 import typer
 from rapidfuzz.fuzz import token_set_ratio
@@ -77,6 +78,7 @@ NON_SECURITY_SIGNAL_PHRASES = {
 }
 BLOCKED_BOARD_TERMS = {
     "celebrity",
+    "concert",
     "rod stewart",
     "ratbag",
     "opinion",
@@ -88,6 +90,68 @@ BLOCKED_BOARD_TERMS = {
     "eurovision entry",
     "music museum",
     "father ted",
+    "rapper",
+    "red card controversy",
+    "football chiefs",
+    "training grounds",
+}
+SPONSORED_URL_MARKERS = {
+    "/sponsored-content/",
+    "/brandstudio/",
+    "/paid-content/",
+    "/partner-content/",
+}
+UNREADABLE_PRIMARY_HOSTS = {
+    "politico.com",
+    "www.politico.com",
+}
+TURKISH_READER_SIGNAL_TERMS = {
+    "tariff",
+    "tariffs",
+    "trade",
+    "sanctions",
+    "inflation",
+    "market",
+    "markets",
+    "energy",
+    "oil",
+    "gas",
+    "defense",
+    "defence",
+    "security",
+    "nato",
+    "eu",
+    "europe",
+    "ukraine",
+    "russia",
+    "china",
+    "trump",
+    "ai",
+    "artificial intelligence",
+    "chip",
+    "chips",
+    "climate",
+    "heatwave",
+    "election",
+    "migration",
+    "central bank",
+    "interest rates",
+    "turkey",
+    "türkiye",
+}
+LOW_PUBLIC_VALUE_ODDITY_TERMS = {
+    "snake",
+    "snakes",
+    "cobra",
+    "cobras",
+    "venomous",
+    "escaped",
+    "rapper",
+    "concert",
+    "kanye",
+    "football chiefs",
+    "red card",
+    "infantino",
 }
 
 
@@ -162,6 +226,24 @@ COMPANY_PATTERNS: dict[str, re.Pattern[str]] = {
 
 def _source_name(item: Any) -> str:
     return item.draft_sources[0].name if item.draft_sources else "-"
+
+
+def _source_url(item: Any) -> str:
+    return str(item.draft_sources[0].url) if item.draft_sources else ""
+
+
+def _source_host(item: Any) -> str:
+    host = urlparse(_source_url(item)).netloc.lower()
+    return host[4:] if host.startswith("www.") else host
+
+
+def _is_sponsored_source(item: Any) -> bool:
+    url = _source_url(item).lower()
+    return any(marker in url for marker in SPONSORED_URL_MARKERS)
+
+
+def _has_known_unreadable_primary_source(item: Any) -> bool:
+    return _source_host(item) in UNREADABLE_PRIMARY_HOSTS
 
 
 def _frontmatter_value(text: str, key: str) -> str:
@@ -329,6 +411,32 @@ def _headline_has_term(headline: str, term: str) -> bool:
     return term in headline
 
 
+def _public_value_text(root: Path, item: Any) -> str:
+    normalized_store = JsonStore(root / "news_pipeline/data/normalized", NormalizedArticle)
+    article = normalized_store.load(item.normalized_id)
+    parts = [
+        item.draft_title or "",
+        item.draft_description or "",
+        " ".join(item.draft_tags or []),
+        _source_name(item),
+    ]
+    if article:
+        parts.extend([article.title or "", article.summary or "", article.content_snippet or "", " ".join(article.tags or [])])
+    return _normalized(" ".join(parts))
+
+
+def _has_turkish_reader_signal(text: str) -> bool:
+    return any(_headline_has_term(text, term) for term in TURKISH_READER_SIGNAL_TERMS)
+
+
+def _has_low_public_value_oddity(text: str) -> bool:
+    return any(_headline_has_term(text, term) for term in LOW_PUBLIC_VALUE_ODDITY_TERMS)
+
+
+def _has_board_hard_veto(reasons: list[str]) -> bool:
+    return any(reason.startswith("public_value_penalty:") for reason in reasons)
+
+
 def _board_score(
     root: Path,
     item: Any,
@@ -338,6 +446,7 @@ def _board_score(
     recent_posts: list[dict[str, str]] | None = None,
 ) -> tuple[float, list[str]]:
     headline = _normalized(_headline_text(root, item))
+    public_value_text = _public_value_text(root, item)
     category = item.draft_category or ""
     source = _normalized(_source_name(item))
     score = float(item.editorial_priority)
@@ -371,6 +480,7 @@ def _board_score(
             repeated = "+".join(sorted(repeat_counts))
             reasons.append(f"recency_penalty:company_repeat:{repeated}:{strongest_repeat}")
     family_hits = _item_topic_family_hits(root, item)
+    has_recent_family_repeat = False
     if family_hits:
         recent_family_counts = recent_live_topic_family_counts(
             root / "src/content/equinoxHaber",
@@ -382,6 +492,7 @@ def _board_score(
             if recent_family_counts[family] >= RECENT_TOPIC_FAMILY_PENALTY_THRESHOLD
         }
         if repeat_counts:
+            has_recent_family_repeat = True
             strongest_repeat = max(repeat_counts.values())
             family_penalty = min(RECENT_TOPIC_FAMILY_PENALTY_MAX, strongest_repeat * RECENT_TOPIC_FAMILY_PENALTY_PER_ITEM)
             score -= family_penalty
@@ -402,6 +513,15 @@ def _board_score(
             score += 0.035
             reasons.append(f"signal_boost:{term}")
             break
+    if _has_turkish_reader_signal(public_value_text) and not localized_crime and not incidental_security and not has_recent_family_repeat:
+        score += 0.045
+        reasons.append("signal_boost:turkish_reader_interest")
+    if _has_low_public_value_oddity(public_value_text):
+        oddity_penalty = 0.18
+        if _has_turkish_reader_signal(public_value_text):
+            oddity_penalty = 0.10
+        score -= oddity_penalty
+        reasons.append("public_value_penalty:oddity_or_entertainment")
     if science_pressure and category == "Bilim":
         score -= SCIENCE_RECENT_PENALTY
         reasons.append("recency_penalty:science_saturation")
@@ -424,6 +544,10 @@ def _passes_basic_board_filter(root: Path, item: Any, max_source_age_hours: int,
     live_urls = live_urls or set()
     if any(str(source.url) in live_urls for source in item.draft_sources):
         return False, "source already published"
+    if _is_sponsored_source(item):
+        return False, "sponsored or paid content"
+    if _has_known_unreadable_primary_source(item):
+        return False, "known unreadable primary source"
     fresh, stale_reason = _source_is_fresh(root, item, max_source_age_hours)
     if not fresh:
         return False, stale_reason
@@ -479,6 +603,7 @@ def _select_headline_board(root: Path, items: list[Any], limit: int, max_source_
         eligible.append((item, board_score, reasons))
 
     eligible.sort(key=lambda row: row[1], reverse=True)
+    score_map = {item.queue_id: (score, reasons) for item, score, reasons in eligible}
     selected: list[Any] = []
     selected_ids: set[str] = set()
     selected_headlines: list[str] = []
@@ -488,6 +613,9 @@ def _select_headline_board(root: Path, items: list[Any], limit: int, max_source_
 
     def add(item: Any) -> bool:
         if item.queue_id in selected_ids:
+            return False
+        _, board_reasons = score_map.get(item.queue_id, (round(float(item.editorial_priority), 3), []))
+        if _has_board_hard_veto(board_reasons):
             return False
         headline = _normalized(_headline_text(root, item))
         if any(token_set_ratio(headline, existing) >= 88 for existing in selected_headlines):
@@ -531,7 +659,6 @@ def _select_headline_board(root: Path, items: list[Any], limit: int, max_source_
             break
         add(item)
 
-    score_map = {item.queue_id: (score, reasons) for item, score, reasons in eligible}
     selected.sort(key=lambda item: score_map.get(item.queue_id, (round(float(item.editorial_priority), 3), []))[0], reverse=True)
     diagnostics = {
         "eligibleCount": len(eligible),

@@ -671,6 +671,68 @@ def test_tv_show_source_format_is_excluded_from_publish_and_board(tmp_path: Path
     assert skipped[0]["reason"] == "excluded source format (podcast/liveblog)"
 
 
+def test_prepare_board_excludes_known_unreadable_primary_source(tmp_path: Path) -> None:
+    article = _article(
+        "politico-com-cloudflare",
+        url="https://www.politico.com/news/2026/07/08/trump-spanish-exports-trade-embargo-00990123",
+    )
+    article.source_id = "politico-eu"
+    article.source_name = "Politico Europe"
+    article.title = "US officials compiling menu of Spanish goods as Trump weighs embargo"
+    item = _item(
+        "politico-com-cloudflare",
+        normalized_id=article.id,
+        url=str(article.canonical_url),
+        priority=0.74,
+    )
+    item.draft_sources = [DraftSource(name="Politico Europe", url=str(article.canonical_url))]
+    _save_runtime(tmp_path, item, article)
+
+    selected, skipped, _ = _select_headline_board(tmp_path, [item], limit=10, max_source_age_hours=72)
+
+    assert selected == []
+    assert skipped[0]["reason"] == "known unreadable primary source"
+
+
+def test_prepare_board_excludes_sponsored_content_url(tmp_path: Path) -> None:
+    article = _article(
+        "sponsored-ai",
+        url="https://www.politico.eu/sponsored-content/europes-ai-moment-four-imperatives-for-business-leaders/",
+    )
+    article.source_id = "politico-eu"
+    article.source_name = "Politico Europe"
+    article.title = "Europe's AI moment: Four imperatives for business leaders"
+    item = _item("sponsored-ai", normalized_id=article.id, url=str(article.canonical_url), priority=0.72)
+    item.draft_sources = [DraftSource(name="Politico Europe", url=str(article.canonical_url))]
+    _save_runtime(tmp_path, item, article)
+
+    selected, skipped, _ = _select_headline_board(tmp_path, [item], limit=10, max_source_age_hours=72)
+
+    assert selected == []
+    assert skipped[0]["reason"] == "sponsored or paid content"
+
+
+def test_prepare_board_penalizes_low_public_value_oddity_below_board_floor(tmp_path: Path) -> None:
+    article = _article("snake-flood", url="https://example.org/world/snakes-flood")
+    article.source_id = "guardian-world"
+    article.source_name = "The Guardian World"
+    article.title = "Venomous snakes escape breeding farms in southern China during flooding"
+    article.summary = "Hundreds of cobras and other snakes escaped during flooding in Guangxi."
+    item = _item("snake-flood", normalized_id=article.id, url=str(article.canonical_url), priority=0.687)
+    item.draft_title = article.title
+    item.draft_description = article.summary
+    item.draft_category = "Bilim"
+    item.draft_sources = [DraftSource(name="The Guardian World", url=str(article.canonical_url))]
+    _save_runtime(tmp_path, item, article)
+
+    selected, _, meta = _select_headline_board(tmp_path, [item], limit=10, max_source_age_hours=72)
+
+    assert selected == []
+    score, reasons = meta["scores"][item.queue_id]
+    assert score < heartbeat_prepare_one.MIN_CATEGORY_TARGET_SCORE
+    assert "public_value_penalty:oddity_or_entertainment" in reasons
+
+
 def test_publish_one_retries_next_candidate_after_duplicate_publish_gate(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.chdir(tmp_path)
     first_article = _article("dup-first", url="https://example.org/demo/dup-first")
@@ -1078,6 +1140,27 @@ def test_queue_approve_refuses_rejected_item_without_explicit_recovery(tmp_path:
 
     with pytest.raises(typer.BadParameter, match="queue item is rejected"):
         queue_approve_command(item.queue_id)
+
+
+def test_queue_source_text_falls_back_to_normalized_context_when_fetch_is_empty(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    article = _article("source-text-fallback", url="https://example.org/demo/source-text-fallback")
+    article.summary = "RSS summary explains the trade and tariff stakes for readers."
+    article.content_snippet = "Normalized snippet keeps enough context when the live article blocks extraction."
+    item = _item("source-text-fallback", normalized_id=article.id, url=str(article.canonical_url))
+    _save_runtime(tmp_path, item, article)
+    monkeypatch.setattr(queue_source_text, "fetch_article_details", lambda *_, **__: queue_source_text.ArticleDetails())
+
+    queue_source_text.queue_source_text_command(item.queue_id, json_output=True)
+
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["extractionStatus"] == "metadata_fallback"
+    assert payload["textChars"] > 0
+    assert "RSS summary" in payload["text"]
 
 
 

@@ -6,7 +6,17 @@ from pathlib import Path
 import typer
 
 from news_pipeline.extractors.article_text import ArticleDetails, fetch_article_details
+from news_pipeline.models.article import NormalizedArticle
 from news_pipeline.queue.service import QueueService
+from news_pipeline.storage.json_store import JsonStore
+
+
+def _metadata_fallback_text(article: NormalizedArticle | None, *, max_chars: int) -> str:
+    if article is None:
+        return ""
+    parts = [article.summary or "", article.content_snippet or ""]
+    text = " ".join(part.strip() for part in parts if part and part.strip())
+    return text[:max_chars].strip()
 
 
 def queue_source_text_command(
@@ -35,6 +45,13 @@ def queue_source_text_command(
 
     source = item.draft_sources[source_index]
     details = fetch_article_details(str(source.url), max_paragraphs=max_paragraphs, max_chars=max_chars)
+    normalized = JsonStore(root / "news_pipeline/data/normalized", NormalizedArticle).load(item.normalized_id)
+    extraction_status = "full_text" if details.snippet else "empty"
+    text = details.snippet
+    if not text:
+        text = _metadata_fallback_text(normalized, max_chars=max_chars)
+        if text:
+            extraction_status = "metadata_fallback"
     payload = {
         "queueId": item.queue_id,
         "title": item.draft_title,
@@ -44,8 +61,9 @@ def queue_source_text_command(
             "url": str(source.url),
         },
         "publishedAt": details.published_at.isoformat() if details.published_at else None,
-        "textChars": len(details.snippet),
-        "text": details.snippet,
+        "extractionStatus": extraction_status,
+        "textChars": len(text),
+        "text": text,
     }
     if json_output:
         print(json.dumps(payload, ensure_ascii=False, indent=2))
