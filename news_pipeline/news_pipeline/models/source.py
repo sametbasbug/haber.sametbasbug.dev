@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field, HttpUrl
 
 
 SourceKind = Literal["rss", "atom", "sitemap", "html"]
+SourceQuality = Literal["trusted", "usable", "noisy", "restricted"]
 
 
 class SourceConfig(BaseModel):
@@ -19,3 +20,4 @@ class SourceConfig(BaseModel):
     max_items: int | None = Field(default=None, ge=1)
     fetch_snippets: bool = True
     snippet_limit: int | None = Field(default=None, ge=0)
+    source_quality: SourceQuality = "usable"

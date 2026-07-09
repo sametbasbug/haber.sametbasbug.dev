@@ -100,6 +100,28 @@ def _save_runtime(root: Path, item: QueueItem, article: NormalizedArticle) -> No
     JsonStore(root / "news_pipeline/data/normalized", NormalizedArticle).save(article.id, article)
 
 
+def _write_sources_config(root: Path, *, source_id: str = "demo-source", source_quality: str = "usable") -> None:
+    config_path = root / "news_pipeline/news_pipeline/config/sources.yaml"
+    config_path.parent.mkdir(parents=True, exist_ok=True)
+    config_path.write_text(
+        f"""sources:
+  - id: {source_id}
+    name: Demo Source
+    kind: rss
+    url: https://example.org/rss.xml
+    category_hints: [Teknoloji]
+    enabled: true
+    cadence: hourly
+    max_items: 10
+    fetch_snippets: true
+    snippet_limit: 3
+    source_quality: {source_quality}
+""",
+        encoding="utf-8",
+    )
+    heartbeat_prepare_one._source_config_map.cache_clear()
+
+
 
 
 def test_collect_cadence_grace_handles_near_hourly_boundary() -> None:
@@ -119,6 +141,29 @@ def test_collect_cadence_grace_handles_near_hourly_boundary() -> None:
     assert due_without_grace is False
     assert reason == "cadence_wait:3540s/3600s"
     assert due_with_grace is True
+
+
+def test_source_config_defaults_to_usable_quality() -> None:
+    source = SourceConfig(
+        id="demo-source",
+        name="Demo Source",
+        kind="rss",
+        url="https://example.org/rss.xml",
+    )
+
+    assert source.source_quality == "usable"
+
+
+def test_source_config_accepts_restricted_quality() -> None:
+    source = SourceConfig(
+        id="demo-source",
+        name="Demo Source",
+        kind="rss",
+        url="https://example.org/rss.xml",
+        source_quality="restricted",
+    )
+
+    assert source.source_quality == "restricted"
 
 
 def test_duplicate_url_and_topic_guard(tmp_path: Path) -> None:
@@ -1603,6 +1648,61 @@ def test_headline_board_does_not_boost_social_security_as_security_signal(tmp_pa
     assert score == pytest.approx(0.621)
     assert "signal_boost:security" not in reasons
 
+
+def test_restricted_source_short_text_is_excluded_from_headline_board(tmp_path: Path) -> None:
+    _write_sources_config(tmp_path, source_quality="restricted")
+    article = _article("restricted-short", url="https://example.org/demo/restricted-short")
+    article.title = "Global trade officials meet in Brussels"
+    article.summary = "Short metadata summary."
+    article.content_snippet = "Short snippet."
+    item = _item("restricted-short", normalized_id=article.id, url=str(article.canonical_url), priority=0.91)
+    item.draft_title = "Küresel ticaret yetkilileri Brüksel'de toplandı"
+    item.draft_description = "Kısa metadata metniyle gelen sınırlı bir kaynak özeti."
+    item.draft_category = "Ekonomi"
+    _save_runtime(tmp_path, item, article)
+
+    selected, skipped, _ = _select_headline_board(tmp_path, [item], limit=6, max_source_age_hours=72)
+
+    assert selected == []
+    assert any(
+        row["queueId"] == item.queue_id and row["reason"].startswith("restricted source lacks article text")
+        for row in skipped
+    )
+
+
+def test_restricted_source_with_enough_text_gets_board_penalty(tmp_path: Path) -> None:
+    _write_sources_config(tmp_path, source_quality="restricted")
+    article = _article("restricted-long", url="https://example.org/demo/restricted-long")
+    article.title = "Regional officials agree on new infrastructure financing plan"
+    article.summary = " ".join(["Officials described a detailed cross-border infrastructure plan."] * 18)
+    article.content_snippet = " ".join(["The plan includes financing, procurement and public audit milestones."] * 8)
+    item = _item("restricted-long", normalized_id=article.id, url=str(article.canonical_url), priority=0.82)
+    item.draft_title = "Bölgesel yetkililer yeni altyapı finansmanı planında anlaştı"
+    item.draft_description = "Uzun ve okunabilir metne sahip restricted kaynak, tamamen atılmadan ceza ile sıralanıyor."
+    item.draft_category = "Ekonomi"
+    _save_runtime(tmp_path, item, article)
+
+    score, reasons = _board_score(tmp_path, item, recent_posts=[])
+
+    assert score == pytest.approx(0.74)
+    assert "source_penalty:restricted" in reasons
+
+
+def test_noisy_source_gets_smaller_board_penalty(tmp_path: Path) -> None:
+    _write_sources_config(tmp_path, source_quality="noisy")
+    article = _article("noisy-source", url="https://example.org/demo/noisy-source")
+    article.title = "Regional officials update a public procurement timetable"
+    article.summary = "The update covers administrative milestones and committee review dates."
+    item = _item("noisy-source", normalized_id=article.id, url=str(article.canonical_url), priority=0.82)
+    item.draft_title = "Bölgesel yetkililer kamu ihalesi takvimini güncelledi"
+    item.draft_description = "Noisy kaynak tamamen dışlanmaz; temiz metin verdiğinde yalnız küçük sıralama cezası alır."
+    item.draft_category = "Ekonomi"
+    _save_runtime(tmp_path, item, article)
+
+    score, reasons = _board_score(tmp_path, item, recent_posts=[])
+
+    assert score == pytest.approx(0.78)
+    assert "source_penalty:noisy" in reasons
 
 
 def test_headline_board_limits_same_topic_family_in_selected_board(tmp_path: Path) -> None:

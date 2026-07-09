@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections import Counter
 from datetime import UTC, datetime, timedelta
+from functools import lru_cache
 import json
 import os
 from pathlib import Path
@@ -13,10 +14,12 @@ import typer
 from rapidfuzz.fuzz import token_set_ratio
 
 from news_pipeline.cli.commands.heartbeat_publish_one import _compact_step, _is_excluded_source_format, _run_pipeline_command, _source_is_fresh
+from news_pipeline.config.loader import load_yaml
 from news_pipeline.cli.commands.publish import _assert_not_duplicate_live
 from news_pipeline.editorial.autonomy import is_autopublish_candidate
 from news_pipeline.editorial.topic_family import describe_family, recent_live_topic_family_counts, topic_families_for_text
 from news_pipeline.models.article import NormalizedArticle
+from news_pipeline.models.source import SourceConfig
 from news_pipeline.queue.service import QueueService
 from news_pipeline.storage.json_store import JsonStore
 
@@ -55,6 +58,9 @@ RECENT_TOPIC_FAMILY_PENALTY_MAX = 0.48
 MAX_BOARD_ITEMS_PER_TOPIC_FAMILY = 1
 POLITICO_EU_BASELINE_PENALTY = 0.035
 POLITICO_EU_RECENT_EXTRA_PENALTY = 0.04
+NOISY_SOURCE_BOARD_PENALTY = 0.04
+RESTRICTED_SOURCE_BOARD_PENALTY = 0.08
+RESTRICTED_SOURCE_MIN_TEXT_CHARS = 650
 RISKY_HEADLINE_TERMS = {
     "lawsuit",
     "trial",
@@ -250,6 +256,35 @@ def _normalized_article(root: Path, item: Any) -> NormalizedArticle | None:
     return JsonStore(root / "news_pipeline/data/normalized", NormalizedArticle).load(item.normalized_id)
 
 
+@lru_cache(maxsize=8)
+def _source_config_map(root_text: str) -> dict[str, SourceConfig]:
+    root = Path(root_text)
+    try:
+        config = load_yaml(root / "news_pipeline/news_pipeline/config/sources.yaml")
+    except Exception:
+        return {}
+    sources: dict[str, SourceConfig] = {}
+    for row in config.get("sources", []):
+        try:
+            source = SourceConfig.model_validate(row)
+        except Exception:
+            continue
+        sources[source.id] = source
+    return sources
+
+
+def _source_config(root: Path, item: Any) -> SourceConfig | None:
+    article = _normalized_article(root, item)
+    if article is None:
+        return None
+    return _source_config_map(str(root)).get(article.source_id)
+
+
+def _source_quality(root: Path, item: Any) -> str:
+    config = _source_config(root, item)
+    return config.source_quality if config else "usable"
+
+
 def _is_sponsored_source(item: Any) -> bool:
     url = _source_url(item).lower()
     return any(marker in url for marker in SPONSORED_URL_MARKERS)
@@ -266,6 +301,8 @@ def _source_text_quality_rejection(root: Path, item: Any) -> str | None:
     source = _normalized(_source_name(item))
     text = _normalized(" ".join(part for part in [article.summary or "", article.content_snippet or ""] if part))
     text_len = len(text)
+    if _source_quality(root, item) == "restricted" and text_len < RESTRICTED_SOURCE_MIN_TEXT_CHARS:
+        return f"restricted source lacks article text ({text_len} chars < {RESTRICTED_SOURCE_MIN_TEXT_CHARS})"
     if source == "france 24 world" and re.search(r"\bfrance 24'?s\b.*\b(reports|tells us|explains)\b", text):
         return "thin France 24 video/report fallback"
     if source == "politico europe" and text_len < MIN_THIN_SOURCE_TEXT_CHARS:
@@ -473,6 +510,13 @@ def _board_score(
     source = _normalized(_source_name(item))
     score = float(item.editorial_priority)
     reasons: list[str] = []
+    source_quality = _source_quality(root, item)
+    if source_quality == "restricted":
+        score -= RESTRICTED_SOURCE_BOARD_PENALTY
+        reasons.append("source_penalty:restricted")
+    elif source_quality == "noisy":
+        score -= NOISY_SOURCE_BOARD_PENALTY
+        reasons.append("source_penalty:noisy")
     if source == "politico europe":
         score -= POLITICO_EU_BASELINE_PENALTY
         reasons.append("source_penalty:politico_europe_baseline")

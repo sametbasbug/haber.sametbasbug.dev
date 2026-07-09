@@ -9,6 +9,7 @@ sources:
     cadence: hourly
     max_items: 20
     snippet_limit: 6
+    source_quality: usable
 
   - id: the-verge
     name: The Verge
@@ -19,6 +20,7 @@ sources:
     cadence: 3h
     max_items: 15
     snippet_limit: 4
+    source_quality: usable
 
   - id: ars-technica
     name: Ars Technica
@@ -29,6 +31,7 @@ sources:
     cadence: 3h
     max_items: 15
     snippet_limit: 4
+    source_quality: usable
 
   - id: engadget
     name: Engadget
@@ -39,6 +42,7 @@ sources:
     cadence: 3h
     max_items: 15
     snippet_limit: 4
+    source_quality: noisy
 
   - id: mit-tech-review
     name: MIT Technology Review
@@ -49,6 +53,7 @@ sources:
     cadence: 6h
     max_items: 12
     snippet_limit: 3
+    source_quality: usable
 
   - id: zdnet
     name: ZDNET
@@ -59,6 +64,7 @@ sources:
     cadence: 6h
     max_items: 12
     snippet_limit: 3
+    source_quality: noisy
 
   - id: fast-company-tech
     name: Fast Company Tech
@@ -69,6 +75,7 @@ sources:
     cadence: 6h
     max_items: 12
     snippet_limit: 2
+    source_quality: usable
 
   - id: wired
     name: WIRED
@@ -79,6 +86,7 @@ sources:
     cadence: 3h
     max_items: 15
     snippet_limit: 4
+    source_quality: trusted
 
   - id: cnbc-tech
     name: CNBC Technology
@@ -89,6 +97,7 @@ sources:
     cadence: 3h
     max_items: 12
     snippet_limit: 3
+    source_quality: trusted
 
   - id: rest-of-world
     name: Rest of World
@@ -99,6 +108,18 @@ sources:
     cadence: 6h
     max_items: 12
     snippet_limit: 3
+    source_quality: trusted
+
+  - id: semafor
+    name: Semafor
+    kind: rss
+    url: https://www.semafor.com/rss.xml
+    category_hints: [Teknoloji, Ekonomi, Siyaset]
+    enabled: true
+    cadence: 3h
+    max_items: 15
+    snippet_limit: 4
+    source_quality: usable
 
   # Global politics / security / diplomacy
   - id: politico-eu
@@ -110,6 +131,7 @@ sources:
     cadence: 3h
     max_items: 15
     snippet_limit: 4
+    source_quality: restricted
 
   - id: bbc-world
     name: BBC World
@@ -120,6 +142,7 @@ sources:
     cadence: hourly
     max_items: 20
     snippet_limit: 5
+    source_quality: trusted
 
   - id: guardian-world
     name: The Guardian World
@@ -130,6 +153,7 @@ sources:
     cadence: hourly
     max_items: 20
     snippet_limit: 5
+    source_quality: trusted
 
   - id: al-jazeera-world
     name: Al Jazeera World
@@ -140,6 +164,7 @@ sources:
     cadence: hourly
     max_items: 20
     snippet_limit: 4
+    source_quality: usable
 
   - id: france24-world
     name: France 24 World
@@ -150,6 +175,7 @@ sources:
     cadence: hourly
     max_items: 18
     snippet_limit: 3
+    source_quality: restricted
 
   - id: dw-world
     name: Deutsche Welle World
@@ -160,6 +186,7 @@ sources:
     cadence: hourly
     max_items: 20
     snippet_limit: 3
+    source_quality: usable
 
   - id: npr-world
     name: NPR World
@@ -170,6 +197,7 @@ sources:
     cadence: 3h
     max_items: 10
     snippet_limit: 2
+    source_quality: trusted
 
   - id: euronews-world
     name: Euronews World
@@ -180,6 +208,7 @@ sources:
     cadence: 3h
     max_items: 15
     snippet_limit: 2
+    source_quality: restricted
 
   - id: sky-news-world
     name: Sky News World
@@ -190,6 +219,51 @@ sources:
     cadence: 3h
     max_items: 8
     snippet_limit: 2
+    source_quality: noisy
+
+  - id: defense-news-global
+    name: Defense News Global
+    kind: rss
+    url: https://www.defensenews.com/arc/outboundfeeds/rss/category/global/?outputType=xml
+    category_hints: [Siyaset]
+    enabled: true
+    cadence: 6h
+    max_items: 10
+    snippet_limit: 3
+    source_quality: usable
+
+  - id: defense-news-air
+    name: Defense News Air
+    kind: rss
+    url: https://www.defensenews.com/arc/outboundfeeds/rss/category/air/?outputType=xml
+    category_hints: [Siyaset, Teknoloji]
+    enabled: true
+    cadence: 6h
+    max_items: 10
+    snippet_limit: 3
+    source_quality: usable
+
+  - id: scmp-world
+    name: South China Morning Post World
+    kind: rss
+    url: https://www.scmp.com/rss/91/feed
+    category_hints: [Siyaset]
+    enabled: true
+    cadence: 3h
+    max_items: 15
+    snippet_limit: 4
+    source_quality: usable
+
+  - id: scmp-asia
+    name: South China Morning Post Asia
+    kind: rss
+    url: https://www.scmp.com/rss/4/feed
+    category_hints: [Siyaset, Ekonomi]
+    enabled: true
+    cadence: 3h
+    max_items: 15
+    snippet_limit: 4
+    source_quality: usable
 
   # Economy / markets / business
   - id: marketwatch-top-stories
@@ -201,6 +275,7 @@ sources:
     cadence: 6h
     max_items: 12
     snippet_limit: 3
+    source_quality: noisy
 
   - id: guardian-business
     name: The Guardian Business
@@ -211,6 +286,7 @@ sources:
     cadence: 3h
     max_items: 15
     snippet_limit: 3
+    source_quality: trusted
 
   - id: npr-business
     name: NPR Business
@@ -221,6 +297,7 @@ sources:
     cadence: 6h
     max_items: 10
     snippet_limit: 2
+    source_quality: usable
 
   - id: dw-business
     name: Deutsche Welle Business
@@ -231,6 +308,7 @@ sources:
     cadence: 6h
     max_items: 10
     snippet_limit: 2
+    source_quality: usable
 
   - id: cnbc-world-economy
     name: CNBC World Economy
@@ -241,6 +319,7 @@ sources:
     cadence: 6h
     max_items: 10
     snippet_limit: 2
+    source_quality: trusted
 
   # Science / climate / space / research
   - id: nasa-news
@@ -252,6 +331,7 @@ sources:
     cadence: 6h
     max_items: 6
     snippet_limit: 2
+    source_quality: usable
 
   - id: sciencedaily-top-science
     name: ScienceDaily Top Science
@@ -262,6 +342,7 @@ sources:
     cadence: 12h
     max_items: 6
     snippet_limit: 2
+    source_quality: usable
 
   - id: guardian-science
     name: The Guardian Science
@@ -272,6 +353,7 @@ sources:
     cadence: 12h
     max_items: 6
     snippet_limit: 2
+    source_quality: trusted
 
   - id: new-scientist
     name: New Scientist
@@ -282,6 +364,7 @@ sources:
     cadence: 6h
     max_items: 10
     snippet_limit: 2
+    source_quality: usable
 
   - id: physorg
     name: Phys.org
@@ -292,6 +375,7 @@ sources:
     cadence: 6h
     max_items: 10
     snippet_limit: 2
+    source_quality: usable
 
   - id: live-science
     name: Live Science
@@ -302,6 +386,7 @@ sources:
     cadence: 6h
     max_items: 10
     snippet_limit: 2
+    source_quality: usable
 
   - id: space-com
     name: Space.com
@@ -312,3 +397,26 @@ sources:
     cadence: 6h
     max_items: 8
     snippet_limit: 2
+    source_quality: usable
+
+  - id: carbon-brief
+    name: Carbon Brief
+    kind: rss
+    url: https://www.carbonbrief.org/feed/
+    category_hints: [Bilim, Ekonomi]
+    enabled: true
+    cadence: 6h
+    max_items: 10
+    snippet_limit: 3
+    source_quality: trusted
+
+  - id: yale-climate-connections
+    name: Yale Climate Connections
+    kind: rss
+    url: https://yaleclimateconnections.org/feed/
+    category_hints: [Bilim]
+    enabled: true
+    cadence: 6h
+    max_items: 10
+    snippet_limit: 3
+    source_quality: trusted
