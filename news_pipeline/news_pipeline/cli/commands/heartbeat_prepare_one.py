@@ -21,7 +21,7 @@ from news_pipeline.queue.service import QueueService
 from news_pipeline.storage.json_store import JsonStore
 
 MAX_PER_SOURCE = 2
-DEFAULT_MAX_SOURCE_AGE_HOURS = 30
+DEFAULT_MAX_SOURCE_AGE_HOURS = 24
 DEFAULT_PREWARM_BOARD_PATH = "news_pipeline/data/heartbeat/prepared-board.json"
 MIN_HEALTHY_BOARD_ELIGIBLE = 6
 MIN_THIN_SOURCE_TEXT_CHARS = 500
