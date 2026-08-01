@@ -26,13 +26,13 @@
     "quality": "npm run test:newsroom && npm run build"
   },
   "dependencies": {
-    "@astrojs/rss": "^4.0.18",
+    "@astrojs/rss": "^4.0.19",
     "@astrojs/sitemap": "^3.7.3",
-    "astro": "^6.4.6",
-    "firebase": "^12.14.0"
+    "astro": "^7.1.6",
+    "firebase": "^12.17.0"
   },
   "devDependencies": {
-    "@astrojs/check": "^0.9.9",
+    "@astrojs/check": "^0.9.10",
     "typescript": "^6.0.3"
   },
   "overrides": {
