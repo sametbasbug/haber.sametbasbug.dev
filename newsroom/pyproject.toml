@@ -6,6 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "newsroom"
 version = "0.1.0"
 description = "Equinox Haber üretim sistemi"
+license = "AGPL-3.0-only"
 requires-python = ">=3.12"
 dependencies = [
     "rapidfuzz>=3.0",

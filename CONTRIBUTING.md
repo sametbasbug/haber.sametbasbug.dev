@@ -8,7 +8,7 @@ This repository is a working publishing system, so contribution discipline matte
 
 Good contribution areas:
 
-- pipeline documentation and setup clarity;
+- newsroom documentation and setup clarity;
 - provider-free tests for parsing, dedupe, scoring, audits, and queue behavior;
 - safer CLI ergonomics and clearer error messages;
 - RSS/source normalization improvements;
@@ -62,6 +62,6 @@ Prefer small commits with plain titles, for example:
 
 ## Content and license boundary
 
-Code is MIT licensed. Editorial content, generated/published images, media, and brand identity are not part of the MIT grant. See [`CONTENT_LICENSE.md`](CONTENT_LICENSE.md).
+Code is licensed under AGPL-3.0; contributions are accepted under the same licence. Editorial content, generated/published images, media, and brand identity are not part of that grant. See [`CONTENT_LICENSE.md`](CONTENT_LICENSE.md).
 
 If you add fixtures, use synthetic examples or short metadata-only samples. Do not paste full third-party article bodies into the repository.

@@ -2,7 +2,7 @@
 
 [![Quality Checks](https://github.com/sametbasbug/haber.sametbasbug.dev/actions/workflows/quality.yml/badge.svg)](https://github.com/sametbasbug/haber.sametbasbug.dev/actions/workflows/quality.yml)
 [![Deploy](https://github.com/sametbasbug/haber.sametbasbug.dev/actions/workflows/deploy.yml/badge.svg)](https://github.com/sametbasbug/haber.sametbasbug.dev/actions/workflows/deploy.yml)
-[![License: MIT](https://img.shields.io/badge/code%20license-MIT-blue.svg)](LICENSE)
+[![License: AGPL-3.0](https://img.shields.io/badge/code%20license-AGPL--3.0-blue.svg)](LICENSE)
 
 Equinox Haber is an editorial-first, AI-assisted Turkish news publishing system for [`haber.sametbasbug.dev`](https://haber.sametbasbug.dev/).
 
@@ -28,10 +28,16 @@ never reach the network and never call a provider.
 
 This repository is intentionally split into two layers:
 
-- **Source code and workflow tooling** are MIT licensed. This includes the Astro site, Python news pipeline, CLI, audits, queue logic, tests, and build/deploy workflow.
-- **Editorial content, generated/published images, brand identity, and protected media** are not included in the MIT license. See [`CONTENT_LICENSE.md`](CONTENT_LICENSE.md).
+- **Source code and workflow tooling** are licensed under **AGPL-3.0**. This
+  includes the Astro site, the `newsroom` package, its CLI, gates, tests, and
+  the build/deploy workflow.
+- **Editorial content, generated/published images, brand identity, and
+  protected media** are not part of that grant. See
+  [`CONTENT_LICENSE.md`](CONTENT_LICENSE.md).
 
-In short: the system can be studied, reused, forked, and adapted; the published news archive and brand layer should not be treated as open content.
+In short: the system can be studied, reused, forked, and adapted — provided
+changes stay open, including when run as a network service; the published news
+archive and brand layer are not open content.
 
 ## Why this repository exists
 
@@ -101,7 +107,7 @@ When a category tab is active, the side block becomes category-specific, for exa
 The repository has two main parts:
 
 - **Astro publishing surface** — static news pages, category UI, article templates, RSS, Google News sitemap, sitemap index, transparency pages, author/site shell, and GitHub Pages deployment.
-- **Python news pipeline** — RSS collection, normalization, duplicate reduction, editorial queue, scoring/filtering, quality gates, AI hero generation handoff, markdown/frontmatter generation, audits, and controlled publish workflow.
+- **`newsroom`, the Python rail** — RSS collection, mechanical screening, candidate board, response contract, Turkish language measurement, markdown generation, hero normalization with a stock fallback, audits, and a publish step that rolls back rather than leave a half-finished story.
 
 ```text
 haber-project/
@@ -338,6 +344,6 @@ The current maintenance priority is to keep the production surface boringly reli
 
 ## License
 
-- Code and workflow tooling: [`MIT License`](LICENSE)
+- Code and workflow tooling: [`GNU AGPL-3.0`](LICENSE)
 - Content, images, media, and brand layer: [`CONTENT_LICENSE.md`](CONTENT_LICENSE.md)
 - Third-party materials remain subject to their original owners and terms.
