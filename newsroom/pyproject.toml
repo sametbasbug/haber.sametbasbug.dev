@@ -21,7 +21,7 @@ dependencies = [
 newsroom = "newsroom.cli:main"
 
 [project.optional-dependencies]
-test = ["pytest>=8.0"]
+test = ["pytest>=9.1.1"]
 
 [tool.setuptools.packages.find]
 include = ["newsroom*"]
