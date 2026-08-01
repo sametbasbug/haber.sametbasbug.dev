@@ -1,7 +1,7 @@
 ---
 import BaseLayout from './BaseLayout.astro';
 import { getNewsCategoryHref } from '../data/equinoxHaber';
-import { getMainSiteUrl, getNewsArchiveHref, getNewsHomePath, getNewsHomeHref, isNewsSubdomainEnabled } from '../data/newsSite';
+import { getMainSiteUrl, getNewsArchiveHref, getNewsHomePath, getNewsHomeHref, getSourceCodeHref, isNewsSubdomainEnabled } from '../data/newsSite';
 
 interface Props {
 	title: string;
@@ -45,6 +45,7 @@ const navCategories = showCategoryNav ? ['Tümü', ...categories.filter(Boolean)
 const newsHomeHref = getNewsHomeHref();
 const newsArchiveHref = getNewsArchiveHref();
 const isLiveSurface = kicker === 'Canlı akış';
+const sourceCodeHref = getSourceCodeHref();
 const newsHomePath = getNewsHomePath();
 const blogHomeHref = isNewsSubdomainEnabled() ? getMainSiteUrl() : '/';
 ---
@@ -141,6 +142,7 @@ const blogHomeHref = isNewsSubdomainEnabled() ? getMainSiteUrl() : '/';
 							<a href={newsArchiveHref}>Arşiv</a>
 							<a href="/rss.xml">RSS</a>
 							<a href="/news-sitemap.xml">News sitemap</a>
+							<a href={sourceCodeHref} rel="noopener">Kaynak kodu</a>
 							<a href={blogHomeHref}>Ana blog</a>
 						</nav>
 					</div>

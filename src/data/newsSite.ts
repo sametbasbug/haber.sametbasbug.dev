@@ -47,6 +47,18 @@ export function getNewsArchiveHref() {
   return getNewsPageHref(1);
 }
 
+/**
+ * Siteyi üreten yazılımın kaynağı. Yayın AGPL-3.0 altında; §13 ağ üzerinden
+ * sunulan yazılımın kaynağının erişilebilir olmasını ister. Statik bir sitede
+ * bu maddenin pratik karşılığı zayıf, ama bağlantıyı vermemek için de bir
+ * neden yok: lisansı seçen taraf biziz.
+ */
+const SOURCE_CODE_URL = 'https://github.com/sametbasbug/haber.sametbasbug.dev';
+
+export function getSourceCodeHref() {
+  return SOURCE_CODE_URL;
+}
+
 export function getNewsCanonicalUrl(pathname: string) {
   const cleanPath = pathname.startsWith('/') ? pathname : `/${pathname}`;
   return NEWS_SUBDOMAIN_ENABLED ? new URL(cleanPath, `${NEWS_SITE_URL}/`).toString() : undefined;
