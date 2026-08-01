@@ -120,3 +120,43 @@ başarısız olmaz), ama bu görsel dilde bir değişiklik olduğu için tasarı
 
 Hero katmanı sağlayıcıdan bağımsız arayüz arkasına konacak; seçenekler Faz 3'te
 görselleriyle sunulacak.
+
+---
+
+## A1 — Açık: `heroAlt` hiçbir şablonda okunmuyor
+
+**Bulgu: Hemera.** Faz 3, 2026-08-01. **Karar bekliyor.**
+
+Kabul sözleşmesi her yayında `heroAlt` istiyor ve Asteria her seferinde
+üretiyor. Ancak `src/` altındaki hiçbir şablon bu alanı okumuyor; tüm `<img>`
+etiketleri `alt=""` kullanıyor.
+
+Ayrıca hero görseli makale sayfasında gösterilmiyor. Şablonlarda yalnız kart
+listelerinde (`NewsCard`, `FeaturedNewsShell`), `og:image` ve JSON-LD alanlarında
+kullanılıyor. Üretilen şey makale görseli değil, küçük resim ve sosyal önizleme.
+
+Seçenekler: (a) `heroAlt`'ı şablonlara bağlamak, (b) sözleşmeden çıkarmak.
+Görseller gerçekten dekoratifse `alt=""` doğru uygulamadır ve `heroAlt` ölü
+veridir. Bu bir tasarım/erişilebilirlik kararı; K6 hero kararıyla birlikte
+görüşülmeli.
+
+---
+
+## A2 — Açık: canlıda 193 yayının adresi İngilizce
+
+**Bulgu: Hemera.** Faz 3, 2026-08-01. **Karar bekliyor.**
+
+585 yayının 193'ünde (%33) slug, Türkçe başlıktan değil kaynağın İngilizce
+manşetinden türemiş. Nisan'da 148, kapı döneminde hâlâ 45 (%13).
+
+Bazıları yarı çevrilmiş durumda:
+
+    airbnb-co-founder-taps-peter-arnell-as-first-abd-chief-brand-architect
+    a-deal-is-a-deal-von-der-leyen-fires-back-at-trump-over-auto-tariff-threat
+
+Yeni `publish.slugify` slug'ı her zaman Türkçe başlıktan türetir ve
+`tests/test_publish.py` bunu sabitler; ileriye dönük sorun kapanıyor.
+
+Mevcut adresler ayrı bir konu: değiştirmek bağlantıları kırar, bırakmak Türkçe
+bir yayında İngilizce adresler bırakır. Yönlendirmeli bir düzeltme mümkün ama
+kapsamı bu işin dışında.

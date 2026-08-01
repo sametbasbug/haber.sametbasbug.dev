@@ -120,6 +120,11 @@ resmi pozisyon, sonraki adım, zamanlama, etkilenen taraf, ya da açık kalan so
 kalabilir; kaynak başlığının İngilizcesi frontmatter'a olduğu gibi geçmemeli.
 Yasak kalıplardan kaçarken metni robotikleştirme — akıcı Türkçe önceliklidir.
 
+**Etiketler.** Etiket haberin konusunu gösterir: kurum, ülke, şirket, olay ya da
+alan. Sistem, süreç veya araç adı etiket değildir — `pipeline`, `haber`,
+`otomasyon` gibi etiketler okuyucuya hiçbir şey söylemez ve arşivde gürültü
+üretir. İki ile altı arası etiket yeterlidir.
+
 **İç metadata.** Queue notları, denetim etiketleri ve editoryal notlar haber
 gövdesine veya kaynaklar bölümüne asla girmez.
 
