@@ -1,0 +1,323 @@
+# Kaynak havuzu.
+#
+# Bu dosya yalnız NEREDEN toplandığını söyler. Bir kaynağın ne kadar iyi olduğu,
+# ne sıklıkta kullanılabileceği ve hangi konularda tercih edileceği editoryal
+# yargıdır ve POLICY.md icindedir.
+#
+# Eski configteki source_quality (trusted/usable/noisy/restricted) alanı bilerek
+# taşınmadı: kaynak kalitesi sıralaması POLICY.md J1 kapsamındadır. Paywall ise
+# ayrı bir alan gerektirmez; metin çıkarımı başarısız olursa aday zaten elenir.
+#
+# snippet_limit / fetch_snippets de taşınmadı: metin artık toplama sırasında
+# değil, yalnız brief'e giren adaylar için çekilir.
+sources:
+- id: techcrunch
+  name: TechCrunch
+  url: https://techcrunch.com/feed/
+  category_hints:
+  - Teknoloji
+  enabled: true
+  cadence: hourly
+  max_items: 20
+- id: the-verge
+  name: The Verge
+  url: https://www.theverge.com/rss/index.xml
+  category_hints:
+  - Teknoloji
+  enabled: true
+  cadence: 3h
+  max_items: 15
+- id: ars-technica
+  name: Ars Technica
+  url: https://feeds.arstechnica.com/arstechnica/index
+  category_hints:
+  - Teknoloji
+  enabled: true
+  cadence: 3h
+  max_items: 15
+- id: engadget
+  name: Engadget
+  url: https://www.engadget.com/rss.xml
+  category_hints:
+  - Teknoloji
+  enabled: true
+  cadence: 3h
+  max_items: 15
+- id: mit-tech-review
+  name: MIT Technology Review
+  url: https://www.technologyreview.com/feed/
+  category_hints:
+  - Teknoloji
+  enabled: true
+  cadence: 6h
+  max_items: 12
+- id: zdnet
+  name: ZDNET
+  url: https://www.zdnet.com/topic/innovation/rss.xml
+  category_hints:
+  - Teknoloji
+  enabled: true
+  cadence: 6h
+  max_items: 12
+- id: fast-company-tech
+  name: Fast Company Tech
+  url: https://www.fastcompany.com/technology/rss
+  category_hints:
+  - Teknoloji
+  enabled: true
+  cadence: 6h
+  max_items: 12
+- id: wired
+  name: WIRED
+  url: https://www.wired.com/feed/rss
+  category_hints:
+  - Teknoloji
+  enabled: true
+  cadence: 3h
+  max_items: 15
+- id: cnbc-tech
+  name: CNBC Technology
+  url: https://www.cnbc.com/id/19854910/device/rss/rss.html
+  category_hints:
+  - Teknoloji
+  - Ekonomi
+  enabled: true
+  cadence: 3h
+  max_items: 12
+- id: rest-of-world
+  name: Rest of World
+  url: https://restofworld.org/feed/latest/
+  category_hints:
+  - Teknoloji
+  enabled: true
+  cadence: 6h
+  max_items: 12
+- id: semafor
+  name: Semafor
+  url: https://www.semafor.com/rss.xml
+  category_hints:
+  - Teknoloji
+  - Ekonomi
+  - Siyaset
+  enabled: true
+  cadence: 3h
+  max_items: 15
+- id: politico-eu
+  name: Politico Europe
+  url: https://www.politico.eu/feed/
+  category_hints:
+  - Siyaset
+  enabled: true
+  cadence: 3h
+  max_items: 15
+- id: bbc-world
+  name: BBC World
+  url: http://feeds.bbci.co.uk/news/world/rss.xml
+  category_hints:
+  - Siyaset
+  enabled: true
+  cadence: hourly
+  max_items: 20
+- id: guardian-world
+  name: The Guardian World
+  url: https://www.theguardian.com/world/rss
+  category_hints:
+  - Siyaset
+  enabled: true
+  cadence: hourly
+  max_items: 20
+- id: al-jazeera-world
+  name: Al Jazeera World
+  url: https://www.aljazeera.com/xml/rss/all.xml
+  category_hints:
+  - Siyaset
+  enabled: true
+  cadence: hourly
+  max_items: 20
+- id: france24-world
+  name: France 24 World
+  url: https://www.france24.com/en/rss
+  category_hints:
+  - Siyaset
+  enabled: true
+  cadence: hourly
+  max_items: 18
+- id: dw-world
+  name: Deutsche Welle World
+  url: https://rss.dw.com/xml/rss-en-all
+  category_hints:
+  - Siyaset
+  enabled: true
+  cadence: hourly
+  max_items: 20
+- id: npr-world
+  name: NPR World
+  url: https://feeds.npr.org/1004/rss.xml
+  category_hints:
+  - Siyaset
+  enabled: true
+  cadence: 3h
+  max_items: 10
+- id: euronews-world
+  name: Euronews World
+  url: https://www.euronews.com/rss?level=theme&name=news
+  category_hints:
+  - Siyaset
+  enabled: true
+  cadence: 3h
+  max_items: 15
+- id: sky-news-world
+  name: Sky News World
+  url: https://feeds.skynews.com/feeds/rss/world.xml
+  category_hints:
+  - Siyaset
+  enabled: true
+  cadence: 3h
+  max_items: 8
+- id: defense-news-global
+  name: Defense News Global
+  url: https://www.defensenews.com/arc/outboundfeeds/rss/category/global/?outputType=xml
+  category_hints:
+  - Siyaset
+  enabled: true
+  cadence: 6h
+  max_items: 10
+- id: defense-news-air
+  name: Defense News Air
+  url: https://www.defensenews.com/arc/outboundfeeds/rss/category/air/?outputType=xml
+  category_hints:
+  - Siyaset
+  - Teknoloji
+  enabled: true
+  cadence: 6h
+  max_items: 10
+- id: scmp-world
+  name: South China Morning Post World
+  url: https://www.scmp.com/rss/91/feed
+  category_hints:
+  - Siyaset
+  enabled: true
+  cadence: 3h
+  max_items: 15
+- id: scmp-asia
+  name: South China Morning Post Asia
+  url: https://www.scmp.com/rss/4/feed
+  category_hints:
+  - Siyaset
+  - Ekonomi
+  enabled: true
+  cadence: 3h
+  max_items: 15
+- id: marketwatch-top-stories
+  name: MarketWatch Top Stories
+  url: https://feeds.content.dowjones.io/public/rss/mw_topstories
+  category_hints:
+  - Ekonomi
+  enabled: true
+  cadence: 6h
+  max_items: 12
+- id: guardian-business
+  name: The Guardian Business
+  url: https://www.theguardian.com/business/rss
+  category_hints:
+  - Ekonomi
+  enabled: true
+  cadence: 3h
+  max_items: 15
+- id: npr-business
+  name: NPR Business
+  url: https://feeds.npr.org/1006/rss.xml
+  category_hints:
+  - Ekonomi
+  enabled: true
+  cadence: 6h
+  max_items: 10
+- id: dw-business
+  name: Deutsche Welle Business
+  url: https://rss.dw.com/xml/rss-en-bus
+  category_hints:
+  - Ekonomi
+  enabled: true
+  cadence: 6h
+  max_items: 10
+- id: cnbc-world-economy
+  name: CNBC World Economy
+  url: https://www.cnbc.com/id/20910258/device/rss/rss.html
+  category_hints:
+  - Ekonomi
+  enabled: true
+  cadence: 6h
+  max_items: 10
+- id: nasa-news
+  name: NASA News
+  url: https://www.nasa.gov/news-release/feed/
+  category_hints:
+  - Bilim
+  enabled: true
+  cadence: 6h
+  max_items: 6
+- id: sciencedaily-top-science
+  name: ScienceDaily Top Science
+  url: https://www.sciencedaily.com/rss/top/science.xml
+  category_hints:
+  - Bilim
+  enabled: true
+  cadence: 12h
+  max_items: 6
+- id: guardian-science
+  name: The Guardian Science
+  url: https://www.theguardian.com/science/rss
+  category_hints:
+  - Bilim
+  enabled: true
+  cadence: 12h
+  max_items: 6
+- id: new-scientist
+  name: New Scientist
+  url: https://www.newscientist.com/feed/home/
+  category_hints:
+  - Bilim
+  enabled: true
+  cadence: 6h
+  max_items: 10
+- id: physorg
+  name: Phys.org
+  url: https://phys.org/rss-feed/
+  category_hints:
+  - Bilim
+  enabled: true
+  cadence: 6h
+  max_items: 10
+- id: live-science
+  name: Live Science
+  url: https://www.livescience.com/feeds/all
+  category_hints:
+  - Bilim
+  enabled: true
+  cadence: 6h
+  max_items: 10
+- id: space-com
+  name: Space.com
+  url: https://www.space.com/feeds/all
+  category_hints:
+  - Bilim
+  enabled: true
+  cadence: 6h
+  max_items: 8
+- id: carbon-brief
+  name: Carbon Brief
+  url: https://www.carbonbrief.org/feed/
+  category_hints:
+  - Bilim
+  - Ekonomi
+  enabled: true
+  cadence: 6h
+  max_items: 10
+- id: yale-climate-connections
+  name: Yale Climate Connections
+  url: https://yaleclimateconnections.org/feed/
+  category_hints:
+  - Bilim
+  enabled: true
+  cadence: 6h
+  max_items: 10
