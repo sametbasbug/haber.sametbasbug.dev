@@ -10,6 +10,7 @@ const equinoxHaber = defineCollection({
     pubDate: z.coerce.date(),
     updatedDate: z.coerce.date().optional(),
     heroImage: z.string().optional(),
+    heroAlt: z.string().optional(),
     isDraft: z.boolean().optional(),
     tags: z.array(z.string()).optional(),
     author: z.string().optional(),
