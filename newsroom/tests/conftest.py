@@ -13,6 +13,18 @@ CORPUS_DIR = Path(__file__).parent / "corpus"
 TURKISH_LANGUAGE_SOURCES = frozenset({"Diken", "Kısa Dalga", "Medyascope"})
 
 
+@pytest.fixture(autouse=True)
+def isolated_env(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Testleri geliştiricinin `.env` dosyasından yalıtır.
+
+    `.env` varsa gerçek API anahtarı okunur ve "anahtar yokken ne olur"
+    testleri makineden makineye farklı sonuç verir. Anahtar gerektiren testler
+    `monkeypatch.setenv` ile kendi değerini koyar.
+    """
+    monkeypatch.setattr("newsroom.env.load_env", lambda *args, **kwargs: None)
+    monkeypatch.delenv("PEXELS_API_KEY", raising=False)
+
+
 def _load(name: str) -> list[dict]:
     path = CORPUS_DIR / name
     with path.open(encoding="utf-8") as handle:

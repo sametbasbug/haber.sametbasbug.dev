@@ -124,8 +124,13 @@ def _git(*args: str, repo_root: Path | None = None) -> str:
 
 
 def changed_paths(*, repo_root: Path | None = None) -> list[str]:
-    """Çalışma ağacındaki tüm değişiklikler (izlenmeyenler dahil)."""
-    output = _git("status", "--porcelain", repo_root=repo_root)
+    """Çalışma ağacındaki tüm değişiklikler (izlenmeyenler dahil).
+
+    `-uall` şart: `git status --porcelain` varsayılan olarak izlenmeyen bir
+    klasörü tek satırda toplar (`src/`). Kapsam kontrolü dosya düzeyinde
+    çalışmalı, yoksa kapsam içindeki yeni bir dosya kapsam dışı görünebilir.
+    """
+    output = _git("status", "--porcelain", "-uall", repo_root=repo_root)
     return [line[3:].strip() for line in output.splitlines() if line.strip()]
 
 

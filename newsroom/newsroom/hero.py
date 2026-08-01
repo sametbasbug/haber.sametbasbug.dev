@@ -19,12 +19,13 @@ tamamı 400 KB sınırının altında.
 from __future__ import annotations
 
 from dataclasses import dataclass
-import os
 from pathlib import Path
 import shutil
 import subprocess
 
 import httpx
+
+from newsroom.env import get_env
 
 HERO_WIDTH = 1200
 HERO_HEIGHT = 675
@@ -147,12 +148,11 @@ def normalize(source: Path, slug: str, *, hero_dir: Path | None = None) -> HeroR
 
 
 def _pexels_key() -> str | None:
-    """Anahtarı ortamdan okur.
+    """Anahtarı ortamdan ya da `.env` dosyasından okur.
 
-    Anahtar repoya yazılmaz ve komut satırından geçirilmez; `.env` veya ortam
-    değişkeni olarak sağlanır.
+    Anahtar repoya yazılmaz ve komut satırından geçirilmez.
     """
-    return os.environ.get("PEXELS_API_KEY") or None
+    return get_env("PEXELS_API_KEY")
 
 
 def from_pexels(
