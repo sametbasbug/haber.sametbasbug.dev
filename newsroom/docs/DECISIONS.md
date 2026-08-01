@@ -153,40 +153,52 @@ haline gelirse ana sayfa tasarımı değişmeli).
 
 ---
 
-## A1 — Açık: `heroAlt` hiçbir şablonda okunmuyor
+## A1 — Çözüldü: `heroAlt` sosyal önizlemeye bağlandı
 
-**Bulgu: Hemera.** Faz 3, 2026-08-01. **Karar bekliyor.**
+**Karar: Hemera.** Faz 3, 2026-08-01.
 
-Kabul sözleşmesi her yayında `heroAlt` istiyor ve Asteria her seferinde
-üretiyor. Ancak `src/` altındaki hiçbir şablon bu alanı okumuyor; tüm `<img>`
-etiketleri `alt=""` kullanıyor.
+`heroAlt` her yayında zorunluydu ama hiçbir şablon okumuyordu. Nedenine
+bakarken daha büyük bir açık çıktı: `NewsLayout` `ogImage` prop'unu hiç
+geçirmiyordu, dolayısıyla **her haber sosyal medyada jenerik `og-default.jpg`
+ile paylaşılıyordu**, kendi hero'suyla değil. Canlıda doğrulandı.
 
-Ayrıca hero görseli makale sayfasında gösterilmiyor. Şablonlarda yalnız kart
-listelerinde (`NewsCard`, `FeaturedNewsShell`), `og:image` ve JSON-LD alanlarında
-kullanılıyor. Üretilen şey makale görseli değil, küçük resim ve sosyal önizleme.
+Yapılanlar:
 
-Seçenekler: (a) `heroAlt`'ı şablonlara bağlamak, (b) sözleşmeden çıkarmak.
-Görseller gerçekten dekoratifse `alt=""` doğru uygulamadır ve `heroAlt` ölü
-veridir. Bu bir tasarım/erişilebilirlik kararı; K6 hero kararıyla birlikte
-görüşülmeli.
+- Makale sayfası `og:image` ve `twitter:image` alanlarını kendi hero'suna
+  bağlar; `og:image:alt` ve `twitter:image:alt` `heroAlt`'tan gelir, alanı
+  olmayan eski yayınlarda başlığa düşer
+- `heroAlt` `src/content.config.ts` şemasına eklendi — frontmatter'a yazılıyor
+  ama zod tarafından eleniyordu, yani bir şablon istese bile okuyamazdı
+
+Sayfa içindeki `alt=""` değerlerine dokunulmadı ve dokunulmamalı: hem
+`NewsCard` hem `FeaturedNewsShell` görseli `aria-hidden` bir sarmalayıcı içinde,
+komşusundaki başlık linkinin dekoratif tekrarı. Oraya alt metni koymak bir şey
+kazandırmaz, çünkü `aria-hidden` onları erişilebilirlik ağacından zaten
+çıkarıyor.
+
+Sonuç: `heroAlt` kabul sözleşmesinde zorunlu kalır, çünkü artık gerçekten
+kullanılıyor.
 
 ---
 
-## A2 — Açık: canlıda 193 yayının adresi İngilizce
+## A2 — Çözüldü: canlıdaki İngilizce adreslere dokunulmayacak
 
-**Bulgu: Hemera.** Faz 3, 2026-08-01. **Karar bekliyor.**
+**Karar: Samet.** Faz 3, 2026-08-01.
 
 585 yayının 193'ünde (%33) slug, Türkçe başlıktan değil kaynağın İngilizce
-manşetinden türemiş. Nisan'da 148, kapı döneminde hâlâ 45 (%13).
-
-Bazıları yarı çevrilmiş durumda:
+manşetinden türemiş. Nisan'da 148, kapı döneminde 45. Bazıları yarı çevrilmiş:
 
     airbnb-co-founder-taps-peter-arnell-as-first-abd-chief-brand-architect
     a-deal-is-a-deal-von-der-leyen-fires-back-at-trump-over-auto-tariff-threat
 
-Yeni `publish.slugify` slug'ı her zaman Türkçe başlıktan türetir ve
-`tests/test_publish.py` bunu sabitler; ileriye dönük sorun kapanıyor.
+**İleriye dönük sorun kapalı:** `publish.slugify` slug'ı her zaman Türkçe
+başlıktan türetir ve `tests/test_publish.py` bunu sabitler.
 
-Mevcut adresler ayrı bir konu: değiştirmek bağlantıları kırar, bırakmak Türkçe
-bir yayında İngilizce adresler bırakır. Yönlendirmeli bir düzeltme mümkün ama
-kapsamı bu işin dışında.
+Mevcut adresler olduğu gibi bırakılıyor. Belirleyici kısıt: site GitHub Pages
+üzerinde yayınlanıyor ve GitHub Pages sunucu tarafı yönlendirme desteklemiyor.
+Gerçek 301 mümkün değil; yapılabilecek tek şey 193 adet `meta refresh` sayfası,
+ki arama motorları için daha zayıf bir sinyal. Kozmetik tutarlılık karşılığında
+193 zayıf yönlendirme ve bir arama geçmişi geçiş dönemi doğuruyor.
+
+Yayın altyapısı ileride gerçek yönlendirme yapabilen bir yere taşınırsa bu
+karar yeniden değerlendirilebilir.
