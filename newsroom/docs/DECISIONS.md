@@ -129,6 +129,22 @@ Bilinen kısıt: Codex kotası **Nyx ile paylaşılıyor**. Kotanın tükenmesi 
 kullanılamaz hale getirir. Bu yüzden hero üretimi savurgan olmamalı: aynı haber
 için tekrar üretim yapılmaz, üretilen görsel diskte kalır.
 
+Codex, uygulama üzerinden çalışır (CLI değil) ve görseli kendi üretir. Python'un
+işi üretmek değil, üretilen dosyayı yayına uygun hâle getirmektir: 1200×675,
+WebP, kalite 82, metadata temizlenmiş. Bu hedefler diskteki 327 görselden
+ölçüldü — hepsi tam olarak bu biçimde.
+
+Yedek sıralaması (Samet):
+
+1. Slug için görsel zaten varsa yeniden üretilmez
+2. Codex'in ürettiği dosya normalize edilir
+3. Üretim yoksa **Pexels**'ten stok görsel alınır (`PEXELS_API_KEY` ortamdan
+   okunur; anahtar repoya yazılmaz, komut satırından geçirilmez)
+4. O da olmazsa haber hero'suz yayımlanır
+
+Pexels seçimi mekaniktir: yatay, en az 1400 piksel genişlikte, daha önce
+kullanılmamış ilk sonuç. Eski sistemdeki ayarlanmış puanlama tablosu taşınmadı.
+
 Buna bağlı varsayım (Hemera): hero üretimi başarısız olursa **yayın durmaz,
 haber hero'suz çıkar**. Şema `heroImage`'ı opsiyonel tutuyor ve şablonlar
 yokluğunu karşılıyor. Bunun nadir bir istisna olması beklenir; sıklaşırsa
