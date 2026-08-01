@@ -32,7 +32,7 @@
     "firebase": "^12.14.0"
   },
   "devDependencies": {
-    "@astrojs/check": "^0.9.9",
+    "@astrojs/check": "^0.9.10",
     "typescript": "^6.0.3"
   },
   "overrides": {
