@@ -9,19 +9,19 @@ description = "Equinox Haber üretim sistemi"
 license = "AGPL-3.0-only"
 requires-python = ">=3.12"
 dependencies = [
-    "rapidfuzz>=3.0",
-    "pyyaml>=6.0",
-    "feedparser>=6.0",
+    "rapidfuzz>=3.14.5",
+    "pyyaml>=6.0.3",
+    "feedparser>=6.0.13",
     "httpx>=0.27",
     "beautifulsoup4>=4.12",
-    "readability-lxml>=0.8",
+    "readability-lxml>=0.8.4.1",
 ]
 
 [project.scripts]
 newsroom = "newsroom.cli:main"
 
 [project.optional-dependencies]
-test = ["pytest>=8.0"]
+test = ["pytest>=9.1.1"]
 
 [tool.setuptools.packages.find]
 include = ["newsroom*"]

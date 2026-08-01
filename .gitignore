@@ -35,3 +35,6 @@ newsroom/data/
 
 # auto-generated news drafts
 src/content/equinoxHaber/_drafts/
+
+# Claude Code yerel yardımcı dosyaları
+.claude/
