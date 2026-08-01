@@ -1,16 +1,21 @@
 ---
 import NewsCard from './NewsCard.astro';
 import { getNewsPageHref, type EquinoxHaberEntry } from '../../data/equinoxHaber';
+import { getNewsArchiveHref } from '../../data/newsSite';
 
 interface Props {
 	entries: EquinoxHaberEntry[];
 	currentPage: number;
 	totalPages: number;
+	/** Arşiv sayfalarında akışın altında ayrıca arşiv bağlantısı gerekmez;
+	 * numaralı gezinim zaten hemen altında duruyor. */
+	showArchiveLink?: boolean;
 }
 
-const { entries, currentPage, totalPages } = Astro.props;
+const { entries, currentPage, totalPages, showArchiveLink = true } = Astro.props;
 const nextPage = currentPage < totalPages ? currentPage + 1 : null;
 const nextPageHref = nextPage ? getNewsPageHref(nextPage) : '';
+const archiveHref = getNewsArchiveHref();
 ---
 
 <section class="news-stream" data-news-stream data-current-page={currentPage} data-total-pages={totalPages} data-next-page={nextPageHref}>
@@ -23,6 +28,9 @@ const nextPageHref = nextPage ? getNewsPageHref(nextPage) : '';
 			<>
 				<p class="news-footer-note">Aşağı indikçe yeni paketler yüklenecek. İstersen elle de devam edebilirsin.</p>
 				<a class="news-load-more" data-news-next-link href={nextPageHref}>Sonraki haber paketini aç</a>
+				{showArchiveLink && (
+					<a class="news-archive-link" href={archiveHref}>Ya da arşivin tamamına göz at</a>
+				)}
 				<div class="news-sentinel" data-news-sentinel aria-hidden="true"></div>
 			</>
 		) : (
@@ -151,6 +159,15 @@ const nextPageHref = nextPage ? getNewsPageHref(nextPage) : '';
 	}
 	.news-load-more:hover {
 		border-color: var(--news-accent);
+		color: var(--news-accent);
+	}
+	.news-archive-link {
+		color: var(--news-muted);
+		font-size: 0.9rem;
+		text-decoration: underline;
+		text-underline-offset: 0.25em;
+	}
+	.news-archive-link:hover {
 		color: var(--news-accent);
 	}
 	.news-load-more.is-disabled {

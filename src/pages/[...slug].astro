@@ -117,6 +117,8 @@ const newsStructuredData = [newsArticleSchema, breadcrumbSchema];
 	activeCategory={normalizeNewsCategory(entry.data.category) ?? 'Tümü'}
 	hidePageHero={true}
 	categoryNavForceReload={true}
+	ogImage={entry.data.heroImage}
+	ogImageAlt={entry.data.heroAlt}
 >
 	<article class="news-article">
 		<div class="article-main">

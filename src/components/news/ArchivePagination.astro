@@ -1,0 +1,134 @@
+---
+import { getNewsPageHref } from '../../data/newsSite';
+
+interface Props {
+	currentPage: number;
+	totalPages: number;
+}
+
+const { currentPage, totalPages } = Astro.props;
+
+/**
+ * Sonsuz kaydırma arşivi gezilebilir yapmıyor: 29. sayfadaki bir habere ulaşmak
+ * için 28 paket yüklemek gerekiyordu. Numaralı gezinim sıçramayı mümkün kılar
+ * ve tarayıcıya da bir kaydırma noktası bırakır.
+ *
+ * Kenarlar her zaman görünür (ilk ve son sayfa), ortada bulunulan sayfanın iki
+ * komşusu. Arada boşluk kalırsa üç nokta konur — bağlantı değil, işaret.
+ */
+const WINDOW = 2;
+
+const numbers: (number | 'gap')[] = [];
+let previous = 0;
+
+for (let page = 1; page <= totalPages; page += 1) {
+	const isEdge = page === 1 || page === totalPages;
+	const isNear = Math.abs(page - currentPage) <= WINDOW;
+	if (!isEdge && !isNear) continue;
+	if (previous && page - previous > 1) numbers.push('gap');
+	numbers.push(page);
+	previous = page;
+}
+
+const previousHref = currentPage > 1 ? getNewsPageHref(currentPage - 1) : '';
+const nextHref = currentPage < totalPages ? getNewsPageHref(currentPage + 1) : '';
+---
+
+<nav class="archive-pagination" aria-label="Arşiv sayfaları">
+	{previousHref ? (
+		<a class="archive-step" href={previousHref} rel="prev">‹ Önceki</a>
+	) : (
+		<span class="archive-step is-disabled" aria-hidden="true">‹ Önceki</span>
+	)}
+
+	<ol class="archive-numbers">
+		{numbers.map((item) =>
+			item === 'gap' ? (
+				<li class="archive-gap" aria-hidden="true">…</li>
+			) : (
+				<li>
+					<a
+						class:list={['archive-number', { 'is-current': item === currentPage }]}
+						href={getNewsPageHref(item)}
+						aria-current={item === currentPage ? 'page' : undefined}
+					>
+						{item}
+					</a>
+				</li>
+			)
+		)}
+	</ol>
+
+	{nextHref ? (
+		<a class="archive-step" href={nextHref} rel="next">Sonraki ›</a>
+	) : (
+		<span class="archive-step is-disabled" aria-hidden="true">Sonraki ›</span>
+	)}
+</nav>
+
+<style>
+	.archive-pagination {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: center;
+		gap: 0.4rem 0.6rem;
+		padding: 1.6rem 0 2.4rem;
+	}
+	.archive-numbers {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: center;
+		gap: 0.3rem;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+	.archive-number,
+	.archive-step {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		border-radius: 999px;
+		border: 1px solid color-mix(in srgb, var(--news-border) 80%, transparent);
+		background: color-mix(in srgb, var(--news-panel) 88%, transparent);
+		color: var(--news-text);
+		text-decoration: none;
+		font-weight: 600;
+		font-variant-numeric: tabular-nums;
+	}
+	.archive-number {
+		min-width: 2.6rem;
+		padding: 0.55rem 0.5rem;
+	}
+	.archive-step {
+		padding: 0.55rem 0.9rem;
+	}
+	.archive-number:hover,
+	.archive-step:hover {
+		border-color: var(--news-accent);
+		color: var(--news-accent);
+	}
+	.archive-number.is-current {
+		border-color: var(--news-accent);
+		background: var(--news-accent);
+		color: var(--news-bg);
+	}
+	.archive-step.is-disabled {
+		opacity: 0.4;
+	}
+	.archive-gap {
+		padding: 0 0.2rem;
+		color: var(--news-muted);
+	}
+	@media (max-width: 520px) {
+		.archive-step {
+			order: 1;
+		}
+		.archive-numbers {
+			order: 0;
+			width: 100%;
+		}
+	}
+</style>

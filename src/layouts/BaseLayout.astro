@@ -5,7 +5,11 @@ interface Props {
 	title: string;
 	description: string;
 	ogImage?: string;
+	ogImageAlt?: string;
 	noindex?: boolean;
+	/** Sayfanın kendi yolu yerine kanonik sayılacak yol. Aynı içeriği iki
+	 * adresten sunan sayfalar (arşivin ilk sayfası ile ana sayfa) için. */
+	canonicalPath?: string;
 	type?: string;
 	shellLayout?: boolean;
 	hideHeader?: boolean;
@@ -15,7 +19,9 @@ const {
 	title,
 	description,
 	ogImage,
+	ogImageAlt,
 	noindex = false,
+	canonicalPath,
 	type = 'website',
 	shellLayout = false,
 	hideHeader = false
@@ -26,8 +32,13 @@ const finalOgImage = ogImage && typeof ogImage === 'string' && ogImage.trim() !=
 	? ogImage
 	: '/og-default.jpg';
 
-const canonicalURL = new URL(Astro.url.pathname, Astro.site).toString();
+const canonicalURL = new URL(canonicalPath || Astro.url.pathname, Astro.site).toString();
 const ogImageURL = new URL(finalOgImage, Astro.site).toString();
+// Paylaşım kartlarında görselin alternatif metni. Sayfa içindeki hero
+// görselleri aria-hidden bir sarmalayıcıda durduğu ve komşu başlık linkinin
+// dekoratif tekrarı olduğu için orada alt="" doğrudur; sosyal kartta ise
+// görselin yanında okunacak başka bir metin yoktur.
+const ogImageAltText = ogImageAlt && ogImageAlt.trim() !== '' ? ogImageAlt.trim() : title;
 const rssFeedURL = new URL('/rss.xml', Astro.site).toString();
 const mainSiteURL = getMainSiteUrl();
 const publicationName = 'Equinox Haber';
@@ -75,6 +86,7 @@ const fullTitle = title === publicationName ? publicationName : `${publicationNa
 		<meta property="og:title" content={fullTitle} />
 		<meta property="og:description" content={description} />
 		<meta property="og:image" content={ogImageURL} />
+		<meta property="og:image:alt" content={ogImageAltText} />
 		<meta property="og:locale" content="tr_TR" />
 		<meta property="og:site_name" content={publicationName} />
 
@@ -84,6 +96,7 @@ const fullTitle = title === publicationName ? publicationName : `${publicationNa
 		<meta name="twitter:title" content={fullTitle} />
 		<meta name="twitter:description" content={description} />
 		<meta name="twitter:image" content={ogImageURL} />
+		<meta name="twitter:image:alt" content={ogImageAltText} />
 
 		<link rel="preconnect" href="https://fonts.googleapis.com">
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

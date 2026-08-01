@@ -1,7 +1,7 @@
 ---
 import BaseLayout from './BaseLayout.astro';
 import { getNewsCategoryHref } from '../data/equinoxHaber';
-import { getMainSiteUrl, getNewsHomePath, getNewsHomeHref, isNewsSubdomainEnabled } from '../data/newsSite';
+import { getMainSiteUrl, getNewsArchiveHref, getNewsHomePath, getNewsHomeHref, getSourceCodeHref, isNewsSubdomainEnabled } from '../data/newsSite';
 
 interface Props {
 	title: string;
@@ -15,6 +15,12 @@ interface Props {
 	showCategoryNav?: boolean;
 	showFooter?: boolean;
 	noindex?: boolean;
+	canonicalPath?: string;
+	/** Başlığın üstündeki küçük etiket. Yanıp sönen nokta yalnız varsayılan
+	 * "Canlı akış" değerinde gösterilir; arşiv canlı bir yüzey değildir. */
+	kicker?: string;
+	ogImage?: string;
+	ogImageAlt?: string;
 }
 
 const {
@@ -29,15 +35,22 @@ const {
 	showCategoryNav = true,
 	showFooter = true,
 	noindex = false,
+	canonicalPath,
+	kicker = 'Canlı akış',
+	ogImage,
+	ogImageAlt,
 } = Astro.props;
 
 const navCategories = showCategoryNav ? ['Tümü', ...categories.filter(Boolean)] : [];
 const newsHomeHref = getNewsHomeHref();
+const newsArchiveHref = getNewsArchiveHref();
+const isLiveSurface = kicker === 'Canlı akış';
+const sourceCodeHref = getSourceCodeHref();
 const newsHomePath = getNewsHomePath();
 const blogHomeHref = isNewsSubdomainEnabled() ? getMainSiteUrl() : '/';
 ---
 
-<BaseLayout title={title} description={description} hideHeader={true} noindex={noindex}>
+<BaseLayout title={title} description={description} hideHeader={true} noindex={noindex} canonicalPath={canonicalPath} ogImage={ogImage} ogImageAlt={ogImageAlt}>
 	<section class="news-app-shell" data-news-home-path={newsHomePath}>
 		<header class="news-masthead">
 			<div class="news-masthead-wrap">
@@ -89,7 +102,10 @@ const blogHomeHref = isNewsSubdomainEnabled() ? getMainSiteUrl() : '/';
 		{!hidePageHero && (
 			<section class="news-hero">
 				<div class="news-hero-copy">
-					<p class="news-kicker"><span class="news-live-dot" aria-hidden="true"></span>Canlı akış</p>
+					<p class="news-kicker">
+						{isLiveSurface && <span class="news-live-dot" aria-hidden="true"></span>}
+						{kicker}
+					</p>
 					{pageTitle && <h1>{pageTitle}</h1>}
 					{pageDescription && <p class="news-summary">{pageDescription}</p>}
 				</div>
@@ -123,8 +139,10 @@ const blogHomeHref = isNewsSubdomainEnabled() ? getMainSiteUrl() : '/';
 						</nav>
 						<nav class="news-footer-group" aria-label="Akış ve ekosistem bağlantıları">
 							<h2>Akış</h2>
+							<a href={newsArchiveHref}>Arşiv</a>
 							<a href="/rss.xml">RSS</a>
 							<a href="/news-sitemap.xml">News sitemap</a>
+							<a href={sourceCodeHref} rel="noopener">Kaynak kodu</a>
 							<a href={blogHomeHref}>Ana blog</a>
 						</nav>
 					</div>

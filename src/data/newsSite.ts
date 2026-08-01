@@ -26,12 +26,37 @@ export function getNewsArticleHref(slug: string) {
   return `/${slug}/`;
 }
 
-export function getNewsPageHref(pageNumber: number) {
+/**
+ * Ana sayfadaki sonsuz kaydırmanın bir sonraki paketi. Birinci sayfa ana
+ * sayfadır; akış oradan başlar.
+ */
+export function getNewsStreamPageHref(pageNumber: number) {
   return pageNumber <= 1 ? '/' : `/sayfa/${pageNumber}/`;
 }
 
-export function getNewsPanelHref(pageNumber: number = 1) {
-  return pageNumber <= 1 ? '/icerik-paneli/' : `/icerik-paneli/sayfa/${pageNumber}/`;
+/**
+ * Arşiv sayfası. Ana sayfadan farklı olarak birinci sayfanın da kendi adresi
+ * vardır; "Arşiv" bağlantısının düşeceği yer orasıdır. Kanonik adresi ana
+ * sayfaya işaret eder, çünkü aynı haberleri taşır.
+ */
+export function getNewsPageHref(pageNumber: number) {
+  return `/sayfa/${Math.max(1, pageNumber)}/`;
+}
+
+export function getNewsArchiveHref() {
+  return getNewsPageHref(1);
+}
+
+/**
+ * Siteyi üreten yazılımın kaynağı. Yayın AGPL-3.0 altında; §13 ağ üzerinden
+ * sunulan yazılımın kaynağının erişilebilir olmasını ister. Statik bir sitede
+ * bu maddenin pratik karşılığı zayıf, ama bağlantıyı vermemek için de bir
+ * neden yok: lisansı seçen taraf biziz.
+ */
+const SOURCE_CODE_URL = 'https://github.com/sametbasbug/haber.sametbasbug.dev';
+
+export function getSourceCodeHref() {
+  return SOURCE_CODE_URL;
 }
 
 export function getNewsCanonicalUrl(pathname: string) {

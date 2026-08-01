@@ -31,8 +31,8 @@ Do not commit real tokens, API keys, cookies, private feed URLs, local queue dat
 Ignored local/runtime paths include:
 
 - `.env` and `.env.production`;
-- `news_pipeline/.venv/`;
-- `news_pipeline/data/*` except placeholder/docs files;
+- `newsroom/.venv/`;
+- `newsroom/data/`;
 - `src/content/equinoxHaber/_drafts/`.
 
 If a new provider or deployment integration needs more variables, document the variable name and safe purpose here, not the secret value.
