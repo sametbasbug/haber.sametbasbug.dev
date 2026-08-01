@@ -109,17 +109,31 @@ karardır, Samet'e bırakıldı.
 
 ---
 
-## K6 — Hero görsel sağlayıcısı Faz 3'e ertelendi
+## K6 — Hero görselleri Codex üretir
 
-**Karar: Samet.** Faz 0, 2026-08-01.
+**Karar: Samet.** Faz 3, 2026-08-01. `openclaw` CLI kalkıyor, yerine Codex.
 
-`openclaw` CLI kalmayacak. Yerine ne geleceği belirsiz; Codex'in kendi görsel
-üretimi kotadan yiyor. Hemera'nın ön önerisi kategori/başlığa göre yerelde
-deterministik üretilen kapak görseli (marjinal maliyet sıfır, kota yok, asla
-başarısız olmaz), ama bu görsel dilde bir değişiklik olduğu için tasarım kararı.
+Değerlendirilip elenen yollar:
 
-Hero katmanı sağlayıcıdan bağımsız arayüz arkasına konacak; seçenekler Faz 3'te
-görselleriyle sunulacak.
+- **Kaynak haberin görselini kullanmak.** Elendi: haber görsellerinin neredeyse
+  tamamı ajans fotoğrafı ve bir görselin telif durumu görsele bakarak
+  belirlenemez. Doğrulanamayan bir şeyi doğrulanmış gibi kullanan kapı, kapı
+  değildir. Yasal riske girmenin karşılığı yok.
+- **Yerelde deterministik kapak görseli.** Elendi: hero ana sayfada 607×301
+  boyutunda ve üstünde başlık yazılı olarak gösteriliyor; şablondan üretilmiş
+  kapaklar hem zayıf kalır hem de aynı anda on tanesi döndüğü için tekdüzeleşir.
+- **Yerelde SDXL çalıştırmak.** Şimdilik elendi: makine kaldırıyor (M4, 16 GB)
+  ama kurulum ve bakım yükü, bu aşamada çözdüğünden fazla iş çıkarıyor.
+
+Bilinen kısıt: Codex kotası **Nyx ile paylaşılıyor**. Kotanın tükenmesi Nyx'i de
+kullanılamaz hale getirir. Bu yüzden hero üretimi savurgan olmamalı: aynı haber
+için tekrar üretim yapılmaz, üretilen görsel diskte kalır.
+
+Buna bağlı varsayım (Hemera): hero üretimi başarısız olursa **yayın durmaz,
+haber hero'suz çıkar**. Şema `heroImage`'ı opsiyonel tutuyor ve şablonlar
+yokluğunu karşılıyor. Bunun nadir bir istisna olması beklenir; sıklaşırsa
+tasarım tarafında ayrıca konuşulmalıdır (Samet'in notu: hero'suz yayın norm
+haline gelirse ana sayfa tasarımı değişmeli).
 
 ---
 
