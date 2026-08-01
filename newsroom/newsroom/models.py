@@ -26,9 +26,13 @@ class Candidate:
     published_at: datetime | None = None
     category_hints: list[str] = field(default_factory=list)
 
-    # Kaynak sayfasından çıkarılan tam metin. Toplama aşamasında doldurulur;
-    # brief'e giren adaylar için zorunludur.
+    # Kaynak sayfasından çıkarılan tam metin. Brief'e girecek adaylar için
+    # elemeden sonra doldurulur.
     article_text: str = ""
+
+    # Adayın depoya ilk girdiği an. Yayın tarihi olmayan kayıtların eskimesi
+    # buradan ölçülür.
+    first_seen: datetime | None = None
 
     @classmethod
     def from_normalized(cls, record: dict) -> Candidate:

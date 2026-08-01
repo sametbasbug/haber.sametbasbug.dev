@@ -16,6 +16,9 @@ dependencies = [
     "readability-lxml>=0.8",
 ]
 
+[project.scripts]
+newsroom = "newsroom.cli:main"
+
 [project.optional-dependencies]
 test = ["pytest>=8.0"]
 

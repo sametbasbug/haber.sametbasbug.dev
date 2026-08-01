@@ -24,7 +24,7 @@ import json
 from pathlib import Path
 import time
 
-from newsroom import hero
+from newsroom import hero, store
 from newsroom.accept import AcceptError, validate
 from newsroom.brief import attach_text, build_brief, select_board
 from newsroom.ingest import collect
@@ -106,6 +106,7 @@ def prepare(
     now: datetime | None = None,
     state_path: Path | None = None,
     brief_path: Path | None = None,
+    candidates_path: Path | None = None,
 ) -> dict:
     """Toplar, eler, panoyu kurar ve brief'i diske yazar."""
     moment = now or datetime.now(UTC)
@@ -113,9 +114,14 @@ def prepare(
 
     sources = load_sources()
     due = due_sources(sources, state.last_fetched, now=time.time())
-    candidates, feed_errors = collect(due)
+    fresh, feed_errors = collect(due)
     for source in due:
         state.last_fetched[source.id] = time.time()
+
+    # Toplama ritmi ile seçim ritmi ayrıdır: bu çevrimde çekilmeyen bir
+    # kaynağın adayları da panoya girebilmeli.
+    candidates = store.merge(store.load(candidates_path), fresh, now=moment)
+    store.save(candidates, candidates_path)
 
     kept, blocked = eligible(candidates, now=moment)
     live = load_live()
@@ -143,6 +149,8 @@ def prepare(
         {"source": error.source_id, "message": error.message} for error in feed_errors
     ]
     brief["pipeline"]["textExtractionFailures"] = len(dropped)
+    brief["pipeline"]["storedCandidates"] = len(candidates)
+    brief["pipeline"]["freshlyCollected"] = len(fresh)
 
     state.last_cycle_at = moment.isoformat()
     state.save(state_path)
