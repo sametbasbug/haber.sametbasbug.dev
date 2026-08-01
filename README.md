@@ -15,16 +15,14 @@ The reusable part is the workflow. The live output is a global-focused Turkish n
 If you want to inspect the reusable workflow layer without touching providers or production data:
 
 ```bash
-python3 -m venv news_pipeline/.venv
-source news_pipeline/.venv/bin/activate
-pip install -e "news_pipeline[test]"
+python3 -m venv newsroom/.venv
+newsroom/.venv/bin/pip install -e "newsroom[test]"
 npm install
 npm run quality
-news-pipeline demo seed --force
-news-pipeline demo walkthrough
 ```
 
-The demo path uses synthetic data and is intended for provider-free review.
+`npm run quality` runs the newsroom test suite and an Astro build. The tests
+never reach the network and never call a provider.
 
 ## What is open source here?
 
@@ -114,25 +112,43 @@ haber-project/
     layouts/                  # News/article/info page shells
     pages/                    # Astro routes, RSS, news sitemap
   public/images/generated/    # Generated hero images
-  news_pipeline/
-    news_pipeline/
-      collectors/             # RSS/source ingestion
-      normalize/              # Raw item cleanup
-      dedupe/                 # Similarity and duplicate checks
-      editorial/              # Filtering, scoring, autonomy gates
-      queue/                  # Editorial queue state
-      publish/                # Markdown/frontmatter/body/hero helpers
-      cli/                    # Typer CLI commands and audits
-    data/                     # Runtime data, ignored except placeholders/docs
+  newsroom/
+    POLICY.md                 # The single editorial source of truth
+    newsroom/
+      ingest.py               # RSS collection
+      screen.py               # Mechanical eligibility gates
+      brief.py                # Candidate board for the editorial agent
+      accept.py               # Response contract validation
+      lang.py                 # Turkish/untranslated measurement
+      publish.py              # Markdown rendering and slugs
+      hero.py                 # Hero normalization and stock fallback
+      cycle.py                # prepare / publish orchestration
+    docs/                     # Runbook and decision log
+    tests/                    # Suite plus the corpus it measures against
+    data/                     # Runtime state, git-ignored
 ```
 
 ## Editorial model
 
 The project is **editorial-first**.
 
-Python is not the editor. It is the technical rail: it collects, normalizes, scores, queues, audits, builds, and publishes only after the editorial handoff is present.
+Python is not the editor. The split is deliberate and it is the one rule the
+whole system is built from:
 
-Asteria AI is the narrow editorial agent used in this project. Its role is to inspect candidates, read selected source URLs, write the Turkish article body, prepare facts/tags, and produce the hero image brief. The pipeline then validates and carries that work into the Astro site.
+> **Python does only what can be verified. Judgement lives in `POLICY.md`.**
+
+If a rule is decidable — is this text Turkish, is the source older than 24
+hours, does this slug already exist, does the hero file actually exist — it
+lives in code and is not negotiable. If a rule needs judgement — is this story
+worth publishing, which source is more trustworthy, is this paragraph carrying
+its weight — it lives in `newsroom/POLICY.md` and the editorial agent applies
+it. No rule is written in both places.
+
+Asteria AI is the narrow editorial agent. Each cycle it receives one brief —
+candidates with their extracted source text, plus the distribution of recent
+publications — reads the policy from disk, and returns a JSON response. The
+rail validates that response against a contract and carries it into the Astro
+site, or rejects it and publishes nothing.
 
 Current category set:
 
@@ -145,64 +161,63 @@ Turkey-related stories are included only when the global context is strong enoug
 
 ## Core workflow
 
+One cycle is three steps.
+
 ```bash
-# Collect source items
-news-pipeline collect
+# 1. Collect, screen, and build the candidate board
+newsroom/.venv/bin/newsroom prepare
 
-# Normalize raw items and update the queue
-news-pipeline process
+# 2. The editorial agent reads POLICY.md and the brief, then writes a response
+#    (no command here — this step is the editorial work)
 
-# Prepare a compact editorial board for Asteria
-news-pipeline heartbeat prepare-one --json
-
-# Asteria applies the editorial handoff
-news-pipeline queue polish <QUEUE_ID> \
-  --title 'Türkçe başlık' \
-  --description 'Türkçe açıklama' \
-  --category 'Teknoloji' \
-  --facts-json '["...", "..."]' \
-  --body 'Haber gövdesi...' \
-  --hero-prompt 'AI hero brief...' \
-  --hero-alt 'Türkçe alt metin' \
-  --tags-json '["haber", "teknoloji"]' \
-  --json
-
-# Publish through the technical rail
-news-pipeline heartbeat publish-one --execute --no-collect --json
-
-# Local quality gates
-news-pipeline audit-content
-news-pipeline audit-images
-npm run build
+# 3. Validate the response and carry it into the site
+newsroom/.venv/bin/newsroom publish --response response.json
 ```
 
-The direct `publish`/`autopublish` path is intentionally disabled for production use. Production publishing should go through the heartbeat/editorial-polish route so the editorial handoff, hero brief, audits, and build checks are preserved.
+`prepare` writes the full brief to `newsroom/data/current-brief.json`. Extracted
+source text travels inside the brief, so the editorial step does not need to
+fetch article pages itself.
+
+`publish` validates against the acceptance contract, renders the markdown,
+resolves the hero, runs the audits and the Astro build, and commits a narrow
+path set. **It never pushes.** If any gate fails, the written file and any
+generated image are removed and nothing is committed — a cycle either lands
+completely or leaves no trace.
+
+Selecting nothing is a valid outcome, not a failure (`POLICY.md` §7).
 
 ## Quality and safety gates
 
-The pipeline is designed to reduce common publishing failure modes:
+Every gate here is mechanical. None of them encodes an editorial preference —
+that separation is the point.
 
-- source age checks;
-- URL/title/description/topic duplicate guards;
-- event-core duplicate checks for same-event/different-angle coverage;
-- headline-board diversity controls that down-rank repeated sources, companies, topic families, and non-core hot categories without hiding core global news categories (`Siyaset`, `Ekonomi`) from Asteria’s candidate view;
-- raw editorial score floor for publish candidates; board/display score is not a bypass;
-- manual-review separation for sensitive legal/political/personal-risk stories;
-- rejected/archive tombstone handling so terminal queue states are not silently resurrected;
-- explicit retry flags for duplicate-gate resets and rejected-item approval;
-- required Asteria editorial polish before production publish;
-- Turkish title/body/fact checks;
-- minimum body-depth gate without encouraging overlong articles;
-- required hero prompt and alt text;
-- AI hero generation with WebP normalization;
-- generated local hero guard: `.webp`, `1200×675`, max `400 KB`;
-- RSS media enclosures with absolute URLs;
-- Google News sitemap for the recent publication window;
-- image/content audits before build;
-- Astro build before deploy;
-- narrow commit/push scope for published items.
+Before a candidate reaches the board:
 
-CI runs provider-free checks only: Python compile, pipeline tests with `pytest`, deprecated CLI guardrails, pipeline audits, and Astro build. It does not call external source collection, AI providers, or production publish commands.
+- source age, with future-dating and undated feeds both rejected;
+- liveblog and sponsored-path formats;
+- duplicate URL or near-duplicate headline against everything published;
+- paywalled pages, detected by how little text they yield rather than by a
+  host list.
+
+Before a response is published:
+
+- schema and contract completeness;
+- Turkish body measurement by **density**, not word count, so length does not
+  bias the result; proper-noun spans are excluded from the English signal;
+- untranslated-headline detection against the source title;
+- body-depth floor as a truncation guard, and a paragraph-count range;
+- leaked internal notes and audit markers;
+- frontmatter validity, sources section, category;
+- hero file existence and `1200×675` WebP under 400 KB;
+- working-tree scope: only that story's files may have changed;
+- Astro build.
+
+Thresholds are not guesses. They were chosen against a corpus of 585 published
+articles and 976 source texts kept in `newsroom/tests/corpus`, and the suite
+replays them on every run.
+
+CI is provider-free: newsroom tests and an Astro build. It performs no
+collection, calls no AI provider, and runs no publish command.
 
 ## Feeds and Google News readiness
 
@@ -224,9 +239,32 @@ Generated hero images are intentionally local and normalized:
 - default quality target: `82`
 - audit maximum: `400 KB`
 
-The image generator writes to a raw temporary output first; the pipeline then resizes, crops, strips metadata, and writes the final WebP. This prevents provider output dimensions from silently bloating the site.
+The generator writes a raw file wherever it likes; the rail then resizes, crops
+to centre, strips metadata, and writes the final WebP. Provider output
+dimensions never reach the site directly.
 
-Source/RSS/OG images from publishers are intentionally blocked for Equinox Haber hero use because they create licensing and editorial reuse risk.
+Resolution order, in full:
+
+1. an image already exists for this slug — never regenerated;
+2. a generated file was supplied — normalized;
+3. neither — a stock photo is fetched as a fallback;
+4. none of the above — the story publishes without a hero, on purpose.
+
+Step four is deliberate. A missing image does not stop a story.
+
+Two constraints worth stating plainly:
+
+**Publisher images are not reused.** Source, RSS, and OG images are blocked
+outright. A photograph's licence cannot be determined by looking at it, and a
+gate that treats an unverifiable thing as verified is not a gate.
+
+**Stock searches look for the subject, not the event.** A stock archive has a
+photograph of a fire in it, but it is not the fire in the story. A frame that
+reads as a news scene shows the reader something that did not happen — the same
+objection that rules out reusing the publisher's image. The search term asks for
+the fact, the setting, the object, the geography: the field, not the moment.
+When a story runs on stock, its alt text is omitted rather than reused, because
+the text was written for an image that was never made.
 
 ## Installation
 
@@ -237,11 +275,13 @@ Requirements:
 - npm
 
 ```bash
-python3 -m venv news_pipeline/.venv
-source news_pipeline/.venv/bin/activate
-pip install -e "news_pipeline[test]"
+python3 -m venv newsroom/.venv
+newsroom/.venv/bin/pip install -e "newsroom[test]"
 npm install
 ```
+
+ImageMagick (`magick`) is needed for hero normalization. Tests that require it
+skip themselves when it is absent.
 
 ## Development commands
 
@@ -255,33 +295,27 @@ npm run build
 # Run provider-free local quality checks
 npm run quality
 
-# Compile Python pipeline
-python -m compileall news_pipeline/news_pipeline
+# Run the newsroom test suite
+newsroom/.venv/bin/python -m pytest newsroom/tests
 
-# Run pipeline unit tests
-news_pipeline/.venv/bin/python -m pytest news_pipeline/tests
-
-# Explore the synthetic demo dataset (dry-run walkthrough; no providers/push)
-news-pipeline demo seed --force
-news-pipeline demo walkthrough
+# Show cycle state between runs
+newsroom/.venv/bin/newsroom status
 ```
 
 Useful npm wrappers:
 
 ```bash
 npm run news:prepare
-npm run news:publish-one
-npm run news:audit
-npm run test:pipeline
+npm run news:status
+npm run test:newsroom
 ```
 
 ## Documentation
 
-- [`news_pipeline/README.md`](news_pipeline/README.md) — pipeline CLI and workflow details
-- [`news_pipeline/OPERATIONS.md`](news_pipeline/OPERATIONS.md) — operational runbook
-- [`news_pipeline/HEARTBEAT_RUNBOOK.md`](news_pipeline/HEARTBEAT_RUNBOOK.md) — heartbeat cycle notes
-- [`news_pipeline/AUTONOMOUS_PUBLISH_POLICY.md`](news_pipeline/AUTONOMOUS_PUBLISH_POLICY.md) — autonomy boundaries
-- [`news_pipeline/news_pipeline/demo/synthetic/README.md`](news_pipeline/news_pipeline/demo/synthetic/README.md) — tiny provider-free demo dataset
+- [`newsroom/POLICY.md`](newsroom/POLICY.md) — the editorial policy itself, in full
+- [`newsroom/docs/RUNBOOK.md`](newsroom/docs/RUNBOOK.md) — operating the cycle
+- [`newsroom/docs/DECISIONS.md`](newsroom/docs/DECISIONS.md) — decisions the code cannot explain, with their reasoning
+- [`newsroom/docs/GATE_INVENTORY.md`](newsroom/docs/GATE_INVENTORY.md) — how each gate of the previous system was classified: mechanical, judgement, or dropped
 - [`docs/environment.md`](docs/environment.md) — documented public/optional environment variables
 - [`CONTRIBUTING.md`](CONTRIBUTING.md) — contribution guidelines
 - [`ROADMAP.md`](ROADMAP.md) — maintainability roadmap
@@ -294,11 +328,13 @@ This is a working public project, not a polished framework package. It powers th
 The current maintenance priority is to keep the production surface boringly reliable:
 
 - keep the category tabs, feeds, sitemap, and transparency pages current;
-- preserve the Asteria editorial handoff instead of sliding into blind autopublish;
+- keep judgement in `POLICY.md` and verification in Python, and never write the
+  same rule in both;
 - keep generated images small and locally auditable;
 - maintain provider-free CI checks;
-- document changes as the site and pipeline evolve;
-- keep this README as the top-level map whenever routes, feeds, pipeline gates, or release policy change.
+- record decisions the code cannot explain in `newsroom/docs/DECISIONS.md`;
+- keep this README as the top-level map whenever routes, feeds, gates, or
+  release policy change.
 
 ## License
 

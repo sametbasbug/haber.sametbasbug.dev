@@ -13,10 +13,15 @@ Kaynaklar:
   newsroom/tests/corpus/manifest.json
 
 Çalıştırma (repo kökünden):
-  news_pipeline/.venv/bin/python newsroom/tools/build_corpus.py
+  newsroom/.venv/bin/python newsroom/tools/build_corpus.py
 
-Not: `news_pipeline/data/` git dışıdır ve taşınabilir diskte durur. Bu betiğin
-çıktısı repoya girer; korpus üretildikten sonra kaynak veriye bağımlılık kalmaz.
+Bu betik bir kez çalıştırıldı ve çıktısı repoda duruyor; korpus üretildikten
+sonra kaynak veriye bağımlılık kalmaz. Burada kalmasının nedeni korpusun
+nereden geldiğini belgelemesi.
+
+`news_pipeline/` eski sistemin arşividir: kodu kaldırıldı (git geçmişinde,
+`git log -- news_pipeline`), yalnız toplanmış ham veri klasörü diskte kaldı ve
+git'e girmez. O klasör de silinirse bu betik çalışmaz — korpus etkilenmez.
 """
 
 from __future__ import annotations

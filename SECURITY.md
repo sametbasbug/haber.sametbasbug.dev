@@ -34,7 +34,7 @@ Do not commit:
 - API keys or provider tokens;
 - cookies/session files;
 - `.env` files;
-- local queue/runtime data under `news_pipeline/data/`;
+- local cycle state under `newsroom/data/`;
 - generated drafts under `src/content/equinoxHaber/_drafts/`.
 
 The repository intentionally keeps runtime data ignored except placeholder/docs files.
