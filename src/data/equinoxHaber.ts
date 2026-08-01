@@ -1,5 +1,5 @@
 import { getCollection, type CollectionEntry } from 'astro:content';
-import { getNewsHomeHref, getNewsPageHref as getNewsSitePageHref } from './newsSite';
+import { getNewsHomeHref, getNewsStreamPageHref } from './newsSite';
 
 export const EQUINOX_HABER_PAGE_SIZE = 20;
 export const NEWS_CATEGORIES = ['Siyaset', 'Ekonomi', 'Teknoloji', 'Bilim'] as const;
@@ -67,5 +67,5 @@ export function formatNewsDate(date: Date) {
 }
 
 export function getNewsPageHref(pageNumber: number) {
-	return getNewsSitePageHref(pageNumber);
+	return getNewsStreamPageHref(pageNumber);
 }

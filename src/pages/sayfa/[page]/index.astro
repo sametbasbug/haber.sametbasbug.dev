@@ -2,11 +2,13 @@
 import type { GetStaticPaths, Page } from 'astro';
 import NewsLayout from '../../../layouts/NewsLayout.astro';
 import NewsStream from '../../../components/news/NewsStream.astro';
+import ArchivePagination from '../../../components/news/ArchivePagination.astro';
 import { EQUINOX_HABER_PAGE_SIZE, getEquinoxHaberCategories, getPublishedEquinoxHaber, type EquinoxHaberEntry } from '../../../data/equinoxHaber';
+import { getNewsHomeHref } from '../../../data/newsSite';
 
 export const getStaticPaths = (async ({ paginate }) => {
 	const entries = await getPublishedEquinoxHaber();
-	return paginate(entries, { pageSize: EQUINOX_HABER_PAGE_SIZE }).filter((page) => page.params.page !== '1');
+	return paginate(entries, { pageSize: EQUINOX_HABER_PAGE_SIZE });
 }) satisfies GetStaticPaths;
 
 interface Props {
@@ -17,22 +19,35 @@ const { page } = Astro.props as Props;
 const categories = getEquinoxHaberCategories();
 const currentPage = page.currentPage;
 const totalPages = page.lastPage;
+const isFirstPage = currentPage === 1;
 
-const title = `Equinox Haber | Sayfa ${currentPage}`;
-const description = `Equinox Haber arşivi, sayfa ${currentPage}. Kısa ve okunaklı haber akışının devamı.`;
+// Arşivin ilk sayfası ana sayfayla aynı haberleri taşır. Sayfanın kendisi
+// erişilebilir kalır — "Arşiv" bağlantısı bir yere düşmeli — ama kanonik adres
+// ana sayfadır; aynı içerik iki adresten indekslenmez.
+const canonicalPath = isFirstPage ? getNewsHomeHref() : undefined;
+
+// BaseLayout başlığın önüne yayın adını kendisi ekliyor; buraya tekrar yazmak
+// "Equinox Haber | Equinox Haber | ..." üretiyordu.
+const title = isFirstPage ? 'Arşiv' : `Arşiv, sayfa ${currentPage}`;
+const description = isFirstPage
+	? `Equinox Haber arşivi: yayımlanmış tüm haberler, en yeniden eskiye ${totalPages} sayfa halinde.`
+	: `Equinox Haber arşivi, sayfa ${currentPage}. Yayımlanmış haberlerin en yeniden eskiye tam listesi.`;
 ---
 
 <NewsLayout
 	title={title}
 	description={description}
-	pageTitle={`Equinox Haber · Sayfa ${currentPage}`}
-	pageDescription="Bu sayfa, ana akışın devam paketidir. Infinite scroll altında gerçek sayfalama çalışır."
+	canonicalPath={canonicalPath}
+	kicker="Arşiv"
+	pageTitle={isFirstPage ? 'Equinox Haber · Arşiv' : `Equinox Haber · Arşiv, sayfa ${currentPage}`}
+	pageDescription={`Yayımlanmış haberlerin tamamı, en yeniden eskiye. ${totalPages} sayfa.`}
 	categories={categories}
 	activeCategory="Tümü"
 >
 	<section class="news-page-wrap">
 		<div class="news-page-main">
-			<NewsStream entries={page.data} currentPage={currentPage} totalPages={totalPages} />
+			<NewsStream entries={page.data} currentPage={currentPage} totalPages={totalPages} showArchiveLink={false} />
+			<ArchivePagination currentPage={currentPage} totalPages={totalPages} />
 		</div>
 	</section>
 </NewsLayout>

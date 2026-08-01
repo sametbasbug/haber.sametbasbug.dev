@@ -7,6 +7,9 @@ interface Props {
 	ogImage?: string;
 	ogImageAlt?: string;
 	noindex?: boolean;
+	/** Sayfanın kendi yolu yerine kanonik sayılacak yol. Aynı içeriği iki
+	 * adresten sunan sayfalar (arşivin ilk sayfası ile ana sayfa) için. */
+	canonicalPath?: string;
 	type?: string;
 	shellLayout?: boolean;
 	hideHeader?: boolean;
@@ -18,6 +21,7 @@ const {
 	ogImage,
 	ogImageAlt,
 	noindex = false,
+	canonicalPath,
 	type = 'website',
 	shellLayout = false,
 	hideHeader = false
@@ -28,7 +32,7 @@ const finalOgImage = ogImage && typeof ogImage === 'string' && ogImage.trim() !=
 	? ogImage
 	: '/og-default.jpg';
 
-const canonicalURL = new URL(Astro.url.pathname, Astro.site).toString();
+const canonicalURL = new URL(canonicalPath || Astro.url.pathname, Astro.site).toString();
 const ogImageURL = new URL(finalOgImage, Astro.site).toString();
 // Paylaşım kartlarında görselin alternatif metni. Sayfa içindeki hero
 // görselleri aria-hidden bir sarmalayıcıda durduğu ve komşu başlık linkinin
