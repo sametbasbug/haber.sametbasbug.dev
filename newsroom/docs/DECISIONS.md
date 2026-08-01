@@ -311,3 +311,32 @@ Bu kural mekanik olarak denetlenemez ve denetlenmeye çalışılmayacak: "bu kar
 bir olay sahnesi mi" sorusu yargıdır. Kod tarafındaki karşılığı görünürlüktür —
 `heroStockDescription` yayın raporunda sağlayıcının kendi tarifini taşır, yani
 ekrana ne çıktığı yayını açmadan okunabilir.
+
+---
+
+## K12 — Birinci basamak (Codex üretimi) uçtan uca doğrulandı
+
+**Karar yok, ölçüm var. Hemera.** Faz 4, 2026-08-01.
+
+Hero sırasının ilk basamağı bugüne kadar hiç çalıştırılmamıştı; hep yedeğe
+düşülmüştü. Samet hatırlattı, denendi ve çalışıyor.
+
+Asteria `POLICY.md` §6'yı okuyup prompt'unu ona göre daralttı — alev, duman,
+kalabalık, tanınabilir kişi ve yazı hariç tutuldu. Üretilen 1672×941 PNG
+(2,4 MB) sistem tarafından 1200×675 WebP'ye, 136 KB'a indirildi; hedeflerin
+tamamı tutuyor.
+
+Ölçülen fark, üç denemenin karşılaştırmasında: aynı haber, aynı `heroAlt`.
+
+- Türkçe stok sorgusu → mont giymiş kalabalık bir Floransa sokağı (alakasız)
+- İngilizce stok sorgusu → gece şenlik ateşi (alakalı ama yanıltıcı)
+- Codex üretimi → güneş altında boş bir Akdeniz caddesi, asfaltta ısı titreşimi
+
+Yalnız üçüncüsünde `heroAlt` yayına yazıldı, çünkü yalnız orada ekrandaki görsel
+Asteria'nın tarif ettiği görseldi. Sıralama K6'daki haliyle doğrulanmış oldu:
+stok bir yedektir, norm değil.
+
+**Ölçülemeyen:** üretimin kota tüketimi. Codex araç çıktısı tüketim bilgisi
+döndürmüyor. Asteria tahmin etmedi, bilmediğini söyledi. Kota Nyx'le paylaşıldığı
+için bu sayı önemli; canlıda saat başı bir üretimle ampirik olarak izlenmesi
+gerekecek.
