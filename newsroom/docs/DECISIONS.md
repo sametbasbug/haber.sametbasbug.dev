@@ -280,3 +280,34 @@ giriyor; operatör ekrana neyin çıktığını yayını açmadan görebiliyor.
 
 Her ikisi de yalnız gerçek bir uçtan uca koşuda görünürdü: testler geçiyordu,
 sözleşme geçiyordu, denetim geçiyordu. Yanlış olan tek şey ekrandaki resimdi.
+
+---
+
+## K11 — Stok görsel olayı değil, olayın alanını arar
+
+**Karar: Samet.** Faz 4, 2026-08-01.
+
+K10'daki `heroQuery` düzeltmesinden sonra sorgu "Italy heatwave" oldu ve gelen
+fotoğraf haberle ilgiliydi — ama sağlayıcının kendi tarifine göre *gece
+Piedmont'ta alevler önünde siluetler*, yani orman yangını değil şenlik ateşi.
+Bir yangın haberinin altında yangın gibi duruyordu.
+
+Sorun sorguda değil, stok fotoğrafın doğasındaydı: haber sahnesine benzeyen bir
+stok kare, olmamış bir olayı olmuş gibi gösterir. Bu, kaynağın görselini
+kullanmayı elediğimiz gerekçenin (K6) aynısıdır — doğrulanamayan bir görüntüyü
+haberin görüntüsü diye sunmak.
+
+Değerlendirilen üç yol:
+
+- **Pexels'i tamamen çıkarmak.** Elendi: hero'suz yayın ana sayfa tasarımını
+  zorluyor.
+- **Olduğu gibi bırakmak.** Elendi: sahte olay görüntüsü gerçek bir güven
+  maliyeti.
+- **Seçilen:** stok terimi olayın kendisini değil **soyut karşılığını** arar —
+  olgu, ortam, nesne, coğrafya. Olay anı değil, olayın alanı. `POLICY.md` §6
+  örneklerle bunu tanımlar.
+
+Bu kural mekanik olarak denetlenemez ve denetlenmeye çalışılmayacak: "bu kare
+bir olay sahnesi mi" sorusu yargıdır. Kod tarafındaki karşılığı görünürlüktür —
+`heroStockDescription` yayın raporunda sağlayıcının kendi tarifini taşır, yani
+ekrana ne çıktığı yayını açmadan okunabilir.

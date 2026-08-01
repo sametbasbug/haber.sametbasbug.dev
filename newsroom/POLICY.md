@@ -150,10 +150,35 @@ tasvirinden, logo ve marka taklidinden, sahte belge ve sahte ekran
 görüntüsünden kaçın. Alternatif metin görselde ne olduğunu söyler, haberi
 tekrar etmez.
 
+### Stok arama terimi
+
 Ayrıca kısa bir **İngilizce** stok arama terimi (`heroQuery`) yazılır: iki ile
-dört sözcük, haberin görsel karşılığını tarif eden. Görsel üretilemediğinde
-sistem bu terimle stok arşive düşer ve stok arşivler İngilizce indekslidir.
-Türkçe etiketle arama, haberle ilgisiz görsel getirir.
+dört sözcük. Görsel üretilemediğinde sistem bu terimle stok arşive düşer ve stok
+arşivler İngilizce indekslidir; Türkçe etiketle arama haberle ilgisiz görsel
+getirir.
+
+Bu terim **olayın kendisini aramaz.** Stok arşivde bir yangın fotoğrafı vardır
+ama o senin haberindeki yangın değildir; bir protesto fotoğrafı vardır ama o
+senin haberindeki protesto değildir. Haber sahnesine benzeyen bir stok kare,
+okuyucuya olmamış bir olayı göstermiş olur. Kaynağın görselini kullanmaktan
+kaçınma gerekçemiz neyse bu da aynı gerekçedir: doğrulanamayan bir görüntüyü
+haberin görüntüsü diye sunmak.
+
+Bunun yerine **konunun soyut karşılığını** ara: olgu, ortam, nesne, coğrafya.
+Olay anı değil, olayın alanı.
+
+    sıcak hava dalgası    → "thermometer heat" · "dry cracked earth"
+                            "empty sunlit street"
+                       değil "wildfire flames" · "burning forest"
+
+    merkez bankası kararı → "central bank building" · "euro banknotes"
+                       değil "worried trader screens"
+
+    silahlı çatışma       → "map of the region" · "empty border road"
+                       değil "soldiers firing" · "explosion smoke"
+
+Uygun bir soyut terim bulamıyorsan `heroQuery`'yi yine yaz ama zorlama; sistemin
+görselsiz yayımlaması, yanlış görselle yayımlamasından iyidir.
 
 Stok görsele düşüldüğünde `heroAlt` yayına yazılmaz: senin yazdığın alt metin
 ürettirmek istediğin görseli anlatır, ekrandaki ise başka bir fotoğraftır.

@@ -118,7 +118,9 @@ Dördüncü adım kasıtlıdır: görsel üretilemedi diye yayın durmaz. Codex 
 Nyx ile paylaşıldığı için birinci adım önemlidir — var olan görseli yeniden
 üretmek doğrudan Nyx'ten kota çalar.
 
-Üçüncü adımda `heroQuery` kullanılır; verilmezse etiketlere düşülür. Stok
+Üçüncü adımda `heroQuery` kullanılır; verilmezse etiketlere düşülür. Terimin
+neyi araması gerektiği — olayın kendisi değil soyut karşılığı — `POLICY.md`
+§6'dadır ve mekanik olarak denetlenemez. Stok
 görsele düşüldüğünde `heroAlt` frontmatter'a **yazılmaz**: alt metin
 ürettirilmek istenen görseli anlatır, ekrandaki ise başka bir fotoğraftır.
 Şablonlar alanın yokluğunda başlığa düşer. Yayın raporundaki
