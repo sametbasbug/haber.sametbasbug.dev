@@ -36,13 +36,18 @@ Brief şunları taşır:
 
 - `policy` — okunacak politika dosyasının yolu ve içerik parmak izi
 - `task.selectCount` — kaç haber seçilebileceği
-- `board[]` — adaylar; her birinde `id`, kaynak, URL, başlık ve **çıkarılmış tam
-  kaynak metni** (`sourceText`)
+- `board[]` — adaylar; her birinde `id`, kaynak, URL, başlık ve çıkarılmış
+  kaynak metni (`sourceText`)
 - `liveContext` — son yayınların kaynak, kategori ve etiket dağılımı
 - `pipeline` — havuz büyüklüğü ve mekanik eleme sayıları
 
 Kaynak metni brief'in içinde geldiği için haber sayfasına ayrıca gitmek
 gerekmez.
+
+`sourceText` **4000 karakterde kesilir** (`brief.BRIEF_TEXT_LIMIT`); bu bağlam
+maliyetini sınırlar. Kesilme olduysa aday üzerinde `sourceTextTruncated: true`
+yazar. Kesilmiş bir metnin devamı tahmin edilmez: gövde yalnız elindeki metne
+dayanır, eksik kalan kısım haberin özüne aitse haber geçilir.
 
 ### 2. Oku, seç, yaz
 
@@ -74,6 +79,15 @@ Yanıt biçimi:
 
 `heroImagePath` isteğe bağlıdır. Görsel üretildiyse dosyanın mutlak yolu
 verilir; boyut ve biçim önemli değildir, sistem 1200×675 WebP'ye kendisi çevirir.
+
+Kaynak alanı yoktur ve olmayacaktır: Kaynaklar bölümünü sistem panodaki adayın
+kendi yayınından yazar (`POLICY.md` §5).
+
+`selections` birden fazla haber taşıyabilir, ama **yayın haber başına
+atomiktir, koşu başına değil.** Her haber kendi kapılarından geçer ve kendi
+commit'ini alır; ikincisi düşerse birincisi yayında kalır. Yarım bırakılmayan
+şey tek bir haberdir. Bugün `selectCount` 1 olduğu için bu ayrım pratikte
+görünmez; 2'ye çıkılırsa geçerli davranış budur.
 
 ### 3. Yayına al
 
@@ -138,6 +152,15 @@ tazelik penceresi) ya da hepsi zaten yayımlanmıştır. `prepare` çıktısınd
 
 **Aynı slug zaten yayında.** Aynı başlık ikinci kez yazılmak istenmiş demektir.
 Sistem üzerine yazmaz; bu bir tekrar yayın işaretidir.
+
+**"bu kaynak zaten yayında" / "aynı haber zaten yayında".** Tekrar kontrolü
+pano kurulurken bir kez, yayın anında bir kez daha yapılır. İkinci kontrolün
+düşmesi brief'in eskidiğini gösterir: araya başka bir çevrim girmiş olabilir.
+`prepare` yeniden çalıştırılır.
+
+**Aday `undated` koduyla eleniyor.** Beslemede yayın tarihi yok. Tazelik kapısı
+ölçemediği yaşı varsaymaz. Bütün bir kaynak birden bu koda düşüyorsa besleme
+biçimi bozulmuş demektir; `sources.yaml` tarafına bakılır.
 
 **Kapsam kapısı düşüyor.** Çalışma ağacında yayınla ilgisiz değişiklikler var.
 Çevrim başlamadan ağaç temiz olmalıdır.

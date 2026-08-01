@@ -203,6 +203,25 @@ class TestPublish:
         assert not report.ok
         assert any("zaten yayında" in problem for problem in report.problems)
 
+    def test_ayni_kaynak_farkli_baslikla_ikinci_kez_yayimlanmaz(
+        self, repo: Path, tmp_path: Path, monkeypatch
+    ) -> None:
+        """Tekrar kontrolü yayın anında da yapılır.
+
+        Pano kurulurken tekrar elenir, ama brief ile yayın arasında zaman geçer.
+        Başlık değiştiği için slug çakışması bunu yakalayamaz; yakalayan şey
+        canlıya yayın anında bakılan URL kontrolüdür.
+        """
+        _publish(repo, tmp_path, monkeypatch)
+        report = _publish(
+            repo,
+            tmp_path,
+            monkeypatch,
+            selection={"title": "Bakanlık takvimi bambaşka sözcüklerle duyurdu"},
+        )
+        assert not report.ok
+        assert any("zaten yayında" in problem for problem in report.problems)
+
     def test_brief_yoksa_yayin_yapilmaz(self, tmp_path: Path) -> None:
         report = publish({"selections": []}, brief_path=tmp_path / "yok.json", build=False)
         assert not report.ok

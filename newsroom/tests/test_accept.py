@@ -183,6 +183,21 @@ class TestSelectionValidation:
         result = validate({"selections": [_selection(tags=["tek"])]}, _brief())
         assert "too_few_tags" in {e.code for e in result.errors}
 
+    def test_asiri_etiket_reddedilir(self) -> None:
+        """POLICY.md §4 üst sınırı da bağlayıcıdır.
+
+        Önceki sürümde yalnız alt sınır denetleniyordu; politika "en çok altı"
+        derken kod on beş etiketi kabul ediyordu.
+        """
+        tags = [f"etiket{i}" for i in range(7)]
+        result = validate({"selections": [_selection(tags=tags)]}, _brief())
+        assert "too_many_tags" in {e.code for e in result.errors}
+
+    def test_ust_sinirdaki_etiket_sayisi_gecer(self) -> None:
+        tags = [f"etiket{i}" for i in range(6)]
+        result = validate({"selections": [_selection(tags=tags)]}, _brief())
+        assert not result.errors
+
     def test_description_baslik_tekrari_reddedilir(self) -> None:
         title = "Bakanlık yeni düzenlemenin takvimini açıkladı bugün sabah"
         result = validate(

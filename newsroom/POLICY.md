@@ -1,6 +1,6 @@
 # Equinox Haber — Editoryal Politika
 
-Sürüm: 0.1 (taslak, Faz 0) · Kanonik adres: https://haber.sametbasbug.dev
+Sürüm: 0.2 (yürürlükte) · Kanonik adres: https://haber.sametbasbug.dev
 
 Bu belge Equinox Haber'in **tek editoryal kaynak-doğrusudur**. Asteria her
 koşuda bunu okur ve buna göre karar verir.
@@ -28,7 +28,9 @@ kaynaklı olması tek başına öne çıkma gerekçesi değildir.
 ## 2. Aday seçimi
 
 Her koşuda elenmiş bir aday listesi ve son yayınların dağılımı verilir.
-Listeden **en fazla bir** haber seçilir.
+Listeden **en fazla `task.selectCount`** haber seçilir. Bu sayı brief'te yazar;
+bugünkü değeri 1'dir. Sayı bir hedef değil üst sınırdır: iyi aday yoksa daha az
+seçilir, hiç yoksa hiç seçilmez (§7).
 
 ### Neye bakılır
 
@@ -123,17 +125,20 @@ Yasak kalıplardan kaçarken metni robotikleştirme — akıcı Türkçe önceli
 **Etiketler.** Etiket haberin konusunu gösterir: kurum, ülke, şirket, olay ya da
 alan. Sistem, süreç veya araç adı etiket değildir — `pipeline`, `haber`,
 `otomasyon` gibi etiketler okuyucuya hiçbir şey söylemez ve arşivde gürültü
-üretir. İki ile altı arası etiket yeterlidir.
+üretir. Etiket sayısı en az iki, en çok altıdır; bu sınır kodda denetlenir.
 
 **İç metadata.** Queue notları, denetim etiketleri ve editoryal notlar haber
 gövdesine veya kaynaklar bölümüne asla girmez.
 
 ## 5. Kaynaklar
 
-Birincil kaynak, haberin dayandığı asıl yayındır. Destekleyici kaynak varsa
-eklenir; aynı yayının farklı sayfaları ayrı kaynak sayılmaz.
+Her haberin tek bir kaynağı vardır: brief'teki adayın kendi yayını. Kaynak
+bölümünü sistem bu adaydan yazar, senin bildirmene gerek yoktur.
 
-Kaynak bölümünde yalnız gerçekten kullanılan bağlantılar bulunur.
+Destekleyici kaynak eklenmez. Bir çevrimde elindeki tek doğrulanmış metin
+adayın `sourceText`'idir; ikinci bir bağlantı vermek, doğrulayamadığın bir
+adresi haberin altına koymak olurdu. Haberi tek kaynakla anlatamıyorsan onu
+yayımlama (§7).
 
 ## 6. Görsel brief
 
@@ -161,5 +166,6 @@ Bu belge Faz 0'da mevcut sistemin iki ayrı yerinden — Python sabitleri ve
 `asteria-editorial-gate.sh` içindeki gömülü prompt — derlenerek oluşturuldu.
 Kapsam ve gerekçeler için `docs/GATE_INVENTORY.md`.
 
-Editoryal çizgi Hemera'nın kararı değildir. Bu taslak Samet'in (ve içerik
-tarafında Nyx'in) onayından geçmeden Faz 2'de referans alınmamalıdır.
+Editoryal çizgi Hemera'nın kararı değildir. Samet 0.2 sürümünü onayladı ve
+belge yürürlüktedir; koşu sırasında referans alınacak metin budur. Sonraki
+değişiklikler de aynı yolu izler: öneri Hemera'dan gelebilir, karar Samet'indir.

@@ -95,23 +95,29 @@ def screen(candidate: Candidate, *, now: datetime | None = None) -> ScreenDecisi
     ):
         return ScreenDecision.blocked("liveblog", "canlı anlatım biçimi")
 
-    if candidate.published_at is not None:
-        published = candidate.published_at.astimezone(UTC)
-        age = moment - published
+    if candidate.published_at is None:
+        # Tazelik kapısı yaş ölçemediği aday için sessizce açılmaz. Beslemede
+        # tarih yoksa haberin ne zaman çıktığı doğrulanamaz ve doğrulanamayan
+        # şey kapıdan geçmez. Mevcut 38 kaynağın tamamı tarih veriyor; bu dal
+        # bir besleme bozulduğunda devreye girer ve sayımda görünür.
+        return ScreenDecision.blocked("undated", "kaynakta yayın tarihi yok")
 
-        if age > MAX_SOURCE_AGE:
-            hours = age.total_seconds() / 3600
-            return ScreenDecision.blocked(
-                "stale",
-                f"kaynak {hours:.0f} saatlik, üst sınır {MAX_SOURCE_AGE.total_seconds() / 3600:.0f} saat",
-            )
+    published = candidate.published_at.astimezone(UTC)
+    age = moment - published
 
-        if age < -MAX_FUTURE_SKEW:
-            hours = -age.total_seconds() / 3600
-            return ScreenDecision.blocked(
-                "future_dated",
-                f"yayın tarihi {hours:.0f} saat ileride",
-            )
+    if age > MAX_SOURCE_AGE:
+        hours = age.total_seconds() / 3600
+        return ScreenDecision.blocked(
+            "stale",
+            f"kaynak {hours:.0f} saatlik, üst sınır {MAX_SOURCE_AGE.total_seconds() / 3600:.0f} saat",
+        )
+
+    if age < -MAX_FUTURE_SKEW:
+        hours = -age.total_seconds() / 3600
+        return ScreenDecision.blocked(
+            "future_dated",
+            f"yayın tarihi {hours:.0f} saat ileride",
+        )
 
     return ScreenDecision.passed()
 

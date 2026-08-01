@@ -165,8 +165,15 @@ class TestAgeGate:
         candidate = _candidate(published_at=now + timedelta(hours=1))
         assert screen(candidate, now=now).eligible
 
-    def test_tarihsiz_kayit_yas_kapisina_takilmaz(self) -> None:
-        assert screen(_candidate(published_at=None)).eligible
+    def test_tarihsiz_kayit_elenir(self) -> None:
+        """Yaşı ölçülemeyen aday tazelik kapısından geçemez.
+
+        Önceki sürümde tarihsiz kayıt kapıyı sessizce atlıyordu: 24 saat kuralı
+        yalnız tarihi olanlara uygulanıyordu. Bu, kapıyı besleme kalitesine
+        bağımlı kılıyordu — tarih vermeyen bir kaynak sınırsız eski haber
+        sokabilirdi. Doğrulanamayan şey geçmez.
+        """
+        assert screen(_candidate(published_at=None)).code == "undated"
 
 
 class TestFormatGates:

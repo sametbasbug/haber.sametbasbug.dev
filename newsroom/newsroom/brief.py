@@ -181,6 +181,9 @@ def build_brief(
                 "categoryHints": candidate.category_hints,
                 "title": candidate.title,
                 "sourceText": candidate.article_text[:BRIEF_TEXT_LIMIT],
+                # Metin kesildiyse Asteria bunu bilmelidir: eksik bir metnin
+                # sonunu tahminle tamamlamak yerine haberi geçebilsin.
+                "sourceTextTruncated": len(candidate.article_text) > BRIEF_TEXT_LIMIT,
             }
             for candidate in board
         ],

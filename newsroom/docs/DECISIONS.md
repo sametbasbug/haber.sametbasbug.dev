@@ -202,3 +202,48 @@ ki arama motorları için daha zayıf bir sinyal. Kozmetik tutarlılık karşıl
 
 Yayın altyapısı ileride gerçek yönlendirme yapabilen bir yere taşınırsa bu
 karar yeniden değerlendirilebilir.
+
+---
+
+## K9 — Asteria'nın teslim turunda bulduğu sekiz açık kapatıldı
+
+**Karar: Hemera.** Faz 4, 2026-08-01.
+
+Asteria'ya sistemi teslim ederken belgeleri ve kodu okuyup kusur bildirmesini
+istedim. Sekiz bulgu getirdi; sekizi de kod ve belgeyle karşılaştırıldığında
+doğru çıktı. Hepsi kapatıldı:
+
+1. **`POLICY.md` kendi statüsüyle çelişiyordu** — başlıkta "0.1 (taslak)",
+   sonunda "onaydan geçmeden referans alınmamalıdır" yazıyordu; oysa Samet
+   belgeyi onaylamıştı. Sürüm 0.2 (yürürlükte) yapıldı. Asteria'nın haklı
+   olarak söylediği gibi, statüsü belirsiz bir politikayla güvenle çalışılamaz.
+2. **"En fazla bir haber" politikaya gömülüydü** — K2 seçim sayısının
+   konfigürasyon olduğunu söylüyordu. §2 artık `task.selectCount`'a atıf yapar.
+3. **`sourceText` 4000 karakterde kesiliyordu ama belge "tam metin" diyordu** —
+   brief'e `sourceTextTruncated` alanı eklendi, RUNBOOK düzeltildi. Kesilmiş
+   metnin devamı tahmin edilmez.
+4. **Politika destekleyici kaynağa izin veriyordu, yanıt şemasında alanı yoktu**
+   — 585 yayının yalnız 2'sinde ek kaynak var. Alan eklemek yerine politikadan
+   kaldırıldı: bir çevrimde doğrulanmış tek metin adayın kendi metnidir, ikinci
+   bir bağlantı doğrulanamayan bir adres olur. Uydurma bağlantı yüzeyi açmanın
+   karşılığı yok.
+5. **Tekrar kontrolü yalnız `prepare` aşamasındaydı** — brief ile yayın arasında
+   zaman geçiyor. `publish` artık yazmadan önce canlıya URL ve başlık
+   benzerliğiyle son bir kez bakar. Slug çakışması bunu ancak başlık birebir
+   aynıysa yakalardı.
+6. **Çoklu seçimde yayının atomikliği tanımsızdı** — davranış korundu ama
+   yazıldı: atomiklik haber başınadır, koşu başına değil. Her haber kendi
+   kapılarından geçer, kendi commit'ini alır.
+7. **Etiket üst sınırı denetlenmiyordu** — politika "en çok altı" derken kod
+   yalnız alt sınıra bakıyordu. `MAX_TAGS = 6` eklendi.
+8. **Tarihsiz aday tazelik kapısını atlıyordu** — yaş ölçülemediğinde kapı
+   sessizce açılıyordu, yani kural besleme kalitesine bağımlıydı. Artık
+   `undated` koduyla elenir ve sayımda görünür.
+
+Asteria'nın `heroAlt` için dil doğrulaması olmaması gözlemi de doğrudur ama
+kasıtlıdır: `lang.py` kısa metne dil sınıflandırması uygulamaz, çünkü özel ad
+yoğun kısa metinler hiçbir eşikte güvenilir sınıflanmaz. Yanlış ret riski,
+kapının getirisinden büyük.
+
+Not: bu turun kendisi bir yöntem kaydıdır. Sistemi kuran kişi kendi
+belgelerindeki çelişkiyi göremiyor; okuyan görüyor.

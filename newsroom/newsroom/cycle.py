@@ -213,9 +213,24 @@ def publish(
     board = {entry["id"]: entry for entry in source_brief.get("board", [])}
     moment = (now or datetime.now(PUBLISH_TZ)).astimezone(PUBLISH_TZ)
 
+    # Tekrar kontrolü pano kurulurken bir kez yapıldı, ama brief ile yayın
+    # arasında zaman geçer. Yayın anında canlıya son bir kez bakılır: brief
+    # eskimişse ya da araya başka bir çevrim girmişse aynı haber ikinci kez
+    # çıkmasın. Slug çakışması bunu ancak başlık birebir aynıysa yakalar.
+    live_now = load_live(content_dir)
+
     for selection in result.accepted:
         entry = board[selection["candidateId"]]
         slug = slugify(selection["title"])
+
+        if live_now.has_url(entry["url"]):
+            report.problems.append(f"bu kaynak zaten yayında: {entry['url']}")
+            continue
+
+        twin = live_now.duplicate_of(selection["title"])
+        if twin is not None:
+            report.problems.append(f"aynı haber zaten yayında: {twin.slug}")
+            continue
 
         generated = selection.get("heroImagePath")
         hero_result = hero.resolve(

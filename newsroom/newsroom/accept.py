@@ -41,7 +41,10 @@ MIN_BODY_LENGTH = 600
 MIN_PARAGRAPHS = 3
 MAX_PARAGRAPHS = 5
 
+# POLICY.md §4: en az iki, en çok altı etiket. Alt sınır boş etiket dizisini,
+# üst sınır arşivi gürültüye boğan etiket yığınını engeller.
 MIN_TAGS = 2
+MAX_TAGS = 6
 MIN_DESCRIPTION_LENGTH = 40
 
 REQUIRED_FIELDS = (
@@ -150,6 +153,8 @@ def _validate_selection(selection: dict, board: dict[str, dict]) -> list[AcceptE
     tags = selection.get("tags") or []
     if not isinstance(tags, list) or len(tags) < MIN_TAGS:
         fail("too_few_tags", f"en az {MIN_TAGS} etiket gerekli")
+    elif len(tags) > MAX_TAGS:
+        fail("too_many_tags", f"{len(tags)} etiket, üst sınır {MAX_TAGS}")
 
     for name in ("body", "title", "description", "heroAlt"):
         if _INTERNAL_MARKERS.search(str(selection.get(name, ""))):
