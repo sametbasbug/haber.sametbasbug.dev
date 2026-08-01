@@ -56,6 +56,11 @@ REQUIRED_FIELDS = (
     "tags",
     "heroPrompt",
     "heroAlt",
+    # İngilizce stok arama terimi. Zorunludur ama ucuzdur: birkaç sözcük.
+    # Karşılığı büyük — Türkçe etiketle arama yapılan gölge koşuda haberle
+    # ilgisiz bir görsel geldi. Codex görseli üretebildiğinde kullanılmaz,
+    # yalnız Pexels yedeğine düşüldüğünde devreye girer.
+    "heroQuery",
 )
 
 # İç kuyruk ve denetim notlarının haber metnine sızması. Eski sistemde

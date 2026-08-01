@@ -177,11 +177,20 @@ def _sources_for(entry: dict) -> list[dict]:
 def _hero_queries(selection: dict) -> list[str]:
     """Stok görsel için arama terimleri.
 
-    Asteria'nın kendi etiketleri ve kategorisi kullanılır; ayrı bir sorgu
-    üretme mantığı yok.
+    Önce Asteria'nın verdiği İngilizce `heroQuery` denenir. Gölge koşuda
+    görüldü ki Türkçe etiketlerle arama zayıf sonuç veriyor: Pexels ağırlıkla
+    İngilizce indekslidir, "İtalya aşırı sıcak" sorgusu "İtalya"yı tutup sıcağı
+    ıskalıyor ve haberle ilgisiz bir sokak fotoğrafı dönüyor.
+
+    Etiketler yine de yedekte kalır — `heroQuery` verilmezse sistem durmaz.
     """
+    queries = []
+    if query := str(selection.get("heroQuery") or "").strip():
+        queries.append(query)
+
     tags = [tag for tag in selection.get("tags") or [] if tag]
-    queries = [" ".join(tags[:2])] if tags else []
+    if tags:
+        queries.append(" ".join(tags[:2]))
     queries.extend(tags[:3])
     queries.append(selection.get("category", ""))
     return [query for query in queries if query.strip()]
@@ -253,6 +262,7 @@ def publish(
             selection,
             sources=_sources_for(entry),
             hero_image=hero_result.public_path,
+            hero_describes_selection=hero_result.stock_description is None,
             now=moment,
             slug=slug,
         )
@@ -282,6 +292,9 @@ def publish(
             "hero": hero_result.origin,
             "heroCredit": hero_result.credit,
             "heroFailure": hero_result.failure,
+            # Stok görselin sağlayıcıdaki tarifi. Operatör, ekrana gerçekte
+            # neyin çıktığını yayını açmadan görebilmeli.
+            "heroStockDescription": hero_result.stock_description,
         }
 
         if do_commit:

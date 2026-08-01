@@ -247,3 +247,36 @@ kapının getirisinden büyük.
 
 Not: bu turun kendisi bir yöntem kaydıdır. Sistemi kuran kişi kendi
 belgelerindeki çelişkiyi göremiyor; okuyan görüyor.
+
+---
+
+## K10 — Gölge koşu iki hero kusuru gösterdi
+
+**Karar: Hemera.** Faz 4, 2026-08-01. İlk uçtan uca gölge çalıştırma.
+
+Asteria brief'i okudu, BBC World'ün İtalya sıcak hava haberini seçti ve yazdı.
+Metin kapıların tamamından geçti; dokuz somut iddianın dokuzu da kaynakta
+doğrulandı, uydurma yok. Pexels yedeği canlıda ilk kez çalıştı ve 1200×675
+WebP üretti. Kusur metinde değil, görsel tarafındaydı.
+
+**1. Stok araması Türkçe gidiyordu.** `_hero_queries` sorguyu etiketlerden
+kuruyordu: "İtalya aşırı sıcak". Pexels ağırlıkla İngilizce indekslidir; sorgu
+"İtalya"yı tuttu, sıcağı ıskaladı ve dönen fotoğraf serin havada, mont giymiş
+kalabalık bir Floransa sokağı oldu. Sıcak hava dalgası haberinin altında.
+
+Yanıt sözleşmesine zorunlu `heroQuery` alanı eklendi: iki-dört sözcük,
+İngilizce. Maliyeti birkaç sözcük, karşılığı stok görselin haberle ilgili
+olması. Etiketler yedekte kalır, alan verilmezse sistem durmaz.
+
+**2. `heroAlt` var olmayan bir görseli anlatıyordu.** Asteria alt metnini
+ürettirmek *istediği* görsel için yazar — "boş bir şehir caddesi". Stok yedeğine
+düşüldüğünde ekrandaki fotoğraf başkadır ve alt metin ekran okuyucu kullanan
+biri için sessiz bir yalana dönüşür.
+
+Stok görsele düşüldüğünde `heroAlt` artık frontmatter'a yazılmıyor. Şablonlar
+başlığa düşüyor (A1'de kurulan yedek). Yanlış alt metin, eksik alt metinden
+kötüdür. Sağlayıcının kendi tarifi `heroStockDescription` olarak yayın raporuna
+giriyor; operatör ekrana neyin çıktığını yayını açmadan görebiliyor.
+
+Her ikisi de yalnız gerçek bir uçtan uca koşuda görünürdü: testler geçiyordu,
+sözleşme geçiyordu, denetim geçiyordu. Yanlış olan tek şey ekrandaki resimdi.

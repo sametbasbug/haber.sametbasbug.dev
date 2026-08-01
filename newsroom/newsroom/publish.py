@@ -72,6 +72,7 @@ def render(
     *,
     sources: list[dict],
     hero_image: str | None = None,
+    hero_describes_selection: bool = True,
     now: datetime | None = None,
     slug: str | None = None,
 ) -> str:
@@ -90,7 +91,14 @@ def render(
 
     if hero_image:
         lines.append(f"heroImage: {_scalar(hero_image)}")
-    lines.append(f"heroAlt: {_scalar(selection['heroAlt'])}")
+
+    # `heroAlt` yalnız ekrandaki görseli gerçekten anlatıyorsa yazılır.
+    # Asteria alt metnini ürettirmek istediği görsel için yazar; stok yedeğine
+    # düşüldüğünde o metin olmayan bir şeyi tarif eder. Yanlış alt metin,
+    # eksik alt metinden kötüdür: ekran okuyucu kullanan biri için sessiz bir
+    # yalandır. Alan yazılmazsa şablonlar başlığa düşer (bkz. DECISIONS A1).
+    if hero_describes_selection:
+        lines.append(f"heroAlt: {_scalar(selection['heroAlt'])}")
 
     lines += [
         "isDraft: false",

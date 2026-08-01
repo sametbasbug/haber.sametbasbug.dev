@@ -56,6 +56,7 @@ def _selection(**overrides) -> dict:
         "tags": ["düzenleme", "işletme", "bakanlık"],
         "heroPrompt": "Resmî bir binanın önünde belge taşıyan kişiler",
         "heroAlt": "Bakanlık binası önünde belge taşıyan kişiler",
+        "heroQuery": "government building officials",
         **overrides,
     }
 
@@ -94,7 +95,10 @@ class TestCorpusReplay:
                 "category": post["category"],
                 "body": post["body"],
                 "tags": post["tags"],
+                # Arşiv görsel yönergesini ve stok sorgusunu saklamıyor; ikisi
+                # de yer tutucu. Test gövde ve başlık kapılarını ölçüyor.
                 "heroPrompt": "brief",
+                "heroQuery": "brief",
                 "heroAlt": post["hero_alt"],
             }
             brief = _brief(post["slug"], origin["orig_title"])

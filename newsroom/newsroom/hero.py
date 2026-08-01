@@ -59,6 +59,12 @@ class HeroResult:
     credit: str | None = None
     failure: str | None = None
 
+    # Stok görselin sağlayıcıdaki kendi tarifi. Asteria'nın `heroAlt`'ı
+    # ürettirmek *istediği* görseli anlatır; stok yedeğine düşüldüğünde o metin
+    # ekranda olmayan bir şeyi anlatır hale gelir. Bu alan gerçeğin ne olduğunu
+    # taşır ve `heroAlt`'ın yazılıp yazılmayacağına karar vermeyi sağlar.
+    stock_description: str | None = None
+
     @property
     def ok(self) -> bool:
         return self.public_path is not None
@@ -221,6 +227,7 @@ def from_pexels(
                         public_path=result.public_path,
                         origin=f"pexels:{photo_id}",
                         credit=photo.get("photographer") or None,
+                        stock_description=photo.get("alt") or None,
                     )
                 return result
 

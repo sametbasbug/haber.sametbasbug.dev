@@ -5,6 +5,7 @@ Ağ ve build çalıştırılmaz; yayın adımı geçici bir git deposunda deneni
 
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import UTC, datetime
 import json
 from pathlib import Path
@@ -13,6 +14,7 @@ import subprocess
 
 import pytest
 
+from newsroom import hero
 from newsroom.cycle import (
     MAX_BOARD_APPEARANCES,
     PEXELS_MEMORY,
@@ -49,6 +51,7 @@ SELECTION = {
     "tags": ["düzenleme", "bakanlık"],
     "heroPrompt": "Resmî bina önünde belge taşıyan kişiler",
     "heroAlt": "Bakanlık binası önünde belge taşıyan kişiler",
+    "heroQuery": "government building officials",
 }
 
 BRIEF = {
@@ -140,6 +143,23 @@ class TestHeroQueries:
 
     def test_etiket_yoksa_kategori_kalir(self) -> None:
         assert _hero_queries({"tags": [], "category": "Bilim"}) == ["Bilim"]
+
+    def test_ingilizce_sorgu_once_denenir(self) -> None:
+        """Stok arşivler İngilizce indekslidir.
+
+        Gölge koşuda "İtalya aşırı sıcak" sorgusu ülkeyi tuttu, sıcağı ıskaladı
+        ve haberle ilgisiz bir sokak fotoğrafı döndü. Türkçe etiketler yedekte
+        kalır ama ilk sırayı İngilizce terim alır.
+        """
+        queries = _hero_queries(
+            {
+                "heroQuery": "italy heatwave empty street",
+                "tags": ["İtalya", "aşırı sıcak"],
+                "category": "Bilim",
+            }
+        )
+        assert queries[0] == "italy heatwave empty street"
+        assert "İtalya aşırı sıcak" in queries
 
 
 class TestPublish:
@@ -264,3 +284,44 @@ class TestPublishWithHero:
             repo / "public/images/generated/equinox-haber"
             / "bakanlik-yeni-duzenlemenin-takvimini-acikladi.webp"
         ).is_file()
+        # Görsel istenen görsel olduğunda alt metin de geçerlidir.
+        assert 'heroAlt: "Bakanlık binası önünde belge taşıyan kişiler"' in written
+
+    def test_stok_gorselde_alt_metin_yazilmaz(
+        self, repo: Path, tmp_path: Path, monkeypatch
+    ) -> None:
+        """Stok yedeğine düşüldüğünde `heroAlt` yayına girmez.
+
+        Asteria alt metnini ürettirmek istediği görsel için yazar. Stok arşivden
+        başka bir fotoğraf gelince o metin ekranda olmayan bir şeyi tarif eder —
+        ekran okuyucu kullanan biri için sessiz bir yalan. Şablonlar alanın
+        yokluğunda başlığa düşer.
+        """
+        source = tmp_path / "stok.png"
+        subprocess.run(
+            ["magick", "-size", "1600x900", "gradient:teal-black", str(source)],
+            check=True,
+            capture_output=True,
+        )
+
+        def fake_pexels(slug, queries, **kwargs):
+            normalized = hero.normalize(source, slug, hero_dir=kwargs.get("hero_dir"))
+            return replace(
+                normalized,
+                origin="pexels:1",
+                credit="Bir Fotoğrafçı",
+                stock_description="a crowded street in daylight",
+            )
+
+        monkeypatch.setattr("newsroom.hero.from_pexels", fake_pexels)
+        report = _publish(repo, tmp_path, monkeypatch)
+
+        assert report.ok, report.problems
+        assert report.published[0]["hero"] == "pexels:1"
+        assert report.published[0]["heroStockDescription"] == "a crowded street in daylight"
+
+        written = next((repo / "src/content/equinoxHaber").glob("*.md")).read_text(
+            encoding="utf-8"
+        )
+        assert "heroImage:" in written
+        assert "heroAlt:" not in written

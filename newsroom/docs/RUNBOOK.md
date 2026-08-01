@@ -73,6 +73,7 @@ Yanıt biçimi:
       "tags": ["etiket", "etiket"],
       "heroPrompt": "Görsel yönergesi",
       "heroAlt": "Türkçe alternatif metin",
+      "heroQuery": "english stock search terms",
       "heroImagePath": "/mutlak/yol/uretilen-gorsel.png"
     }
   ],
@@ -116,6 +117,13 @@ ihlali) veya `problems` (doğrulama) alanları neyin düştüğünü söyler.
 Dördüncü adım kasıtlıdır: görsel üretilemedi diye yayın durmaz. Codex kotası
 Nyx ile paylaşıldığı için birinci adım önemlidir — var olan görseli yeniden
 üretmek doğrudan Nyx'ten kota çalar.
+
+Üçüncü adımda `heroQuery` kullanılır; verilmezse etiketlere düşülür. Stok
+görsele düşüldüğünde `heroAlt` frontmatter'a **yazılmaz**: alt metin
+ürettirilmek istenen görseli anlatır, ekrandaki ise başka bir fotoğraftır.
+Şablonlar alanın yokluğunda başlığa düşer. Yayın raporundaki
+`heroStockDescription` sağlayıcının kendi tarifini gösterir; ekrana gerçekte
+neyin çıktığı yayını açmadan görülebilir.
 
 ## Kapılar
 

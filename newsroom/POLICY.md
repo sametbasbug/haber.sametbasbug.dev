@@ -150,6 +150,15 @@ tasvirinden, logo ve marka taklidinden, sahte belge ve sahte ekran
 görüntüsünden kaçın. Alternatif metin görselde ne olduğunu söyler, haberi
 tekrar etmez.
 
+Ayrıca kısa bir **İngilizce** stok arama terimi (`heroQuery`) yazılır: iki ile
+dört sözcük, haberin görsel karşılığını tarif eden. Görsel üretilemediğinde
+sistem bu terimle stok arşive düşer ve stok arşivler İngilizce indekslidir.
+Türkçe etiketle arama, haberle ilgisiz görsel getirir.
+
+Stok görsele düşüldüğünde `heroAlt` yayına yazılmaz: senin yazdığın alt metin
+ürettirmek istediğin görseli anlatır, ekrandaki ise başka bir fotoğraftır.
+Yanlış alt metin eksik alt metinden kötüdür.
+
 ## 7. Şüphedeysen
 
 Yayımlama.
