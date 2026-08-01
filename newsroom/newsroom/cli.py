@@ -85,6 +85,7 @@ def _status(args: argparse.Namespace) -> int:
             "candidatesTracked": len(state.board_appearances),
             "exhaustedCandidates": len(state.exhausted_candidates()),
             "pexelsRemembered": len(state.pexels_used),
+            "lastCollection": state.last_collection,
         },
         ok=True,
     )

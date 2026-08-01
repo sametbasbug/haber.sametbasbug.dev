@@ -79,6 +79,17 @@ class TestLiveIndex:
         assert context["tags"]["yapay zeka"] == 2
         assert context["windowSize"] == 2
 
+    def test_baslik_listesi_pencerenin_tamamini_kapsar(self) -> None:
+        """Sayımlar 20 yayını kapsıyorsa başlıklar da kapsamalı.
+
+        Önceki sürümde `latest` sekizde kesiliyordu: 9-20 arasında aynı olayın
+        farklı sözcüklerle çıkıp çıkmadığı görülemiyordu. Tekrar yargısı sayıyla
+        değil başlıkla verilir.
+        """
+        index = LiveIndex([_post(str(i), f"Haber {i}") for i in range(20)])
+        context = index.recent_context()
+        assert len(context["latest"]) == context["windowSize"] == 20
+
     def test_baglamda_sabit_sirket_listesi_yok(self) -> None:
         """Konu yığılması etiketlerden okunur, kodda gömülü listeden değil."""
         import newsroom.live as module
@@ -164,6 +175,13 @@ class TestBuildBrief:
         )
         brief = build_brief([candidate], LiveIndex([]), now=NOW)
         assert len(brief["board"][0]["sourceText"]) == BRIEF_TEXT_LIMIT
+        # Kırpma görünür olmalı: eksik metnin sonu tahminle tamamlanmasın.
+        assert brief["board"][0]["sourceTextTruncated"] is True
+
+    def test_kirpilmayan_metin_isaretlenmez(self) -> None:
+        candidate = replace(_candidate("a1", "aaa", 5), article_text="kısa metin")
+        brief = build_brief([candidate], LiveIndex([]), now=NOW)
+        assert brief["board"][0]["sourceTextTruncated"] is False
 
     def test_eleme_ozeti_tasinir(self) -> None:
         brief = build_brief(
@@ -171,6 +189,15 @@ class TestBuildBrief:
         )
         assert brief["pipeline"]["collected"] == 462
         assert brief["pipeline"]["mechanicallyFiltered"]["stale"] == 134
+
+    def test_brief_operasyonel_teshis_tasimaz(self) -> None:
+        """Brief editoryal bir belgedir; her alanı bağlam maliyeti doğurur.
+
+        Toplama sayaçları ve sabit dosya adları seçim kararına girmez; onlar
+        `newsroom status` tarafında durur.
+        """
+        brief = build_brief([], LiveIndex([]), pool_size=462, now=NOW)
+        assert set(brief["pipeline"]) == {"collected", "mechanicallyFiltered"}
 
     @pytest.mark.parametrize("count", [1, 2, 3])
     def test_secim_sayisi_yapilandirilabilir(self, count: int) -> None:

@@ -91,6 +91,10 @@ class LiveIndex:
             "sources": _counts(name for post in window for name in post.source_names),
             "categories": _counts(post.category for post in window if post.category),
             "tags": _counts(tag for post in window for tag in post.tags),
+            # Pencerenin tamamı listelenir. Daha önce sekiz haber veriliyordu:
+            # sayımlar 20 yayını kapsarken başlıklar 8'de kesiliyordu, yani
+            # 9-20 arasında aynı olayın farklı sözcüklerle çıkıp çıkmadığı
+            # görülemiyordu. Tekrar yargısı başlığı görmeyi gerektirir.
             "latest": [
                 {
                     "title": post.title,
@@ -98,7 +102,7 @@ class LiveIndex:
                     "source": post.source_names[0] if post.source_names else None,
                     "pubDate": post.pub_date,
                 }
-                for post in window[:8]
+                for post in window
             ],
         }
 

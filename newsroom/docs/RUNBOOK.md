@@ -38,8 +38,11 @@ Brief şunları taşır:
 - `task.selectCount` — kaç haber seçilebileceği
 - `board[]` — adaylar; her birinde `id`, kaynak, URL, başlık ve çıkarılmış
   kaynak metni (`sourceText`)
-- `liveContext` — son yayınların kaynak, kategori ve etiket dağılımı
-- `pipeline` — havuz büyüklüğü ve mekanik eleme sayıları
+- `liveContext` — son 20 yayının kaynak, kategori ve etiket dağılımı; `latest`
+  aynı pencerenin başlıklarını taşır
+- `pipeline` — havuz büyüklüğü ve mekanik eleme sayıları. Arıza alanları
+  (`feedErrors`, `textExtractionFailures`) yalnız arıza varken görünür.
+  Operasyonel sayaçlar burada değil, `newsroom status` çıktısındadır.
 
 Kaynak metni brief'in içinde geldiği için haber sayfasına ayrıca gitmek
 gerekmez.

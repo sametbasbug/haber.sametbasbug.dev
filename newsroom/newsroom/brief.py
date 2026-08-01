@@ -31,7 +31,6 @@ from newsroom.extract import extract
 from newsroom.ingest import USER_AGENT
 from newsroom.live import LiveIndex
 from newsroom.models import Candidate
-from newsroom.sources import DEFAULT_SOURCES_PATH
 
 POLICY_PATH = Path(__file__).resolve().parents[1] / "POLICY.md"
 REPO_ROOT = POLICY_PATH.parents[1]
@@ -188,9 +187,12 @@ def build_brief(
             for candidate in board
         ],
         "liveContext": live.recent_context(),
+        # Brief'e giren her alan her koşuda bağlam maliyeti doğurur ve o kota
+        # Nyx'le paylaşılıyor. Buradaki iki sayı editoryal karara girer: havuz
+        # daraldığında koşuyu boş geçme eşiği yükselir. Operasyonel teşhis
+        # (`newsroom status`) ayrı yerdedir, brief'e karışmaz.
         "pipeline": {
             "collected": pool_size,
             "mechanicallyFiltered": screening or {},
-            "sourcesConfig": str(DEFAULT_SOURCES_PATH.name),
         },
     }

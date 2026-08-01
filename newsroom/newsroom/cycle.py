@@ -54,6 +54,7 @@ class CycleState:
     board_appearances: dict[str, int] = field(default_factory=dict)
     pexels_used: list[str] = field(default_factory=list)
     last_cycle_at: str | None = None
+    last_collection: dict[str, int] = field(default_factory=dict)
 
     @classmethod
     def load(cls, path: Path | None = None) -> CycleState:
@@ -145,12 +146,19 @@ def prepare(
         pool_size=len(candidates),
         now=moment,
     )
-    brief["pipeline"]["feedErrors"] = [
-        {"source": error.source_id, "message": error.message} for error in feed_errors
-    ]
-    brief["pipeline"]["textExtractionFailures"] = len(dropped)
-    brief["pipeline"]["storedCandidates"] = len(candidates)
-    brief["pipeline"]["freshlyCollected"] = len(fresh)
+    # Arıza bilgisi yalnız arıza varken brief'e girer. Her koşuda `[]` ve `0`
+    # taşımak dikkat harcatır ve hiçbir şey söylemez; bir kaynak düştüğünde ise
+    # bunu görmek gerekir.
+    if feed_errors:
+        brief["pipeline"]["feedErrors"] = [
+            {"source": error.source_id, "message": error.message} for error in feed_errors
+        ]
+    if dropped:
+        brief["pipeline"]["textExtractionFailures"] = len(dropped)
+
+    # Toplama sayaçları operasyoneldir, editoryal değil: durum dosyasında
+    # tutulur ve `newsroom status` üzerinden okunur.
+    state.last_collection = {"fresh": len(fresh), "stored": len(candidates)}
 
     state.last_cycle_at = moment.isoformat()
     state.save(state_path)
