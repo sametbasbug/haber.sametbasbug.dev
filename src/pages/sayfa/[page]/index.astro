@@ -3,12 +3,11 @@ import type { GetStaticPaths, Page } from 'astro';
 import NewsLayout from '../../../layouts/NewsLayout.astro';
 import NewsStream from '../../../components/news/NewsStream.astro';
 import ArchivePagination from '../../../components/news/ArchivePagination.astro';
-import { EQUINOX_HABER_PAGE_SIZE, getEquinoxHaberCategories, getPublishedEquinoxHaber, type EquinoxHaberEntry } from '../../../data/equinoxHaber';
-import { getNewsHomeHref } from '../../../data/newsSite';
+import { EQUINOX_HABER_ARCHIVE_PAGE_SIZE, getEquinoxHaberCategories, getPublishedEquinoxHaber, type EquinoxHaberEntry } from '../../../data/equinoxHaber';
 
 export const getStaticPaths = (async ({ paginate }) => {
 	const entries = await getPublishedEquinoxHaber();
-	return paginate(entries, { pageSize: EQUINOX_HABER_PAGE_SIZE });
+	return paginate(entries, { pageSize: EQUINOX_HABER_ARCHIVE_PAGE_SIZE });
 }) satisfies GetStaticPaths;
 
 interface Props {
@@ -21,11 +20,6 @@ const currentPage = page.currentPage;
 const totalPages = page.lastPage;
 const isFirstPage = currentPage === 1;
 
-// Arşivin ilk sayfası ana sayfayla aynı haberleri taşır. Sayfanın kendisi
-// erişilebilir kalır — "Arşiv" bağlantısı bir yere düşmeli — ama kanonik adres
-// ana sayfadır; aynı içerik iki adresten indekslenmez.
-const canonicalPath = isFirstPage ? getNewsHomeHref() : undefined;
-
 // BaseLayout başlığın önüne yayın adını kendisi ekliyor; buraya tekrar yazmak
 // "Equinox Haber | Equinox Haber | ..." üretiyordu.
 const title = isFirstPage ? 'Arşiv' : `Arşiv, sayfa ${currentPage}`;
@@ -37,9 +31,8 @@ const description = isFirstPage
 <NewsLayout
 	title={title}
 	description={description}
-	canonicalPath={canonicalPath}
-	kicker="Arşiv"
-	pageTitle={isFirstPage ? 'Equinox Haber · Arşiv' : `Equinox Haber · Arşiv, sayfa ${currentPage}`}
+	kicker=""
+	pageTitle={isFirstPage ? 'Arşiv' : `Arşiv · Sayfa ${currentPage}`}
 	pageDescription={`Yayımlanmış haberlerin tamamı, en yeniden eskiye. ${totalPages} sayfa.`}
 	categories={categories}
 	activeCategory="Tümü"

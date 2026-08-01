@@ -1,7 +1,15 @@
 import { getCollection, type CollectionEntry } from 'astro:content';
 import { getNewsHomeHref, getNewsStreamPageHref } from './newsSite';
 
+/** Ana sayfanın öne çıkan panelini besleyen havuz. */
 export const EQUINOX_HABER_PAGE_SIZE = 20;
+
+/**
+ * Arşiv sayfası ayrı bir boyut kullanır: arşivde okunan şey akış değil liste,
+ * ve on başlık bir ekranda taranabiliyor. Ana sayfanın havuzuyla bağlanmaz —
+ * o sayının değişmesi öne çıkan haber bileşimini de değiştirirdi.
+ */
+export const EQUINOX_HABER_ARCHIVE_PAGE_SIZE = 10;
 export const NEWS_CATEGORIES = ['Siyaset', 'Ekonomi', 'Teknoloji', 'Bilim'] as const;
 
 export type NewsCategory = (typeof NEWS_CATEGORIES)[number];

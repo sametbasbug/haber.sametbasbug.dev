@@ -16,8 +16,9 @@ interface Props {
 	showFooter?: boolean;
 	noindex?: boolean;
 	canonicalPath?: string;
-	/** Başlığın üstündeki küçük etiket. Yanıp sönen nokta yalnız varsayılan
-	 * "Canlı akış" değerinde gösterilir; arşiv canlı bir yüzey değildir. */
+	/** Başlığın üstündeki küçük etiket. Boş verilirse hiç basılmaz — arşivde
+	 * başlığın kendisi zaten "Arşiv" diyor, ikisi birden tekrar olurdu. Yanıp
+	 * sönen nokta yalnız varsayılan "Canlı akış" değerinde gösterilir. */
 	kicker?: string;
 	ogImage?: string;
 	ogImageAlt?: string;
@@ -102,10 +103,12 @@ const blogHomeHref = isNewsSubdomainEnabled() ? getMainSiteUrl() : '/';
 		{!hidePageHero && (
 			<section class="news-hero">
 				<div class="news-hero-copy">
-					<p class="news-kicker">
-						{isLiveSurface && <span class="news-live-dot" aria-hidden="true"></span>}
-						{kicker}
-					</p>
+					{kicker && (
+						<p class="news-kicker">
+							{isLiveSurface && <span class="news-live-dot" aria-hidden="true"></span>}
+							{kicker}
+						</p>
+					)}
 					{pageTitle && <h1>{pageTitle}</h1>}
 					{pageDescription && <p class="news-summary">{pageDescription}</p>}
 				</div>
