@@ -33,9 +33,5 @@ briefing/*/*.md
 newsroom/.venv/
 newsroom/data/
 
-# Eski sistemin arşivi. Kodu git geçmişinde (bkz. `git log -- news_pipeline`);
-# buradaki klasör yalnız toplanmış ham veriyi tutar ve git'e girmez.
-news_pipeline/
-
 # auto-generated news drafts
 src/content/equinoxHaber/_drafts/

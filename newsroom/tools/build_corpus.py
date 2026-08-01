@@ -19,9 +19,10 @@ Bu betik bir kez çalıştırıldı ve çıktısı repoda duruyor; korpus üreti
 sonra kaynak veriye bağımlılık kalmaz. Burada kalmasının nedeni korpusun
 nereden geldiğini belgelemesi.
 
-`news_pipeline/` eski sistemin arşividir: kodu kaldırıldı (git geçmişinde,
-`git log -- news_pipeline`), yalnız toplanmış ham veri klasörü diskte kaldı ve
-git'e girmez. O klasör de silinirse bu betik çalışmaz — korpus etkilenmez.
+**Betik artık çalıştırılamaz:** okuduğu `news_pipeline/data/` eski sistemle
+birlikte kaldırıldı (kod git geçmişinde: `git log -- news_pipeline`). Korpus
+etkilenmez; yeniden üretilmesi gerekirse toplama katmanı `newsroom/ingest.py`
+üzerinden yeniden yazılmalıdır.
 """
 
 from __future__ import annotations
