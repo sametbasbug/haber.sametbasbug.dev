@@ -26,7 +26,7 @@
     "quality": "npm run test:newsroom && npm run build"
   },
   "dependencies": {
-    "@astrojs/rss": "^4.0.18",
+    "@astrojs/rss": "^4.0.19",
     "@astrojs/sitemap": "^3.7.3",
     "astro": "^6.4.6",
     "firebase": "^12.14.0"
