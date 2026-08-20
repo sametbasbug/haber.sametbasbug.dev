@@ -1,0 +1,33 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "haber-yayin",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-08-20",
+  // `nodejs_compat` markdown işlemcisi için değil (satteri saf JS), ileride
+  // eklenecek kütüphaneler için açık tutuluyor. Gereksizse kapatılır.
+  "compatibility_flags": ["nodejs_compat"],
+
+  // Sözdizimi vurgulaması kapalı olduğu halde `@astrojs/prism` statik olarak
+  // içeri giriyor; boş bir modüle yönlendiriliyor.
+  "alias": {
+    "virtual:astro-cloudflare:prism": "./shims/prism-empty.js"
+  },
+
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "haber",
+      // Gerçek kimlik Cloudflare hesabında oluşturulunca yazılır. Yerel
+      // geliştirmede (`wrangler dev`) kullanılmıyor.
+      "database_id": "PLACEHOLDER_YEREL_GELISTIRME",
+      "migrations_dir": "migrations"
+    }
+  ],
+
+  "r2_buckets": [
+    {
+      "binding": "HERO",
+      "bucket_name": "haber-gorseller"
+    }
+  ]
+}
