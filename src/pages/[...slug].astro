@@ -5,6 +5,8 @@ import NewsCard from '../components/news/NewsCard.astro';
 import { findAuthorByName } from '../data/authors';
 import { formatNewsDate, getEquinoxHaberCategories, getNewsCategoryToken, getPublishedEquinoxHaber, normalizeNewsCategory } from '../data/equinoxHaber';
 import { getNewsArticleHref, getNewsCanonicalUrl, getNewsHomeHref } from '../data/newsSite';
+import { getPublishedFromD1 } from '../data/equinoxHaberD1';
+import { getDatabase } from '#runtime-env';
 
 export async function getStaticPaths() {
 	const entries = await getPublishedEquinoxHaber();
@@ -12,14 +14,35 @@ export async function getStaticPaths() {
 }
 
 const routeSlug = Astro.params.slug;
-const allEntries = await getPublishedEquinoxHaber();
+
+/*
+ * İçerik iki kaynaktan gelebilir ve aşağıdaki hiçbir satır hangisinin
+ * konuştuğunu bilmiyor:
+ *
+ *   - sunucu modunda (Cloudflare adaptörü)  → D1
+ *   - statik modda                          → içerik koleksiyonu
+ *
+ * İkisi de aynı girdi biçimini döndürüyor (`src/data/equinoxHaberD1.ts`).
+ * Şablonu D1 için ikinci kez yazmak, 1900 satırlık düzeni iki yerde bakmak
+ * demekti; bu ayrım onun yerine geçiyor.
+ */
+const db = getDatabase();
+const allEntries = db ? await getPublishedFromD1(db) : await getPublishedEquinoxHaber();
 const entry = allEntries.find((item) => item.id === routeSlug);
 
 if (!entry) {
+	/* Statik modda buraya düşülmez: `getStaticPaths` yalnız var olan
+	   haberlerin adresini üretir. Sunucu modunda ise bilinmeyen bir slug
+	   normal bir istektir ve 404 ile cevaplanır, hata ile değil. */
+	if (db) return new Response(null, { status: 404 });
 	throw new Error(`Haber bulunamadı: ${routeSlug}`);
 }
 
-const { Content } = await render(entry);
+/* D1 girdisi yazma anında üretilmiş HTML taşır; koleksiyon girdisi markdown
+   taşır ve çalışma anında render edilir. İkisinin çıktısının aynı olduğu
+   ölçüldü (587/587) — bkz. `worker/tools/parity-render.mjs`. */
+const bodyHtml = 'bodyHtml' in entry ? (entry as { bodyHtml: string }).bodyHtml : null;
+const Content = bodyHtml === null ? (await render(entry as never)).Content : null;
 const currentIndex = allEntries.findIndex((item) => item.id === entry.id);
 const nextEntry = allEntries[currentIndex - 1];
 const prevEntry = allEntries[currentIndex + 1];
@@ -139,7 +162,7 @@ const newsStructuredData = [newsArticleSchema, breadcrumbSchema];
 			</div>
 
 			<div class="article-prose">
-				<Content />
+				{bodyHtml === null ? <Content /> : <Fragment set:html={bodyHtml} />}
 			</div>
 
 			{!hasInlineSourcesSection && entry.data.sources && entry.data.sources.length > 0 && (

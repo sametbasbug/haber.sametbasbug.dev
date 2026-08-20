@@ -8,7 +8,9 @@
     "parity": "tools/parity.sh",
     "e2e": "tools/e2e.sh",
     "test:orbit": "node tools/orbit-token-tests.mjs",
-    "test:orbit:e2e": "node tools/e2e-orbit.mjs"
+    "test:orbit:e2e": "node tools/e2e-orbit.mjs",
+    "parity:page": "tools/parity-page.sh",
+    "migrate:archive": "node tools/migrate-archive.mjs .cases/migrate.sql"
   },
   "dependencies": {
     "@astrojs/markdown-remark": "^7.2.4"

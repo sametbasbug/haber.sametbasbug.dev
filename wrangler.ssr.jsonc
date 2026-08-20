@@ -1,0 +1,33 @@
+{
+  // Astro SSR sitesinin Worker yapılandırması.
+  //
+  // Yayın API'si (`worker/`) ayrı bir Worker olarak duruyor. İkisi aynı D1 ve
+  // R2'yi bağlıyor: biri yazıyor, diğeri okuyor. Tek Worker'da birleştirmek
+  // mümkün ve muhtemelen daha basit, ama bu bir dağıtım topolojisi kararı ve
+  // Cloudflare tarafında kaynak açmayı gerektiriyor — Samet'in kararı.
+  "name": "haber-site",
+  "main": "dist-ssr/server/entry.mjs",
+  "compatibility_date": "2026-08-20",
+  "compatibility_flags": ["nodejs_compat"],
+
+  "assets": {
+    "binding": "ASSETS",
+    "directory": "dist-ssr/client"
+  },
+
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "haber",
+      "database_id": "PLACEHOLDER_YEREL_GELISTIRME",
+      "migrations_dir": "worker/migrations"
+    }
+  ],
+
+  "r2_buckets": [
+    {
+      "binding": "HERO",
+      "bucket_name": "haber-gorseller"
+    }
+  ]
+}

@@ -1,22 +1,23 @@
-﻿// @ts-check
+// @ts-check
+// SSR yapılandırması — YALNIZ Worker dağıtımı için.
+//
+// `astro.config.mjs` dokunulmadan duruyor ve GitHub Pages'e giden statik
+// derleme aynen çalışmaya devam ediyor. İki config'in ayrı olması kasıtlı:
+// D1 yolu kanıtlanana kadar canlı dağıtımın tek satırı bile değişmemeli.
 import { defineConfig } from 'astro/config';
 import { unified } from '@astrojs/markdown-remark';
-import sitemap from '@astrojs/sitemap';
+import cloudflare from '@astrojs/cloudflare';
 import { fileURLToPath } from 'node:url';
 
-// https://astro.build/config
 export default defineConfig({
   site: process.env.PUBLIC_SITE_URL || 'https://haber.sametbasbug.dev',
-  integrations: [sitemap()],
+  // Ayrı çıktı dizini şart: iki config aynı `dist/`'i paylaşırsa biri
+  // diğerinin çıktısını siler ve CI'daki statik derleme sessizce SSR
+  // çıktısının üstüne yazar.
+  outDir: './dist-ssr',
 
-  // Astro 7 varsayılanı 'jsx' oldu: satır içi öğeler arasındaki boşluk JSX
-  // kurallarına göre siliniyor. Sitede bu boşluğa bel bağlayan bir yer olup
-  // olmadığını 585 sayfada tek tek doğrulayamayız; doğrulayamadığımız şeyi
-  // sürüm yükseltmesinin yan etkisi olarak kabul etmiyoruz.
-  //
-  // Eski davranış açıkça sabitlendi. 'jsx'e geçmek ayrı ve ölçülerek verilecek
-  // bir karar; o zaman kazanılan birkaç kilobayt karşılığında ne kaybedildiği
-  // görsel olarak karşılaştırılmalı.
+  output: 'server',
+  adapter: cloudflare(),
   /*
    * Markdown işlemcisi: `unified`, Astro 7 varsayılanı olan `satteri` değil.
    *
@@ -43,9 +44,17 @@ export default defineConfig({
   vite: {
     resolve: {
       alias: {
-        // Statik derlemede binding yoktur; içerik koleksiyondan gelir.
-        // Karşılığı `astro.config.ssr.mjs` içinde gerekçesiyle yazılı.
-        '#runtime-env': fileURLToPath(new URL('./src/data/runtimeEnv.ts', import.meta.url)),
+        /*
+         * Binding erişimi tek bir modülde ve mod başına değişiyor.
+         *
+         * Takma ad ÇIPLAK bir tanımlayıcıya bağlı (`#runtime-env`), göreli
+         * yola değil: Vite takma adları içe aktarma DİZESİYLE eşleştiriyor,
+         * çözülmüş dosya yoluyla değil. Mutlak yolu anahtar yapmak sessizce
+         * hiçbir şey eşleştirmiyor — dal budanıyor, `getDatabase()` sabit
+         * `undefined` dönüyor ve sayfa farkına varmadan koleksiyona düşüyor.
+         * Bu tam olarak başıma geldi ve ancak mutasyon testiyle görüldü.
+         */
+        "#runtime-env": fileURLToPath(new URL("./src/data/runtimeEnv.workers.ts", import.meta.url)),
       },
     },
   },

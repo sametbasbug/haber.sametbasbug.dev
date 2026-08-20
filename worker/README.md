@@ -62,6 +62,7 @@ açık kalabilecek ayrı bir bayrak yok.
 | uçlar ve pano yaşam döngüsü | 26 vaka |
 | ID token doğrulama (gerçek kripto) | 22 vaka |
 | Orbit kimliğiyle tam akış (gerçek ağ) | 10 vaka |
+| **D1'den üretilen sayfa ↔ statik sayfa** | **587/587 birebir** |
 
 Hepsi tek komut:
 
@@ -70,6 +71,7 @@ npm run parity          # çeviri ↔ Python  (5 takım)
 npm run e2e             # uçlar, pano yaşam döngüsü, kapılar  (26 vaka)
 npm run test:orbit      # ID token doğrulama, gerçek kripto  (22 vaka)
 npm run test:orbit:e2e  # Orbit kimliğiyle tam akış, gerçek ağ  (10 vaka)
+npm run parity:page     # D1 sayfası ↔ statik sayfa  (587 sayfa)
 ```
 
 `parity` referanslarını Python tarafı üretir; karşılaştırma iki bağımsız
@@ -90,6 +92,30 @@ npm run dev                                   # e2e için (8787)
 Orbit takımı iki sunucu ister; ikisi de `.claude/launch.json` içinde tanımlı
 (`orbit-fixture` → 8799, `haber-yayin-worker-orbit` → 8788).
 
+## Site D1'den nasıl okuyor
+
+Şablon D1 için ikinci kez YAZILMADI. `NewsLayout` (711 satır) ve
+`[...slug].astro` (447 satır) olduğu gibi duruyor; Astro Cloudflare adaptörüyle
+SSR koşuyor ve içerik kaynağı değişiyor:
+
+```
+sunucu modunda  → D1            (src/data/equinoxHaberD1.ts)
+statik modda    → koleksiyon    (astro:content)
+```
+
+İki kaynak aynı girdi biçimini döndürüyor, o yüzden sayfanın hiçbir satırı
+hangisinin konuştuğunu bilmiyor. Sonuç ölçüldü: **587 sayfanın 587'si bayt
+bayt aynı** — şablon, ilgili haberler, önceki/sonraki, JSON-LD, meta etiketler
+dahil.
+
+Binding erişimi tek bir modülde (`#runtime-env`) ve mod başına takma adla
+değişiyor. Takma adın ÇIPLAK bir tanımlayıcıya bağlı olması şart: Vite takma
+adları içe aktarma dizesiyle eşleştiriyor, çözülmüş dosya yoluyla değil.
+Mutlak yolu anahtar yapmak sessizce hiçbir şey eşleştirmiyor, dal budanıyor ve
+sayfa farkına varmadan koleksiyona düşüyor. Bu tam olarak oldu ve yalnız
+mutasyon testiyle görüldü — parity o sırada 587/587 "geçiyordu", çünkü
+koleksiyonu kendisiyle karşılaştırıyordu.
+
 ## Renderer
 
 Site bugün `satteri` kullanıyor (Astro 7 varsayılanı). Worker `unified()`
@@ -103,10 +129,17 @@ render'da `TypeError: createMdastHandle is not a function`.
 Tek fark URL'lerdeki `&` kaçış biçimi (`&amp;` / `&#x26;`) ve ikisi de geçerli
 HTML.
 
-**Açık karar:** site de `unified()` işlemcisine alınabilir. O zaman sistemde
-tek renderer kalır ve bu kozmetik fark da kaybolur. Bugün agree eden iki
-işlemci yarın ayrışabilir; tek işlemci ayrışamaz. Bu 587 sayfada görünmeyen
-ama gerçek bir diff üretir, o yüzden ayrı bir karar.
+**Site de `unified()`'a alındı** (`astro.config.mjs`). Sistemde artık tek
+renderer var ve `&` farkı kaynağında yok oldu. Gerekçe: bugün anlaşan iki
+işlemci yarın ayrışabilir, tek işlemci ayrışamaz.
+
+Bu geçiş bir şeyi de öğretti. Site `satteri` iken saklanan HTML'de arşivin
+tamamında bir satır sonu eksik görünüyordu ve renderer'a `+ "\n"` eklenmişti.
+Ölçüm doğruydu ama yanlış şeyi söylüyordu: eksik satır sonu Astro'nun genel
+davranışı değil, o zamanki işlemcinin davranışıydı. Site `unified`'a geçince
+ekleme fazlalığa dönüştü ve kaldırıldı. Farkı KAPATMAK ile farkın NEDENİNİ
+bulmak aynı şey değil; kapatmak, sebep değiştiğinde sessizce yanlış hale
+gelir.
 
 ## Kapatılmamış olanlar
 
@@ -122,8 +155,16 @@ Bunlar bilerek açık ve canlıya çıkmadan önce kapanmalı:
    Bu dilimin sorusu "render-on-write uçtan uca çalışıyor mu" idi; şablon
    eşleştirmesi ayrı bir dilim.
 
-3. **Göç.** 587 haber henüz D1'de değil. Kasıtlı: tasarım oturmadan göç etmek
-   göçü iki kez yapmak demek.
+3. **Göç — yerelde yapıldı, canlıda yapılmadı.** `npm run migrate:archive`
+   587 haberi SQL'e çeviriyor (`body_html` göç anında üretiliyor, aynı
+   renderer). Yerel D1'e uygulandı ve sayfa denkliği onun üzerinde ölçüldü.
+   Canlı D1 henüz yok.
+
+   Göç bir de içerik bulgusu çıkardı: **16 haber, 8 kaynağı ikişer kez
+   kullanıyor** — her çift aynı haberin iki sürümü, biri İngilizce slug'la
+   (kaynağın manşetinden türemiş), biri Türkçe. Eski sistemin bilinen
+   davranışı. Göç ikisini de taşıyor; hangisinin kalacağı editoryal bir karar
+   ve göç betiğinin vereceği bir karar değil.
 
 4. **Git write-behind aynası.** Yayımlanan haberin `src/content/`'e yazılıp
    commit'lenmesi henüz yok. D1 gerçek kaynak olacaksa arşiv ve kurtarma yolu

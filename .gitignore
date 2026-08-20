@@ -38,3 +38,9 @@ src/content/equinoxHaber/_drafts/
 
 # Claude Code yerel yardımcı dosyaları
 .claude/
+
+# SSR derleme çıktısı
+dist-ssr/
+
+# wrangler yerel durumu ve derleme artıkları
+.wrangler/

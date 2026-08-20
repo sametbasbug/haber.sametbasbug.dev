@@ -76,6 +76,18 @@ export interface RenderResult {
  * diye böyle: aynı girdi, aynı işlemci, aynı çıktı. */
 export async function renderBody(markdown: string): Promise<RenderResult> {
   const result = await (await processor()).render(markdown);
+
+  /* Çıktı olduğu gibi saklanıyor; sonuna bir şey eklenmiyor.
+   *
+   * Bir ara buraya `+ "\n"` konmuştu, çünkü ölçümde arşivin tamamında tam
+   * bir satır sonu eksik görünüyordu. O ölçüm doğruydu ama yanlış şeyi
+   * söylüyordu: eksik satır sonu Astro'nun genel davranışı değil, o zamanki
+   * işlemcinin (`satteri`) davranışıydı. Site de `unified`'a geçince fark
+   * kaynağında yok oldu ve ekleme fazlalığa dönüştü.
+   *
+   * Ders kayda değer: iki uygulamayı hizalarken farkı kapatmak ile farkın
+   * NEDENİNİ bulmak aynı şey değil. Kapatmak, sebep değiştiğinde sessizce
+   * yanlış hale gelir. */
   return {
     html: result.code,
     headings: result.metadata.headings as RenderResult["headings"],

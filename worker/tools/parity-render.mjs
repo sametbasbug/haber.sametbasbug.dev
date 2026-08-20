@@ -61,11 +61,17 @@ for (const slug of slugs.slice(0, limit)) {
   // geçerli HTML ve tarayıcıda aynı karaktere çözülüyor; arşivde bu farkı
   // gösteren 182 haber var ve hepsinde tek sebep kaynak URL'indeki utm
   // parametreleri. Site de `unified()` işlemcisine alınırsa bu satır düşer.
+  //
+  // Kırpma YAPILMIYOR. Başlangıçta `.trim()` vardı ve sondaki satır sonu
+  // farkını 587 haberin hepsinde gizliyordu; hata ancak tam sayfa
+  // karşılaştırmasında ortaya çıktı. Şablonun kattığı tek boşluk baştan ve
+  // sondan çıkarılıyor, geri kalan markdown çıktısının kendisi.
   const normalize = (value) => value.replaceAll("&#x26;", "&amp;");
+  const inner = prose.replace(/^ /u, "").replace(/ $/u, "");
 
-  if (normalize(prose.trim()) !== normalize(mine.html.trim())) {
+  if (normalize(inner) !== normalize(mine.html)) {
     if (failures.length < 3) {
-      const a = normalize(prose.trim()), b = normalize(mine.html.trim());
+      const a = normalize(inner), b = normalize(mine.html);
       let at = 0;
       while (at < a.length && at < b.length && a[at] === b[at]) at += 1;
       failures.push({ slug, ilkAyrimIndex: at,
