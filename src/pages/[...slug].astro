@@ -5,8 +5,7 @@ import NewsCard from '../components/news/NewsCard.astro';
 import { findAuthorByName } from '../data/authors';
 import { formatNewsDate, getEquinoxHaberCategories, getNewsCategoryToken, getPublishedEquinoxHaber, normalizeNewsCategory } from '../data/equinoxHaber';
 import { getNewsArticleHref, getNewsCanonicalUrl, getNewsHomeHref } from '../data/newsSite';
-import { getPublishedFromD1 } from '../data/equinoxHaberD1';
-import { getDatabase } from '#runtime-env';
+
 
 export async function getStaticPaths() {
 	const entries = await getPublishedEquinoxHaber();
@@ -15,27 +14,16 @@ export async function getStaticPaths() {
 
 const routeSlug = Astro.params.slug;
 
-/*
- * İçerik iki kaynaktan gelebilir ve aşağıdaki hiçbir satır hangisinin
- * konuştuğunu bilmiyor:
- *
- *   - sunucu modunda (Cloudflare adaptörü)  → D1
- *   - statik modda                          → içerik koleksiyonu
- *
- * İkisi de aynı girdi biçimini döndürüyor (`src/data/equinoxHaberD1.ts`).
- * Şablonu D1 için ikinci kez yazmak, 1900 satırlık düzeni iki yerde bakmak
- * demekti; bu ayrım onun yerine geçiyor.
- */
-const db = getDatabase();
-const allEntries = db ? await getPublishedFromD1(db) : await getPublishedEquinoxHaber();
+/* Kaynak seçimi `getPublishedEquinoxHaber` içinde; burası hangi kaynaktan
+   okuduğunu bilmiyor. */
+const allEntries = await getPublishedEquinoxHaber();
 const entry = allEntries.find((item) => item.id === routeSlug);
 
 if (!entry) {
 	/* Statik modda buraya düşülmez: `getStaticPaths` yalnız var olan
-	   haberlerin adresini üretir. Sunucu modunda ise bilinmeyen bir slug
-	   normal bir istektir ve 404 ile cevaplanır, hata ile değil. */
-	if (db) return new Response(null, { status: 404 });
-	throw new Error(`Haber bulunamadı: ${routeSlug}`);
+	   haberlerin adresini üretir. Sunucu modunda bilinmeyen bir slug normal
+	   bir istektir ve 404 doğru cevaptır — hata fırlatmak 500 üretirdi. */
+	return new Response(null, { status: 404 });
 }
 
 /* D1 girdisi yazma anında üretilmiş HTML taşır; koleksiyon girdisi markdown

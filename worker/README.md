@@ -62,7 +62,7 @@ açık kalabilecek ayrı bir bayrak yok.
 | uçlar ve pano yaşam döngüsü | 26 vaka |
 | ID token doğrulama (gerçek kripto) | 22 vaka |
 | Orbit kimliğiyle tam akış (gerçek ağ) | 10 vaka |
-| **D1'den üretilen sayfa ↔ statik sayfa** | **587/587 birebir** |
+| **D1'den üretilen sayfa ↔ statik sayfa** | **592/592 birebir** |
 
 Hepsi tek komut:
 
@@ -71,7 +71,7 @@ npm run parity          # çeviri ↔ Python  (5 takım)
 npm run e2e             # uçlar, pano yaşam döngüsü, kapılar  (26 vaka)
 npm run test:orbit      # ID token doğrulama, gerçek kripto  (22 vaka)
 npm run test:orbit:e2e  # Orbit kimliğiyle tam akış, gerçek ağ  (10 vaka)
-npm run parity:page     # D1 sayfası ↔ statik sayfa  (587 sayfa)
+npm run parity:page     # D1 sayfası ↔ statik sayfa  (592 sayfa)
 ```
 
 `parity` referanslarını Python tarafı üretir; karşılaştırma iki bağımsız
@@ -103,10 +103,18 @@ sunucu modunda  → D1            (src/data/equinoxHaberD1.ts)
 statik modda    → koleksiyon    (astro:content)
 ```
 
-İki kaynak aynı girdi biçimini döndürüyor, o yüzden sayfanın hiçbir satırı
-hangisinin konuştuğunu bilmiyor. Sonuç ölçüldü: **587 sayfanın 587'si bayt
-bayt aynı** — şablon, ilgili haberler, önceki/sonraki, JSON-LD, meta etiketler
-dahil.
+Kaynak seçimi `getPublishedEquinoxHaber()` içinde, TEK noktada. Ana sayfa,
+arşiv sayfaları, RSS ve haber site haritası hep o fonksiyondan geçiyor — biri
+D1'den diğeri koleksiyondan okusaydı yeni yayımlanan bir haber kendi adresinde
+görünür ama listelerde görünmezdi.
+
+Sonuç ölçüldü: **592 sayfanın 592'si bayt bayt aynı** — 587 haber, ana sayfa,
+iki arşiv sayfası, RSS ve site haritası. Şablon, ilgili haberler,
+önceki/sonraki, JSON-LD ve meta etiketler dahil.
+
+Sunucu modunda `getStaticPaths` çalışmadığı için arşiv sayfalaması çalışma
+anında yeniden kuruluyor (`sayfa/[page]`); aralık dışı sayfa numarası 404
+döner, uydurulmaz.
 
 Binding erişimi tek bir modülde (`#runtime-env`) ve mod başına takma adla
 değişiyor. Takma adın ÇIPLAK bir tanımlayıcıya bağlı olması şart: Vite takma

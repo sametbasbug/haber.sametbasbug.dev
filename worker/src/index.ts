@@ -127,8 +127,10 @@ export function bodyMarkdown(body: string, sources: { name: string; url: string 
     parts.push("", "## Ek kaynaklar", "");
     for (const source of supporting) parts.push(`- [${source.name}](${source.url})`);
   }
-  parts.push("");
-  return parts.join("\n");
+  /* Sonda boş satır bırakılmıyor: `body_md` Astro'nun `entry.body`'siyle aynı
+     biçimde saklanmalı (kırpılmış), yoksa RSS'in `content:encoded` alanı
+     arşivden gelen haberle yeni yayımlanan haber arasında ayrışır. */
+  return parts.join("\n").trim();
 }
 
 async function writeBrief(request: Request, env: Env): Promise<Response> {

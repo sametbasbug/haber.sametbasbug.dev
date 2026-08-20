@@ -14,7 +14,37 @@ interface Props {
 	page: Page<EquinoxHaberEntry>;
 }
 
-const { page } = Astro.props as Props;
+/*
+ * `paginate()` yalnız statik modda çalışır: `getStaticPaths` sunucu modunda
+ * yok sayılıyor ve `Astro.props.page` boş geliyor. Aynı sayfalama çalışma
+ * anında yeniden kuruluyor.
+ *
+ * Kullanılan üç alan var — `data`, `currentPage`, `lastPage` — ve üçü de
+ * `paginate()`'in ürettiğiyle aynı anlamı taşımak zorunda; aksi halde iki mod
+ * farklı sayfalar üretir. Denklik `worker/tools/parity-page.mjs` içinde
+ * ölçülüyor.
+ */
+let { page } = Astro.props as Props;
+
+if (!page) {
+	const entries = await getPublishedEquinoxHaber();
+	const size = EQUINOX_HABER_ARCHIVE_PAGE_SIZE;
+	const lastPage = Math.max(1, Math.ceil(entries.length / size));
+	const requested = Number(Astro.params.page ?? 1);
+
+	/* Aralık dışı sayfa numarası uydurulmuyor: statik modda o adres hiç
+	   üretilmezdi, sunucu modunda da var olmamalı. */
+	if (!Number.isInteger(requested) || requested < 1 || requested > lastPage) {
+		return new Response(null, { status: 404 });
+	}
+
+	page = {
+		data: entries.slice((requested - 1) * size, requested * size),
+		currentPage: requested,
+		lastPage,
+	} as Props['page'];
+}
+
 const categories = getEquinoxHaberCategories();
 const currentPage = page.currentPage;
 const totalPages = page.lastPage;

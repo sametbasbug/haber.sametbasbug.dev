@@ -38,7 +38,14 @@ for (const file of files) {
   if (!match) { skipped.push(`${slug}: frontmatter yok`); continue; }
 
   const data = parseYaml(match[1]);
-  const body = raw.slice(match[0].length);
+
+  /* Gövde kırpılıyor çünkü Astro'nun içerik koleksiyonu `entry.body`'yi
+     kırpılmış veriyor ve `rss.xml.ts` onu doğrudan `content:encoded` içine
+     yazıyor. Kırpmazsak RSS iki modda farklı çıkar. Bu kural varsayılmadı:
+     statik RSS çıktısından geri okundu (`.strip()` ile birebir eşleşiyor).
+     Markdown açısından baştaki/sondaki boş satır anlamsız, yani üretilen
+     HTML değişmiyor. */
+  const body = raw.slice(match[0].length).trim();
 
   /* Taslaklar da taşınıyor. Atlamak, arşivde var olan bir şeyi sessizce
      kaybetmek olurdu; `is_draft` alanı zaten ayrımı taşıyor. */

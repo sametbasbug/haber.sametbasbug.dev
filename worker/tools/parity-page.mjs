@@ -40,6 +40,40 @@ const normalize = (html) => html
 let checked = 0, skipped = 0;
 const failures = [];
 
+/* Haber sayfaları tek başına yetmez. Kaynak seçimi `getPublishedEquinoxHaber`
+ * içinde tek noktada yapılıyor ve o fonksiyonu ana sayfa, arşiv sayfaları,
+ * RSS ve haber site haritası da çağırıyor. Biri D1'den diğeri koleksiyondan
+ * okusaydı yeni bir haber kendi adresinde görünür ama listelerde görünmezdi —
+ * sessiz ve teşhisi zor bir tutarsızlık. Bu yüzden hepsi karşılaştırılıyor. */
+const extraPaths = [
+  ["/", "dist/index.html"],
+  ["/sayfa/2/", "dist/sayfa/2/index.html"],
+  ["/sayfa/3/", "dist/sayfa/3/index.html"],
+  ["/rss.xml", "dist/rss.xml"],
+  ["/news-sitemap.xml", "dist/news-sitemap.xml"],
+];
+
+for (const [path, distRelative] of extraPaths) {
+  const distPath = `${ROOT}${distRelative}`;
+  if (!existsSync(distPath)) { skipped += 1; continue; }
+
+  const response = await fetch(`${BASE}${path}`);
+  if (!response.ok) { failures.push({ sayfa: path, sorun: `SSR ${response.status}` }); continue; }
+
+  const fromD1 = normalize(await response.text());
+  const fromStatic = normalize(readFileSync(distPath, "utf-8"));
+  if (fromD1 !== fromStatic) {
+    let i = 0;
+    while (i < fromD1.length && i < fromStatic.length && fromD1[i] === fromStatic[i]) i += 1;
+    failures.push({
+      sayfa: path, ilkAyrim: i,
+      statik: fromStatic.slice(Math.max(0, i - 70), i + 110),
+      d1: fromD1.slice(Math.max(0, i - 70), i + 110),
+    });
+  }
+  checked += 1;
+}
+
 for (const slug of slugs.slice(0, limit)) {
   const distPath = `${ROOT}dist/${slug}/index.html`;
   if (!existsSync(distPath)) { skipped += 1; continue; }

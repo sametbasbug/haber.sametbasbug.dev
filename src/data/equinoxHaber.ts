@@ -1,5 +1,7 @@
 import { getCollection, type CollectionEntry } from 'astro:content';
 import { getNewsHomeHref, getNewsStreamPageHref } from './newsSite';
+import { getPublishedFromD1, type D1NewsEntry } from './equinoxHaberD1';
+import { getDatabase } from '#runtime-env';
 
 /** Ana sayfanın öne çıkan panelini besleyen havuz. */
 export const EQUINOX_HABER_PAGE_SIZE = 20;
@@ -15,7 +17,27 @@ export const NEWS_CATEGORIES = ['Siyaset', 'Ekonomi', 'Teknoloji', 'Bilim'] as c
 export type NewsCategory = (typeof NEWS_CATEGORIES)[number];
 export type EquinoxHaberEntry = CollectionEntry<'equinoxHaber'>;
 
-export async function getPublishedEquinoxHaber() {
+/**
+ * Yayımlanmış haberler, yeniden eskiye.
+ *
+ * Kaynak seçimi TEK yerde, burada. Çağıran hiçbir sayfa hangi kaynaktan
+ * okuduğunu bilmiyor ve bilmemeli:
+ *
+ *   - sunucu modunda (Cloudflare adaptörü)  → D1
+ *   - statik modda                          → içerik koleksiyonu
+ *
+ * Ayrımın burada olması bir kolaylık değil, doğruluk şartı. Bir sayfa D1'den,
+ * diğeri koleksiyondan okusaydı yeni yayımlanan bir haber kendi adresinde
+ * görünür ama ana sayfada, arşivde ve RSS'te görünmezdi — sessiz ve
+ * teşhisi zor bir tutarsızlık.
+ */
+export async function getPublishedEquinoxHaber(): Promise<(EquinoxHaberEntry | D1NewsEntry)[]> {
+	const db = getDatabase();
+	if (db) {
+		// D1 tarafında sıralama ve taslak filtresi sorguda yapılıyor.
+		return getPublishedFromD1(db);
+	}
+
 	return (await getCollection('equinoxHaber'))
 		.filter((entry) => !entry.data.isDraft)
 		.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
