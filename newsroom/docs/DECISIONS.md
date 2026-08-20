@@ -340,3 +340,36 @@ stok bir yedektir, norm değil.
 döndürmüyor. Asteria tahmin etmedi, bilmediğini söyledi. Kota Nyx'le paylaşıldığı
 için bu sayı önemli; canlıda saat başı bir üretimle ampirik olarak izlenmesi
 gerekecek.
+
+---
+
+## K13 — Codex CLI artık yerleşik görsel üretimini taşıyor
+
+**Karar yok, ölçüm var. Selene.** 2026-08-20.
+
+K6'daki "Codex uygulama üzerinden çalışır, CLI değil" kısıtı güncel runtime'da
+geçerliliğini yitirdi. `codex-cli 0.148.0` feature listesinde
+`image_generation` özelliği `stable` ve etkin durumda. Non-interactive
+`codex exec --ephemeral --enable image_generation` turunda ajan, sistemdeki
+`imagegen` skill'ini okuyup yerleşik image-generation aracını kullandı; API
+anahtarı isteyen fallback CLI yoluna geçmedi.
+
+Kontrollü testte kodla görsel üretme yolları özellikle yasaklandı: SVG,
+HTML/canvas, Python/Pillow, ImageMagick, ekran görüntüsü ve stok indirme yoktu.
+Codex buna rağmen gerçek raster çıktı üretti ve kendi `$CODEX_HOME/generated_images`
+alanından Equinox Local workspace'e kopyaladı.
+
+Ölçüm:
+
+- yerleşik Codex çıktısı: PNG, 1672×941, yaklaşık 1,8 MB
+- `hero.normalize()` sonucu: WebP, 1200×675, 52 KB
+- sonuç: `origin='generated'`, hata yok
+
+Böylece saatlik haber turunda hero sırası değişmeden kalır, fakat birinci basamak
+artık GUI'ye bağımlı değildir: Selene haber brief'ini yazar, ayrı Codex CLI görsel
+turu raster dosyayı üretir, `heroImagePath` bu dosyayı newsroom'a verir. Codex
+üretimi başarısızsa mevcut Pexels yedeği devreye girer.
+
+Ressam profilinin adı ve kişiliği bu sözleşmenin parçası değildir. Asteria başka
+bir göreve taşınır ve Codex CLI için ayrı bir görsel ajan profili oluşturulursa
+yalnız profil seçimi değişir; newsroom sözleşmesi değişmez.

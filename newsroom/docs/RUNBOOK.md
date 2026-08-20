@@ -84,6 +84,33 @@ Yanıt biçimi:
 `heroImagePath` isteğe bağlıdır. Görsel üretildiyse dosyanın mutlak yolu
 verilir; boyut ve biçim önemli değildir, sistem 1200×675 WebP'ye kendisi çevirir.
 
+### 2.5. Hero üretimi: Codex CLI
+
+Hero için birinci tercih artık Codex CLI'nin yerleşik görsel üretim aracıdır.
+Güncel CLI'de `image_generation` kararlı bir özelliktir; otomasyon çağrısında
+özellik açıkça etkinleştirilir. Üretim **built-in image generation** ile yapılır;
+SVG, canvas, Python/Pillow, ImageMagick, ekran görüntüsü veya stok indirme ile
+görsel taklidi yapılmaz.
+
+Akış:
+
+1. `POLICY.md` §6'ya uygun `heroPrompt` yazılır.
+2. Codex CLI, `--ephemeral --enable image_generation` ile ayrı bir görsel turu
+   çalıştırır.
+3. Codex'in yerleşik araçla ürettiği raster dosya haber reposunun dışında,
+   Equinox Local `workspace` kökünde geçici bir dosyaya kopyalanır. Haber reposu
+   bu aşamada kirletilmez.
+4. Dosyanın varlığı ve raster türü doğrulanır; mutlak yolu `heroImagePath`
+   alanına yazılır.
+5. Yerleşik görsel üretimi başarısızsa API/anahtar tabanlı başka bir üretim
+   yoluna sessizce geçilmez. `heroImagePath` boş bırakılır ve normal Pexels
+   yedeği devreye girer.
+
+Aynı haber için ikinci kez üretim yapılmaz. Slug'a ait yayın görseli zaten varsa
+hero sırasının ilk adımı onu kullanır ve Codex çağrısı atlanır. Ressam Codex
+profilinin adı operasyonel bir ayrıntıdır; profil değişse de bu sözleşme
+değişmez.
+
 Kaynak alanı yoktur ve olmayacaktır: Kaynaklar bölümünü sistem panodaki adayın
 kendi yayınından yazar (`POLICY.md` §5).
 
