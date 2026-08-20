@@ -12,6 +12,43 @@ HTTP. Böylece yayın "repoda komut çalıştırmak" olmaktan çıkıp "paket
 göndermek" oluyor: hangi ajanın yayımladığı, hangi makinede olduğu ve çalışma
 ağacının temiz olup olmadığı yayının koşulu olmaktan çıkıyor.
 
+## Akış
+
+```
+POST /api/brief    → pano sabitlenir, briefId döner
+POST /api/publish  → haber o panoya karşı ölçülür ve yayımlanır
+```
+
+İki adımın ayrılması kasıtlı. Pano yükün içinde gelseydi "panoda olmayan
+aday" ve "çevrilmemiş başlık" kapıları, yayımlamak isteyen tarafın kendi
+yazdığı referansa karşı ölçerdi. Aynı ajan ikisini de yapıyorken bile ayrım
+kazandırır: aday listesi haber yazılmadan önce donar ve sonradan haberi haklı
+çıkaracak şekilde şekillendirilemez. Pano bir kez tüketilir.
+
+## Kimlik ve yetki
+
+İki soru ayrı sorulur:
+
+| soru | cevap veren |
+|---|---|
+| Bu istek kimden geliyor? | Orbit'in ES256 imzalı ID token'ı (JWKS ile doğrulanır) |
+| O kimlik ne yapabilir? | haber'in kendi `publishers` tablosu |
+
+Orbit ikinciyi cevaplamaz ve cevaplamaması bilinçlidir: site kapsamlarının
+tamamı okumadır ve `site-authorization-scopes.ts` "ajan adına yazma yetkisi"
+verilmediğini gerekçesiyle yazar — bir siteye giriş izni, o sitenin kullanıcı
+adına konuşmasına dönüşemez. Yetkiyi Orbit'ten ithal etmek, Orbit'in kasten
+kapattığı kapıyı arkadan açmak olurdu.
+
+Bunun iki görünür sonucu var: kimliği doğrulanmış ama listede olmayan biri
+**403** alır (401 değil — "kim olduğunu bilmiyorum" ile "biliyorum, yetkin
+yok" farklı sorunlardır), ve yayın imzası token'ın `sub`'una bağlı tablo
+satırından gelir, yükten değil. Yükte başka bir imza yazması sonucu
+değiştirmez.
+
+`ORBIT_ISSUER` tanımlıyken paylaşılan sır yolu kendiliğinden kapanır; unutulup
+açık kalabilecek ayrı bir bayrak yok.
+
 ## Ölçülen
 
 | | sonuç |
@@ -22,15 +59,36 @@ ağacının temiz olup olmadığı yayının koşulu olmaktan çıkıyor.
 | dil kapısı ↔ Python | 741 gövde + 1170 başlık, sapma 0 |
 | kabul sözleşmesi ↔ Python | 609 vaka, kod ve mesaj dahil birebir |
 | slug ↔ Python `slugify` | 596 vaka birebir |
+| uçlar ve pano yaşam döngüsü | 26 vaka |
+| ID token doğrulama (gerçek kripto) | 22 vaka |
+| Orbit kimliğiyle tam akış (gerçek ağ) | 10 vaka |
 
 Hepsi tek komut:
 
 ```bash
-npm run parity
+npm run parity          # çeviri ↔ Python  (5 takım)
+npm run e2e             # uçlar, pano yaşam döngüsü, kapılar  (26 vaka)
+npm run test:orbit      # ID token doğrulama, gerçek kripto  (22 vaka)
+npm run test:orbit:e2e  # Orbit kimliğiyle tam akış, gerçek ağ  (10 vaka)
 ```
 
-Referansları Python tarafı üretir, karşılaştırma iki bağımsız uygulamayı
-sınar — tek uygulamayı kendine karşı değil.
+`parity` referanslarını Python tarafı üretir; karşılaştırma iki bağımsız
+uygulamayı sınar, tek uygulamayı kendine karşı değil.
+
+`test:orbit` anahtarı kendi üretir ve token'ı kendi imzalar: bozulmuş imza,
+`alg:none`, algoritma değiştirme, süresi dolmuş token, başka site için
+verilmiş token, bilinmeyen anahtar ve anahtar değişimi ayrı ayrı sınanır.
+Sahte bir "doğrulandı" dönüşü yok — imza bozulunca test düşer.
+
+`e2e` ve `test:orbit:e2e` çalışan bir Worker ister:
+
+```bash
+npm run migrate:local
+npm run dev                                   # e2e için (8787)
+```
+
+Orbit takımı iki sunucu ister; ikisi de `.claude/launch.json` içinde tanımlı
+(`orbit-fixture` → 8799, `haber-yayin-worker-orbit` → 8788).
 
 ## Renderer
 
@@ -54,25 +112,20 @@ ama gerçek bir diff üretir, o yüzden ayrı bir karar.
 
 Bunlar bilerek açık ve canlıya çıkmadan önce kapanmalı:
 
-1. **Kimlik.** `authorize()` şu an paylaşılan bir sır karşılaştırıyor.
-   Tasarlanan şey Orbit'in ES256 imzalı ID token'ının JWKS üzerinden
-   doğrulanması ve `author`'ın token'ın `sub`'undan türetilmesi. Orbit'te
-   istemci kaydı gerektiriyor. Buraya sahte bir Orbit doğrulaması yazılmadı:
-   çalışıyormuş gibi duran bir kimlik katmanı, hiç olmayanından tehlikelidir.
+1. **Orbit istemci kaydı.** Doğrulama kodu yazıldı ve sınandı, ama gerçek
+   Orbit'te haber için bir istemci kaydı ve `sub` değerleri henüz yok —
+   o Samet'in kararı. `publishers` tablosu bu yüzden boş; Selene'nin `sub`'u
+   Orbit token verdiğinde eklenecek. Yapılandırılana kadar Worker yerel
+   geliştirme sırrıyla çalışır.
 
-2. **Pano güveni.** `brief` yükün içinde geliyor, yani "panoda olmayan aday"
-   ve "çevrilmemiş başlık" kapıları ajanın kendi beyan ettiği panoya karşı
-   ölçüyor. Kapılar duruyor ama kandırılabilir. Doğrusu: `prepare` panoyu
-   sunucuya yazsın, `publish` yalnız `briefId` göndersin.
-
-3. **Şablon.** `GET /<slug>` çıplak HTML döndürüyor, `NewsLayout` değil.
+2. **Şablon.** `GET /<slug>` çıplak HTML döndürüyor, `NewsLayout` değil.
    Bu dilimin sorusu "render-on-write uçtan uca çalışıyor mu" idi; şablon
    eşleştirmesi ayrı bir dilim.
 
-4. **Göç.** 587 haber henüz D1'de değil. Kasıtlı: tasarım oturmadan göç etmek
+3. **Göç.** 587 haber henüz D1'de değil. Kasıtlı: tasarım oturmadan göç etmek
    göçü iki kez yapmak demek.
 
-5. **Git write-behind aynası.** Yayımlanan haberin `src/content/`'e yazılıp
+4. **Git write-behind aynası.** Yayımlanan haberin `src/content/`'e yazılıp
    commit'lenmesi henüz yok. D1 gerçek kaynak olacaksa arşiv ve kurtarma yolu
    olarak bu gerekiyor.
 
