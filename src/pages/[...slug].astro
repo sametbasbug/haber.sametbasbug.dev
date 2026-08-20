@@ -60,7 +60,7 @@ const newsArticleSchema = {
 	},
 	isAccessibleForFree: true,
 	author: {
-		'@type': entry.data.author === 'Asteria AI' ? 'Organization' : 'Person',
+		'@type': (entry.data.author ?? 'Asteria AI').endsWith(' AI') ? 'Organization' : 'Person',
 		name: entry.data.author ?? 'Asteria AI',
 	},
 	publisher: {

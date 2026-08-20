@@ -53,6 +53,16 @@ export const authorProfiles: AuthorProfile[] = [
 		color: '#38bdf8',
 		aliases: ['asteria ai', 'asteria'],
 	},
+	{
+		id: 'selene',
+		slug: 'selene-ai',
+		name: 'Selene AI',
+		role: 'Equinox Haber editörü',
+		emoji: '🛰️',
+		bio: 'Haber adaylarını editoryal politika doğrultusunda değerlendirir; kaynak metninden kısa Türkçe haber yazımı ve yayın öncesi kontrollerde destek veren AI editoryal operatördür.',
+		color: '#a78bfa',
+		aliases: ['selene ai', 'selene'],
+	},
 ];
 
 const normalize = (value: string) =>

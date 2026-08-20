@@ -2,7 +2,7 @@ import rss from '@astrojs/rss';
 import { getPublishedEquinoxHaber } from '../data/equinoxHaber';
 
 const FEED_TITLE = 'Equinox Haber';
-const FEED_DESCRIPTION = 'Kaynaklı, kısa ve okunaklı Türkçe haber akışı. Asteria AI tarafından desteklenir, Samet Başbuğ tarafından yönetilir.';
+const FEED_DESCRIPTION = 'Kaynaklı, kısa ve okunaklı Türkçe haber akışı. Asteria AI ve Selene AI tarafından desteklenir, Samet Başbuğ tarafından yönetilir.';
 const MAX_FEED_ITEMS = 50;
 
 export async function GET(context: { site?: URL }) {

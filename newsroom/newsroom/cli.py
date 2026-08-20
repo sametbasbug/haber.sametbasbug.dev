@@ -17,6 +17,7 @@ from pathlib import Path
 import sys
 
 from newsroom.cycle import BRIEF_PATH, CycleState, prepare, publish
+from newsroom.publish import DEFAULT_AUTHOR, SUPPORTED_AUTHORS
 
 
 def _emit(payload: dict, *, ok: bool) -> int:
@@ -57,7 +58,7 @@ def _publish(args: argparse.Namespace) -> int:
     if isinstance(payload, dict) and "__error__" in payload:
         return _emit({"ok": False, "problems": [payload["__error__"]]}, ok=False)
 
-    report = publish(payload, build=not args.no_build, do_commit=not args.no_commit)
+    report = publish(payload, build=not args.no_build, do_commit=not args.no_commit, author=args.author)
 
     return _emit(
         {
@@ -105,10 +106,11 @@ def build_parser() -> argparse.ArgumentParser:
     )
     prepare_cmd.set_defaults(func=_prepare)
 
-    publish_cmd = sub.add_parser("publish", help="Asteria yanıtını yayına taşır")
+    publish_cmd = sub.add_parser("publish", help="Editoryal operatör yanıtını yayına taşır")
     group = publish_cmd.add_mutually_exclusive_group(required=True)
     group.add_argument("--response", help="Yanıt JSON dosyası")
     group.add_argument("--stdin", action="store_true", help="Yanıtı stdin'den oku")
+    publish_cmd.add_argument("--author", choices=SUPPORTED_AUTHORS, default=DEFAULT_AUTHOR, help=f"Yayın imzası (varsayılan: {DEFAULT_AUTHOR})")
     publish_cmd.add_argument("--no-build", action="store_true", help="Astro build adımını atla")
     publish_cmd.add_argument("--no-commit", action="store_true", help="Commit adımını atla")
     publish_cmd.set_defaults(func=_publish)

@@ -29,7 +29,7 @@ from newsroom.accept import AcceptError, validate
 from newsroom.brief import attach_text, build_brief, select_board
 from newsroom.ingest import collect
 from newsroom.live import load_live
-from newsroom.publish import PUBLISH_TZ, render, slugify, write
+from newsroom.publish import DEFAULT_AUTHOR, PUBLISH_TZ, SUPPORTED_AUTHORS, render, slugify, write
 from newsroom.screen import eligible
 from newsroom.sources import due_sources, load_sources
 from newsroom.verify import commit, verify
@@ -207,9 +207,14 @@ def publish(
     hero_dir: Path | None = None,
     build: bool = True,
     do_commit: bool = True,
+    author: str = DEFAULT_AUTHOR,
 ) -> PublishReport:
     """Asteria yanıtını doğrular ve yayına taşır."""
     report = PublishReport()
+    if author not in SUPPORTED_AUTHORS:
+        report.problems.append(f"desteklenmeyen yazar: {author}")
+        return report
+
     source_brief = brief
     if source_brief is None:
         target = brief_path or BRIEF_PATH
@@ -265,6 +270,7 @@ def publish(
             hero_describes_selection=hero_result.stock_description is None,
             now=moment,
             slug=slug,
+            author=author,
         )
 
         try:

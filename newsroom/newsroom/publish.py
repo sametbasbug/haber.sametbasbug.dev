@@ -23,7 +23,8 @@ DEFAULT_CONTENT_DIR = (
 # Yayın saati Türkiye saatiyle yazılır; mevcut arşivin tamamı bu biçimde.
 PUBLISH_TZ = ZoneInfo("Europe/Istanbul")
 
-AUTHOR = "Asteria AI"
+DEFAULT_AUTHOR = "Asteria AI"
+SUPPORTED_AUTHORS = ("Asteria AI", "Selene AI")
 HERO_DIR = "/images/generated/equinox-haber"
 
 # Türkçe harfler ASCII karşılıklarına eşlenir. `str.lower()` "İ" için birleşik
@@ -75,6 +76,7 @@ def render(
     hero_describes_selection: bool = True,
     now: datetime | None = None,
     slug: str | None = None,
+    author: str = DEFAULT_AUTHOR,
 ) -> str:
     """Yayına girecek markdown dosyasının tam içeriğini üretir."""
     moment = (now or datetime.now(PUBLISH_TZ)).astimezone(PUBLISH_TZ)
@@ -103,7 +105,7 @@ def render(
     lines += [
         "isDraft: false",
         f"tags: {json.dumps(selection['tags'], ensure_ascii=False)}",
-        f"author: {_scalar(AUTHOR)}",
+        f"author: {_scalar(author)}",
         f"category: {_scalar(selection['category'])}",
         "breaking: false",
         "sources:",

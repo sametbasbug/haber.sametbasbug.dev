@@ -33,6 +33,14 @@ class TestParser:
         with pytest.raises(SystemExit):
             build_parser().parse_args(["publish", "--stdin", "--response", "x.json"])
 
+    def test_varsayilan_yazar_asteria(self) -> None:
+        args = build_parser().parse_args(["publish", "--response", "x.json"])
+        assert args.author == "Asteria AI"
+
+    def test_selene_yazari_secilebilir(self) -> None:
+        args = build_parser().parse_args(["publish", "--response", "x.json", "--author", "Selene AI"])
+        assert args.author == "Selene AI"
+
     def test_varsayilan_secim_sayisi_bir(self) -> None:
         assert build_parser().parse_args(["prepare"]).select_count == 1
 

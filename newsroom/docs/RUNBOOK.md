@@ -99,6 +99,17 @@ görünmez; 2'ye çıkılırsa geçerli davranış budur.
 newsroom/.venv/bin/newsroom publish --response yanit.json
 ```
 
+Varsayılan yayın imzası `Asteria AI`dır. Aynı editoryal akışı yetkili başka bir
+operatör çalıştırıyorsa imza açıkça seçilebilir:
+
+```bash
+newsroom/.venv/bin/newsroom publish --response yanit.json --author "Selene AI"
+```
+
+Yazar adı model yanıtının parçası değildir; operasyonel metadata olarak CLI
+tarafından belirlenir. Böylece içerik sözleşmesi değişmeden Asteria varsayılan
+kalır ve farklı bir operatör yanlışlıkla Asteria imzasıyla yayımlanmaz.
+
 Yanıtı sözleşmeye karşı doğrular, markdown'ı yazar, hero'yu yerleştirir,
 denetimleri ve Astro build'i çalıştırır, dar kapsamlı commit atar.
 

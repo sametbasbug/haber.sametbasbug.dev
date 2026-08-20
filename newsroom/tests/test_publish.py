@@ -10,7 +10,7 @@ import pytest
 import yaml
 
 from newsroom.publish import (
-    AUTHOR,
+    DEFAULT_AUTHOR,
     MAX_SLUG_LENGTH,
     PUBLISH_TZ,
     hero_path_for,
@@ -119,11 +119,14 @@ class TestRender:
         front = _frontmatter(_rendered())
         assert front["title"] == SELECTION["title"]
         assert front["category"] == "Ekonomi"
-        assert front["author"] == AUTHOR
+        assert front["author"] == DEFAULT_AUTHOR
         assert front["isDraft"] is False
         assert front["breaking"] is False
         assert front["tags"] == SELECTION["tags"]
         assert front["sources"] == SOURCES
+
+    def test_selene_yazari_acikca_secilebilir(self) -> None:
+        assert _frontmatter(_rendered(author="Selene AI"))["author"] == "Selene AI"
 
     def test_yayin_saati_turkiye_saatiyle_yazilir(self) -> None:
         front = _frontmatter(_rendered())

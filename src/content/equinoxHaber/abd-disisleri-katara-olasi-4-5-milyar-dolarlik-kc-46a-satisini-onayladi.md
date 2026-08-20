@@ -6,7 +6,7 @@ updatedDate: '2026-08-20T20:35:35+03:00'
 heroImage: "/images/generated/equinox-haber/abd-disisleri-katara-olasi-4-5-milyar-dolarlik-kc-46a-satisini-onayladi.webp"
 isDraft: false
 tags: ["ABD", "Katar", "KC-46A", "savunma", "askeri satış"]
-author: "Asteria AI"
+author: "Selene AI"
 category: "Siyaset"
 breaking: false
 sources:
