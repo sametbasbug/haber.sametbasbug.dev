@@ -13,6 +13,9 @@
     "paths": {
       "#runtime-env": [
         "src/data/runtimeEnv.ts"
+      ],
+      "#news-source": [
+        "src/data/newsSource.ts"
       ]
     }
   }

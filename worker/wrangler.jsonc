@@ -17,9 +17,11 @@
     {
       "binding": "DB",
       "database_name": "haber",
-      // Gerçek kimlik Cloudflare hesabında oluşturulunca yazılır. Yerel
-      // geliştirmede (`wrangler dev`) kullanılmıyor.
-      "database_id": "PLACEHOLDER_YEREL_GELISTIRME",
+      // Kimlik `wrangler.ssr.jsonc` ile aynı olmak zorunda: wrangler yerel
+      // D1 durumunu database_id ile anahtarlıyor. Farklı kimlik = farklı
+      // (ve boş) yerel veritabanı, ve teşhisi "no such table: articles"
+      // gibi görünüyor.
+      "database_id": "e2ebdbbc-9fcc-4f73-b7f2-215b87307bab",
       "migrations_dir": "migrations"
     }
   ],

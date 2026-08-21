@@ -1,7 +1,6 @@
-import { getCollection, type CollectionEntry } from 'astro:content';
+import type { CollectionEntry } from 'astro:content';
 import { getNewsHomeHref, getNewsStreamPageHref } from './newsSite';
-import { getPublishedFromD1, type D1NewsEntry } from './equinoxHaberD1';
-import { getDatabase } from '#runtime-env';
+import { getPublished } from '#news-source';
 
 /** Ana sayfanın öne çıkan panelini besleyen havuz. */
 export const EQUINOX_HABER_PAGE_SIZE = 20;
@@ -20,27 +19,18 @@ export type EquinoxHaberEntry = CollectionEntry<'equinoxHaber'>;
 /**
  * Yayımlanmış haberler, yeniden eskiye.
  *
- * Kaynak seçimi TEK yerde, burada. Çağıran hiçbir sayfa hangi kaynaktan
- * okuduğunu bilmiyor ve bilmemeli:
+ * Kaynak seçimi `#news-source` takma adıyla DERLEME ZAMANINDA yapılıyor:
+ * sunucu modunda D1, statik modda içerik koleksiyonu. Çalışma anında bir `if`
+ * yetmezdi — `astro:content` içeri alındığı anda 587 haberin tamamı Worker
+ * paketine giriyor (3.3 MB) ve dağıtım boyut sınırından düşüyor.
  *
- *   - sunucu modunda (Cloudflare adaptörü)  → D1
- *   - statik modda                          → içerik koleksiyonu
- *
- * Ayrımın burada olması bir kolaylık değil, doğruluk şartı. Bir sayfa D1'den,
+ * Çağıran hiçbir sayfa hangi kaynaktan okuduğunu bilmiyor ve bilmemeli. Ana
+ * sayfa, arşiv, RSS ve haber site haritası hep buradan geçiyor; biri D1'den
  * diğeri koleksiyondan okusaydı yeni yayımlanan bir haber kendi adresinde
- * görünür ama ana sayfada, arşivde ve RSS'te görünmezdi — sessiz ve
- * teşhisi zor bir tutarsızlık.
+ * görünür ama listelerde görünmezdi.
  */
-export async function getPublishedEquinoxHaber(): Promise<(EquinoxHaberEntry | D1NewsEntry)[]> {
-	const db = getDatabase();
-	if (db) {
-		// D1 tarafında sıralama ve taslak filtresi sorguda yapılıyor.
-		return getPublishedFromD1(db);
-	}
-
-	return (await getCollection('equinoxHaber'))
-		.filter((entry) => !entry.data.isDraft)
-		.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+export async function getPublishedEquinoxHaber() {
+	return getPublished();
 }
 
 export function getEquinoxHaberCategories() {

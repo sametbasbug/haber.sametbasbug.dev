@@ -5,6 +5,12 @@
  * HTTP. Ajan tarafı bu yüzden yeniden yazılmıyor, yalnız gönderim biçimi
  * değişiyor.
  *
+ * Bu modül hem tek başına bir Worker olarak (yerel geliştirme ve testler,
+ * `wrangler dev`), hem de Astro SSR sitesinin API rotaları üzerinden
+ * kullanılıyor (`src/pages/api/*`). Canlıda tek Worker var: yayın uçlarını
+ * ayrı bir Worker'a koymak iki dağıtım, iki config ve görsel yolunun iki
+ * kopyası demekti.
+ *
  * Akış iki adımlı ve ayrılması kasıtlı:
  *
  *   POST /api/brief    → pano sabitlenir, `briefId` döner
@@ -133,7 +139,7 @@ export function bodyMarkdown(body: string, sources: { name: string; url: string 
   return parts.join("\n").trim();
 }
 
-async function writeBrief(request: Request, env: Env): Promise<Response> {
+export async function writeBrief(request: Request, env: Env): Promise<Response> {
   const auth = await authenticate(request, env);
   if (!auth.ok) return json({ error: auth.error }, auth.status);
   if (!auth.identity.mayWriteBrief) {
@@ -173,7 +179,7 @@ async function writeBrief(request: Request, env: Env): Promise<Response> {
   }, 201);
 }
 
-async function publish(request: Request, env: Env): Promise<Response> {
+export async function publish(request: Request, env: Env): Promise<Response> {
   const auth = await authenticate(request, env);
   if (!auth.ok) return json({ error: auth.error }, auth.status);
   if (!auth.identity.mayPublish) {
@@ -351,7 +357,7 @@ async function publish(request: Request, env: Env): Promise<Response> {
   }, 201);
 }
 
-async function readArticle(slug: string, env: Env): Promise<Response> {
+export async function readArticle(slug: string, env: Env): Promise<Response> {
   const row = await env.DB.prepare(
     `SELECT slug, title, description, category, author, body_html,
             hero_image, hero_alt, pub_date, updated_date, render_version

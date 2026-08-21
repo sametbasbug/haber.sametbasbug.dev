@@ -13,6 +13,13 @@ import { fileURLToPath } from "node:url";
 
 const BASE = process.argv[2] ?? "http://localhost:8790";
 const limit = Number(process.argv[3] ?? Infinity);
+
+/* Uzak bir dağıtıma karşı koşarken istekler aralıklandırılıyor. 592 isteği
+   arka arkaya atmak Cloudflare tarafında 503'e yol açıyor ve sonuç "sayfalar
+   ayrışıyor" gibi okunuyor — oysa sayfa hiç üretilmemiş oluyor. Yerelde
+   gecikme yok. */
+const PACE_MS = BASE.startsWith("http://localhost") ? 0 : Number(process.env.PACE_MS ?? 120);
+const bekle = () => (PACE_MS > 0 ? new Promise((r) => setTimeout(r, PACE_MS)) : null);
 const ROOT = fileURLToPath(new URL("../..", import.meta.url));
 
 const slugs = readdirSync(`${ROOT}src/content/equinoxHaber`)
@@ -57,6 +64,7 @@ for (const [path, distRelative] of extraPaths) {
   const distPath = `${ROOT}${distRelative}`;
   if (!existsSync(distPath)) { skipped += 1; continue; }
 
+  await bekle();
   const response = await fetch(`${BASE}${path}`);
   if (!response.ok) { failures.push({ sayfa: path, sorun: `SSR ${response.status}` }); continue; }
 
@@ -78,6 +86,7 @@ for (const slug of slugs.slice(0, limit)) {
   const distPath = `${ROOT}dist/${slug}/index.html`;
   if (!existsSync(distPath)) { skipped += 1; continue; }
 
+  await bekle();
   const response = await fetch(`${BASE}/${slug}/`);
   if (!response.ok) {
     failures.push({ slug, sorun: `SSR ${response.status}` });

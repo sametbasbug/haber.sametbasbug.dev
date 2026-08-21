@@ -11,7 +11,7 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
-const BASE = process.argv[2] ?? "http://localhost:8787";
+const BASE = process.argv[2] ?? "http://localhost:8790";
 const TOKEN = process.env.DEV_PUBLISH_TOKEN ?? "yerel-gelistirme-tokeni-degistirilecek";
 const ROOT = fileURLToPath(new URL("../..", import.meta.url));
 

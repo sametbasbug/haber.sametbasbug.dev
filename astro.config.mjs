@@ -46,6 +46,7 @@ export default defineConfig({
         // Statik derlemede binding yoktur; içerik koleksiyondan gelir.
         // Karşılığı `astro.config.ssr.mjs` içinde gerekçesiyle yazılı.
         '#runtime-env': fileURLToPath(new URL('./src/data/runtimeEnv.ts', import.meta.url)),
+        '#news-source': fileURLToPath(new URL('./src/data/newsSource.ts', import.meta.url)),
       },
     },
   },

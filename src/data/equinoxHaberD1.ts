@@ -96,13 +96,27 @@ function assemble(
 /** Yayımlanmış haberler, yeniden eskiye.
  *
  * Sıralama `ORDER BY` ile veritabanında yapılıyor; koleksiyon tarafındaki
- * `sort((a,b) => b.pubDate - a.pubDate)` ile aynı sonucu vermeli. */
-export async function getPublishedFromD1(db: D1Database): Promise<D1NewsEntry[]> {
+ * `sort((a,b) => b.pubDate - a.pubDate)` ile aynı sonucu vermeli.
+ *
+ * **Gövdeler bu sorguya girmez.** Listeleme, ilgili haberler, önceki/sonraki
+ * ve site haritası yalnız üstbilgi kullanıyor; gövdeleri de çekmek her sayfa
+ * isteğinde ~2 MB'ı boşuna taşımak demekti. Gövdeye gerçekten ihtiyacı olan
+ * iki yer var ve ikisi de kendi sorgusunu yapıyor: haber sayfası
+ * (`getArticleFromD1`) ve RSS (`withBody`).
+ *
+ * `withBody` yalnız RSS için var ve orada da sınırlı sayıda haber isteniyor. */
+export async function getPublishedFromD1(
+  db: D1Database,
+  options: { withBody?: boolean; limit?: number } = {},
+): Promise<D1NewsEntry[]> {
+  const bodyColumns = options.withBody ? "body_md, body_html," : "'' AS body_md, '' AS body_html,";
+  const limit = options.limit ? ` LIMIT ${Number(options.limit)}` : "";
+
   const [articles, tags, sources] = await Promise.all([
     db.prepare(
-      `SELECT slug, title, description, category, author, body_md, body_html,
+      `SELECT slug, title, description, category, author, ${bodyColumns}
               hero_image, hero_alt, pub_date, updated_date, is_draft, breaking, editor_pick
-         FROM articles WHERE is_draft = 0 ORDER BY pub_date DESC`,
+         FROM articles WHERE is_draft = 0 ORDER BY pub_date DESC${limit}`,
     ).all<ArticleRow>(),
     db.prepare("SELECT slug, tag FROM article_tags ORDER BY slug, position").all<{ slug: string; tag: string }>(),
     db.prepare("SELECT slug, name, url FROM article_sources ORDER BY slug, position")
@@ -110,4 +124,19 @@ export async function getPublishedFromD1(db: D1Database): Promise<D1NewsEntry[]>
   ]);
 
   return assemble(articles.results ?? [], tags.results ?? [], sources.results ?? []);
+}
+
+/** Tek haber, gövdesiyle.
+ *
+ * Haber sayfası listeyi zaten üstbilgi olarak çekiyor (ilgili haberler,
+ * önceki/sonraki için); gövdeye yalnız gösterilen haber için ihtiyaç var. */
+export async function getArticleFromD1(
+  db: D1Database,
+  slug: string,
+): Promise<{ body: string; bodyHtml: string } | null> {
+  const row = await db.prepare(
+    "SELECT body_md, body_html FROM articles WHERE slug = ? AND is_draft = 0",
+  ).bind(slug).first<{ body_md: string; body_html: string }>();
+
+  return row ? { body: row.body_md, bodyHtml: row.body_html } : null;
 }

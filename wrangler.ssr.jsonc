@@ -1,10 +1,14 @@
 {
-  // Astro SSR sitesinin Worker yapılandırması.
+  // Equinox Haber — tek Worker.
   //
-  // Yayın API'si (`worker/`) ayrı bir Worker olarak duruyor. İkisi aynı D1 ve
-  // R2'yi bağlıyor: biri yazıyor, diğeri okuyor. Tek Worker'da birleştirmek
-  // mümkün ve muhtemelen daha basit, ama bu bir dağıtım topolojisi kararı ve
-  // Cloudflare tarafında kaynak açmayı gerektiriyor — Samet'in kararı.
+  // Hem siteyi sunuyor (Astro SSR, içerik D1'den) hem yayın uçlarını
+  // (`/api/brief`, `/api/publish`) barındırıyor. Ayrı bir yayın Worker'ı
+  // olabilirdi; iki dağıtım, iki config ve görsel yolunun iki kopyası
+  // demekti.
+  //
+  // `worker/wrangler.jsonc` hâlâ duruyor ama YALNIZ yerel geliştirme ve
+  // testler için: uçtan uca takım tek başına koşan Worker'a karşı çalışıyor.
+  // Canlıya giden yapılandırma budur.
   "name": "haber-site",
   "main": "dist-ssr/server/entry.mjs",
   "compatibility_date": "2026-08-20",
@@ -19,7 +23,7 @@
     {
       "binding": "DB",
       "database_name": "haber",
-      "database_id": "PLACEHOLDER_YEREL_GELISTIRME",
+      "database_id": "e2ebdbbc-9fcc-4f73-b7f2-215b87307bab",
       "migrations_dir": "worker/migrations"
     }
   ],
@@ -29,5 +33,20 @@
       "binding": "HERO",
       "bucket_name": "haber-gorseller"
     }
-  ]
+  ],
+
+  // Yayın uçları için kimlik ayarı BİLEREK yok.
+  //
+  // `ORBIT_ISSUER`/`ORBIT_AUDIENCE` tanımlanana kadar `authenticate()` hiçbir
+  // isteği kabul etmiyor ve /api/publish her çağrıya 401 dönüyor. Okuma yolu
+  // etkilenmiyor. Bu, "yayın açık ama kimlik yarım" durumundan iyidir:
+  // paylaşılan bir sırla açılan yazma ucu, herkese açık bir adreste kalıcı
+  // hale gelmeye çok müsait.
+  //
+  // Orbit'te istemci kaydı yapıldığında:
+  //   npx wrangler secret put ORBIT_ISSUER   --config wrangler.ssr.jsonc
+  //   npx wrangler secret put ORBIT_AUDIENCE --config wrangler.ssr.jsonc
+  // ve `publishers` tablosuna Selene'nin `sub` değeri eklenir.
+
+  "observability": { "enabled": true }
 }

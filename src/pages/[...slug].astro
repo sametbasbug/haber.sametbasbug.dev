@@ -1,5 +1,5 @@
 ---
-import { render } from 'astro:content';
+import { getArticleBody, renderEntry } from '#news-source';
 import NewsLayout from '../layouts/NewsLayout.astro';
 import NewsCard from '../components/news/NewsCard.astro';
 import { findAuthorByName } from '../data/authors';
@@ -29,8 +29,11 @@ if (!entry) {
 /* D1 girdisi yazma anında üretilmiş HTML taşır; koleksiyon girdisi markdown
    taşır ve çalışma anında render edilir. İkisinin çıktısının aynı olduğu
    ölçüldü (587/587) — bkz. `worker/tools/parity-render.mjs`. */
-const bodyHtml = 'bodyHtml' in entry ? (entry as { bodyHtml: string }).bodyHtml : null;
-const Content = bodyHtml === null ? (await render(entry as never)).Content : null;
+/* Gövde listeyle birlikte gelmiyor (bkz. `equinoxHaberD1.ts`): liste yalnız
+   üstbilgi taşıyor, gövde yalnız gösterilen haber için okunuyor. */
+const article = await getArticleBody(routeSlug!);
+const bodyHtml = article?.bodyHtml ?? null;
+const Content = bodyHtml === null ? await renderEntry(entry) : null;
 const currentIndex = allEntries.findIndex((item) => item.id === entry.id);
 const nextEntry = allEntries[currentIndex - 1];
 const prevEntry = allEntries[currentIndex + 1];
@@ -51,7 +54,10 @@ const relatedEntries = allEntries
 const authorProfile = findAuthorByName(entry.data.author);
 const categories = getEquinoxHaberCategories();
 const categoryToken = getNewsCategoryToken(entry.data.category);
-const hasInlineSourcesSection = /^##\s+Kaynaklar\b/m.test(entry.body ?? '');
+/* Gövde liste sorgusuyla gelmiyor; bu kontrol ayrıca çekilen gövdeye bakmalı.
+   Boş metne bakarsa "Kaynaklar bölümü yok" sonucuna varır ve şablon yedek
+   Kaynaklar bölümünü basar — yani her haberde çift Kaynaklar. */
+const hasInlineSourcesSection = /^##\s+Kaynaklar\b/m.test(article?.body ?? entry.body ?? '');
 
 const title = entry.data.title;
 const description = entry.data.description;

@@ -44,3 +44,6 @@ dist-ssr/
 
 # wrangler yerel durumu ve derleme artıkları
 .wrangler/
+
+# yerel geliştirme sırları
+.dev.vars

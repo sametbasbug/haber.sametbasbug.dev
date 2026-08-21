@@ -9,6 +9,29 @@ import { unified } from '@astrojs/markdown-remark';
 import cloudflare from '@astrojs/cloudflare';
 import { fileURLToPath } from 'node:url';
 
+/*
+ * Yayın uçları ve görsel yolu YALNIZ bu yapılandırmaya enjekte ediliyor,
+ * `src/pages/` altında durmuyorlar.
+ *
+ * Gerekçe: `prerender = false` taşıyan bir rota adaptör ister ve statik
+ * derlemede adaptör yok. `src/pages/api/` altına konduklarında `npm run build`
+ * düşüyordu — yani canlıda çalışan dağıtım yolu, henüz doğrulanmamış yenisi
+ * uğruna bozulmuş oluyordu. Rotanın nerede yaşadığı bir dosya düzeni tercihi;
+ * çalışan bir dağıtımı kırmak değil.
+ */
+function yayinUclari() {
+  return {
+    name: 'haber-yayin-uclari',
+    hooks: {
+      'astro:config:setup': ({ injectRoute }) => {
+        injectRoute({ pattern: '/api/brief', entrypoint: './src/server/routes/brief.ts' });
+        injectRoute({ pattern: '/api/publish', entrypoint: './src/server/routes/publish.ts' });
+        injectRoute({ pattern: '/images/generated/[...path]', entrypoint: './src/server/routes/hero.ts' });
+      },
+    },
+  };
+}
+
 export default defineConfig({
   site: process.env.PUBLIC_SITE_URL || 'https://haber.sametbasbug.dev',
   // Ayrı çıktı dizini şart: iki config aynı `dist/`'i paylaşırsa biri
@@ -18,6 +41,7 @@ export default defineConfig({
 
   output: 'server',
   adapter: cloudflare(),
+  integrations: [yayinUclari()],
   /*
    * Markdown işlemcisi: `unified`, Astro 7 varsayılanı olan `satteri` değil.
    *
@@ -37,7 +61,18 @@ export default defineConfig({
    * `unified` Astro'nun desteklediği ikinci işlemcidir, bir geçici çözüm
    * değil.
    */
-  markdown: { processor: unified() },
+  markdown: {
+    processor: unified(),
+
+    /*
+     * Sözdizimi vurgulaması kapalı. Arşivdeki 587 haberin hiçbirinde kod
+     * bloğu yok (ölçüldü) ve POLICY.md gövdede madde işaretli listeyi bile
+     * yasaklıyor. Açık bırakıldığında Shiki'nin dilbilgileri Worker paketine
+     * giriyor — emacs-lisp 772 KB, cpp 768 KB, wasm 608 KB — ve hiç
+     * kullanılmayacak bir özellik yüzünden boyut sınırı aşılıyor.
+     */
+    syntaxHighlight: false,
+  },
 
   compressHTML: true,
 
@@ -55,6 +90,7 @@ export default defineConfig({
          * Bu tam olarak başıma geldi ve ancak mutasyon testiyle görüldü.
          */
         "#runtime-env": fileURLToPath(new URL("./src/data/runtimeEnv.workers.ts", import.meta.url)),
+        "#news-source": fileURLToPath(new URL("./src/data/newsSource.workers.ts", import.meta.url)),
       },
     },
   },
