@@ -14,6 +14,27 @@
   "compatibility_date": "2026-08-20",
   "compatibility_flags": ["nodejs_compat"],
 
+  // Canlı alan adı.
+  //
+  // Custom Domain, DNS kaydını Cloudflare'in kendisi yönetiyor. Geçişten önce
+  // kayıt şuydu ve GERİ DÖNÜŞ YOLU budur:
+  //     haber  CNAME  sametbasbug.github.io  (Proxied, TTL Auto)
+  //
+  // Geri almak için: bu blok kaldırılır, `wrangler deploy` çalıştırılır ve
+  // panelden yukarıdaki CNAME yeniden eklenir. GitHub Pages dağıtımı
+  // (`deploy.yml`) ve statik derleme bozulmadan duruyor, yani hedef hâlâ
+  // ayakta.
+  "routes": [
+    { "pattern": "haber.sametbasbug.dev", "custom_domain": true }
+  ],
+
+  // workers.dev adresi açık kalıyor. `routes` eklendiğinde wrangler onu
+  // ÖRTÜK OLARAK kapatıyor; bir kez öyle oldu ve custom domain de
+  // bağlanamayınca Worker'ın hiç rotası kalmadı. Önizleme adresi geri dönüş
+  // doğrulaması için gerekli: canlı alanla ilgili bir şey ters giderse
+  // Worker'ın çalıştığını buradan görebilmek gerekiyor.
+  "workers_dev": true,
+
   "assets": {
     "binding": "ASSETS",
     "directory": "dist-ssr/client"

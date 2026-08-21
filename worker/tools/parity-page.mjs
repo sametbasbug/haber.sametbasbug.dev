@@ -58,6 +58,8 @@ const extraPaths = [
   ["/sayfa/3/", "dist/sayfa/3/index.html"],
   ["/rss.xml", "dist/rss.xml"],
   ["/news-sitemap.xml", "dist/news-sitemap.xml"],
+  ["/sitemap-index.xml", "dist/sitemap-index.xml"],
+  ["/sitemap-0.xml", "dist/sitemap-0.xml"],
 ];
 
 for (const [path, distRelative] of extraPaths) {

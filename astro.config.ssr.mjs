@@ -27,6 +27,11 @@ function yayinUclari() {
         injectRoute({ pattern: '/api/brief', entrypoint: './src/server/routes/brief.ts' });
         injectRoute({ pattern: '/api/publish', entrypoint: './src/server/routes/publish.ts' });
         injectRoute({ pattern: '/images/generated/[...path]', entrypoint: './src/server/routes/hero.ts' });
+        /* Site haritası statikte `@astrojs/sitemap` tarafından derleme anında
+           üretiliyor; sunucu modunda üretilmiyor ve `robots.txt` ona işaret
+           ediyor. Karşılıkları burada. */
+        injectRoute({ pattern: '/sitemap-index.xml', entrypoint: './src/server/routes/sitemap-index.ts' });
+        injectRoute({ pattern: '/sitemap-0.xml', entrypoint: './src/server/routes/sitemap-0.ts' });
       },
     },
   };
