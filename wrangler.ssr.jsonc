@@ -35,33 +35,23 @@
   // Worker'ın çalıştığını buradan görebilmek gerekiyor.
   "workers_dev": true,
 
-  // ACİL DURUM MODU — 2026-08-21.
+  // Sayfalar Worker'da üretiliyor; buradaki varlıklar SSR'ın istemci
+  // dosyaları (CSS, betikler, görseller).
   //
-  // Ücretsiz planda Worker başına CPU limiti 10 ms. Astro'nun sayfa render'ı
-  // bunun çok üstünde: ana sayfa 612 ms, haber sayfası 20 ms, arşiv sayfası
-  // 15 ms (canlıda `wrangler tail` ile ölçüldü). Sonuç, önbellek ısınana
-  // kadar her isteğin `exceededCpu` ile 1102 dönmesiydi — site fiilen
-  // açılmıyordu. Sıcak önbellek bunu benden gizlemişti: ölçümlerimin hepsi
-  // önbellekten dönen yanıtlara bakıyordu.
+  // Bir dönem burası statik derlemeyi (`dist-serve`) gösteriyordu: ücretsiz
+  // planda Worker başına CPU limiti 10 ms ve ana sayfanın render'ı 626 ms
+  // sürüyordu, önbellek soğukken her istek 1102 dönüyordu. Sebep planın
+  // dar gelmesi değil, sayfanın savurgan olmasıydı — sinyal skorlaması
+  // sıralama karşılaştırıcısının içinde çalışıyor ve istek başına yüz
+  // binlerce kalıp derliyordu. Düzeltildikten sonra ölçüm: ana sayfa 48 ms,
+  // haber sayfası 12 ms, 29 ardışık soğuk istekte tek kesilme yok.
   //
-  // Geçici çözüm: sayfalar statik derlemeden sunuluyor. Varlık isteği
-  // Worker'ı HİÇ çalıştırmıyor, dolayısıyla CPU tüketimi sıfır. `dist-serve`
-  // = statik derleme (`dist`) + SSR'ın istemci varlıkları
-  // (`dist-ssr/client`); ikincisi, bir istek yine de SSR'a düşerse stil ve
-  // betiklerin kırılmaması için duruyor.
-  //
-  // `dist-serve`'de karşılığı olmayan yollar (yani `/api/brief`,
-  // `/api/publish`) hâlâ Worker'a düşüyor: yayın uçları ve D1 çalışmaya
-  // devam ediyor. Kaybedilen tek şey ANLIK YAYIN — yeni haber statik
-  // derleme yenilenene kadar sitede görünmüyor.
-  //
-  // Kalıcı çözüm iki yoldan biri ve karar Samet'te:
-  //   (a) Workers Paid ($5/ay) — CPU limiti 30 sn olur, SSR aynen geri döner.
-  //   (b) Render'ı Workers dışına taşımak — anlık yayın makineye bağlanır.
-  // Geri dönüş: aşağıdaki directory'yi "dist-ssr/client" yapıp deploy etmek.
+  // Buranın statik derlemeyi göstermesi hâlâ geçerli bir acil fren: tek
+  // satır değiştirip deploy etmek siteyi Worker'ı hiç çalıştırmadan ayağa
+  // kaldırır, ama anlık yayını kapatır.
   "assets": {
     "binding": "ASSETS",
-    "directory": "dist-serve"
+    "directory": "dist-ssr/client"
   },
 
   "d1_databases": [
