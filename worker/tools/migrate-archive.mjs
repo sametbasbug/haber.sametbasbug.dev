@@ -79,6 +79,14 @@ for (const file of files) {
   });
 }
 
+/* Göç de bir içerik değişikliğidir ve önbelleği geçersizleştirmek zorunda.
+ * `publish()` sürümü kendi artırıyor; `publish()` DIŞINDAN yapılan her
+ * değişiklik — göç, silme, elle düzeltme — bunu kendisi yapmalı. Unutulursa
+ * belirti şu olur: veritabanı doğru, sayfa eski. */
+statements.push(
+  "UPDATE site_state SET content_version = content_version + 1, updated_at = datetime('now') WHERE id = 1;",
+);
+
 writeFileSync(out, statements.join("\n") + "\n");
 
 console.log(`haber: ${files.length} · taslak: ${drafts} · ifade: ${statements.length}`);

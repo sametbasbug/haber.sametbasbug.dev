@@ -1,4 +1,5 @@
 import type { MiddlewareHandler } from 'astro';
+import { getDatabase } from '#runtime-env';
 
 /* Kenar önbelleği.
  *
@@ -16,6 +17,16 @@ import type { MiddlewareHandler } from 'astro';
  * `stale-while-revalidate` ile kenar, süresi dolmuş bir kopyayı arka planda
  * tazelerken sunmaya devam ediyor: D1 bir an cevap veremezse site kararmaz.
  *
+ * Önbellek anahtarına içerik sürümü karışıyor (`site_state.content_version`).
+ * Yayın ve düzeltme o sayıyı artırıyor, artan sayı bütün eski anahtarları
+ * ulaşılamaz kılıyor — yani yeni haber liste sayfalarında ANINDA görünüyor,
+ * önbellek süresinin dolmasını beklemiyor. Cache API'sinin `delete()`'i yalnız
+ * isteğin düştüğü veri merkezini temizlediği için gerçek bir geçersizleştirme
+ * aracı değil; sürüm anahtarı her yerde çalışıyor.
+ *
+ * Maliyet istek başına bir satır okuma. Önbellek isabetinde sayfa maliyeti
+ * 4225 satırdan 1 satıra iniyor.
+ *
  * Statik derlemede `caches` yok; ara katman hiçbir şey yapmadan geçiyor.
  */
 
@@ -30,7 +41,10 @@ export const onRequest: MiddlewareHandler = async (context, next) => {
 	   cevabı dönerdi. */
 	if (!cache || context.request.method !== 'GET') return next();
 
-	const cached = await cache.match(context.request);
+	const version = await contentVersion();
+	const key = versionedKey(context.request, version);
+
+	const cached = await cache.match(key);
 	if (cached) return cached;
 
 	const response = await next();
@@ -45,6 +59,28 @@ export const onRequest: MiddlewareHandler = async (context, next) => {
 		`public, max-age=0, s-maxage=${TTL_SECONDS}, stale-while-revalidate=${STALE_SECONDS}`,
 	);
 
-	await cache.put(context.request, cacheable.clone());
+	await cache.put(key, cacheable.clone());
 	return cacheable;
 };
+
+/** İçerik sürümü. Okunamazsa önbellek atlanır: bayat içerik sunmaktansa
+ *  her isteği taze üretmek yeğdir. */
+async function contentVersion(): Promise<string> {
+	const db = getDatabase();
+	if (!db) return '0';
+	const row = await db
+		.prepare('SELECT content_version FROM site_state WHERE id = 1')
+		.first<{ content_version: number }>();
+	return row ? String(row.content_version) : '0';
+}
+
+/** Sürümü önbellek anahtarına katar.
+ *
+ * Sorgu parametresi olarak ekleniyor çünkü Cache API anahtarı bir `Request`
+ * ve adres dışında ayırt edici bir alanı yok. Bu adres hiçbir zaman ağa
+ * çıkmıyor; yalnız anahtar olarak kullanılıyor. */
+function versionedKey(request: Request, version: string): Request {
+	const url = new URL(request.url);
+	url.searchParams.set('__v', version);
+	return new Request(url.toString(), { method: 'GET', headers: request.headers });
+}

@@ -345,6 +345,11 @@ export async function publish(request: Request, env: Env): Promise<Response> {
         .bind(slug, i, source.name, source.url)),
     env.DB.prepare("UPDATE briefs SET consumed_at = ? WHERE id = ?")
       .bind(stamp, payload.briefId),
+    /* İçerik sürümü aynı partide artıyor. Ayrı bir çağrı olsaydı "haber
+       yazıldı ama sürüm artmadı" durumu mümkün olurdu ve haber liste
+       sayfalarında önbellek süresi dolana kadar görünmezdi. */
+    env.DB.prepare("UPDATE site_state SET content_version = content_version + 1, updated_at = ? WHERE id = 1")
+      .bind(stamp),
   ]);
 
   return json({

@@ -13,7 +13,24 @@
  * Bu yüzden burada Orbit'ten bir "publish" kapsamı beklenmiyor. Token yalnız
  * `sub`'u kanıtlar; yayımlama yetkisi bu tarafta verilir. Yetkiyi ithal etmek,
  * Orbit'in kasten kapattığı kapıyı arkadan açmak olurdu.
- */
+ *
+ * ————————————————————————————————————————————————————————————————
+ * BUGÜN İKİ KİMLİK YOLU VAR VE BUNUN GEÇİCİ BİR SEBEBİ VAR
+ *
+ * Orbit'te bir AJANIN alabileceği kimlik henüz yok: site kapısı tarayıcı
+ * tabanlı kullanıcı girişi akışıdır, MCP yetkileri ise ajanın Orbit ÜZERİNDE
+ * iş yapması içindir. Selene'nin haber'e sunabileceği bir token üreten yol
+ * yok ve bunu eklemek Orbit'in token ucunu değiştirmek demek — Orbit anime
+ * sitesinin de kimlik sağlayıcısı, o ayrı bir karar.
+ *
+ * Bu yüzden yayıncı anahtarı yolu var. Orbit'in yerine geçmiyor, boşluğu
+ * dolduruyor; Orbit doğrulaması aşağıda duruyor ve sınanmış durumda.
+ * `ORBIT_ISSUER` tanımlandığı gün Orbit yolu devreye girer. Anahtar yolu
+ * kendiliğinden kapanmaz ve kapanmamalı: geçiş sırasında ikisinin birden
+ * çalışması gerekiyor, yoksa Orbit açıldığı an Selene yayımlayamaz hale
+ * gelir. Anahtar yolunu kapatmak `publishers.key_digest` sütununu boşaltmakla
+ * olur — açık ve geri alınabilir bir işlem.
+ * ———————————————————————————————————————————————————————————————— */
 
 export interface Identity {
   /** Orbit ID token'ındaki `sub`. Handle değil — handle geri alınabiliyor. */
@@ -23,7 +40,7 @@ export interface Identity {
   mayWriteBrief: boolean;
   mayPublish: boolean;
   /** Kimliğin nasıl kanıtlandığı. Denetim ve hata mesajları için. */
-  via: "orbit" | "shared-secret";
+  via: "orbit" | "publisher-key" | "shared-secret";
 }
 
 export interface AuthFailure {
@@ -162,6 +179,19 @@ export async function verifyOrbitToken(
   return { subject: claims.sub };
 }
 
+/** Anahtarın SHA-256 özeti, onaltılık.
+ *
+ * Anahtarın kendisi hiç saklanmıyor. Veritabanı sızarsa özet yayımlama
+ * yetkisi vermez; ters çevirmek için anahtarın entropisini kırmak gerekir. */
+async function digest(value: string): Promise<string> {
+  const bytes = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value));
+  return [...new Uint8Array(bytes)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+/** Yayıncı anahtarı öneki. Yanlışlıkla başka bir sırrın buraya girmesini
+ *  zorlaştırır ve logda görülünce ne olduğu anlaşılır. */
+const PUBLISHER_KEY_PREFIX = "hbr_pub_v1_";
+
 function timingSafeEqual(a: string, b: string): boolean {
   const left = new TextEncoder().encode(a);
   const right = new TextEncoder().encode(b);
@@ -186,6 +216,30 @@ export async function authenticate(request: Request, env: AuthEnv): Promise<Auth
   const header = request.headers.get("authorization") ?? "";
   const token = header.startsWith("Bearer ") ? header.slice(7).trim() : "";
   if (!token) return { ok: false, status: 401, error: "yetkilendirme başlığı yok" };
+
+  /* Yayıncı anahtarı. Sorgu ÖZETLE yapılıyor, anahtarla değil: eşleşme
+   * veritabanında tam eşitlik üzerinden çözülüyor ve anahtar hiçbir yerde
+   * saklanmıyor. */
+  if (token.startsWith(PUBLISHER_KEY_PREFIX)) {
+    const row = await env.DB.prepare(
+      `SELECT subject, author, may_write_brief, may_publish, disabled_at
+         FROM publishers WHERE key_digest = ?`,
+    ).bind(await digest(token)).first<any>();
+
+    if (!row) return { ok: false, status: 401, error: "yetkisiz" };
+    if (row.disabled_at) return { ok: false, status: 403, error: "bu kimliğin erişimi kapatılmış" };
+
+    return {
+      ok: true,
+      identity: {
+        subject: row.subject,
+        author: row.author,
+        mayWriteBrief: row.may_write_brief === 1,
+        mayPublish: row.may_publish === 1,
+        via: "publisher-key",
+      },
+    };
+  }
 
   if (env.ORBIT_ISSUER && env.ORBIT_AUDIENCE) {
     const verified = await verifyOrbitToken(token, env.ORBIT_ISSUER, env.ORBIT_AUDIENCE);

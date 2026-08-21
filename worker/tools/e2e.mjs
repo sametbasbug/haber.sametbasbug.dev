@@ -41,8 +41,8 @@ function selection(overrides = {}) {
   };
 }
 
-async function newBrief(overrides = {}) {
-  const brief = {
+function boardBody(overrides = {}) {
+  return {
     task: { selectCount: 1 },
     board: [{
       id: "c1",
@@ -53,8 +53,11 @@ async function newBrief(overrides = {}) {
     policy: { fingerprint: "d311041a7e5a" },
     ...overrides,
   };
+}
+
+async function newBrief(overrides = {}) {
   const response = await fetch(`${BASE}/api/brief`, {
-    method: "POST", headers: auth, body: JSON.stringify(brief),
+    method: "POST", headers: auth, body: JSON.stringify(boardBody(overrides)),
   });
   return { status: response.status, body: await response.json() };
 }
@@ -182,6 +185,57 @@ console.log("\n── tekrar yayın ──");
   const shuffled = title.split(" ").slice(0, -1).reverse().join(" ") + " ek";
   const similar = await post("/api/publish", { briefId: brief3.body.briefId, selections: [selection({ title: shuffled })] });
   check("benzer başlık", similar.status, 409, firstProblem(similar.body));
+}
+
+console.log("\n── yayıncı anahtarı ──");
+{
+  const KEY = "hbr_pub_v1_e2e_test_anahtari_degistirilecek";
+  const keyAuth = { authorization: `Bearer ${KEY}`, "content-type": "application/json" };
+
+  const bad = await post("/api/brief", boardBody(), { authorization: "Bearer hbr_pub_v1_olmayan", "content-type": "application/json" });
+  check("bilinmeyen anahtar", bad.status, 401, bad.body?.error ?? "");
+
+  /* Anahtarı GEÇERLİ ama kimliği kapatılmış: 403 beklenir, 401 değil.
+     Ayrım önemli — "anahtarı tanımıyorum" ile "tanıyorum, erişimi kapalı"
+     farklı sorunlar. Bu vaka bir ara yanlışlıkla bilinmeyen bir anahtar
+     kullanıyordu ve iki kez aynı şeyi ölçüyordu. */
+  const disabled = await post("/api/brief", boardBody(), { authorization: "Bearer hbr_pub_v1_kapali_olan", "content-type": "application/json" });
+  check("kapatılmış kimliğin anahtarı", disabled.status, 403, disabled.body?.error ?? "");
+
+  const briefResponse = await fetch(`${BASE}/api/brief`, { method: "POST", headers: keyAuth, body: JSON.stringify(boardBody()) });
+  const brief = { status: briefResponse.status, body: await briefResponse.json() };
+  check("anahtarla pano yazımı", brief.status, 201, brief.body?.briefId ? "briefId alındı" : "briefId YOK");
+
+  const publishResponse = await fetch(`${BASE}/api/publish`, {
+    method: "POST", headers: keyAuth,
+    body: JSON.stringify({ briefId: brief.body.briefId, author: "Asteria AI", selections: [selection()] }),
+  });
+  const published = { status: publishResponse.status, body: await publishResponse.json() };
+  check("anahtarla yayın", published.status, 201, published.body?.published?.[0]?.slug?.slice(0, 26) ?? firstProblem(published.body));
+  check("imza kimlikten geliyor", published.body?.published?.[0]?.author, "Selene AI", "(yükte 'Asteria AI' yazıyordu)");
+}
+
+console.log("\n── önbellek geçersizleştirme ──");
+{
+  /* Samet'in asıl istediği şey buydu: "tak diye canlıya yansısın". Kenar
+     önbelleği D1 okumasını makul tutuyor ama sürümsüz bir önbellek, yeni
+     haberi liste sayfalarında TTL boyunca gizlerdi. Bu vaka o gecikmenin
+     olmadığını ölçüyor — önbellek ısıtılıyor, haber yayımlanıyor, ana sayfa
+     hiçbir hile olmadan yeniden isteniyor. */
+  await fetch(`${BASE}/`);            // önbelleği ısıt
+  await fetch(`${BASE}/sayfa/2/`);
+
+  const brief = await newBrief();
+  const title = `Onbellek denemesi ${Date.now()} bir haber basligi`;
+  const published = await post("/api/publish", { briefId: brief.body.briefId, selections: [selection({ title })] });
+  check("yayın", published.status, 201);
+
+  const slug = published.body?.published?.[0]?.slug;
+  const home = await (await fetch(`${BASE}/`)).text();
+  check("ana sayfada anında görünüyor", home.includes(slug) ? "evet" : "hayır", "evet", slug?.slice(0, 30));
+
+  const article = await fetch(`${BASE}/${slug}/`);
+  check("kendi adresinde", article.status, 200);
 }
 
 const failed = results.filter((r) => !r.ok);

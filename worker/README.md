@@ -25,6 +25,28 @@ yazdığı referansa karşı ölçerdi. Aynı ajan ikisini de yapıyorken bile a
 kazandırır: aday listesi haber yazılmadan önce donar ve sonradan haberi haklı
 çıkaracak şekilde şekillendirilemez. Pano bir kez tüketilir.
 
+## Canlı
+
+`https://haber-site.samett33710.workers.dev` — tek Worker: siteyi sunuyor
+(Astro SSR, içerik D1'den) ve yayın uçlarını barındırıyor.
+
+| | |
+|---|---|
+| yayın (canlıda ölçüldü) | **0,6 sn**, HTTP 201 |
+| yeni haber ana sayfada | **anında** (önbellek sürümle geçersizleşiyor) |
+| sayfa denkliği (canlı) | 592/592 birebir |
+
+Okuma maliyeti ölçüldü: sayfa başına D1'den **4225 satır** (587 haber
+üstbilgisi, 3041 etiket, 597 kaynak). Ücretsiz plan günde 5M satır veriyor,
+yani önbelleksiz tavan ~1.180 görüntüleme/gün. Kenar önbelleği bunu isabet
+başına **1 satıra** indiriyor (yalnız içerik sürümü okunuyor).
+
+Önbellek anahtarına `site_state.content_version` karışıyor. Yayın onu kendi
+artırıyor, artan sayı bütün eski anahtarları ulaşılamaz kılıyor — yeni haber
+liste sayfalarında beklemeden görünüyor. **`publish()` dışından yapılan her
+değişiklik (göç, silme, elle düzeltme) sürümü artırmak zorunda**; unutulduğunda
+belirti sinsi: veritabanı doğru, sayfa eski.
+
 ## Kimlik ve yetki
 
 İki soru ayrı sorulur:
@@ -48,6 +70,26 @@ değiştirmez.
 
 `ORBIT_ISSUER` tanımlıyken paylaşılan sır yolu kendiliğinden kapanır; unutulup
 açık kalabilecek ayrı bir bayrak yok.
+
+### Bugün Orbit değil, yayıncı anahtarı
+
+Orbit'te bir **ajanın** alabileceği kimlik yok. İki mekanizması var ve ikisi de
+başka soruyu cevaplıyor: `oauth_clients` tarayıcı tabanlı **kullanıcı girişi**
+akışıdır (insan onay ekranına basar), `mcp_authorization_grants` ise ajanın
+**Orbit üzerinde** iş yapması içindir (`posts:write` vb.). Selene'nin haber'e
+sunabileceği bir token üreten yol yok.
+
+Bunu eklemek Orbit'in token ucunu değiştirmek demek — Orbit anime sitesinin de
+kimlik sağlayıcısı ve o ayrı bir karar.
+
+Bu yüzden yayıncı anahtarı var (`hbr_pub_v1_…`). Anahtarın kendisi
+saklanmıyor, yalnız SHA-256 özeti. Orbit'in yerine geçmiyor, boşluğu
+dolduruyor: Orbit doğrulaması yerinde ve sınanmış, `ORBIT_ISSUER` tanımlandığı
+gün devreye girer. İki yol yan yana çalışabilir — geçişte Selene'nin
+yayımlayamaz hale gelmemesi için.
+
+Devredilebilirlik yine sağlanıyor ve asıl istenen oydu: başka bir ajana geçmek,
+yeni anahtar verip `publishers` satırını güncellemek demek.
 
 ## Ölçülen
 
@@ -153,11 +195,10 @@ gelir.
 
 Bunlar bilerek açık ve canlıya çıkmadan önce kapanmalı:
 
-1. **Orbit istemci kaydı.** Doğrulama kodu yazıldı ve sınandı, ama gerçek
-   Orbit'te haber için bir istemci kaydı ve `sub` değerleri henüz yok —
-   o Samet'in kararı. `publishers` tablosu bu yüzden boş; Selene'nin `sub`'u
-   Orbit token verdiğinde eklenecek. Yapılandırılana kadar Worker yerel
-   geliştirme sırrıyla çalışır.
+1. **Orbit ajan kimliği.** Orbit'in ajanlara token verebilmesi için token
+   ucunun genişletilmesi gerekiyor (yukarıda). O yapıldığında `ORBIT_ISSUER`
+   ve `ORBIT_AUDIENCE` sır olarak eklenir ve `publishers.subject` Orbit'in
+   `sub` değeriyle güncellenir.
 
 2. **Şablon.** `GET /<slug>` çıplak HTML döndürüyor, `NewsLayout` değil.
    Bu dilimin sorusu "render-on-write uçtan uca çalışıyor mu" idi; şablon
@@ -174,7 +215,7 @@ Bunlar bilerek açık ve canlıya çıkmadan önce kapanmalı:
    davranışı. Göç ikisini de taşıyor; hangisinin kalacağı editoryal bir karar
    ve göç betiğinin vereceği bir karar değil.
 
-4. **Git write-behind aynası.** Yayımlanan haberin `src/content/`'e yazılıp
+5. **Git write-behind aynası.** Yayımlanan haberin `src/content/`'e yazılıp
    commit'lenmesi henüz yok. D1 gerçek kaynak olacaksa arşiv ve kurtarma yolu
    olarak bu gerekiyor.
 
