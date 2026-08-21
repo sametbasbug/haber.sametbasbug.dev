@@ -30,10 +30,46 @@ import { getDatabase } from '#runtime-env';
  * Statik derlemede `caches` yok; ara katman hiçbir şey yapmadan geçiyor.
  */
 
+/* Birleştirilen tekrar haberler.
+ *
+ * Arşivde sekiz haber iki kez yayımlanmıştı: aynı kaynak adresi, aynı olay,
+ * iki ayrı slug. İkinci kopyalar 22-23 Nisan'da eklenmiş, daha kısa ve
+ * görselleri başka haberlerle tekrar ediyordu; her çiftte erken tarihli ve
+ * özgün görselli olan tutuldu.
+ *
+ * Kaldırılan adresler 404 DÖNMÜYOR, kalıcı olarak eşine yönlendiriliyor:
+ * bu adresler bir süre yayında kaldı, arama motorlarında ve paylaşımlarda
+ * karşılıkları olabilir. Yönlendirme önbellekten önce çalışıyor.
+ */
+const BIRLESTIRILEN: Record<string, string> = {
+	'adobe-firefly-yapay-zeka-asistani-creative-cloud-uygulamalarinda-calisacak':
+		'adobe-firefly-ai-assistant-kreatif-cloud-uygulamalarinda-gorev-tamamlayabiliyor',
+	'airwallex-is-about-to-take-on-stripe-and-the-rest-of-the-payments-industry-in-the-physical-world':
+		'airwallex-stripea-karsi-magaza-ici-odemelere-giriyor',
+	'openai-updates-its-agents-sdk-to-help-enterprises-build-safer-more-capable-agents':
+		'openai-ajanlar-icin-sdk-sini-guncelleyerek-kurumsal-kullanimi-guclendiriyor',
+	'sweden-blames-russian-hackers-for-attempting-destructive-cyberattack-on-thermal-plant':
+		'isvec-bir-isi-santraline-donuk-siber-saldiri-girisiminden-rusya-baglantili-hackerlari-sorumlu-tuttu',
+	'qualcomm-up-7-on-report-it-s-partnering-with-openai-on-smartphone-ai-chip':
+		'qualcomm-jumps-12-on-report-it-s-partnering-with-openai-on-smartphone-ai-chip',
+	'agriculture-department-plans-to-use-grok-despite-growing-concerns-over-the-chatbot-exclusive':
+		'abd-tarim-bakanligi-groku-kullanmaya-hazirlaniyor',
+	"pentagon-says-ukraine-support-can-t-rely-on-american-contributions":
+		'pentagon-ukrayna-yardiminda-avrupaya-daha-fazla-yuk-dusmesini-istiyor',
+	'google-launches-a-gemini-ai-app-on-mac':
+		'google-mac-icin-gemini-uygulamasini-kullanima-acti',
+};
+
 const TTL_SECONDS = 60;
 const STALE_SECONDS = 300;
 
 export const onRequest: MiddlewareHandler = async (context, next) => {
+	/* Yönlendirme önbellekten önce: kaldırılan adresin eski bir kopyası
+	   önbellekte kalmış olsa bile eşine gitmeli. */
+	const yol = new URL(context.request.url).pathname.replace(/^\/+|\/+$/g, '');
+	const hedef = BIRLESTIRILEN[yol];
+	if (hedef) return context.redirect(`/${hedef}/`, 301);
+
 	const cache = (globalThis as { caches?: { default?: Cache } }).caches?.default;
 
 	/* Yalnız GET önbelleklenir. POST /api/publish önbelleğe girerse yayın
