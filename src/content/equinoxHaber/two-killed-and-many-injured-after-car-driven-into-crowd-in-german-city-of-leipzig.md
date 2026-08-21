@@ -32,4 +32,3 @@ Yetkililer, mevcut bulgulara göre dini ya da siyasi bir motivasyona dair kanıt
 ## Ek kaynaklar
 
 - [The Guardian World](https://www.theguardian.com/world/2026/may/04/car-runs-into-crowd-in-german-city-of-leipzig-with-fatalities-reported)
-

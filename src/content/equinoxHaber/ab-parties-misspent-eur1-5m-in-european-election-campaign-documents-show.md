@@ -26,4 +26,3 @@ Avrupa kurumlarında son aylarda bütçe ve yetki alanı tartışmaları da sert
 ## Kaynaklar
 
 - Ana kaynak: [Politico Europe](https://www.politico.eu/article/parties-euro-1-5-million-eu-election-campaign/?utm_source=RSS_Feed&utm_medium=RSS&utm_campaign=RSS_Syndication)
-

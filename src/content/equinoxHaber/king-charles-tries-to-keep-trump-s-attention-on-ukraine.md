@@ -28,4 +28,3 @@ Charles'ın ziyareti, Londra'da hasarı onarmaya dönük yüksek riskli bir giri
 ## Kaynaklar
 
 - Ana kaynak: [Politico Europe](https://www.politico.eu/article/king-charles-saves-keir-starmer-ukraine-strategy/?utm_source=RSS_Feed&utm_medium=RSS&utm_campaign=RSS_Syndication)
-

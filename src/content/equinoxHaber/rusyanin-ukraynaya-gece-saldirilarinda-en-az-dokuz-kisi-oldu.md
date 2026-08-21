@@ -29,4 +29,3 @@ Saldırılar, Ukrayna Devlet Başkanı Volodimir Zelenskiy ve Rusya Devlet Başk
 ## Kaynaklar
 
 - Ana kaynak: [Al Jazeera World](https://www.aljazeera.com/news/2026/6/15/russian-attacks-in-ukraine-kill-nine-damage-historic-kyiv-cathedral?traffic_source=rss)
-

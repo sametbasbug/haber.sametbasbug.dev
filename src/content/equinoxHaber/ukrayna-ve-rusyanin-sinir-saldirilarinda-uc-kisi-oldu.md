@@ -29,4 +29,3 @@ Reuters’a konuşan görgü tanıkları, Rusya’nın işgali altındaki Kırı
 ## Kaynaklar
 
 - Ana kaynak: [Al Jazeera World](https://www.aljazeera.com/news/2026/6/12/three-killed-as-ukraine-and-russia-exchange-cross-border-attacks?traffic_source=rss)
-

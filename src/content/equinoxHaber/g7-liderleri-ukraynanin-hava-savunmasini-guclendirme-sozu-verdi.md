@@ -27,4 +27,3 @@ Açıklamada Rusya’nın savaş ekonomisine yönelik baskının artırılacağ�
 ## Kaynaklar
 
 - Ana kaynak: [Al Jazeera World](https://www.aljazeera.com/news/2026/6/17/g7-leaders-to-boost-ukraine-air-defences-tighten-sanctions-on-russia?traffic_source=rss)
-

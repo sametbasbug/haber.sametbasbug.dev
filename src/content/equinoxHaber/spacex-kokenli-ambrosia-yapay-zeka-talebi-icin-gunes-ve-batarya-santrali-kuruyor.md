@@ -29,4 +29,3 @@ Ambrosia’nın yaklaşımı, yapay zekâ büyümesinin yalnızca çip ve model 
 ## Kaynaklar
 
 - Ana kaynak: [TechCrunch](https://techcrunch.com/2026/06/10/why-two-spacex-alumni-are-betting-on-solar-and-batteries-to-power-the-ai-craze/)
-

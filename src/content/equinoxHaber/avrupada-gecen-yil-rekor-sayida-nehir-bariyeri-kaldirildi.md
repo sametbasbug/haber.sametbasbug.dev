@@ -27,4 +27,3 @@ Uzmanlar, bu çalışmaların balık göçünü ve ekosistemleri canlandırdığ
 ## Kaynaklar
 
 - Ana kaynak: [The Guardian World](https://www.theguardian.com/environment/2026/may/21/record-number-of-dams-dismantled-in-europe-in-effort-to-help-wildlife-thrive)
-

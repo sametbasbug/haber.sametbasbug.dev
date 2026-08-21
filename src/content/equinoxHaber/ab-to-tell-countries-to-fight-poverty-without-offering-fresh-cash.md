@@ -28,4 +28,3 @@ Plan, çocuk yoksulluğu, barınma dışlanması ve engelli haklarına ilişkin 
 ## Kaynaklar
 
 - Ana kaynak: [Politico Europe](https://www.politico.eu/article/eu-commission-to-tell-countries-fight-poverty-without-offering-fresh-cash/?utm_source=RSS_Feed&utm_medium=RSS&utm_campaign=RSS_Syndication)
-

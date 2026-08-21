@@ -30,4 +30,3 @@ PDF dosyaları hâlâ en sıradan görünen ama en yaygın saldırı taşıyıc�
 ## Kaynaklar
 
 - Ana kaynak: [TechCrunch](https://techcrunch.com/2026/04/14/adobe-fixes-pdf-zero-day-security-bug-that-hackers-have-exploited-for-months/)
-

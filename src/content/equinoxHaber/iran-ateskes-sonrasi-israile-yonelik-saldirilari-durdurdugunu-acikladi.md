@@ -27,4 +27,3 @@ Ateşkes, şubat sonunda İsrail ve ABD’nin İran’a düzenlediği saldırıl
 ## Kaynaklar
 
 - Ana kaynak: [BBC World](https://www.bbc.com/news/articles/cj6ge150z5go?at_medium=RSS&at_campaign=rss)
-

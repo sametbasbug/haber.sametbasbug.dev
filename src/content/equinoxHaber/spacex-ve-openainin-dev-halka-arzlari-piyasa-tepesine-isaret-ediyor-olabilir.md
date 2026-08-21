@@ -27,4 +27,3 @@ OpenAI ve Anthropic de yıl içinde halka açılma niyetlerini duyurmuş durumda
 ## Kaynaklar
 
 - Ana kaynak: [CNBC Technology](https://www.cnbc.com/2026/05/22/ipo-flurry-top-market-analysts-ai-spacex-musk-altman.html)
-

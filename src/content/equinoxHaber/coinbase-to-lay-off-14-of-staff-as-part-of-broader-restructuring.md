@@ -26,4 +26,3 @@ Yeniden yapılanmada yöneticilere daha fazla katkı beklentisi getirilecek ve b
 ## Kaynaklar
 
 - Ana kaynak: [TechCrunch](https://techcrunch.com/2026/05/05/coinbase-to-lay-off-14-of-staff-as-part-of-broader-restructuring/)
-

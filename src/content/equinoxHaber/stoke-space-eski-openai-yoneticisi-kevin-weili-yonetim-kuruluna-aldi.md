@@ -27,4 +27,3 @@ Lapsa, OpenAI bağlantılı yatırım iddiaları hakkında yorum yapmadı; Weil�
 ## Kaynaklar
 
 - Ana kaynak: [TechCrunch](https://techcrunch.com/2026/07/08/former-openai-exec-kevin-weil-is-now-on-the-board-of-stoke-space/)
-

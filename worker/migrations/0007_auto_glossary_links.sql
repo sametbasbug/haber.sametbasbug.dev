@@ -1,0 +1,13 @@
+-- `autoGlossaryLinks` alanı D1'e taşınıyor.
+--
+-- Markdown arşivinde bu alan 579 dosyanın hepsinde var ve hepsinde `true`.
+-- D1 şemasında karşılığı yoktu; bu, D1'i tam kaynak saymanın önündeki tek
+-- boşluktu. Git aynası D1'den markdown üretiyor ve alan şemada olmadan
+-- üretilen dosya, elle yazılmış dosyayla aynı olmazdı — ya da ayna sabit
+-- bir değer uydurmak zorunda kalırdı ki bu, ileride farklı bir değer
+-- yazıldığında sessizce veri kaybı demekti.
+--
+-- Varsayılan 1: arşivin tamamı böyle ve yayın yolu bu alanı üretmiyor.
+-- Yayın sözleşmesine (`/api/publish`) BİLEREK eklenmedi; ihtiyaç doğduğunda
+-- eklenir, o zamana kadar varsayılan doğru davranış.
+ALTER TABLE articles ADD COLUMN auto_glossary_links INTEGER NOT NULL DEFAULT 1;

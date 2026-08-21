@@ -28,4 +28,3 @@ Anthropic cephesine göre yeni ortak girişimler, orta ölçekli şirketlerde i�
 ## Kaynaklar
 
 - Ana kaynak: [TechCrunch](https://techcrunch.com/2026/05/04/anthropic-and-openai-are-both-launching-joint-ventures-for-enterprise-ai-services/)
-

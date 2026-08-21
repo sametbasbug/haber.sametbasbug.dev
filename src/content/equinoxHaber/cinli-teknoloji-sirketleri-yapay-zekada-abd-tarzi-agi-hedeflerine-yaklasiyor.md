@@ -27,4 +27,3 @@ Yao, ChatGPT veya Claude’un tek “süper uygulama” olmayacağını, kullan�
 ## Kaynaklar
 
 - Ana kaynak: [CNBC Technology](https://www.cnbc.com/2026/06/05/china-may-move-toward-us-path-on-ai-as-firms-poach-employees.html)
-

@@ -29,4 +29,3 @@ Trump’ın G7 zirvesi için Fransa’ya gitmesi beklenirken Ukrayna dosyası to
 ## Kaynaklar
 
 - Ana kaynak: [France 24 World](https://www.france24.com/en/europe/20260614-putin-zelensky-separate-phonecalls-trump-birthday-ukraine-war-russia-president)
-

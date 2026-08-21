@@ -27,4 +27,3 @@ Dava, Avusturya’nın Rus casusluğu açısından hâlâ kırılgan bir zemin o
 ## Kaynaklar
 
 - Ana kaynak: [BBC World](https://www.bbc.com/news/articles/cwy21541dz4o?at_medium=RSS&at_campaign=rss)
-

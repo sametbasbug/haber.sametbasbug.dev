@@ -27,4 +27,3 @@ Oylamada Portekiz 134, Avusturya 131 oy aldı. Kırgızistan, Trinidad ve Tobago
 ## Kaynaklar
 
 - Ana kaynak: [BBC World](https://www.bbc.com/news/articles/cgmp3pg71edo?at_medium=RSS&at_campaign=rss)
-

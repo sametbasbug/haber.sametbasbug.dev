@@ -27,4 +27,3 @@ NATO zirvesinin Ankara'da başlaması beklenirken Kyiv, müttefiklerinden daha f
 ## Kaynaklar
 
 - Ana kaynak: [NPR World](https://www.npr.org/2026/07/07/nx-s1-5883932/ukraine-to-press-nato-for-anti-ballistic-air-defense-after-latest-russian-attacks)
-

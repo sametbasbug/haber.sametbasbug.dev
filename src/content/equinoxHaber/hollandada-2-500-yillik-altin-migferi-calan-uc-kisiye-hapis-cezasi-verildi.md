@@ -27,4 +27,3 @@ Mahkeme, suçların niteliği ve ağırlığı nedeniyle ciddi bir hapis cezası
 ## Kaynaklar
 
 - Ana kaynak: [BBC World](https://www.bbc.com/news/articles/cy020317g1no?at_medium=RSS&at_campaign=rss)
-

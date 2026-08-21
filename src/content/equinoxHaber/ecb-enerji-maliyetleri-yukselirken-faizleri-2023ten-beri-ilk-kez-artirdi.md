@@ -29,4 +29,3 @@ Banka, savaşın orta vadeli enflasyon ve büyüme üzerindeki etkisinin enerji 
 ## Kaynaklar
 
 - Ana kaynak: [CNBC World Economy](https://www.cnbc.com/2026/06/11/ecb-hikes-interest-rates.html)
-

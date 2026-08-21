@@ -29,4 +29,3 @@ Bardella’nın 2027’de Ulusal Birlik’in cumhurbaşkanı adayı olup olmayac
 ## Kaynaklar
 
 - Ana kaynak: [Politico Europe](https://www.politico.eu/article/france-eu-far-right-jordan-bardella-coming-for-europe/?utm_source=RSS_Feed&utm_medium=RSS&utm_campaign=RSS_Syndication)
-

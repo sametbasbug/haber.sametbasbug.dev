@@ -29,4 +29,3 @@ Ukrayna tarafında da tablo rahat değil. Kiev’in büyük çaplı karşı taar
 ## Kaynaklar
 
 - Ana kaynak: [France 24 World](https://www.france24.com/en/europe/20260614-despite-regular-strikes-on-ukraine-russian-offensive-loses-steam)
-

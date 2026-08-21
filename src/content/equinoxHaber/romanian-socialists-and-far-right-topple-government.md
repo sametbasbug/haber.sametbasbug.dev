@@ -26,4 +26,3 @@ Siyasi kriz, Romanya'nın 11 milyar avroyu bulan AB fonlarını açmak için ağ
 ## Kaynaklar
 
 - Ana kaynak: [Politico Europe](https://www.politico.eu/article/romania-government-collapses/?utm_source=RSS_Feed&utm_medium=RSS&utm_campaign=RSS_Syndication)
-

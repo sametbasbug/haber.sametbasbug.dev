@@ -28,4 +28,3 @@ Kallas, AB’nin doğrudan görüşmelere girmesi için Moskova’nın önce tav
 ## Kaynaklar
 
 - Ana kaynak: [Politico Europe](https://www.politico.eu/article/kaja-kallas-rejects-gerhard-schroder-as-russia-ukraine-negotiator/?utm_source=RSS_Feed&utm_medium=RSS&utm_campaign=RSS_Syndication)
-

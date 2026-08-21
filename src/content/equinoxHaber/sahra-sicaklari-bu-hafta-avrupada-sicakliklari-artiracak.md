@@ -27,4 +27,3 @@ Bazı bölgelerde orta 30 derecelerde beş güne kadar sürebilecek koşullar s�
 ## Kaynaklar
 
 - Ana kaynak: [The Guardian World](https://www.theguardian.com/environment/2026/jun/15/weather-tracker-sahara-heatwave-temperatures-europe-australia)
-

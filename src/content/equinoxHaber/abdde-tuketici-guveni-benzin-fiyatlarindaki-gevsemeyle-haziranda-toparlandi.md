@@ -29,4 +29,3 @@ Tüketici güvenindeki zayıflık, kasımdaki ara seçimler öncesinde ekonomi v
 ## Kaynaklar
 
 - Ana kaynak: [The Guardian Business](https://www.theguardian.com/business/2026/jun/12/consumer-sentiment-june-data-gas-prices)
-

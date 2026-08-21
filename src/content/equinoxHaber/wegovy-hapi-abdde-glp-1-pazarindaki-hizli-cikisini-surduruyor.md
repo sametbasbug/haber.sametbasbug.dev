@@ -27,4 +27,3 @@ Wegovy hapı, Eli Lilly’nin kilo kaybı için geliştirdiği GLP-1 tableti Fou
 ## Kaynaklar
 
 - Ana kaynak: [MarketWatch Top Stories](https://www.marketwatch.com/story/the-wegovy-pill-is-still-dominating-the-glp-1-pill-market-f7add507?mod=mw_rss_topstories)
-

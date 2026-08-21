@@ -29,4 +29,3 @@ New York merkezli Human Rights in China, Güney Kore’ye Dong’u Çin’e iade
 ## Kaynaklar
 
 - Ana kaynak: [BBC World](https://www.bbc.com/news/articles/c87q2pdwpw3o?at_medium=RSS&at_campaign=rss)
-

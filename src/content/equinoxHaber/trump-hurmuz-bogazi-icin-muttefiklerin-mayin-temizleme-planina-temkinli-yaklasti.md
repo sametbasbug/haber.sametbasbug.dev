@@ -29,4 +29,3 @@ Hürmüz Boğazı, küresel enerji ticareti açısından kritik geçiş noktalar
 ## Kaynaklar
 
 - Ana kaynak: [Euronews World](http://www.euronews.com/2026/06/16/trump-appears-hesitant-about-ally-proposed-plan-to-demine-strait-of-hormuz-for-commercial-)
-

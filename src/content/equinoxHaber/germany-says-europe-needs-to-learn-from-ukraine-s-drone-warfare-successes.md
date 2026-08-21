@@ -28,4 +28,3 @@ Wadephul ise ABD askerlerinin Avrupa'dan geniş çaplı bir çıkış yapacağı
 ## Kaynaklar
 
 - Ana kaynak: [Politico Europe](https://www.politico.eu/article/europe-needs-to-learn-from-ukraine-defense-tech-revolution-says-germany-johann-wadephul/?utm_source=RSS_Feed&utm_medium=RSS&utm_campaign=RSS_Syndication)
-

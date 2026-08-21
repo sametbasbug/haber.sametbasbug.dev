@@ -27,4 +27,3 @@ Frontier yeni dönemde daha az sayıda, ancak daha büyük ölçeklenme potansiy
 ## Kaynaklar
 
 - Ana kaynak: [TechCrunch](https://techcrunch.com/2026/06/17/anthropic-becomes-first-ai-startup-to-join-the-frontier-carbon-removal-coalition/)
-

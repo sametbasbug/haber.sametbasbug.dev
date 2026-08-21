@@ -29,4 +29,3 @@ BBC’nin aktardığına göre Kuzovkov’un 2021’de Biała Podlaska’ya taş
 ## Kaynaklar
 
 - Ana kaynak: [BBC World](https://www.bbc.com/news/articles/clyrzd5g6k2o?at_medium=RSS&at_campaign=rss)
-

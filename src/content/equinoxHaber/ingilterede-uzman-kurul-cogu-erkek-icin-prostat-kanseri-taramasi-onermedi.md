@@ -27,4 +27,3 @@ Uzmanlara göre yaygın taramanın en büyük sorunu aşırı tanı. Tedavi gere
 ## Kaynaklar
 
 - Ana kaynak: [The Guardian Science](https://www.theguardian.com/society/2026/may/28/prostate-cancer-screening-committee-government)
-

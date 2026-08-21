@@ -29,4 +29,3 @@ Rutte ayrıca İran’a yönelik ABD operasyonu sırasında Avrupa’nın lojist
 ## Kaynaklar
 
 - Ana kaynak: [Politico Europe](https://www.politico.eu/article/mark-rutte-nato-admit-it-donald-trump-was-right/?utm_source=RSS_Feed&utm_medium=RSS&utm_campaign=RSS_Syndication)
-

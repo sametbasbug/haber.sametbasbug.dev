@@ -27,4 +27,3 @@ Blue Origin CEO’su Dave Limp de şirketin fırlatma sahasında yaşanan patlam
 ## Kaynaklar
 
 - Ana kaynak: [BBC World](https://www.bbc.com/news/articles/ceqdrw2yy3vo?at_medium=RSS&at_campaign=rss)
-

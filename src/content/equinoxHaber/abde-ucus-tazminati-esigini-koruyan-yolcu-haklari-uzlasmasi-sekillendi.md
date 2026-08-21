@@ -27,4 +27,3 @@ Uzlaşma ayrıca havayollarına yeni bir bildirim yükümlülüğü getiriyor. �
 ## Kaynaklar
 
 - Ana kaynak: [Politico Europe](https://www.politico.eu/article/eu-negotiators-reach-compromise-proposal-on-air-passenger-rights/?utm_source=RSS_Feed&utm_medium=RSS&utm_campaign=RSS_Syndication)
-

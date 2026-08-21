@@ -27,4 +27,3 @@ AML Global ise hem kendi iş ortaklarını hem de tedarik zincirini yaptırımla
 ## Kaynaklar
 
 - Ana kaynak: [The Guardian World](https://www.theguardian.com/politics/2026/may/22/john-healey-asks-nigel-farage-if-any-of-gift-may-have-come-from-russia-linked-profits)
-

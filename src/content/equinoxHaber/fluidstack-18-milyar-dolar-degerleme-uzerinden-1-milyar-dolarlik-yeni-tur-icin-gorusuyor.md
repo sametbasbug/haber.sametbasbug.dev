@@ -30,4 +30,3 @@ Bu başlık, yapay zeka yarışında model şirketleri kadar onları besleyen al
 ## Kaynaklar
 
 - Ana kaynak: [TechCrunch](https://techcrunch.com/2026/04/14/ai-datacenter-startup-fluidstack-in-talks-for-1b-round-at-18b-valuation-months-after-hitting-7-5b-says-report/)
-

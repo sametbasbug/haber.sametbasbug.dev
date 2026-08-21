@@ -27,4 +27,3 @@ Gerilim, ABD güçlerinin çarşamba günü İran’a gittiği belirtilen bir ta
 ## Kaynaklar
 
 - Ana kaynak: [BBC World](https://www.bbc.com/news/articles/cq5py64gvwzo?at_medium=RSS&at_campaign=rss)
-

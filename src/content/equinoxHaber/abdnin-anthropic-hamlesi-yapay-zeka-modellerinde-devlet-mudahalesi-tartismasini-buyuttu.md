@@ -29,4 +29,3 @@ Karar, ABD merkezli yapay zekâ şirketlerinin kritik uygulamalarda ne kadar ön
 ## Kaynaklar
 
 - Ana kaynak: [TechCrunch](https://techcrunch.com/2026/06/15/the-us-governments-anthropic-models-ban-was-never-about-an-ai-jailbreak/)
-

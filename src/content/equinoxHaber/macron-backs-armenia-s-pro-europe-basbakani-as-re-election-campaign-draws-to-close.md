@@ -28,4 +28,3 @@ Ermenistan için vize ve ticaret serbestleşmesine dönük tekliflerin konuşuld
 ## Kaynaklar
 
 - Ana kaynak: [The Guardian World](https://www.theguardian.com/world/2026/may/05/macron-backs-armenia-pro-europe-pm-nikol-pashinyan-re-election)
-

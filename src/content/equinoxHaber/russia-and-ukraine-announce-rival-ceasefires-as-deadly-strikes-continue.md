@@ -26,4 +26,3 @@ Kiev, saldırıların ardından savaşı bitirmek için gerçek diplomasinin zam
 ## Kaynaklar
 
 - Ana kaynak: [BBC World](https://www.bbc.com/news/articles/c1e2zjz22p9o?at_medium=RSS&at_campaign=rss)
-

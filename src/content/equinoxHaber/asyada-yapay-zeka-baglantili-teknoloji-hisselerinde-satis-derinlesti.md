@@ -27,4 +27,3 @@ Satış baskısında, ABD’de güçlü gelen istihdam verisinin faizlerin daha 
 ## Kaynaklar
 
 - Ana kaynak: [CNBC Technology](https://www.cnbc.com/2026/06/08/softbank-samsung-tech-ai-stocks-asia-fall.html)
-

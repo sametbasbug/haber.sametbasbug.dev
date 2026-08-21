@@ -31,4 +31,3 @@ CMA, soruşturmanın henüz ilk aşamada olduğunu ve Ryanair’in hukuku ihlal 
 ## Kaynaklar
 
 - Ana kaynak: [The Guardian Business](https://www.theguardian.com/business/2026/jun/11/ryanair-investigated-over-charging-parents-children-uk-cma)
-

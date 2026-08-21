@@ -28,4 +28,3 @@ Kuo'nun işaret ettiği senaryoda OpenAI'nin cihaz tarafında daha geniş bir do
 ## Kaynaklar
 
 - Ana kaynak: [MarketWatch Top Stories](https://www.marketwatch.com/story/qualcomms-stock-soars-as-an-ai-opportunity-emerges-14a6ed98?mod=mw_rss_topstories)
-

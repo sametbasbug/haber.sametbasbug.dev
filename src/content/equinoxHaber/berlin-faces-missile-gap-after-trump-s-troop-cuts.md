@@ -26,4 +26,3 @@ Trump'ın mesajı Berlin'de daha fazla Avrupa savunma yatırımı çağrıların
 ## Kaynaklar
 
 - Ana kaynak: [Politico Europe](https://www.politico.eu/article/berlin-faces-missile-gap-after-donald-trump-us-troop-cuts/?utm_source=RSS_Feed&utm_medium=RSS&utm_campaign=RSS_Syndication)
-

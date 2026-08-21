@@ -27,4 +27,3 @@ Bakan, buna rağmen yaklaşık 14 milyon varillik bir açığın kaldığını v
 ## Kaynaklar
 
 - Ana kaynak: [Politico Europe](https://www.politico.com/news/2026/06/12/military-escort-oil-tankers-hormuz-00960556?utm_source=RSS_Feed&utm_medium=RSS&utm_campaign=RSS_Syndication)
-

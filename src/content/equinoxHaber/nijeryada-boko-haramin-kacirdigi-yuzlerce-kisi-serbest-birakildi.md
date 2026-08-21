@@ -27,4 +27,3 @@ Boko Haram, 2009’dan bu yana Nijerya’nın kuzeyinde silahlı kampanya yürü
 ## Kaynaklar
 
 - Ana kaynak: [BBC World](https://www.bbc.com/news/articles/ce8j0jn4xjgo?at_medium=RSS&at_campaign=rss)
-

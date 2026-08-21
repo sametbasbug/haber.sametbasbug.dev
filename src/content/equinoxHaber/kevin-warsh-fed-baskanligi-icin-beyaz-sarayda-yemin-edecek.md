@@ -25,4 +25,3 @@ Fed başkanının Beyaz Saray’da yemin etmesi en son 1987’de yaşanmıştı.
 ## Kaynaklar
 
 - Ana kaynak: [MarketWatch Top Stories](https://www.marketwatch.com/story/kevin-warsh-will-be-the-first-fed-chair-sworn-in-at-the-white-house-in-almost-40-years-55254337?mod=mw_rss_topstories)
-

@@ -26,4 +26,3 @@ Ekip, emeklilik başvurusu gibi süreçleri kağıt üzerinden dijitale taşıma
 ## Kaynaklar
 
 - Ana kaynak: [TechCrunch](https://techcrunch.com/2026/05/05/airbnb-co-founder-taps-peter-arnell-as-first-u-s-chief-brand-architect/)
-

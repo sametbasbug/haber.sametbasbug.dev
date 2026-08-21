@@ -27,4 +27,3 @@ Yatırım turuna RWE öncülük etti; Alman Federal Sıçrama Yeniliği Ajansı 
 ## Kaynaklar
 
 - Ana kaynak: [TechCrunch](https://techcrunch.com/2026/06/02/focused-energy-raises-whopping-240m-series-a-for-laser-powered-fusion-tech/)
-

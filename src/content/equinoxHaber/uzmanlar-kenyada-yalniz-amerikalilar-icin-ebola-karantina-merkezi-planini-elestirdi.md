@@ -27,4 +27,3 @@ Uzmanlara göre ABD’de Ebola vakaları için kurulmuş yüksek güvenlikli biy
 ## Kaynaklar
 
 - Ana kaynak: [The Guardian World](https://www.theguardian.com/world/2026/jun/04/experts-criticise-plan-for-american-only-ebola-quarantine-centre-in-kenya)
-

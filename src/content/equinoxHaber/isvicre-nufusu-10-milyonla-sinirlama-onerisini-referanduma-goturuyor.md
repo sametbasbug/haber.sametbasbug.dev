@@ -29,4 +29,3 @@ Referandumun sonucu yalnız İsviçre için değil, Avrupa’daki göç politika
 ## Kaynaklar
 
 - Ana kaynak: [Deutsche Welle Business](https://www.dw.com/en/swiss-to-vote-on-whether-to-cap-population-at-10-million/a-77492750?maca=en-rss-en-bus-2091-xml-mrss)
-

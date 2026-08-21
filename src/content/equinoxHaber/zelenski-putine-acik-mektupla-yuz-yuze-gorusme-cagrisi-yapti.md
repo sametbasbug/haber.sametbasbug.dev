@@ -27,4 +27,3 @@ Zelenski mektubunda görüşmenin İsviçre veya Türkiye gibi bir ülkede yapı
 ## Kaynaklar
 
 - Ana kaynak: [BBC World](https://www.bbc.com/news/articles/cwy2ypyp4x4o?at_medium=RSS&at_campaign=rss)
-

@@ -29,4 +29,3 @@ Karar, ABD’nin Küba Devlet Başkanı Miguel Díaz-Canel ve bazı kurumlara y�
 ## Kaynaklar
 
 - Ana kaynak: [Euronews World](http://www.euronews.com/2026/06/11/us-slaps-sanctions-on-cubas-oil-and-gas-company-accusing-it-of-weaponising-energy)
-

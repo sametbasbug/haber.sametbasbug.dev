@@ -27,4 +27,3 @@ Kodlama modeli MAI-Code-1-Flash ise GitHub Copilot ve Visual Studio Code içinde
 ## Kaynaklar
 
 - Ana kaynak: [CNBC Technology](https://www.cnbc.com/2026/06/02/microsoft-unveils-new-ai-models-lessen-reliance-on-openai-lower-costs.html)
-

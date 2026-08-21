@@ -29,4 +29,3 @@ Düzenleme tamamlanırsa ABD’de 800 bini aşan kayıtlı drone ekosistemi içi
 ## Kaynaklar
 
 - Ana kaynak: [Fast Company Tech](https://www.fastcompany.com/91558061/drone-use-could-skyrocket-after-faa-rule-change?partner=rss&utm_source=rss&utm_medium=feed&utm_campaign=rss+fastcompany&utm_content=rss)
-

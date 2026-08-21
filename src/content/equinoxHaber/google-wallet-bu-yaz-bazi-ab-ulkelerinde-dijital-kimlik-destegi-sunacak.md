@@ -27,4 +27,3 @@ Duyuru, Avrupa’da çevrim içi güvenlik ve yaş doğrulama kurallarının sı
 ## Kaynaklar
 
 - Ana kaynak: [Engadget](https://www.engadget.com/2186977/google-wallet-id-passes-will-be-available-in-select-eu-states-this-summer/)
-

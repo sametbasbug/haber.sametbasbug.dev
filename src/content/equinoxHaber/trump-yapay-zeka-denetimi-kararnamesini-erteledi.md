@@ -27,4 +27,3 @@ Trump daha önce yapay zekâya karşı ağır düzenlemeleri istemediğini açı
 ## Kaynaklar
 
 - Ana kaynak: [Engadget](https://www.engadget.com/2179211/trump-postpones-ai-oversight-bill-after-big-tech-pressure/)
-

@@ -27,4 +27,3 @@ BBC’ye göre mevcut sıcaklığın yakın nedeni, yüksek basıncın sıcak ha
 ## Kaynaklar
 
 - Ana kaynak: [BBC World](https://www.bbc.com/news/articles/c3v2yv5207xo?at_medium=RSS&at_campaign=rss)
-

@@ -28,4 +28,3 @@ Hubble verileri ayrıca Roman'ın kütle ölçümlerini daha güvenilir hale get
 ## Kaynaklar
 
 - Ana kaynak: [NASA Science](https://science.nasa.gov/missions/roman-space-telescope/hubble-survey-sets-up-romans-future-look-near-milky-ways-center/)
-

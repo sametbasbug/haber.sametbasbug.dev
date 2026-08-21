@@ -29,4 +29,3 @@ Akdeniz’de rekor düzeyde deniz sıcak hava dalgası görülürken, doğu Avru
 ## Kaynaklar
 
 - Ana kaynak: [France 24 World](https://www.france24.com/en/europe/20260709-western-europe-records-its-hottest-june-on-record-says-eu-climate-monitor)
-

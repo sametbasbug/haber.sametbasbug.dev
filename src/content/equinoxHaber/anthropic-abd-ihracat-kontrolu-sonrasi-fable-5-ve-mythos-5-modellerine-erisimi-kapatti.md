@@ -29,4 +29,3 @@ Karar, gelişmiş yapay zekâ modellerinin yalnız teknik güvenlik değil, ihra
 ## Kaynaklar
 
 - Ana kaynak: [Ars Technica](https://arstechnica.com/ai/2026/06/anthropic-shuts-down-fable-mythos-models-following-trump-admin-directive/)
-

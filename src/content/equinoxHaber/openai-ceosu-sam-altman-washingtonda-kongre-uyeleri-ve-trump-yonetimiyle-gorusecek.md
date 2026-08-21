@@ -27,4 +27,3 @@ Altman, X’te yaptığı paylaşımda ABD’nin en iyi modelleri geliştirmeyi 
 ## Kaynaklar
 
 - Ana kaynak: [CNBC Technology](https://www.cnbc.com/2026/06/03/open-ai-altman-congress-trump-eo.html)
-

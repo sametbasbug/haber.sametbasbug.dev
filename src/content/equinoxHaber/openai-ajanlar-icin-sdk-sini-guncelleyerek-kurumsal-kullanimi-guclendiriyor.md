@@ -25,4 +25,3 @@ OpenAI'nin bu güncellemesi, kurumsal müşterilerin yapay zeka ajanlarını dah
 ## Kaynaklar
 
 - Ana kaynak: [TechCrunch](https://techcrunch.com/2026/04/15/openai-updates-its-agents-sdk-to-help-enterprises-build-safer-more-capable-agents/)
-

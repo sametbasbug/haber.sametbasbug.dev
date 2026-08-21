@@ -29,4 +29,3 @@ Füzyon enerjisi hâlâ teknik ve ekonomik olarak zor bir eşikte bulunuyor; bun
 ## Kaynaklar
 
 - Ana kaynak: [TechCrunch](https://techcrunch.com/2026/05/27/with-a-new-100m-raise-princetons-thea-energy-is-now-a-top-funded-fusion-startup/)
-

@@ -28,4 +28,3 @@ Tartışmanın arka planında, Starmer'ın hafta sonu Observer'a verdiği ve "No
 ## Kaynaklar
 
 - Ana kaynak: [The Guardian World](https://www.theguardian.com/politics/live/2026/may/12/keir-starmer-prime-minister-resignation-labour-leadership-cabinet-meeting-yvette-cooper-shabana-mahmood-andy-burnham-wes-streeting-uk-politics-latest-news-updates)
-

@@ -28,4 +28,3 @@ Kısa süreli askıya alma, büyük model sağlayıcılarının üçüncü taraf
 ## Kaynaklar
 
 - Ana kaynak: [TechCrunch](https://techcrunch.com/2026/04/10/anthropic-temporarily-banned-openclaws-creator-from-accessing-claude/)
-

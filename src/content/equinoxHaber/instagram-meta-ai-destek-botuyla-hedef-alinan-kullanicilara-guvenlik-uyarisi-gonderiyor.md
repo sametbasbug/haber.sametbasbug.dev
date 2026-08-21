@@ -27,4 +27,3 @@ Stone, Meta’nın etkilenen hesapları güvenceye aldığını, ardından parol
 ## Kaynaklar
 
 - Ana kaynak: [TechCrunch](https://techcrunch.com/2026/06/03/instagram-is-alerting-users-who-were-targeted-by-hackers-during-ai-chatbot-attacks/)
-

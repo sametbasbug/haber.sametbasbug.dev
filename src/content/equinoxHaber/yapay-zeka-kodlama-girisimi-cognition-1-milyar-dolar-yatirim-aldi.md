@@ -27,4 +27,3 @@ Cognition, geçen yıl Windsurf’ün kalan varlıklarını satın almıştı. �
 ## Kaynaklar
 
 - Ana kaynak: [TechCrunch](https://techcrunch.com/2026/05/27/ai-coding-startup-cognition-raises-1b-at-25b-pre-money-valuation/)
-

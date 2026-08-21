@@ -27,4 +27,3 @@ Girişim, Avrupa Gıda, Tarım ve Turizm Sendikaları Federasyonu Effat’ın da
 ## Kaynaklar
 
 - Ana kaynak: [The Guardian Business](https://www.theguardian.com/environment/2026/jul/08/unions-europe-worker-protections-heat-stress-climate-crisis)
-

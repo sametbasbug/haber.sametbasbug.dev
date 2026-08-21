@@ -27,4 +27,3 @@ Avrupa’da “dijital egemenlik” başlığı uzun süredir gündemde olsa da 
 ## Kaynaklar
 
 - Ana kaynak: [WIRED](https://www.wired.com/story/all-the-ways-europe-is-ditching-american-technology/)
-

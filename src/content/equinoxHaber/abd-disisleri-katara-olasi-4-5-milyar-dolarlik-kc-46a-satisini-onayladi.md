@@ -26,4 +26,3 @@ Açıklamaya göre satışın uygulanması için Katar’a ek ABD hükümeti ya 
 ## Kaynaklar
 
 - Ana kaynak: [Defense News Global](https://www.defensenews.com/global/mideast-africa/2026/08/20/us-approves-possible-45-billion-sale-of-kc-46as-equipment-to-qatar)
-

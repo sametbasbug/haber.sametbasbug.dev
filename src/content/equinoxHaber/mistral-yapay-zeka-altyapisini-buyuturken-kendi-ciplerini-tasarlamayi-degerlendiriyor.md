@@ -29,4 +29,3 @@ Mistral perşembe günü ayrıca Fransa’da özellikle çıkarım süreçleri i
 ## Kaynaklar
 
 - Ana kaynak: [CNBC Technology](https://www.cnbc.com/2026/05/28/mistral-arthur-mensch-design-chips-ai-data-centers.html)
-

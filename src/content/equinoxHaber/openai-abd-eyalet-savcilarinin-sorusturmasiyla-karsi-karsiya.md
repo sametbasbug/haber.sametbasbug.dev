@@ -29,4 +29,3 @@ Soruşturma, OpenAI’ın ürün güvenliği, telif davaları, çocukların koru
 ## Kaynaklar
 
 - Ana kaynak: [Engadget](https://www.engadget.com/2193666/openai-investigation-state-attorneys-general/)
-

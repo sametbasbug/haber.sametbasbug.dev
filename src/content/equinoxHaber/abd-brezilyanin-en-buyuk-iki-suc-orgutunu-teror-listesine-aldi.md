@@ -29,4 +29,3 @@ ABD’nin terör listesi kararının somut etkileri henüz belirsiz. Ancak uzman
 ## Kaynaklar
 
 - Ana kaynak: [The Guardian World](https://www.theguardian.com/world/2026/may/29/brazil-gangs-terrorist-rubio)
-

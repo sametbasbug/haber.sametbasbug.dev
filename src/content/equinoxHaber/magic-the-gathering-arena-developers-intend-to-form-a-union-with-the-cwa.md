@@ -28,4 +28,3 @@ Bu girişimin önümüzdeki adımı, Hasbro'nun tanıma kararı verip vermeyece�
 ## Kaynaklar
 
 - Ana kaynak: [Engadget](https://www.engadget.com/gaming/magic-the-gathering-arena-developers-intend-to-form-a-union-with-the-cwa-104438341.html?src=rss)
-

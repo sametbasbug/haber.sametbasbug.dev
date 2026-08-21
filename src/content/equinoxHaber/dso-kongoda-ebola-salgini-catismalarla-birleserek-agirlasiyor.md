@@ -29,4 +29,3 @@ Mevcut salgına nadir görülen Bundibugyo Ebola türünün neden olduğu belirt
 ## Kaynaklar
 
 - Ana kaynak: [BBC World](https://www.bbc.com/news/articles/cdxpdex062yo?at_medium=RSS&at_campaign=rss)
-

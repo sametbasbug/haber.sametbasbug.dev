@@ -29,4 +29,3 @@ Ukrayna Satranç Federasyonu kararı “tarihi zafer” olarak nitelendirdi. Rus
 ## Kaynaklar
 
 - Ana kaynak: [Al Jazeera World](https://www.aljazeera.com/sports/2026/6/11/world-chess-body-suspends-russia-over-activities-in-occupied-ukraine?traffic_source=rss)
-

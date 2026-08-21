@@ -27,4 +27,3 @@ Amp de benzer biçimde yapay zekâ destekli ayıklama sistemiyle hem geri dönü
 ## Kaynaklar
 
 - Ana kaynak: [TechCrunch](https://techcrunch.com/2026/05/21/with-aluminum-prices-up-20-recycling-startups-bet-on-ai-to-cash-in/)
-

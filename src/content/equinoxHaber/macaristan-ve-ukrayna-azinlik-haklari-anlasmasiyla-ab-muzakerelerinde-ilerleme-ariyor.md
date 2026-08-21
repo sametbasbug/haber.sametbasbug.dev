@@ -29,4 +29,3 @@ Magyar’ın Ukrayna Cumhurbaşkanı Volodimir Zelenskiy ile görüşmeye hazır
 ## Kaynaklar
 
 - Ana kaynak: [Deutsche Welle World](https://www.dw.com/en/hungary-ukraine-make-historic-deal-after-years-of-tension/a-77496875?maca=en-rss-en-all-1573-xml-mrss)
-

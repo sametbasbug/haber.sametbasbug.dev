@@ -29,4 +29,3 @@ Konuşma, İngiltere ile ABD arasındaki UKUSA istihbarat anlaşmasının 80. y�
 ## Kaynaklar
 
 - Ana kaynak: [CNBC Technology](https://www.cnbc.com/2026/05/27/uk-spy-chief-gchq-russia-china-us-cyber-attack-security.html)
-

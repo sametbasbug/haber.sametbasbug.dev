@@ -29,4 +29,3 @@ AB, geçen ay Batı Şeria’da hak ihlallerinden sorumlu şiddet yanlısı yerl
 ## Kaynaklar
 
 - Ana kaynak: [Al Jazeera World](https://www.aljazeera.com/news/2026/6/15/eu-fails-to-agree-on-sanctions-for-far-right-israeli-minister-ben-gvir?traffic_source=rss)
-

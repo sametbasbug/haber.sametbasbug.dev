@@ -27,4 +27,3 @@ Birleşmiş Milletler’in bu ay açıkladığı verilere göre Haiti’de yıl 
 ## Kaynaklar
 
 - Ana kaynak: [BBC World](https://www.bbc.com/news/articles/cz9le087414o?at_medium=RSS&at_campaign=rss)
-

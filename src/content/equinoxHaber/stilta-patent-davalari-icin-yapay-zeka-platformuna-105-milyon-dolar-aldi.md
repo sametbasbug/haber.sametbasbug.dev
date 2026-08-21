@@ -27,4 +27,3 @@ Hukuk teknolojisi, yapay zekâ dalgasıyla birlikte yatırımcıların daha fazl
 ## Kaynaklar
 
 - Ana kaynak: [TechCrunch](https://techcrunch.com/2026/05/19/legal-tech-announced-stilta-announces-10m-seed-backed-by-yc-and-a16z-months-after-launch/)
-

@@ -27,4 +27,3 @@ Komisyon yetkilileri, çalışmanın verimliliği artırmayı amaçladığını 
 ## Kaynaklar
 
 - Ana kaynak: [Politico Europe](https://www.politico.eu/article/european-commission-restructure-departments-funds-dg-regio/?utm_source=RSS_Feed&utm_medium=RSS&utm_campaign=RSS_Syndication)
-

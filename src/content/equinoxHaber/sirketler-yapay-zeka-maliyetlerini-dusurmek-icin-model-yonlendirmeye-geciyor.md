@@ -27,4 +27,3 @@ Bu değişim, OpenAI ve Anthropic gibi en gelişmiş modelleri satan şirketler 
 ## Kaynaklar
 
 - Ana kaynak: [CNBC Technology](https://www.cnbc.com/2026/06/05/model-routing-on-ai-is-a-problem-for-openai-and-anthropic.html)
-

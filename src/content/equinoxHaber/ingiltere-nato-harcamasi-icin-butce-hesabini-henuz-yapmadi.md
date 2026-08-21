@@ -29,4 +29,3 @@ Savunma yatırım planı, bakanlığın bütçesine dört yılda 15 milyar sterl
 ## Kaynaklar
 
 - Ana kaynak: [The Guardian Business](https://www.theguardian.com/business/2026/jul/08/treasury-due-diligence-money-uk-nato-spend)
-

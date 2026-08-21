@@ -27,4 +27,3 @@ ABD ve İngiltere’yi de kapsayan AUKUS anlaşması, gelecek hafta Avustralya S
 ## Kaynaklar
 
 - Ana kaynak: [The Guardian World](https://www.theguardian.com/world/2026/jun/07/greens-warn-nuclear-submarines-deal-risks-war-with-china-as-albanese-says-aukus-full-steam-ahead)
-

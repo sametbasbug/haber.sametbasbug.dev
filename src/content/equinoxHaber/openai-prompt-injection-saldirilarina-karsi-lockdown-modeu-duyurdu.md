@@ -27,4 +27,3 @@ OpenAI, Lockdown Mode’un herkes için tasarlanmadığını; daha sıkı veri k
 ## Kaynaklar
 
 - Ana kaynak: [TechCrunch](https://techcrunch.com/2026/06/06/openai-unveils-lockdown-mode-to-protect-sensitive-data-from-prompt-injection-attacks/)
-

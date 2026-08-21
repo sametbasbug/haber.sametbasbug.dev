@@ -27,4 +27,3 @@ Görüşmeler, Trump yönetiminin yapay zekâ şirketleriyle daha yakın bir san
 ## Kaynaklar
 
 - Ana kaynak: [CNBC Technology](https://www.cnbc.com/2026/06/05/trump-open-ai-altman-stake.html)
-

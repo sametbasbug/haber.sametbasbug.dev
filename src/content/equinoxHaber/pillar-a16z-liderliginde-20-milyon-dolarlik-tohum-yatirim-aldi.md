@@ -27,4 +27,3 @@ Bu tür yatırımlar, kurumsal yazılım pazarında finansal risk yönetimi ara�
 ## Kaynaklar
 
 - Ana kaynak: [TechCrunch](https://techcrunch.com/2026/04/14/financial-risk-management-platform-pillar-raises-20m-seed-in-round-led-by-a16z/)
-

@@ -29,4 +29,3 @@ OpenAI de raporunda işaret ettiği hesapların mevcut kamu kaygılarını büy�
 ## Kaynaklar
 
 - Ana kaynak: [WIRED](https://www.wired.com/story/china-us-data-center-opposition/)
-

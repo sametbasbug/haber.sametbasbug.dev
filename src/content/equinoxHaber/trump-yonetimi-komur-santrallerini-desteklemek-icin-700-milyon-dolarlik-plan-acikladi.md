@@ -27,4 +27,3 @@ Kömürün ABD elektrik üretimindeki payı son yıllarda belirgin biçimde geri
 ## Kaynaklar
 
 - Ana kaynak: [Ars Technica](https://arstechnica.com/science/2026/06/trump-admin-tries-again-to-revive-dying-coal-industry/)
-

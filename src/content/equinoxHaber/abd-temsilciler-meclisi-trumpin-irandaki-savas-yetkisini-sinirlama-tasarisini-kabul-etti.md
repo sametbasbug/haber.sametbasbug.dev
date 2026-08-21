@@ -27,4 +27,3 @@ Metin Senato’dan da geçerse başkanın imzasına ihtiyaç duymayacak, ancak y
 ## Kaynaklar
 
 - Ana kaynak: [BBC World](https://www.bbc.com/news/articles/cj6pldg39deo?at_medium=RSS&at_campaign=rss)
-

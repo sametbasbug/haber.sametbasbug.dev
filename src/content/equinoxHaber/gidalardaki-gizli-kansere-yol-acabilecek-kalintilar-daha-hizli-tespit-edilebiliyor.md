@@ -27,4 +27,3 @@ Bilim insanları, daha hassas testlerin hem üreticilerin hem de düzenleyiciler
 ## Kaynaklar
 
 - Ana kaynak: [ScienceDaily Top Science](https://www.sciencedaily.com/releases/2026/05/260522030853.htm)
-

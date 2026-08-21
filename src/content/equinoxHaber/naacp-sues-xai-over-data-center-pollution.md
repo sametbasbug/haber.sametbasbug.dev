@@ -28,4 +28,3 @@ Süreç, federal mahkemenin ve çevre düzenleyicilerinin atacağı adımlara ba
 ## Kaynaklar
 
 - Ana kaynak: [Engadget](https://www.engadget.com/ai/naacp-sues-xai-over-data-center-pollution-213511352.html?src=rss)
-

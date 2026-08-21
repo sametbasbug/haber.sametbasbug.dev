@@ -29,4 +29,3 @@ Uluslararası Enerji Ajansı, yüksek petrol fiyatları ve düşen batarya maliy
 ## Kaynaklar
 
 - Ana kaynak: [Deutsche Welle World](https://www.dw.com/en/charging-ahead-evs-outpace-growth-predictions/a-77486417?maca=en-rss-en-all-1573-xml-mrss)
-

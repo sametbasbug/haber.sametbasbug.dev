@@ -28,5 +28,3 @@ Soruşturma ilerledikçe motive ve güvenlik zincirine ilişkin yeni ayrıntıla
 ## Kaynaklar
 
 - Ana kaynak: [The Guardian World](https://www.theguardian.com/us-news/2026/apr/28/first-thing-white-house-dinner-suspect-charged-with-attempted-assassination)
-
-

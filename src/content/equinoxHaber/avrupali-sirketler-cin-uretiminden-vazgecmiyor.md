@@ -29,4 +29,3 @@ Bu tablo, Avrupa’nın Pekin’e karşı ticaret politikalarını sertleştirme
 ## Kaynaklar
 
 - Ana kaynak: [CNBC Technology](https://www.cnbc.com/2026/05/27/european-companies-expand-china-supply-chains-automation-costs.html)
-

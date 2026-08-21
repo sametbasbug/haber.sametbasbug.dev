@@ -29,4 +29,3 @@ Anthropic ayrıca preferred ve common hisselerin transfer kısıtlarına tabi ol
 ## Kaynaklar
 
 - Ana kaynak: [TechCrunch](https://techcrunch.com/2026/05/12/anthropic-warns-investors-against-secondary-platforms-offering-access-to-its-shares/)
-

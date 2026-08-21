@@ -27,4 +27,3 @@ Kenya yönetimi ise kararı savundu. Dışişleri Bakanlığı Principal Secreta
 ## Kaynaklar
 
 - Ana kaynak: [Al Jazeera World](https://www.aljazeera.com/news/2026/6/17/taiwan-accuses-kenya-of-deporting-conference-delegates-on-chinas-behalf?traffic_source=rss)
-

@@ -27,4 +27,3 @@ Anlaşma, Kanada’da Amazon ve Walmart gibi büyük perakende ve e-ticaret işv
 ## Kaynaklar
 
 - Ana kaynak: [The Guardian World](https://www.theguardian.com/business/2026/jun/06/canada-walmart-first-union-deal)
-

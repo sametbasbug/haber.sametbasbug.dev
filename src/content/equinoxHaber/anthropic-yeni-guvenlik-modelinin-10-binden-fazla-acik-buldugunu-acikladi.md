@@ -27,4 +27,3 @@ Güncelleme, Anthropic’in kamu kurumları ve teknoloji ortaklarıyla işbirli�
 ## Kaynaklar
 
 - Ana kaynak: [Engadget](https://www.engadget.com/2180028/anthropic-claude-mythos-preview-project-glasswing-update/)
-

@@ -31,4 +31,3 @@ Cursor anlaşması, SpaceX’in bu hedefleri yalnız uzay ve altyapı işinden d
 ## Kaynaklar
 
 - Ana kaynak: [CNBC Technology](https://www.cnbc.com/2026/06/16/spacex-spcx-cursor-acquisition-ipo.html)
-

@@ -26,4 +26,3 @@ Moment Energy ayrıca bu yaklaşımın UL sertifikası aldığını, bunun da he
 ## Kaynaklar
 
 - Ana kaynak: [TechCrunch](https://techcrunch.com/2026/05/05/moment-energy-raises-40m-to-meet-infinite-demand-for-power-with-ev-batteries/)
-

@@ -27,4 +27,3 @@ Güvenlik ve aile kontrolleri tarafında Find Hub için “kayıp olarak işaret
 ## Kaynaklar
 
 - Ana kaynak: [TechCrunch](https://techcrunch.com/2026/06/16/android-17-launches-with-new-multitasking-tools-as-google-expands-gemini-features/)
-

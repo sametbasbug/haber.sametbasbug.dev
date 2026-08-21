@@ -29,4 +29,3 @@ Enerji Bakanı Michael Shanks, şebekenin güçlendirilmesi ve temiz enerji proj
 ## Kaynaklar
 
 - Ana kaynak: [The Guardian Business](https://www.theguardian.com/environment/2026/jun/10/labour-renewable-energy-projects-halfway-long-delay)
-

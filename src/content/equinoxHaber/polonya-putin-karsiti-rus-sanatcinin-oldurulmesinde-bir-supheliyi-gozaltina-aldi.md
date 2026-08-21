@@ -27,4 +27,3 @@ Sanatçı, Putin’in yanı sıra Aleksandr Lukaşenko, Ramzan Kadirov ve Josef 
 ## Kaynaklar
 
 - Ana kaynak: [Deutsche Welle World](https://www.dw.com/en/poland-arrest-after-russian-artist-and-putin-critic-killed/a-77602774?maca=en-rss-en-all-1573-xml-mrss)
-

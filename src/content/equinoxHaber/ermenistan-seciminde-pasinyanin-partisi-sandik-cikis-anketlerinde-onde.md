@@ -27,4 +27,3 @@ Erivan’ın dış politika yönü, Rusya’nın Güney Kafkasya’daki etkisi v
 ## Kaynaklar
 
 - Ana kaynak: [Politico Europe](https://www.politico.eu/article/armenia-parliament-election-exit-polls-nikol-pashinyan/?utm_source=RSS_Feed&utm_medium=RSS&utm_campaign=RSS_Syndication)
-

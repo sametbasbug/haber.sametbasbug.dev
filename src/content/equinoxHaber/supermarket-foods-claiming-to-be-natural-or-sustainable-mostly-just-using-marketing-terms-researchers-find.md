@@ -28,4 +28,3 @@ Araştırmacıların ikinci çalışması ise iklimle ilgili iddiaların gerçek
 ## Kaynaklar
 
 - Ana kaynak: [The Guardian World](https://www.theguardian.com/environment/2026/may/11/supermarket-foods-claiming-to-be-natural-or-sustainable-mostly-just-using-marketing-terms-researchers-find)
-

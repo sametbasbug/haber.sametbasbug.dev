@@ -29,4 +29,3 @@ Halka arz sonrası SpaceX, ABD’nin en değerli şirketleri arasına girdi. Yen
 ## Kaynaklar
 
 - Ana kaynak: [Deutsche Welle World](https://www.dw.com/en/spacex-ipo-makes-musk-a-paper-trillionaire/a-77529579?maca=en-rss-en-all-1573-xml-mrss)
-

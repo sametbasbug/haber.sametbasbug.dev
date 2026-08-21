@@ -28,4 +28,3 @@ Türkiye'nin üyelik sürecinin kâğıt üzerinde sürse de siyaseten tıkandı
 ## Kaynaklar
 
 - Ana kaynak: [Politico Europe](https://www.politico.eu/article/recep-tayyip-erdogan-rival-ekrem-imamoglu-warns-ursula-von-der-leyen-after-turkey-gaffe/?utm_source=RSS_Feed&utm_medium=RSS&utm_campaign=RSS_Syndication)
-

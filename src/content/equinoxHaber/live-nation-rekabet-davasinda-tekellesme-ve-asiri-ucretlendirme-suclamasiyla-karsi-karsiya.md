@@ -23,4 +23,3 @@ Live Nation’ın hisseleri karar sonrası düştü. Şirketin daha sert yaptır
 ## Kaynaklar
 
 - Ana kaynak: [BBC World](https://www.bbc.com/news/articles/clyddyp19yyo?at_medium=RSS&at_campaign=rss)
-

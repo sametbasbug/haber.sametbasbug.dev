@@ -27,4 +27,3 @@ Başsavcının görüşü bağlayıcı değil, ancak AB Adalet Divanı’nın ni
 ## Kaynaklar
 
 - Ana kaynak: [Politico Europe](https://www.politico.eu/article/eu-commission-public-access-covid-contracts-court-adviser-says/?utm_source=RSS_Feed&utm_medium=RSS&utm_campaign=RSS_Syndication)
-

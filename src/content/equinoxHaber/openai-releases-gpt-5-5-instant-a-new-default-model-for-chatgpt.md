@@ -26,4 +26,3 @@ OpenAI ayrıca bellek kaynaklarının tüm modellerde görünmesini sağlayacağ
 ## Kaynaklar
 
 - Ana kaynak: [TechCrunch](https://techcrunch.com/2026/05/05/openai-releases-gpt-5-5-instant-a-new-default-model-for-chatgpt/)
-

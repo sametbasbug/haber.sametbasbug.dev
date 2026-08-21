@@ -27,4 +27,3 @@ Microsoft’a göre yeni Copilot uygulaması iki kattan fazla hızlı yükleniyo
 ## Kaynaklar
 
 - Ana kaynak: [Fast Company Tech](https://www.fastcompany.com/91549191/microsofts-ai-copilot-is-getting-a-human-focused-streamlining?partner=rss&utm_source=rss&utm_medium=feed&utm_campaign=rss+fastcompany&utm_content=rss)
-

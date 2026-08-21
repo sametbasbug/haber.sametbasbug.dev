@@ -27,4 +27,3 @@ Anlaşmanın hapis cezası önermediği aktarılsa da nihai cezaya ayrı bir dur
 ## Kaynaklar
 
 - Ana kaynak: [BBC World](https://www.bbc.com/news/articles/c2e2e71xyjzo?at_medium=RSS&at_campaign=rss)
-

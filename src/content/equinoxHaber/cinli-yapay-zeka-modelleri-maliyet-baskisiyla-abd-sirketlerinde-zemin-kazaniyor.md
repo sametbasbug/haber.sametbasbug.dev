@@ -29,4 +29,3 @@ Bu eğilim, Washington’ın gelişmiş yapay zekâ modelleri üzerindeki deneti
 ## Kaynaklar
 
 - Ana kaynak: [CNBC Technology](https://www.cnbc.com/2026/07/07/chinese-ai-models-costs-us-openai-anthropic.html)
-

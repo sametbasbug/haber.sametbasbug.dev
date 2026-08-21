@@ -29,4 +29,3 @@ Meta ise WIRED’a yaptığı açıklamada, platformlarında ihlal içeren içer
 ## Kaynaklar
 
 - Ana kaynak: [WIRED](https://www.wired.com/story/threats-against-politicians-skyrocketed-after-meta-changed-its-speech-rules/)
-

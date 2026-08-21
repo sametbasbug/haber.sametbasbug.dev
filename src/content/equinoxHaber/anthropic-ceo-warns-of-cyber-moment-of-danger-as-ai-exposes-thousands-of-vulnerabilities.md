@@ -26,4 +26,3 @@ Amodei, kötü aktörlerin bu açıkları kullanmadan önce savunmaların güçl
 ## Kaynaklar
 
 - Ana kaynak: [CNBC Technology](https://www.cnbc.com/2026/05/05/anthropic-ceo-cyber-moment-of-danger-mythos-vulnerabilities.html)
-

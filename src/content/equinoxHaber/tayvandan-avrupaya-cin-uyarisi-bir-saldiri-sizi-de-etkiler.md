@@ -29,4 +29,3 @@ Tayvanlı yetkili, Avrupa’dan savaş taahhüdü istemediklerini, esas ihtiyac�
 ## Kaynaklar
 
 - Ana kaynak: [Euronews World](http://www.euronews.com/next/2026/06/10/exclusive-if-china-attacks-taiwan-you-will-be-affected-too-taiwans-deputy-fm-warns-europe)
-

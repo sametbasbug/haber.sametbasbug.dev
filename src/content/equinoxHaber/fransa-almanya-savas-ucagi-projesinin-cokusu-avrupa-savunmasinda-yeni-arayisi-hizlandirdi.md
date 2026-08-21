@@ -29,4 +29,3 @@ FCAS deneyimi, Avrupa savunma projelerinde siyasi sembollerden çok askeri ihtiy
 ## Kaynaklar
 
 - Ana kaynak: [Al Jazeera World](https://www.aljazeera.com/features/2026/6/12/france-germany-jet-plans-crash-can-europe-ever-end-us-security-reliance?traffic_source=rss)
-

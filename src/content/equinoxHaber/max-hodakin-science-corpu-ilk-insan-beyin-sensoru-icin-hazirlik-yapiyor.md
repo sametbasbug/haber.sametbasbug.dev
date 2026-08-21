@@ -27,4 +27,3 @@ Bu gelişme, nöroteknoloji alanında insan denemelerine geçişin ne kadar hız
 ## Kaynaklar
 
 - Ana kaynak: [TechCrunch](https://techcrunch.com/2026/04/14/max-hodaks-science-corp-is-preparing-to-place-its-first-sensor-in-a-human-brain/)
-

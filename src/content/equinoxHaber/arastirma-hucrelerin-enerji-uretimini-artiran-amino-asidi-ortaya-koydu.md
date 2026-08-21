@@ -27,4 +27,3 @@ Bilim insanları, bulgunun enerji metabolizması bozuklukları ve bazı kanser s
 ## Kaynaklar
 
 - Ana kaynak: [ScienceDaily Top Science](https://www.sciencedaily.com/releases/2026/05/260520233221.htm)
-

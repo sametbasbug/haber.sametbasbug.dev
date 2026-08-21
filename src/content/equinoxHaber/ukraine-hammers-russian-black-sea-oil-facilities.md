@@ -27,4 +27,3 @@ Moskova ile Kiev arasındaki enerji altyapısı savaşı sürerken, Tuapse'deki 
 ## Kaynaklar
 
 - Ana kaynak: [Politico Europe](https://www.politico.eu/article/ukraine-bombs-russias-oil-export-hub-in-tuapse-on-the-black-sea-again/?utm_source=RSS_Feed&utm_medium=RSS&utm_campaign=RSS_Syndication)
-

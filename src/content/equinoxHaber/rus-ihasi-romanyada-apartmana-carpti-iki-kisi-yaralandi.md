@@ -29,4 +29,3 @@ Romanya, Ukrayna savaşı boyunca Rus İHA parçalarının topraklarına düşt�
 ## Kaynaklar
 
 - Ana kaynak: [BBC World](https://www.bbc.com/news/articles/c93x4nxlkjeo?at_medium=RSS&at_campaign=rss)
-

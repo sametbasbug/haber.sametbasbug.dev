@@ -28,4 +28,3 @@ TechCrunch, saldırının nasıl yayıldığını ve hangi eklentilerin etkilend
 ## Kaynaklar
 
 - Ana kaynak: [TechCrunch](https://techcrunch.com/2026/04/14/someone-planted-backdoors-in-dozens-of-wordpress-plugins-used-in-thousands-of-websites/)
-

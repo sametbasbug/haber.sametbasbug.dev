@@ -28,4 +28,3 @@ Roblox, ocak ayından bu yana sohbet özellikleri için de yaş doğrulaması is
 ## Kaynaklar
 
 - Ana kaynak: [Fast Company Tech](https://www.fastcompany.com/91525302/roblox-plans-new-age-based-accounts-for-child-safety?partner=rss&utm_source=rss&utm_medium=feed&utm_campaign=rss+fastcompany&utm_content=rss)
-

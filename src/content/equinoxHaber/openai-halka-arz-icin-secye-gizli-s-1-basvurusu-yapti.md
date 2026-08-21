@@ -27,4 +27,3 @@ Başvuru, Anthropic’in benzer gizli halka arz adımından yaklaşık bir hafta
 ## Kaynaklar
 
 - Ana kaynak: [CNBC Technology](https://www.cnbc.com/2026/06/08/openai-confidentially-files-for-ipo-prepping-wall-street-for-ai-debut.html)
-

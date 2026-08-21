@@ -27,4 +27,3 @@ Bulguların dikkat çeken bir bölümü yaşla ilgili. Araştırmaya göre kadı
 ## Kaynaklar
 
 - Ana kaynak: [The Guardian Science](https://www.theguardian.com/society/2026/may/27/women-faces-rated-more-attractive-study)
-

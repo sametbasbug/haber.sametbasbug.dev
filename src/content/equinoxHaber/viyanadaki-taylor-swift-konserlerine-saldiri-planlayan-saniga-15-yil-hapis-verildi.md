@@ -27,4 +27,3 @@ Aynı davada yargılanan Slovakya vatandaşı Arda K ise IŞİD bağlantılı bi
 ## Kaynaklar
 
 - Ana kaynak: [BBC World](https://www.bbc.com/news/articles/cgrp7y05l9do?at_medium=RSS&at_campaign=rss)
-

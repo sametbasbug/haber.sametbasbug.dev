@@ -29,4 +29,3 @@ Kremlin Sözcüsü Dmitry Peskov ise savaşın arkasında Berlin, Paris, Lahey, 
 ## Kaynaklar
 
 - Ana kaynak: [Al Jazeera World](https://www.aljazeera.com/news/2026/7/7/russia-touts-war-with-nato-amid-losses-in-ukraine?traffic_source=rss)
-

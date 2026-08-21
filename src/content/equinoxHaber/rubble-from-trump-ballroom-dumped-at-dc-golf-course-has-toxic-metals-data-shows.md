@@ -26,4 +26,3 @@ Mahkeme, sahada yapılacak her türlü kapanış, ağaç kesimi ya da inşaat ha
 ## Kaynaklar
 
 - Ana kaynak: [The Guardian World](https://www.theguardian.com/us-news/2026/may/05/trump-ballroom-rubble-toxic-metals-dc-golf-course)
-

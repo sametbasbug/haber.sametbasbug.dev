@@ -28,4 +28,3 @@ Ukrayna tarafı, savaşın başından bu yana Rusya'nın milyonun üzerinde kay�
 ## Kaynaklar
 
 - Ana kaynak: [Politico Europe](https://www.politico.eu/article/russia-scales-down-may-9-military-parade-amid-ukraine-war-struggles/?utm_source=RSS_Feed&utm_medium=RSS&utm_campaign=RSS_Syndication)
-

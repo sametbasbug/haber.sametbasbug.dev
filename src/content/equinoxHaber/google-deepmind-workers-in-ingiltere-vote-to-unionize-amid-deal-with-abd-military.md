@@ -28,4 +28,3 @@ Gelişme, Pentagon'un geçen hafta Google'ın da aralarında bulunduğu yedi bü
 ## Kaynaklar
 
 - Ana kaynak: [The Guardian World](https://www.theguardian.com/us-news/2026/may/04/google-deepmind-uk-workers-union)
-

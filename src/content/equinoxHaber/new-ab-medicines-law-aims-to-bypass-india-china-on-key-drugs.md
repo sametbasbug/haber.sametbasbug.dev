@@ -30,4 +30,3 @@ AB kurumları ayrıca, kritik ilaç ihalelerinde Avrupa içinde üretilen ürün
 ## Kaynaklar
 
 - Ana kaynak: [Politico Europe](https://www.politico.eu/article/eu-clinches-deal-on-new-law-to-tackle-drug-shortages/?utm_source=RSS_Feed&utm_medium=RSS&utm_campaign=RSS_Syndication)
-

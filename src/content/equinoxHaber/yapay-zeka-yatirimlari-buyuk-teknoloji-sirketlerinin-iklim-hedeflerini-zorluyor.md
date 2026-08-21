@@ -29,4 +29,3 @@ Büyük teknoloji şirketleri son yıllarda rüzgâr ve güneş enerjisi projele
 ## Kaynaklar
 
 - Ana kaynak: [The Guardian Business](https://www.theguardian.com/technology/2026/jul/06/ai-climate-crisis)
-

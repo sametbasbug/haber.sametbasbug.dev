@@ -29,4 +29,3 @@ Bu buluşma tarafların tamamen aynı çizgide olduğu anlamına gelmiyor. Papa 
 ## Kaynaklar
 
 - Ana kaynak: [WIRED](https://www.wired.com/story/the-vaticans-man-inside-anthropic/)
-

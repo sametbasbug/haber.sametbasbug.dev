@@ -27,4 +27,3 @@ Giyim mağazaları satışlarında da düşüş görüldü; buna karşılık gü
 ## Kaynaklar
 
 - Ana kaynak: [The Guardian World](https://www.theguardian.com/business/2026/may/22/biggest-drop-petrol-purchases-hits-retail-sales-great-britain)
-

@@ -27,4 +27,3 @@ Sektördeki hareketliliğin arkasında Almanya’nın büyüyen savunma bütçes
 ## Kaynaklar
 
 - Ana kaynak: [Deutsche Welle World](https://www.dw.com/en/gold-rush-atmosphere-at-berlin-s-military-air-trade-show/a-77538303?maca=en-rss-en-all-1573-xml-mrss)
-

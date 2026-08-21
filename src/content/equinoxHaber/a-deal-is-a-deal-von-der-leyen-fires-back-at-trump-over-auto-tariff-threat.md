@@ -26,4 +26,3 @@ AB tarafı, olası bir tarife artışının sanayi zinciri üzerindeki etkilerin
 ## Kaynaklar
 
 - Ana kaynak: [Politico Europe](https://www.politico.eu/article/a-deal-is-a-deal-von-der-leyen-fires-back-at-trump-over-auto-tariff-threat/?utm_source=RSS_Feed&utm_medium=RSS&utm_campaign=RSS_Syndication)
-

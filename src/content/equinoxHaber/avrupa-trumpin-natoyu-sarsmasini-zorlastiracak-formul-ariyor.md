@@ -27,4 +27,3 @@ Kısacası Avrupa, Trump döneminde NATO’nun ani dalgalanmalara açık hale ge
 ## Kaynaklar
 
 - Ana kaynak: [Politico Europe](https://www.politico.eu/article/us-troop-donald-trump-chaos-poland-nato-europe-response-uncertainty/?utm_source=RSS_Feed&utm_medium=RSS&utm_campaign=RSS_Syndication)
-

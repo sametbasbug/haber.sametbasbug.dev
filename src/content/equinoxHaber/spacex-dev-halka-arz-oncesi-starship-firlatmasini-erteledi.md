@@ -27,4 +27,3 @@ SpaceX geçen yıl 18,6 milyar dolar gelir elde etse de 4,9 milyar dolar net zar
 ## Kaynaklar
 
 - Ana kaynak: [BBC World](https://www.bbc.com/news/articles/cy42w782ejvo?at_medium=RSS&at_campaign=rss)
-

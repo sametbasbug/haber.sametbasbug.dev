@@ -29,4 +29,3 @@ Denetim kurulunun planı kabul etmesi halinde şirket ile sendikalar arasında a
 ## Kaynaklar
 
 - Ana kaynak: [The Guardian Business](https://www.theguardian.com/business/2026/jul/09/vw-protests-germany-proposed-job-cuts-factory-closures)
-

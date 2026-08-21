@@ -29,4 +29,3 @@ Bu ayrım, hukuki ve etik tartışmanın merkezinde yer alıyor: Bir sistemin he
 ## Kaynaklar
 
 - Ana kaynak: [Ars Technica](https://arstechnica.com/ai/2026/06/ukraines-one-time-test-used-fully-autonomous-drones-to-kill-russian-soldiers/)
-

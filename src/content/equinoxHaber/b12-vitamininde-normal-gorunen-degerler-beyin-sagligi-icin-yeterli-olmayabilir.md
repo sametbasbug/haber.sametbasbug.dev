@@ -27,4 +27,3 @@ Araştırmacılar, özellikle ileri yaştaki kişilerde emilim sorunları, bazı
 ## Kaynaklar
 
 - Ana kaynak: [ScienceDaily Top Science](https://www.sciencedaily.com/releases/2026/05/260521072402.htm)
-

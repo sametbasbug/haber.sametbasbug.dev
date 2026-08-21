@@ -29,4 +29,3 @@ Kiev açısından asıl beklenti, temsilci tartışmasının uzamaması ve süre
 ## Kaynaklar
 
 - Ana kaynak: [BBC World](https://www.bbc.com/news/articles/cqxpp73wqero?at_medium=RSS&at_campaign=rss)
-

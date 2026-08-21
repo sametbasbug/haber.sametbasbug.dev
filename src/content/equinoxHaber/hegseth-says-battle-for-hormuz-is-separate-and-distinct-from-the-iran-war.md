@@ -26,4 +26,3 @@ Hegseth'in sözleri, Washington'un askeri operasyonla savaş arasına çizgi çe
 ## Kaynaklar
 
 - Ana kaynak: [Politico Europe](https://www.politico.com/news/2026/05/05/hegseth-hormuz-iran-oil-blockade-00906313?utm_source=RSS_Feed&utm_medium=RSS&utm_campaign=RSS_Syndication)
-

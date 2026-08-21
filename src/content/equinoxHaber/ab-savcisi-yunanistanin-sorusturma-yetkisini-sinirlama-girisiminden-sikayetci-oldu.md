@@ -27,4 +27,3 @@ Atina yönetimi, soruşturma ve değişiklik üzerinden artan baskıyla karşı 
 ## Kaynaklar
 
 - Ana kaynak: [Politico Europe](https://www.politico.eu/article/eu-prosecutor-complains-to-brussels-over-greece-reluctance-cooperate/?utm_source=RSS_Feed&utm_medium=RSS&utm_campaign=RSS_Syndication)
-

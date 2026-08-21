@@ -29,4 +29,3 @@ BBC'ye konuşan eski güvenlik servisi görevlisi ve askeri uzman Ivan Stupak, P
 ## Kaynaklar
 
 - Ana kaynak: [BBC World](https://www.bbc.co.uk/news/articles/ce8klree690o?at_medium=RSS&at_campaign=rss)
-

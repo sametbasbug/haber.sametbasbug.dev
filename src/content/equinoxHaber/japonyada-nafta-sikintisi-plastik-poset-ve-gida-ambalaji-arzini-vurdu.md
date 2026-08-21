@@ -27,4 +27,3 @@ Hükümet sorunu bir arz “darboğazı” olarak tanımlasa da sektör temsilci
 ## Kaynaklar
 
 - Ana kaynak: [The Guardian World](https://www.theguardian.com/world/2026/jun/04/japan-naphtha-shortage-plastic-bag)
-

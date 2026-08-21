@@ -29,4 +29,3 @@ WeRoad, 2025’te gelirini yıllık yüzde 30 artırarak 130 milyon euroya çık
 ## Kaynaklar
 
 - Ana kaynak: [TechCrunch](https://techcrunch.com/2026/05/27/airbnb-backed-weroad-raises-58m-to-take-its-group-travel-platform-to-the-us/)
-

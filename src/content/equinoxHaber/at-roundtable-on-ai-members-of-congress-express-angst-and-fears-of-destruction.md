@@ -28,4 +28,3 @@ Oturumda Anthropic'in son dönemde kamuoyuna açıkladığı daha güçlü model
 ## Kaynaklar
 
 - Ana kaynak: [Fast Company Tech](https://www.fastcompany.com/91528592/at-roundtable-ai-members-congress-express-angst-fears-destruction?partner=rss&utm_source=rss&utm_medium=feed&utm_campaign=rss+fastcompany&utm_content=rss)
-

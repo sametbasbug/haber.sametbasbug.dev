@@ -29,4 +29,3 @@ Kentte panzehir stokları artırılırken, Hengzhou Halk Hastanesi’nde yılan 
 ## Kaynaklar
 
 - Ana kaynak: [The Guardian World](https://www.theguardian.com/world/2026/jul/09/snakes-cobras-escape-breeding-farms-southern-china-flooding)
-

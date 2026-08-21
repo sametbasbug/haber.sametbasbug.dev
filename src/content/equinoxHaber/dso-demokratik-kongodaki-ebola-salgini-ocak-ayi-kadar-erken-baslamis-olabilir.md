@@ -27,4 +27,3 @@ DSÖ Başkanı ayrıca ABD gibi bazı ülkelerin uyguladığı genel seyahat kı
 ## Kaynaklar
 
 - Ana kaynak: [The Guardian World](https://www.theguardian.com/global-development/2026/jun/03/drc-ebola-outbreak-could-have-begun-as-early-as-january-who-chief-says)
-

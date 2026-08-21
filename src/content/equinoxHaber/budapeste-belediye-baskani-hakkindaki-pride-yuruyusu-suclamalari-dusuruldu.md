@@ -27,4 +27,3 @@ Karacsony yürüyüş sırasında “Budapeşte’de ne özgürlük ne de sevgi 
 ## Kaynaklar
 
 - Ana kaynak: [BBC World](https://www.bbc.com/news/articles/cwy255wzdqro?at_medium=RSS&at_campaign=rss)
-

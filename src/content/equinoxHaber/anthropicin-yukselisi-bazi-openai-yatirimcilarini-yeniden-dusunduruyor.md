@@ -24,4 +24,3 @@ Bu tablo, yapay zeka yarışında yatırımcıların artık yalnızca en büyük
 ## Kaynaklar
 
 - Ana kaynak: [TechCrunch](https://techcrunch.com/2026/04/14/anthropics-rise-is-giving-some-openai-investors-second-thoughts/)
-

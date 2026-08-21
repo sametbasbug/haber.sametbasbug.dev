@@ -29,4 +29,3 @@ Kırım’da son saldırılar nedeniyle yakıt tedarikinde de sıkışma yaşand
 ## Kaynaklar
 
 - Ana kaynak: [Al Jazeera World](https://www.aljazeera.com/news/2026/6/10/ukrainian-drones-strike-sevastopol-museum-and-key-russian-oil-refineries?traffic_source=rss)
-

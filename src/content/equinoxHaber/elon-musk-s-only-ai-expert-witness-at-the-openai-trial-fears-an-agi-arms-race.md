@@ -28,4 +28,3 @@ Davada şimdi gözler, hem şirketlerin geçmiş güvenlik vaatlerine hem de AGI
 ## Kaynaklar
 
 - Ana kaynak: [TechCrunch](https://techcrunch.com/2026/05/04/elon-musks-only-expert-witness-at-the-openai-trial-fears-an-agi-arms-race/)
-

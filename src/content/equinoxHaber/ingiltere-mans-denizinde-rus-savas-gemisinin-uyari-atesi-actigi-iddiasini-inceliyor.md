@@ -29,4 +29,3 @@ Tarafların açıklamaları olayın ayrıntıları konusunda henüz tam örtüş
 ## Kaynaklar
 
 - Ana kaynak: [France 24 World](https://www.france24.com/en/europe/20260616-russian-warship-fires-warning-shots-uk-flagged-yacht-english-channel)
-

@@ -29,4 +29,3 @@ Açıklamalar, Ukrayna savaşı ve Orta Doğu’daki gerilimlerin enerji piyasal
 ## Kaynaklar
 
 - Ana kaynak: [Deutsche Welle World](https://www.dw.com/en/india-news-fm-blasts-europe-criticism-of-buying-russian-oil/live-77516858?maca=en-rss-en-all-1573-xml-mrss)
-

@@ -26,4 +26,3 @@ Süreç şimdilik, model erişimi ile siyasi ve askeri kullanım arasındaki çi
 ## Kaynaklar
 
 - Ana kaynak: [Engadget](https://www.engadget.com/ai/google-and-the-pentagon-sign-classified-deal-to-give-the-department-of-defense-unfettered-access-to-its-ai-models-155211834.html?src=rss)
-

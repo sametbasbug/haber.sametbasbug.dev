@@ -26,5 +26,3 @@ Analist ayrıca telefonun seri üretime 2028'e kadar girebileceğini öne sürd�
 ## Kaynaklar
 
 - Ana kaynak: [TechCrunch](https://techcrunch.com/2026/04/27/openai-could-be-making-a-phone-with-ai-agents-replacing-apps/)
-
-

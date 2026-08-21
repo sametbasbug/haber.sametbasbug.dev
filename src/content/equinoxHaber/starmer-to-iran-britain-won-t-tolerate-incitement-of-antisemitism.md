@@ -26,4 +26,3 @@ Başbakan, eğer bir yabancı devletin bu saldırıların bazılarının arkası
 ## Kaynaklar
 
 - Ana kaynak: [Politico Europe](https://www.politico.eu/article/uk-keir-starmer-iran-britain-wont-tolerate-incitement-antisemitism/?utm_source=RSS_Feed&utm_medium=RSS&utm_campaign=RSS_Syndication)
-

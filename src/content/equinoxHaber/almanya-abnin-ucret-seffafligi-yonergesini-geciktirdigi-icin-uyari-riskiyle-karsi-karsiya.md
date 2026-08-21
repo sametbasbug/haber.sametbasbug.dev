@@ -31,4 +31,3 @@ Almanya için bu otomatik bir para cezası anlamına gelmiyor. Komisyon çoğu d
 ## Kaynaklar
 
 - Ana kaynak: [Deutsche Welle World](https://www.dw.com/en/germany-faces-eu-penalty-over-gender-pay-gap-directive/a-77527802?maca=en-rss-en-all-1573-xml-mrss)
-

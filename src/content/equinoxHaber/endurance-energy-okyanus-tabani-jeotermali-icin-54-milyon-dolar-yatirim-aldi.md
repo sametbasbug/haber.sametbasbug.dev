@@ -27,4 +27,3 @@ Endurance henüz erken aşamada olsa da hedeflediği pazar, yapay zekâ veri mer
 ## Kaynaklar
 
 - Ana kaynak: [TechCrunch](https://techcrunch.com/2026/06/11/endurance-energy-raises-54m-to-harness-a-massive-untapped-energy-source/)
-

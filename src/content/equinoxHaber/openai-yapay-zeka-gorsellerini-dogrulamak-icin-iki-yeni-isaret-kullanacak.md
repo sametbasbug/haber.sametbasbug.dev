@@ -27,4 +27,3 @@ SynthID ise görselin içine daha zor fark edilen bir filigran yerleştiriyor. G
 ## Kaynaklar
 
 - Ana kaynak: [TechCrunch](https://techcrunch.com/2026/05/19/openai-is-making-it-easier-to-check-if-an-image-was-made-by-their-models/)
-

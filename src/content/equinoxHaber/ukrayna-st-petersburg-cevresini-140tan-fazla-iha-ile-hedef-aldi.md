@@ -27,4 +27,3 @@ Drozdenko, saldırıların bir askeri tesiste yangına yol açtığını ve baz�
 ## Kaynaklar
 
 - Ana kaynak: [BBC World](https://www.bbc.com/news/articles/cg7498kz808o?at_medium=RSS&at_campaign=rss)
-

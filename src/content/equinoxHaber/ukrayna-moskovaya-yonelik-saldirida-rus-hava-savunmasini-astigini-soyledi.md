@@ -27,4 +27,3 @@ Saldırı, Rusya’nın geçen hafta Kiev’e düzenlediği ve Ukrayna tarafına
 ## Kaynaklar
 
 - Ana kaynak: [Politico Europe](https://www.politico.eu/article/ukraine-breaches-russia-strongest-air-defenses-drone-attack-hits-moscow/?utm_source=RSS_Feed&utm_medium=RSS&utm_campaign=RSS_Syndication)
-

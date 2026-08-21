@@ -29,4 +29,3 @@ Zelenskiy mektubunda Avrupa’nın kendi güvenliğinde daha büyük rol üstlen
 ## Kaynaklar
 
 - Ana kaynak: [Politico Europe](https://www.politico.eu/article/ukraine-volodymyr-zelenskyy-pleads-with-us-donald-trump-for-patriots-to-fight-russian-bombardment/?utm_source=RSS_Feed&utm_medium=RSS&utm_campaign=RSS_Syndication)
-

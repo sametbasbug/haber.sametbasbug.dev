@@ -27,4 +27,3 @@ Lunabotics’in önemi, NASA’nın Ay’da kalıcı insan varlığı kurma hede
 ## Kaynaklar
 
 - Ana kaynak: [NASA News](https://www.nasa.gov/centers-and-facilities/kennedy/nasas-2026-lunabotics-winning-student-teams-engineering-lunar-future/)
-

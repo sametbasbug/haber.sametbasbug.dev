@@ -29,4 +29,3 @@ Pekin ise ihracatçıların haksız biçimde devlet desteğinden yararlandığı
 ## Kaynaklar
 
 - Ana kaynak: [The Guardian Business](https://www.theguardian.com/business/2026/jun/15/eu-trade-deficit-with-china-record-1bn-a-day)
-

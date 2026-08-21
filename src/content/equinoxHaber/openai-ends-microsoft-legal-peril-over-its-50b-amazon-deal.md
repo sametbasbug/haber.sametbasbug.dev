@@ -30,4 +30,3 @@ Microsoft şirketi, buna karşın OpenAI'nin başlıca bulut ortağı olmayı s�
 ## Kaynaklar
 
 - Ana kaynak: [TechCrunch](https://techcrunch.com/2026/04/27/openai-ends-microsoft-legal-peril-over-its-50b-amazon-deal/)
-

@@ -29,4 +29,3 @@ Anthropic son dönemde Hindistan’daki varlığını büyütüyor. Şirket ülk
 ## Kaynaklar
 
 - Ana kaynak: [TechCrunch](https://techcrunch.com/2026/06/11/anthropic-taps-tcs-to-scale-its-enterprise-ai-deployments/)
-

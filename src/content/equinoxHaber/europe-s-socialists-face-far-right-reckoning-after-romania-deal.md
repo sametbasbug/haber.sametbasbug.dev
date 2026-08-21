@@ -27,4 +27,3 @@ Romanya'da koalisyon dengeleri değişirken, PSD'nin atacağı sonraki adımın 
 ## Kaynaklar
 
 - Ana kaynak: [Politico Europe](https://www.politico.eu/article/europe-socialists-far-right-reckoning-romania-deal-ilie-bolojan/?utm_source=RSS_Feed&utm_medium=RSS&utm_campaign=RSS_Syndication)
-

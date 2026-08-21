@@ -28,4 +28,3 @@ Bir başka örnek de çip tasarımına dönük araçlar geliştiren Recursive In
 ## Kaynaklar
 
 - Ana kaynak: [CNBC Technology](https://www.cnbc.com/2026/04/28/meta-google-big-tech-staff-ai-labs-investors.html)
-

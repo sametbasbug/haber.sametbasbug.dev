@@ -27,4 +27,3 @@ Yerel yönetimlerin bazı bölgelerde hesaplama kuponu, düşük kiralı ofis, b
 ## Kaynaklar
 
 - Ana kaynak: [Rest of World](https://restofworld.org/2026/china-ai-worker-innovation/?utm_source=rss&utm_medium=rss&utm_campaign=feeds)
-

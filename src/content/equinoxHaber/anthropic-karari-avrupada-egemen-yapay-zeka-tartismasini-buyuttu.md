@@ -27,4 +27,3 @@ Britanya’da Al Carns ve Tom Tugendhat da kararın yalnızca teknoloji sektör�
 ## Kaynaklar
 
 - Ana kaynak: [Euronews World](http://www.euronews.com/2026/06/13/wake-up-call-europe-reacts-to-anthropic-halting-access-to-its-fable-5-and-mythos-5-ai-mode)
-

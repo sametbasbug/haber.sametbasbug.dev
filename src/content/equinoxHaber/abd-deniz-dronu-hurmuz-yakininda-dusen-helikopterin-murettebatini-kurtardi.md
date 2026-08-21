@@ -27,4 +27,3 @@ Helikopterin neden düştüğü henüz bilinmiyor. ABD’li yetkililer olayın m
 ## Kaynaklar
 
 - Ana kaynak: [BBC World](https://www.bbc.com/news/articles/cwy0l44ex5wo?at_medium=RSS&at_campaign=rss)
-

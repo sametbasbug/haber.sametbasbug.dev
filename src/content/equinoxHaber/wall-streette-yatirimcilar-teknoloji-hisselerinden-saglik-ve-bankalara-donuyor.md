@@ -27,4 +27,3 @@ Analistlere göre hareket, yatırımcıların yapay zekâ işleminde değerlemel
 ## Kaynaklar
 
 - Ana kaynak: [MarketWatch Top Stories](https://www.marketwatch.com/story/these-are-the-markets-new-hot-stocks-as-investors-flee-from-tech-826096c2?mod=mw_rss_topstories)
-

@@ -27,4 +27,3 @@ Paris’in yükselişi, Avrupa’daki teknoloji şirketlerinin büyüme strateji
 ## Kaynaklar
 
 - Ana kaynak: [TechCrunch](https://techcrunch.com/2026/05/28/why-paris-may-be-the-most-important-ai-city-outside-silicon-valley/)
-

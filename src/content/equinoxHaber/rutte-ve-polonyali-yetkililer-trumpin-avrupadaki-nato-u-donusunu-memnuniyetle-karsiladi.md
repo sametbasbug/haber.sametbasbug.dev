@@ -27,4 +27,3 @@ Trump’ın olası U dönüşünün kapsamı henüz netleşmiş değil. Ancak ba
 ## Kaynaklar
 
 - Ana kaynak: [Politico Europe](https://www.politico.eu/article/rutte-welcomes-trump-poland-uturn-nato-troops/?utm_source=RSS_Feed&utm_medium=RSS&utm_campaign=RSS_Syndication)
-

@@ -26,4 +26,3 @@ Bu çerçevede gündem, yeni bir yasa yazmaktan çok, mevcut kuralların hangi a
 ## Kaynaklar
 
 - Ana kaynak: [Politico Europe](https://www.politico.eu/article/eu-europe-laws-ill-equipped-deal-with-superhacking-ai-lawmakers-warn/?utm_source=RSS_Feed&utm_medium=RSS&utm_campaign=RSS_Syndication)
-

@@ -27,4 +27,3 @@ Buna karşılık savunma uzmanları, tek başına ilerlemenin siyasi olarak cazi
 ## Kaynaklar
 
 - Ana kaynak: [Politico Europe](https://www.politico.eu/article/european-fighter-jet-failure-vindicates-french-far-right-national-rally-jordan-bardella/?utm_source=RSS_Feed&utm_medium=RSS&utm_campaign=RSS_Syndication)
-

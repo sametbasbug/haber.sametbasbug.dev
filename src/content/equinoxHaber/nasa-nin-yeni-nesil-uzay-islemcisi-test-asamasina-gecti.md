@@ -23,4 +23,3 @@ Yeni çiplerin otonom uzay araçlarını, daha hızlı bilimsel veri analizini v
 ## Kaynaklar
 
 - Ana kaynak: [NASA News](https://www.nasa.gov/technology/hello-universe-nasas-next-gen-space-processor-undergoes-testing/)
-

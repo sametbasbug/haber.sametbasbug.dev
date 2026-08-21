@@ -29,4 +29,3 @@ Tartışmanın odağında, Fable’ın korumalarının aşılabildiğini öne s�
 ## Kaynaklar
 
 - Ana kaynak: [TechCrunch](https://techcrunch.com/2026/06/15/cybersecurity-vets-protest-dangerous-us-government-ban-on-anthropics-most-powerful-models/)
-

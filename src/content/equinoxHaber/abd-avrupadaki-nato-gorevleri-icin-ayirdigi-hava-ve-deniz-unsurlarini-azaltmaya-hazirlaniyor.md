@@ -29,4 +29,3 @@ Kesintilerin özellikle keşif, yakıt ikmali ve uzun menzilli vuruş kapasitesi
 ## Kaynaklar
 
 - Ana kaynak: [Al Jazeera World](https://www.aljazeera.com/news/2026/6/12/us-to-cut-air-and-naval-assets-deployed-for-nato-operations-in-europe?traffic_source=rss)
-

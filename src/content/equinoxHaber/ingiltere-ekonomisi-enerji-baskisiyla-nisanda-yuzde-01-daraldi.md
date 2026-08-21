@@ -31,4 +31,3 @@ Ekonomistler, yüksek enerji maliyetlerinin yılın ilerleyen bölümünde enfla
 ## Kaynaklar
 
 - Ana kaynak: [The Guardian Business](https://www.theguardian.com/business/2026/jun/12/uk-economy-gdp-shrank-april-iran-war-held-back-growth)
-

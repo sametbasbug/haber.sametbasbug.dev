@@ -29,4 +29,3 @@ Merkel’in adı son dönemde AB adına olası barış elçileri arasında anıl
 ## Kaynaklar
 
 - Ana kaynak: [Politico Europe](https://www.politico.eu/article/germany-angela-merkel-eu-russia-ukraine-war/?utm_source=RSS_Feed&utm_medium=RSS&utm_campaign=RSS_Syndication)
-

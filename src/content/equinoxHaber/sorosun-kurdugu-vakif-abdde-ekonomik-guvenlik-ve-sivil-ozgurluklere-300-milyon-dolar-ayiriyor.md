@@ -27,4 +27,3 @@ Açıklama, Donald Trump’ın ikinci döneminde sivil toplum kuruluşları ve h
 ## Kaynaklar
 
 - Ana kaynak: [The Guardian World](https://www.theguardian.com/business/2026/may/20/george-soros-pledge-economic-security-civil-liberties)
-

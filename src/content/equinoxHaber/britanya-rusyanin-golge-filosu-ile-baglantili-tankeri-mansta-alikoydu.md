@@ -27,4 +27,3 @@ Gölge filo dosyası, Avrupa’nın enerji yaptırımlarını deniz güvenliğiy
 ## Kaynaklar
 
 - Ana kaynak: [NPR World](https://www.npr.org/2026/06/14/nx-s1-5857587/britain-detains-sanctioned-oil-tanker-believed-linked-to-russias-shadow-fleet)
-

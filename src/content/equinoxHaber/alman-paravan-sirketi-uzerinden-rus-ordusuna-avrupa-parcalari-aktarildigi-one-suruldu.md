@@ -27,4 +27,3 @@ Dosyaya göre sevkiyatların önemli bölümü Türkiye üzerinden Rusya’ya y�
 ## Kaynaklar
 
 - Ana kaynak: [Politico Europe](https://www.politico.eu/article/russia-germany-sanctions-ukraine-smuggling-network/?utm_source=RSS_Feed&utm_medium=RSS&utm_campaign=RSS_Syndication)
-

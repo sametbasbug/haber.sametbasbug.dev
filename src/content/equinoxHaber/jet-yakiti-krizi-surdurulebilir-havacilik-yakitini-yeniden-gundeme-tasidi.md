@@ -27,4 +27,3 @@ United Airlines sürdürülebilirlik yöneticisi Lauren Riley, geleneksel jet ya
 ## Kaynaklar
 
 - Ana kaynak: [WIRED](https://www.wired.com/story/summer-travel-season-sustainable-aviation-fuel/)
-

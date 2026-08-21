@@ -27,4 +27,3 @@ Buna rağmen uzmanlar, çalışmanın DEET’in normal kullanımda etkisizleşti
 ## Kaynaklar
 
 - Ana kaynak: [The Guardian Science](https://www.theguardian.com/environment/2026/may/28/deet-mosquito-spray-attract-insects-study-malaria-zika)
-

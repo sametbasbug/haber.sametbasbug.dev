@@ -29,4 +29,3 @@ Xpeng aynı zamanda Avrupa’da daha fazla üretim yapma seçeneklerini değerle
 ## Kaynaklar
 
 - Ana kaynak: [The Guardian Business](https://www.theguardian.com/business/2026/jun/16/ev-prices-uk-eu-chinese-car-firm-xpeng)
-

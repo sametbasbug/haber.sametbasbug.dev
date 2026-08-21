@@ -24,4 +24,3 @@ Yeni araç, tarayıcı tarafında OpenAI, Perplexity ve The Browser Company gibi
 ## Kaynaklar
 
 - Ana kaynak: [TechCrunch](https://techcrunch.com/2026/04/14/google-adds-ai-skills-to-chrome-to-help-you-save-favorite-workflows/)
-

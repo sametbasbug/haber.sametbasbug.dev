@@ -27,4 +27,3 @@ Açıklamalar, kent devletinin bu yıl yapay zekâ altyapısına ve kamu araşt�
 ## Kaynaklar
 
 - Ana kaynak: [CNBC Technology](https://www.cnbc.com/2026/05/20/singapore-google-openai-ai-partnerships-lab-investment-chatgpt-ai-agents-atxsummit-mddi.html)
-

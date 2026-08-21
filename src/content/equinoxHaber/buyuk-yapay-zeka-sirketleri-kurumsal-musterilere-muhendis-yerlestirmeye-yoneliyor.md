@@ -27,4 +27,3 @@ Bu eğilim, sektörün “talep üzerine bol zekâ” vaadiyle sahadaki gerçekl
 ## Kaynaklar
 
 - Ana kaynak: [Fast Company Tech](https://www.fastcompany.com/91544792/why-big-ai-companies-embedding-engineers-customers-what-does-that-mean?partner=rss&utm_source=rss&utm_medium=feed&utm_campaign=rss+fastcompany&utm_content=rss)
-

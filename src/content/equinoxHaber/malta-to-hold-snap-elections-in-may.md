@@ -27,4 +27,3 @@ Malta'da iktidardaki İşçi Partisi 2013'ten bu yana yönetimde bulunuyor; son 
 ## Kaynaklar
 
 - Ana kaynak: [Politico Europe](https://www.politico.eu/article/robert-abela-malta-to-hold-snap-elections-in-may/?utm_source=RSS_Feed&utm_medium=RSS&utm_campaign=RSS_Syndication)
-

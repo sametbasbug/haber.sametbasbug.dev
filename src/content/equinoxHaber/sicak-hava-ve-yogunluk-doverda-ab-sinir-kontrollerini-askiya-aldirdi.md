@@ -27,4 +27,3 @@ Yeni sistem, pasaport damgaları yerine dijital kayıt kullanıyor ve geçen ay 
 ## Kaynaklar
 
 - Ana kaynak: [The Guardian World](https://www.theguardian.com/uk-news/2026/may/23/extra-eu-border-checks-ees-suspended-dover-travel-delays-hot-weather)
-

@@ -29,4 +29,3 @@ Anthropic’in hamlesi, büyük dil modellerinin artık yalnızca sohbet aracı 
 ## Kaynaklar
 
 - Ana kaynak: [TechCrunch](https://techcrunch.com/2026/05/12/the-ai-legal-services-industry-is-heating-up-anthropic-is-getting-in-on-the-action/)
-

@@ -27,4 +27,3 @@ Bilim ekibi, Arethusa çıkıntısının Jezero Krateri oluşmadan önce var olm
 ## Kaynaklar
 
 - Ana kaynak: [NASA News](https://www.nasa.gov/image-article/perseverance-stuns-in-new-selfie/)
-

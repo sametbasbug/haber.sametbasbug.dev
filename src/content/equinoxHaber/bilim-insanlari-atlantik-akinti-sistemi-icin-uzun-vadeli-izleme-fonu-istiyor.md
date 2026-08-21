@@ -27,4 +27,3 @@ Araştırmacılar, ABD’de NASA, NOAA ve NSF gibi kurumlara yönelik bütçe ke
 ## Kaynaklar
 
 - Ana kaynak: [The Guardian Business](https://www.theguardian.com/commentisfree/2026/jun/14/amoc-collapse-europe-climate)
-

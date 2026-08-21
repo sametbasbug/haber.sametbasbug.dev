@@ -28,4 +28,3 @@ Bu çıkış, ABD'nin Avrupa'daki askerî varlığına ilişkin tartışmaların
 ## Kaynaklar
 
 - Ana kaynak: [Politico Europe](https://www.politico.eu/article/finlands-alexander-stubb-tells-europe-to-calm-down-over-us-troop-pullback/?utm_source=RSS_Feed&utm_medium=RSS&utm_campaign=RSS_Syndication)
-

@@ -29,4 +29,3 @@ ABD’de veri merkezi projelerine karşı tepki, yapay zekâ sistemlerinin artan
 ## Kaynaklar
 
 - Ana kaynak: [Al Jazeera World](https://www.aljazeera.com/economy/2026/6/11/openai-says-china-based-actors-stoking-opposition-to-ai-data-centres?traffic_source=rss)
-

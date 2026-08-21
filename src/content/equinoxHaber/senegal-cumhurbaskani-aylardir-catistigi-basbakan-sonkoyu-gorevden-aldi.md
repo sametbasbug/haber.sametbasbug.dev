@@ -27,4 +27,3 @@ Sonko’nun görevden alınmasının ardından başkent Dakar’da öğrenciler 
 ## Kaynaklar
 
 - Ana kaynak: [BBC World](https://www.bbc.com/news/articles/c202jwpd24go?at_medium=RSS&at_campaign=rss)
-

@@ -27,4 +27,3 @@ Bu ziyaret, yaklaşık 15 yıl sonra bir papanın İspanya’ya yaptığı ilk r
 ## Kaynaklar
 
 - Ana kaynak: [BBC World](https://www.bbc.com/news/articles/c4gyejvzx9eo?at_medium=RSS&at_campaign=rss)
-

@@ -26,4 +26,3 @@ Haberde, Kremlin'in 9 Mayıs töreni öncesi Moskova'da güvenlik önlemlerini a
 ## Kaynaklar
 
 - Ana kaynak: [The Guardian World](https://www.theguardian.com/world/live/2026/may/05/zelenskyy-putin-ukraine-russia-trump-troops-merz-latest-news-updates)
-

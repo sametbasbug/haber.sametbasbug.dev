@@ -28,4 +28,3 @@ Hamle, OpenAI ile rakibi Anthropic arasındaki farkı da görünür kıldı. Ope
 ## Kaynaklar
 
 - Ana kaynak: [Politico Europe](https://www.politico.eu/article/openai-offre-a-lunion-europeenne-un-acces-a-son-ia-la-plus-avancee/?utm_source=RSS_Feed&utm_medium=RSS&utm_campaign=RSS_Syndication)
-

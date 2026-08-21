@@ -29,4 +29,3 @@ Tartışma, BM için yapay zekayı yalnızca kullanılacak bir araç olarak değ
 ## Kaynaklar
 
 - Ana kaynak: [Fast Company Tech](https://www.fastcompany.com/91570286/a-small-fix-could-give-the-united-nations-a-seat-at-the-ai-frontier?partner=rss&utm_source=rss&utm_medium=feed&utm_campaign=rss+fastcompany&utm_content=rss)
-

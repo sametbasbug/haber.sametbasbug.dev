@@ -27,4 +27,3 @@ Von der Leyen, kuralları ihlal eden teknoloji şirketlerinin yaptırımdan muaf
 ## Kaynaklar
 
 - Ana kaynak: [BBC World](https://www.bbc.com/news/articles/c9q3x19ddl7o?at_medium=RSS&at_campaign=rss)
-

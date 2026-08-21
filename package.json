@@ -22,6 +22,8 @@
     "news:prepare": "newsroom/.venv/bin/newsroom prepare",
     "news:publish": "newsroom/.venv/bin/newsroom publish --stdin",
     "news:status": "newsroom/.venv/bin/newsroom status",
+    "haber:ayna": "node scripts/haber-ayna.mjs",
+    "haber:ayna:kuru": "node scripts/haber-ayna.mjs --kuru",
     "test:newsroom": "newsroom/.venv/bin/python -m pytest newsroom/tests",
     "quality": "npm run test:newsroom && npm run build"
   },

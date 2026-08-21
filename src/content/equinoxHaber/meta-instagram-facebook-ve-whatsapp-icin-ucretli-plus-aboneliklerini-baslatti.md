@@ -27,4 +27,3 @@ Meta, bu planların mevcut Meta Verified aboneliğinin yerini almadığını; do
 ## Kaynaklar
 
 - Ana kaynak: [TechCrunch](https://techcrunch.com/2026/05/27/meta-officially-launches-instagram-facebook-and-whatsapp-subscriptions-with-more-to-come-including-ai-plans/)
-

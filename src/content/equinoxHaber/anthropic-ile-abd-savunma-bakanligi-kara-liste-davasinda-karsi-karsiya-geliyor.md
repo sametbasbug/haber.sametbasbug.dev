@@ -29,4 +29,3 @@ Mahkeme nisan ayında Anthropic’in etiketi geçici olarak durdurma talebini re
 ## Kaynaklar
 
 - Ana kaynak: [CNBC Technology](https://www.cnbc.com/2026/05/19/anthropic-dod-blacklist-court-opening-arguments.html)
-

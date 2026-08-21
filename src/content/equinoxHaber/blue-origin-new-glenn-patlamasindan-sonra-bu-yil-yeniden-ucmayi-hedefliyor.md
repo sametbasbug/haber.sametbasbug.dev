@@ -27,4 +27,3 @@ Uzmanlara göre takvimin gerçekçiliği, patlamanın nedeninin ne kadar hızlı
 ## Kaynaklar
 
 - Ana kaynak: [The Guardian Business](https://www.theguardian.com/science/2026/jun/13/jeff-bezos-blue-origin-nasa-aretemis)
-

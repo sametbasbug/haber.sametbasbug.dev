@@ -27,4 +27,3 @@ Sonuçlar, yapay zekâ altyapısı talebinin yalnız çip üreticilerini değil,
 ## Kaynaklar
 
 - Ana kaynak: [CNBC Technology](https://www.cnbc.com/2026/05/29/dell-stock-earnings-ai-servers.html)
-

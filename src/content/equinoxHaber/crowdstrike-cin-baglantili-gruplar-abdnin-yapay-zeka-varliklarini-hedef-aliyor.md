@@ -29,4 +29,3 @@ CrowdStrike raporunda Kuzey Kore bağlantılı aktörlere de ayrı bir başlık 
 ## Kaynaklar
 
 - Ana kaynak: [CNBC Technology](https://www.cnbc.com/2026/06/10/crowdstrike-warns-of-increasing-chinese-ai-cyberattacks-on-us-tech.html)
-

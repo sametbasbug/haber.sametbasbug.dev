@@ -27,4 +27,3 @@ Gelişmeler, Rusya Devlet Başkanı Vladimir Putin’in St Petersburg’daki bü
 ## Kaynaklar
 
 - Ana kaynak: [BBC World](https://www.bbc.com/news/articles/c707098wkzpo?at_medium=RSS&at_campaign=rss)
-

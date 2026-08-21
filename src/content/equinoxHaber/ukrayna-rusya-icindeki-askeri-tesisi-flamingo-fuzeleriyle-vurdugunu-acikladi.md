@@ -29,4 +29,3 @@ Rusya Savunma Bakanlığı, gece boyunca farklı bölgelerde 326 Ukrayna İHA’
 ## Kaynaklar
 
 - Ana kaynak: [BBC World](https://www.bbc.com/news/articles/c5yzm2nzgr2o?at_medium=RSS&at_campaign=rss)
-

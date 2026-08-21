@@ -27,4 +27,3 @@ Gelişmeler, Rusya’nın bir gün önce Ukrayna kentlerine düzenlediği büyü
 ## Kaynaklar
 
 - Ana kaynak: [BBC World](https://www.bbc.com/news/articles/cp3peyykxd5o?at_medium=RSS&at_campaign=rss)
-

@@ -27,4 +27,3 @@ Tartışmanın diğer tarafında enerji yükü ve emisyonlar var. Klimaların el
 ## Kaynaklar
 
 - Ana kaynak: [WIRED](https://www.wired.com/story/is-an-air-conditioning-revolution-coming-to-europe/)
-

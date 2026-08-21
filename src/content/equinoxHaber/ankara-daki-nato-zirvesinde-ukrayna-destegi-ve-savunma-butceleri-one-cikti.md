@@ -27,4 +27,3 @@ Ev sahibi Cumhurbaşkanı Recep Tayyip Erdoğan toplantıları tarihi olarak nit
 ## Kaynaklar
 
 - Ana kaynak: [Al Jazeera World](https://www.aljazeera.com/news/2026/7/8/five-key-takeaways-from-the-nato-summit-in-ankara?traffic_source=rss)
-

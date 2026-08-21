@@ -31,4 +31,3 @@ Haziran ayında imzalanan mutabakat, 60 günlük ateşkes süresinde müzakerele
 ## Kaynaklar
 
 - Ana kaynak: [BBC World](https://www.bbc.co.uk/news/articles/clyw8w1g409o?at_medium=RSS&at_campaign=rss)
-

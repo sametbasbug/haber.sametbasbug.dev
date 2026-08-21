@@ -29,4 +29,3 @@ Enflasyondaki yükseliş, ABD Merkez Bankası’nın faiz kararlarını da zorla
 ## Kaynaklar
 
 - Ana kaynak: [BBC World](https://www.bbc.com/news/articles/c0myzxjkw99o?at_medium=RSS&at_campaign=rss)
-

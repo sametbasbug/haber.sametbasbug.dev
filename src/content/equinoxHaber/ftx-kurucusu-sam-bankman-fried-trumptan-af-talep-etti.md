@@ -27,4 +27,3 @@ Beyaz Saray başvuru hakkında yorum yapmadı. Bankman-Fried’ın avukatından 
 ## Kaynaklar
 
 - Ana kaynak: [BBC World](https://www.bbc.com/news/articles/cjwgd6jqd5do?at_medium=RSS&at_campaign=rss)
-

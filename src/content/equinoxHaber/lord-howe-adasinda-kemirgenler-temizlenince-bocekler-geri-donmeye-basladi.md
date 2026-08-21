@@ -27,4 +27,3 @@ Araştırmacılar, adada bilinen 1.600’den fazla omurgasız türü bulunduğun
 ## Kaynaklar
 
 - Ana kaynak: [The Guardian World](https://www.theguardian.com/australia-news/2026/may/27/lord-howe-island-got-rid-of-its-rats-and-mice-now-cockroaches-and-bugs-are-bouncing-back)
-

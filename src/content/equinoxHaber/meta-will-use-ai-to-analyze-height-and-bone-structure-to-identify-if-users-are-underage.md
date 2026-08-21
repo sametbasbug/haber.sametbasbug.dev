@@ -28,4 +28,3 @@ ABD'de Facebook için başlayacak daha sıkı yaş kontrolü, haziranda İngilte
 ## Kaynaklar
 
 - Ana kaynak: [TechCrunch](https://techcrunch.com/2026/05/05/meta-will-use-ai-to-analyze-height-and-bone-structure-to-identify-if-users-are-underage/)
-

@@ -27,4 +27,3 @@ Starmer'ın son mesajı, hem Ukrayna için finansal destek hem de Avrupa'nın ke
 ## Kaynaklar
 
 - Ana kaynak: [The Guardian World](https://www.theguardian.com/world/2026/may/04/europe-must-face-up-to-tensions-with-trump-keir-starmer-says)
-

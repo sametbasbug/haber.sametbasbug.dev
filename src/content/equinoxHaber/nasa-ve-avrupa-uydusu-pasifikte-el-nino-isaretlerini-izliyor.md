@@ -29,4 +29,3 @@ Araştırmacılar, her El Niño’nun farklı geliştiğini ve en büyük etkile
 ## Kaynaklar
 
 - Ana kaynak: [NASA News](https://www.nasa.gov/missions/jason-cs-sentinel-6/sentinel-6-michael-freilich/nasa-european-sea-level-mission-homes-in-on-el-nino/)
-

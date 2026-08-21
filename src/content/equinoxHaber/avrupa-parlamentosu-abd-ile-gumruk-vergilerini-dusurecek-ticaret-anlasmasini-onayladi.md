@@ -29,4 +29,3 @@ Parlamentodaki oylamada 440 milletvekili anlaşma lehine, 151 milletvekili aleyh
 ## Kaynaklar
 
 - Ana kaynak: [Deutsche Welle World](https://www.dw.com/en/european-parliament-approves-us-trade-deal-to-lower-tariffs/a-77577033?maca=en-rss-en-all-1573-xml-mrss)
-

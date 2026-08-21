@@ -29,4 +29,3 @@ Avrupa Komisyonu’nun dijital dolandırıcılığa karşı yazdan önce bir eyl
 ## Kaynaklar
 
 - Ana kaynak: [Deutsche Welle World](https://www.dw.com/en/rising-asian-cyberscam-losses-expose-gaps-in-eu-response/a-77487321?maca=en-rss-en-all-1573-xml-mrss)
-

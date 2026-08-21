@@ -27,4 +27,3 @@ Fransız-Alman metni ayrıca müzakere sürecindeki ara adımların daha az biç
 ## Kaynaklar
 
 - Ana kaynak: [Politico Europe](https://www.politico.eu/article/france-germany-propose-gradual-eu-integration-candidate-countries/?utm_source=RSS_Feed&utm_medium=RSS&utm_campaign=RSS_Syndication)
-

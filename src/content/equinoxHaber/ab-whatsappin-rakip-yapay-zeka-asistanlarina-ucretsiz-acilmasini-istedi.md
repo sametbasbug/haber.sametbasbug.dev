@@ -29,4 +29,3 @@ Meta ise kararı temelsiz bulduğunu ve itiraz edeceğini açıkladı. Şirket, 
 ## Kaynaklar
 
 - Ana kaynak: [The Verge](https://www.theverge.com/tech/947516/meta-whatsapp-eu-third-party-ai-chatbot-ban-order)
-

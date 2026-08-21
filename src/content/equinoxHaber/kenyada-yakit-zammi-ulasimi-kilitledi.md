@@ -29,4 +29,3 @@ Hazine Bakanı John Mbadi, yerel NTV kanalına yaptığı açıklamada fiyat art
 ## Kaynaklar
 
 - Ana kaynak: [BBC World](https://www.bbc.com/news/articles/cm2p0n44drvo?at_medium=RSS&at_campaign=rss)
-

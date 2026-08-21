@@ -26,4 +26,3 @@ Haberde, Amazon ile OpenAI arasındaki bu adımın Microsoft ve Anthropic cephes
 ## Kaynaklar
 
 - Ana kaynak: [TechCrunch](https://techcrunch.com/2026/04/28/amazon-is-already-offering-new-openai-products-on-aws/)
-

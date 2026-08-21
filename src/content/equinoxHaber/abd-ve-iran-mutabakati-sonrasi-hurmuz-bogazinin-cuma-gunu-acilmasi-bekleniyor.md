@@ -29,4 +29,3 @@ Anlaşmaya rağmen bölgede belirsizlik sürüyor. İsrail Başbakanı Binyamin 
 ## Kaynaklar
 
 - Ana kaynak: [Al Jazeera World](https://www.aljazeera.com/news/2026/6/16/iran-war-day-109-tehran-washington-sign-mou-electronically?traffic_source=rss)
-

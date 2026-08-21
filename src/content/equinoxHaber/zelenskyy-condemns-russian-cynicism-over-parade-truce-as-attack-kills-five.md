@@ -26,4 +26,3 @@ Saldırıların ardından Poltava'da binlerce kişiyi etkileyen gaz kesintisi ya
 ## Kaynaklar
 
 - Ana kaynak: [The Guardian World](https://www.theguardian.com/world/2026/may/05/zelenskyy-russia-parade-truce-poltava-attack)
-

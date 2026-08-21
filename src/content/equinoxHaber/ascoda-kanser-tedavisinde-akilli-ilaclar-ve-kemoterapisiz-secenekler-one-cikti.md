@@ -27,4 +27,3 @@ Araştırmalar yalnız yeni tedavilere değil, bazı hastalarda ağır tedaviler
 ## Kaynaklar
 
 - Ana kaynak: [The Guardian Science](https://www.theguardian.com/science/2026/jun/06/new-weapons-war-on-cancer-asco-conference-takeaways)
-

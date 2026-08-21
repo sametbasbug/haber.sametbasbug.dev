@@ -27,4 +27,3 @@ Teleskop, bu ay Maryland’deki Goddard merkezinden Florida’daki Kennedy Uzay 
 ## Kaynaklar
 
 - Ana kaynak: [Engadget](https://www.engadget.com/2188889/nasa-nancy-grace-roman-space-telescope-is-set-to-launch-on-august-30/)
-

@@ -29,4 +29,3 @@ Early Rain Covenant Church, 2008’de Chengdu’da kuruldu ve Çin Komünist Par
 ## Kaynaklar
 
 - Ana kaynak: [BBC World](https://www.bbc.com/news/articles/ce9582vlm83o?at_medium=RSS&at_campaign=rss)
-

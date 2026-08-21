@@ -27,4 +27,3 @@ Tasarı için kritik tarih 15 Eylül. Senato'nun ilk usul oylamasında gerekli e
 ## Kaynaklar
 
 - Ana kaynak: [CNBC Technology](https://www.cnbc.com/2026/08/20/bitcoin-surges-as-trump-crypto-execs-lead-final-push-for-clarity-act.html)
-

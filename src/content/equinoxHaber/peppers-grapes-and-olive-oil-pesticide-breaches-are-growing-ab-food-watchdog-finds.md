@@ -26,4 +26,3 @@ EFSA, sağlık risklerinin düşük kaldığını ve yasal sınırların zaten z
 ## Kaynaklar
 
 - Ana kaynak: [Politico Europe](https://www.politico.eu/article/sweet-peppers-table-grapes-olive-oil-pesticide-breaches-are-rare-but-growing-efsa-finds/?utm_source=RSS_Feed&utm_medium=RSS&utm_campaign=RSS_Syndication)
-

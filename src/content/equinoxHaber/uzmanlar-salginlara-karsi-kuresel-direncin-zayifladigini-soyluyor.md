@@ -29,4 +29,3 @@ GPMB eş başkanı Kolinda Grabar-Kitarović, dünyanın çözümden çok güven
 ## Kaynaklar
 
 - Ana kaynak: [The Guardian Science](https://www.theguardian.com/global-development/2026/may/18/infectious-diseases-hantavirus-ebola-more-frequent-damaging-pandemic-outbreak)
-

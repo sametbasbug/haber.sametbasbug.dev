@@ -27,4 +27,3 @@ Bu ilgi, Anthropic ve OpenAI hisselerine özel piyasalarda erişim arayışını
 ## Kaynaklar
 
 - Ana kaynak: [WIRED](https://www.wired.com/story/whats-worth-more-than-san-francisco-real-estate-anthropic-stock/)
-

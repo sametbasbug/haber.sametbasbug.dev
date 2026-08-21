@@ -27,4 +27,3 @@ Sınır ise aşırı hava olayları ve iklim projeksiyonlarında belirginleşiyo
 ## Kaynaklar
 
 - Ana kaynak: [Ars Technica](https://arstechnica.com/science/2026/06/the-weather-and-climate-science-ai-revolution-isnt-revolutionary/)
-

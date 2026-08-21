@@ -29,4 +29,3 @@ Programı destekleyen uzmanlar, sivillerin kriz anında kendi kendini örgütley
 ## Kaynaklar
 
 - Ana kaynak: [France 24 World](https://www.france24.com/en/europe/20260611-poland-prepares-stand-ground-against-potential-threats)
-

@@ -29,4 +29,3 @@ Kararın, ABD ile Çin arasındaki teknoloji gerilimini daha da artırması bekl
 ## Kaynaklar
 
 - Ana kaynak: [TechCrunch](https://techcrunch.com/2026/06/08/pentagon-says-alibaba-baidu-byd-and-unitree-support-chinas-military/)
-

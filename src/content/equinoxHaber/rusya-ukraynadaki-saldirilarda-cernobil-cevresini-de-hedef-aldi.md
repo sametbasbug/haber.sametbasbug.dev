@@ -27,4 +27,3 @@ Saldırılar, Kyiv’in hafta sonu Rusya içinde, St. Petersburg çevresi dahil 
 ## Kaynaklar
 
 - Ana kaynak: [Politico Europe](https://www.politico.eu/article/russia-strikes-chernobyl-amid-drone-attacks-with-ukraine/?utm_source=RSS_Feed&utm_medium=RSS&utm_campaign=RSS_Syndication)
-

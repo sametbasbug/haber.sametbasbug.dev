@@ -27,4 +27,3 @@ Corgi, yeni kaynağı sigorta kategorilerini genişletmek, yapay zekâ destekli 
 ## Kaynaklar
 
 - Ana kaynak: [TechCrunch](https://techcrunch.com/2026/05/28/corgi-announces-106m-raise-at-2-6b-valuation-three-weeks-after-160m-series-b/)
-

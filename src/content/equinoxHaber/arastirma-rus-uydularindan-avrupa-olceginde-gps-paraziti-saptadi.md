@@ -29,4 +29,3 @@ Avrupa Birliği konuyu incelediğini ancak sonuçları gizlilik nedeniyle payla�
 ## Kaynaklar
 
 - Ana kaynak: [Ars Technica](https://arstechnica.com/space/2026/06/tests-suggest-russian-satellites-can-jam-gps-on-a-continental-scale/)
-

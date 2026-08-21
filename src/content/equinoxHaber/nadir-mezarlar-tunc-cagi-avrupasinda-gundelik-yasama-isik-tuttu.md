@@ -27,4 +27,3 @@ Sonuçlar, Orta Avrupa’da ani bir nüfus değişiminden çok yavaş ve bölges
 ## Kaynaklar
 
 - Ana kaynak: [ScienceDaily Top Science](https://www.sciencedaily.com/releases/2026/05/260518041445.htm)
-

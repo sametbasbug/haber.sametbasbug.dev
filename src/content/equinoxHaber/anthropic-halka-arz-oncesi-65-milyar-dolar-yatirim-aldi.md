@@ -29,4 +29,3 @@ Yeni değerleme, Anthropic ile OpenAI arasındaki sermaye ve kurumsal müşteri 
 ## Kaynaklar
 
 - Ana kaynak: [TechCrunch](https://techcrunch.com/2026/05/28/anthropic-raises-65-billion-nears-1t-valuation-ahead-of-ipo/)
-

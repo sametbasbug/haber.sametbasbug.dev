@@ -29,4 +29,3 @@ Küresel ölçekte fark hâlâ büyük. Toyota 2025’te 11,3 milyon araçla dü
 ## Kaynaklar
 
 - Ana kaynak: [The Guardian Business](https://www.theguardian.com/business/2026/jun/10/china-byd-car-firm-ev-maker-toyota)
-

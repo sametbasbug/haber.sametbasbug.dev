@@ -29,4 +29,3 @@ Ancak büyüme yeni baskılar da yaratıyor. Uzmanlara göre Londra’da kalitel
 ## Kaynaklar
 
 - Ana kaynak: [CNBC Technology](https://www.cnbc.com/2026/06/11/anthropic-openai-london-expansions-big-tech.html)
-

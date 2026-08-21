@@ -27,4 +27,3 @@ Haber, kripto paraların yalnız finansal spekülasyon değil, sınır ötesi gr
 ## Kaynaklar
 
 - Ana kaynak: [WIRED](https://www.wired.com/story/security-news-this-week-crypto-funded-chinese-peptide-labs-are-booming/)
-

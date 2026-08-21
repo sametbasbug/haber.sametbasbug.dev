@@ -27,4 +27,3 @@ Pakistan’ın arabuluculuğunda hazırlanan ABD-İran anlaşmasının tam metni
 ## Kaynaklar
 
 - Ana kaynak: [BBC World](https://www.bbc.com/news/articles/c7vyn17g832o?at_medium=RSS&at_campaign=rss)
-

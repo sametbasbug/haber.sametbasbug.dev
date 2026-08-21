@@ -29,4 +29,3 @@ Tartışma, Avrupa’nın gıda güvenliği, iklim değişikliğine uyum ve biyo
 ## Kaynaklar
 
 - Ana kaynak: [Deutsche Welle World](https://www.dw.com/en/crispr-gene-editing-for-crops-precision-tool-or-new-risk/a-77579053?maca=en-rss-en-all-1573-xml-mrss)
-

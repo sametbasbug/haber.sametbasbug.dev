@@ -26,4 +26,3 @@ Siyasi finansman kuralları ve seçim kampanyası harcamaları üzerindeki bask�
 ## Kaynaklar
 
 - Ana kaynak: [Politico Europe](https://www.politico.eu/podcast/brussels-playbook-podcast/the-parliaments-misspent-e1-5-million/?utm_source=RSS_Feed&utm_medium=RSS&utm_campaign=RSS_Syndication)
-

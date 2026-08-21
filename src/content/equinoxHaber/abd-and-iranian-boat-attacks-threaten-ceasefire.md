@@ -26,4 +26,3 @@ Gerilim hattının kısa vadede rahatlayıp rahatlamayacağı belirsiz. Ancak H�
 ## Kaynaklar
 
 - Ana kaynak: [Politico Europe](https://www.politico.com/news/2026/05/04/us-iran-boat-attacks-ceasefire-00905301?utm_source=RSS_Feed&utm_medium=RSS&utm_campaign=RSS_Syndication)
-

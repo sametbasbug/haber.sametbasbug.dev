@@ -27,4 +27,3 @@ D.A. Davidson teknoloji araştırmaları başkanı Gil Luria, Anthropic’in sı
 ## Kaynaklar
 
 - Ana kaynak: [CNBC Technology](https://www.cnbc.com/2026/06/05/tech-download-anthropic-ipo-ai-valuations.html)
-

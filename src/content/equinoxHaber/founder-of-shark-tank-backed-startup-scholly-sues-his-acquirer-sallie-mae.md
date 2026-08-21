@@ -28,4 +28,3 @@ Davanın sonucu, Scholly kullanıcı verilerinin nasıl işlendiğine ve satış
 ## Kaynaklar
 
 - Ana kaynak: [TechCrunch](https://techcrunch.com/2026/04/28/founder-of-shark-tank-backed-startup-scholly-sues-his-acquirer-sallie-mae/)
-

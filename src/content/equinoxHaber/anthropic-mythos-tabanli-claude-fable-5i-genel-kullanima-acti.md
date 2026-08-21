@@ -29,4 +29,3 @@ Modelin fiyatı, milyon giriş tokenı başına 10 dolar ve milyon çıkış tok
 ## Kaynaklar
 
 - Ana kaynak: [TechCrunch](https://techcrunch.com/2026/06/09/anthropic-released-claude-fable-5-its-most-powerful-model-publicly-days-after-warning-ai-is-getting-too-dangerous/)
-

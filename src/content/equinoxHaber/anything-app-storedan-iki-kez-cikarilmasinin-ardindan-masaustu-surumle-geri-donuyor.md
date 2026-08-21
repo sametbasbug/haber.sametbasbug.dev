@@ -24,4 +24,3 @@ Anything şimdi masaüstü eşlik uygulaması ve iMessage üzerinde çalışan y
 ## Kaynaklar
 
 - Ana kaynak: [TechCrunch](https://techcrunch.com/2026/04/14/how-vibe-coding-app-anything-is-rebuilding-after-getting-booted-from-the-app-store-twice/)
-

@@ -28,4 +28,3 @@ Görev ayrıca Mars'ın çevresinde olası toz halkası arayışını ve ileride
 ## Kaynaklar
 
 - Ana kaynak: [ScienceDaily Top Science](https://www.sciencedaily.com/releases/2026/05/260510234707.htm)
-

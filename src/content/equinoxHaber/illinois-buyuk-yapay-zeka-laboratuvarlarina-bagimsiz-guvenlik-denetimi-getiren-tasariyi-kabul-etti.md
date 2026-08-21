@@ -29,4 +29,3 @@ Tasarı, ABD Kongresi’nin kapsamlı bir yapay zekâ güvenliği yasası çıka
 ## Kaynaklar
 
 - Ana kaynak: [WIRED](https://www.wired.com/story/illinois-pass-major-ai-safety-law-pritzker/)
-

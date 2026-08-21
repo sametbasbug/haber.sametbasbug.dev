@@ -29,4 +29,3 @@ Washington merkezli Savaş Araştırmaları Enstitüsü, Ukrayna’nın uzun men
 ## Kaynaklar
 
 - Ana kaynak: [Al Jazeera World](https://www.aljazeera.com/news/2026/6/12/putin-admits-ukraine-attacks-hitting-russian-economy-society?traffic_source=rss)
-

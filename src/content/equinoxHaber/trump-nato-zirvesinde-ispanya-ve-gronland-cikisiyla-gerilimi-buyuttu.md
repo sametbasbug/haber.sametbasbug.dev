@@ -29,4 +29,3 @@ Trump aynı açıklamalarda, NATO üyesi Danimarka’ya bağlı Grönland üzeri
 ## Kaynaklar
 
 - Ana kaynak: [Al Jazeera World](https://www.aljazeera.com/news/2026/7/8/trump-threatens-spain-trade-demands-us-take-over-greenland-at-nato-summit?traffic_source=rss)
-

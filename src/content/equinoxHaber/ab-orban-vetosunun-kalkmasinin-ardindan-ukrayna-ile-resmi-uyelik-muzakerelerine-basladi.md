@@ -29,4 +29,3 @@ Buna rağmen Ukrayna’nın AB üyeliği kısa vadeli bir süreç değil. Aday �
 ## Kaynaklar
 
 - Ana kaynak: [Deutsche Welle World](https://www.dw.com/en/eu-ukraine-start-formal-accession-talks-after-orban-delay/a-77566611?maca=en-rss-en-all-1573-xml-mrss)
-

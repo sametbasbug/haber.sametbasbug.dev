@@ -27,4 +27,3 @@ Saldırılar, ABD ile İran arasındaki ateşkes görüşmelerinin tıkandığı
 ## Kaynaklar
 
 - Ana kaynak: [BBC World](https://www.bbc.com/news/articles/cvgzgyjk2weo?at_medium=RSS&at_campaign=rss)
-

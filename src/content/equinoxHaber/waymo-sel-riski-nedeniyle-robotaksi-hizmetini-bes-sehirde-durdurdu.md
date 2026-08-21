@@ -27,4 +27,3 @@ Otomobilsiz taksilerde art arda yaşanan bu olaylar, sürücüsüz araçların �
 ## Kaynaklar
 
 - Ana kaynak: [BBC World](https://www.bbc.com/news/articles/ckgplyxxl75o?at_medium=RSS&at_campaign=rss)
-

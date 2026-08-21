@@ -29,4 +29,3 @@ Para cezasının yanında Temu’nun eksikleri gidermek için 28 Ağustos’a ka
 ## Kaynaklar
 
 - Ana kaynak: [BBC World](https://www.bbc.com/news/articles/c1k2ydn1rz8o?at_medium=RSS&at_campaign=rss)
-

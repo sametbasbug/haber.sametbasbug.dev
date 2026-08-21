@@ -27,4 +27,3 @@ Denetim Kurulu, Meta’ya kullanıcıların geçmiş ihlallerini, uygulanan yapt
 ## Kaynaklar
 
 - Ana kaynak: [TechCrunch](https://techcrunch.com/2026/06/04/metas-oversight-board-says-account-bans-lack-due-process-transparency/)
-

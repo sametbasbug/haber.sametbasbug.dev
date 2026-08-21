@@ -27,4 +27,3 @@ Aschenbrenner, OpenAI’da süperinsan düzeyindeki yapay zekâ sistemlerinin g�
 ## Kaynaklar
 
 - Ana kaynak: [CNBC Technology](https://www.cnbc.com/2026/05/28/nebius-situational-awareness-ai-stock-ex-openai-stake.html)
-

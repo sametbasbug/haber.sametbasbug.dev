@@ -27,4 +27,3 @@ Tayvan yönetimi savunma harcamalarını artırmaya çalışırken, parlamento g
 ## Kaynaklar
 
 - Ana kaynak: [Al Jazeera World](https://www.aljazeera.com/news/2026/6/18/taiwan-hopes-us-arms-sale-package-can-be-approved-soon-president-says?traffic_source=rss)
-

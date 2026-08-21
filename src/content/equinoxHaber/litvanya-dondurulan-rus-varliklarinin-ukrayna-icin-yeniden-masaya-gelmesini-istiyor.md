@@ -27,4 +27,3 @@ Yeni çıkış, Avrupa içinde Ukrayna finansmanı ve Rusya’ya baskı konular�
 ## Kaynaklar
 
 - Ana kaynak: [Politico Europe](https://www.politico.eu/article/lithuania-eu-frozen-russian-assets-return-ukraine-funding-debate/?utm_source=RSS_Feed&utm_medium=RSS&utm_campaign=RSS_Syndication)
-

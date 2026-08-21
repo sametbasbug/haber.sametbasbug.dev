@@ -29,4 +29,3 @@ Rusya’da büyük siyasi etkinlikler, sınır bölgelerindeki askeri hareketlil
 ## Kaynaklar
 
 - Ana kaynak: [France 24 World](https://www.france24.com/en/europe/20260615-putin-s-paranoia-ai-espionage-pushes-kremlin-to-reinforce-security-measures)
-

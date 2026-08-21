@@ -29,4 +29,3 @@ Gerilim, ABD’nin Küba yönetimine yönelik yeni yaptırımları ve eski Devle
 ## Kaynaklar
 
 - Ana kaynak: [Euronews World](http://www.euronews.com/2026/06/10/children-are-dying-cuba-says-as-us-blockade-hampers-delivery-of-un-aid)
-

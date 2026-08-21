@@ -27,4 +27,3 @@ Piyasa tepkisi Corning lehine oldu. Corning hisseleri haberin ardından pazartes
 ## Kaynaklar
 
 - Ana kaynak: [CNBC Technology](https://www.cnbc.com/2026/06/08/amazon-taps-corning-for-op.html)
-

@@ -27,4 +27,3 @@ Görev, astronotları doğrudan Ay yüzeyine indirmekten çok, 2028’deki Artem
 ## Kaynaklar
 
 - Ana kaynak: [Fast Company Tech](https://www.fastcompany.com/91557684/meet-the-artemis-iii-crew-who-will-keep-nasa-on-track-for-a-2028-moon-landing?partner=rss&utm_source=rss&utm_medium=feed&utm_campaign=rss+fastcompany&utm_content=rss)
-

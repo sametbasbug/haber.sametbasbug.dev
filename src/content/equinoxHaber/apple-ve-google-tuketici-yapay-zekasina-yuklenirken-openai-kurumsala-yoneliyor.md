@@ -27,4 +27,3 @@ Bu farkın arkasında gelir modeli bulunuyor. Şirketler yapay zekâ araçları 
 ## Kaynaklar
 
 - Ana kaynak: [CNBC Technology](https://www.cnbc.com/2026/06/11/as-openai-leans-into-enterprise-apple-and-google-target-consumer-ai.html)
-

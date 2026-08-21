@@ -27,4 +27,3 @@ Hafta boyunca AMD ve Nebius da Britanya’da yapay zekâ altyapısı ve araştı
 ## Kaynaklar
 
 - Ana kaynak: [The Guardian Business](https://www.theguardian.com/technology/2026/jun/13/uk-ai-hardware-london-tech-week-investment-chips)
-

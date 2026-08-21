@@ -27,4 +27,3 @@ Alternatif tedarik kaynakları kurmak ise hızlı sonuç verecek bir süreç de�
 ## Kaynaklar
 
 - Ana kaynak: [The Guardian World](https://www.theguardian.com/business/2026/jun/06/us-china-trump-trade-war)
-

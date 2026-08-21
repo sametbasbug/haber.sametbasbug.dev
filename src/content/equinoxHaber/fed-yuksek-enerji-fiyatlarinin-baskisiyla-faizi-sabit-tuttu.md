@@ -27,4 +27,3 @@ Piyasalar karar öncesinde faizin sabit kalmasını büyük ölçüde fiyatlamı
 ## Kaynaklar
 
 - Ana kaynak: [Al Jazeera World](https://www.aljazeera.com/economy/2026/6/17/us-federal-reserve-holds-rates-steady-under-new-chair-warsh?traffic_source=rss)
-

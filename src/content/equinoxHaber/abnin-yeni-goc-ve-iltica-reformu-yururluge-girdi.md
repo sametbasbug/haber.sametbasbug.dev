@@ -29,4 +29,3 @@ Paket ayrıca ani göç artışları veya göç akışlarının siyasi baskı ar
 ## Kaynaklar
 
 - Ana kaynak: [France 24 World](https://www.france24.com/en/europe/20260612-eu-adopts-major-landmark-asylum-reform-hardening-border-procedures)
-

@@ -29,4 +29,3 @@ Koruma projeleri bu dengeyi yönetmeye çalışıyor. Bazı bölgelerde metal ba
 ## Kaynaklar
 
 - Ana kaynak: [The Guardian Science](https://www.theguardian.com/environment/2026/may/27/blossoming-spoil-heaps-plants-metallophytes-heavy-metal-aoe)
-

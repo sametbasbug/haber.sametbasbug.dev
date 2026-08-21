@@ -27,4 +27,3 @@ Paket, Microsoft Office biçimleri olan DOCX, XLSX ve PPTX ile OpenDocument biç
 ## Kaynaklar
 
 - Ana kaynak: [ZDNET](https://www.zdnet.com/article/euro-office-a-sovereign-cloud-based-office-suite-google-microsoft-alternative/)
-

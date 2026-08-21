@@ -29,4 +29,3 @@ Bu ölçeğin arkasında şirketlerin daha uzun süre özel kalması ve yapay ze
 ## Kaynaklar
 
 - Ana kaynak: [TechCrunch](https://techcrunch.com/2026/07/09/anthropic-openai-and-spacex-are-bigger-than-the-last-25-years-of-tech-exits/)
-

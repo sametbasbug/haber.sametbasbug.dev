@@ -27,4 +27,3 @@ Yeni tur GIC liderliğinde gerçekleşti; Stripe, Georgian ve Salesforce Venture
 ## Kaynaklar
 
 - Ana kaynak: [TechCrunch](https://techcrunch.com/2026/06/05/supabase-doubles-valuation-to-10b-in-8-months/)
-

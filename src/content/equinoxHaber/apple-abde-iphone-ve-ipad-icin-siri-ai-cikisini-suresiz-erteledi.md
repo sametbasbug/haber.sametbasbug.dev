@@ -27,4 +27,3 @@ Apple ayrıca Siri AI ve yeni Apple Intelligence özelliklerinin Çin’de de d�
 ## Kaynaklar
 
 - Ana kaynak: [Engadget](https://www.engadget.com/2189932/siri-ai-for-iphones-and-ipads-will-be-delayed-indefinitely-in-the-eu/)
-

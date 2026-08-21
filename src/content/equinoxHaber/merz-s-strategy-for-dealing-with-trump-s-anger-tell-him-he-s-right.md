@@ -26,4 +26,3 @@ Ancak bu çizginin ne kadar işe yarayacağı belirsiz. Trump'ın söylemi sertl
 ## Kaynaklar
 
 - Ana kaynak: [Politico Europe](https://www.politico.eu/article/friedrich-merz-germany-strategy-angry-donald-trump-threats-trade-security-tensions/?utm_source=RSS_Feed&utm_medium=RSS&utm_campaign=RSS_Syndication)
-

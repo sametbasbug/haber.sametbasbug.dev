@@ -27,4 +27,3 @@ Volvo’nun çoğunluk hissesi Çinli Geely Holding’e ait olduğu için şirke
 ## Kaynaklar
 
 - Ana kaynak: [TechCrunch](https://techcrunch.com/2026/05/26/trump-administration-permits-volvo-to-keep-selling-connected-cars-in-the-us/)
-

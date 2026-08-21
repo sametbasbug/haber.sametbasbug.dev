@@ -27,4 +27,3 @@ Magyar hükümeti ayrıca Ukrayna’nın Avrupa Birliği üyelik sürecine yöne
 ## Kaynaklar
 
 - Ana kaynak: [Al Jazeera World](https://www.aljazeera.com/news/2026/6/13/hungarys-former-pm-orban-re-elected-party-leader-despite-election-loss?traffic_source=rss)
-

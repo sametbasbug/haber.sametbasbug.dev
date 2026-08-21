@@ -29,4 +29,3 @@ GameStop'un sunduğu planın bir bölümünde TD Securities'ten yaklaşık 20 mi
 ## Kaynaklar
 
 - Ana kaynak: [BBC World](https://www.bbc.com/news/articles/ckgp5ll3jd4o?at_medium=RSS&at_campaign=rss)
-

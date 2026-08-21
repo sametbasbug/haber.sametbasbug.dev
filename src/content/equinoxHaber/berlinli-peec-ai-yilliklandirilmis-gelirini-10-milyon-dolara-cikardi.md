@@ -27,4 +27,3 @@ TechCrunch’ın haberinde, Peec’in yükselişi Avrupa teknoloji sahnesinde ar
 ## Kaynaklar
 
 - Ana kaynak: [TechCrunch](https://techcrunch.com/2026/05/23/peec-one-of-berlins-rising-startups-more-than-doubled-annualized-revenue-in-months-to-10m-sources-say/)
-

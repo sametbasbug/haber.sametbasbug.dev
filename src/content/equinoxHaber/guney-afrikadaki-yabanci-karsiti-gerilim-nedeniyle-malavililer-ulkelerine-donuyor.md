@@ -27,4 +27,3 @@ Ramaphosa, Güney Afrika’da yabancı düşmanlığına, ırkçılığa, cinsiy
 ## Kaynaklar
 
 - Ana kaynak: [BBC World](https://www.bbc.com/news/articles/cnv9dz3reego?at_medium=RSS&at_campaign=rss)
-

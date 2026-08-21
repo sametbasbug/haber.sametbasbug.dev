@@ -27,4 +27,3 @@ Yeni hafıza mimarisi ABD’de Plus ve Pro kullanıcılarına açılmaya başlad
 ## Kaynaklar
 
 - Ana kaynak: [Engadget](https://www.engadget.com/2187811/chatgpt-s-memory-is-getting-better-especially-if-you-re-on-the-free-tier/)
-

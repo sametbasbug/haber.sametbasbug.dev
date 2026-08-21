@@ -27,4 +27,3 @@ Nick Dearden ise hükümetten günler içinde yanıt beklediklerini, yeterli aç
 ## Kaynaklar
 
 - Ana kaynak: [Politico Europe](https://www.politico.eu/article/legal-action-nhs-drug-pricing-deal-donald-trump/?utm_source=RSS_Feed&utm_medium=RSS&utm_campaign=RSS_Syndication)
-

@@ -25,4 +25,3 @@ Google’ın bu genişletmesi, Gemini’yi yalnızca sohbet eden bir asistan olm
 ## Kaynaklar
 
 - Ana kaynak: [TechCrunch](https://techcrunch.com/2026/04/14/google-brings-its-gemini-personal-intelligence-feature-to-india/)
-

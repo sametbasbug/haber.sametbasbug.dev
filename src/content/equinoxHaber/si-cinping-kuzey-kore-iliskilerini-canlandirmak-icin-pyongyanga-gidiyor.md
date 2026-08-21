@@ -27,4 +27,3 @@ Görüşmenin gündeminde Kore Yarımadası’ndaki güvenlik başlıkları da o
 ## Kaynaklar
 
 - Ana kaynak: [The Guardian World](https://www.theguardian.com/world/2026/jun/08/xi-jinping-kim-jong-un-meeting-north-korea)
-

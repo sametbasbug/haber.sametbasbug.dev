@@ -27,4 +27,3 @@ AB Ulaştırma Komiseri Apostolos Tzitzikostas, Avrupa’da şu anda jet yakıt�
 ## Kaynaklar
 
 - Ana kaynak: [The Guardian World](https://www.theguardian.com/business/2026/jun/06/aviation-industry-looks-skywards-as-leaders-fly-in-for-rio-summit)
-

@@ -27,4 +27,3 @@ Retatrutide, GIP, GLP-1 ve glukagon reseptörlerini aynı anda hedefleyen deneys
 ## Kaynaklar
 
 - Ana kaynak: [MarketWatch Top Stories](https://www.marketwatch.com/story/tired-of-nausea-or-taking-a-glp-1-pill-every-day-these-experimental-drugs-could-be-better-than-zepbound-and-wegovy-587bf648?mod=mw_rss_topstories)
-

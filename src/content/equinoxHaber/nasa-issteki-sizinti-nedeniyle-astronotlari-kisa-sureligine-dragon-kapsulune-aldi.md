@@ -27,4 +27,3 @@ Rus servis modülündeki çatlaklar ve sızıntılar uzun süredir izleniyor. Ol
 ## Kaynaklar
 
 - Ana kaynak: [TechCrunch](https://techcrunch.com/2026/06/05/nasa-tells-astronauts-to-shelter-in-spacex-dragon-due-to-new-leaks-on-the-iss/)
-

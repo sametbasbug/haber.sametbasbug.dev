@@ -26,4 +26,3 @@ Değişiklik, OpenAI'nin son aylarda altyapı ve dağıtım tarafında daha fazl
 ## Kaynaklar
 
 - Ana kaynak: [CNBC Technology](https://www.cnbc.com/2026/04/27/openai-microsoft-partnership-revenue-cap.html)
-

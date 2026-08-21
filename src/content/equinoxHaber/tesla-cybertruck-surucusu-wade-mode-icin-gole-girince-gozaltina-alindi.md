@@ -27,4 +27,3 @@ Olay, Tesla’nın su içi sürüşe izin veren sistemlerinin yasal ve güvenlik
 ## Kaynaklar
 
 - Ana kaynak: [BBC World](https://www.bbc.com/news/articles/c072x1kml44o?at_medium=RSS&at_campaign=rss)
-

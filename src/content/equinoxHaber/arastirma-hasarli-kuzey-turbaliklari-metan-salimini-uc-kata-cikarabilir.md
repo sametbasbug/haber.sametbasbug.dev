@@ -29,4 +29,3 @@ Waterloo Üniversitesi’nden araştırmacılar, Kanada’daki bazı sahalarda r
 ## Kaynaklar
 
 - Ana kaynak: [Phys.org](https://phys.org/news/2026-06-boreal-peatlands-triple-methane-emissions.html)
-

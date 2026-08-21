@@ -28,4 +28,3 @@ Süreç, Trump yönetiminin temiz enerji yerine fosil yakıtlara daha fazla alan
 ## Kaynaklar
 
 - Ana kaynak: [Engadget](https://www.engadget.com/science/trump-administration-is-paying-more-companies-to-abandon-offshore-wind-projects-150216769.html?src=rss)
-

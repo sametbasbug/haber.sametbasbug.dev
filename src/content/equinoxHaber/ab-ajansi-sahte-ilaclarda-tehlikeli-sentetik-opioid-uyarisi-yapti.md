@@ -29,4 +29,3 @@ Rapor, AB liderlerinin gelecek hafta organize suç ve uyuşturucu kaçakçılı�
 ## Kaynaklar
 
 - Ana kaynak: [Politico Europe](https://www.politico.eu/article/dangerous-synthetic-opioids-found-fake-medicines-eu-drug-agency-warns/?utm_source=RSS_Feed&utm_medium=RSS&utm_campaign=RSS_Syndication)
-

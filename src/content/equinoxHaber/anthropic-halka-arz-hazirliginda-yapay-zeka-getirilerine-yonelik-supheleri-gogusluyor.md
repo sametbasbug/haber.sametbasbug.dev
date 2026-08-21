@@ -27,4 +27,3 @@ Buna karşın kurumsal müşterilerin yapay zekâ harcamalarından beklediği ve
 ## Kaynaklar
 
 - Ana kaynak: [TechCrunch](https://techcrunch.com/2026/06/04/ahead-of-its-ipo-anthropics-daniela-amodei-shrugs-off-doubts-about-ais-returns/)
-

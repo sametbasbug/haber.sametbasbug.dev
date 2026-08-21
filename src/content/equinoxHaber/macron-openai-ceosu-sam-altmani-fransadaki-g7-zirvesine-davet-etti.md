@@ -27,4 +27,3 @@ Macron son dönemde Fransa’yı yapay zekâ altyapısı için daha cazip bir me
 ## Kaynaklar
 
 - Ana kaynak: [CNBC Technology](https://www.cnbc.com/2026/06/03/openai-sam-altman-g7-macron-france-big-tech.html)
-

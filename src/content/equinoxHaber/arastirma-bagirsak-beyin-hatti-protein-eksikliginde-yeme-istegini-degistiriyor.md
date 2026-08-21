@@ -29,4 +29,3 @@ Araştırmacılara göre bulgular, iştah kontrolü, obezite, metabolik hastalı
 ## Kaynaklar
 
 - Ana kaynak: [ScienceDaily Top Science](https://www.sciencedaily.com/releases/2026/05/260527023202.htm)
-

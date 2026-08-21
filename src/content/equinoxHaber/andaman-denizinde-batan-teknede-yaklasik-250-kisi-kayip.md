@@ -25,4 +25,3 @@ Kayıp sayısı ve kurtarma çalışmalarının seyri, gelecek resmi açıklamal
 ## Kaynaklar
 
 - Ana kaynak: [BBC World](https://www.bbc.com/news/articles/cz6778j78vlo?at_medium=RSS&at_campaign=rss)
-

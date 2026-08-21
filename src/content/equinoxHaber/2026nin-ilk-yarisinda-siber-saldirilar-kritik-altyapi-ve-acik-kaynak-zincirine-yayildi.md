@@ -27,4 +27,3 @@ Açık kaynak tedarik zinciri de yılın en kırılgan alanlarından biri olarak
 ## Kaynaklar
 
 - Ana kaynak: [TechCrunch](https://techcrunch.com/2026/06/07/the-worst-hacks-and-breaches-of-2026-so-far/)
-

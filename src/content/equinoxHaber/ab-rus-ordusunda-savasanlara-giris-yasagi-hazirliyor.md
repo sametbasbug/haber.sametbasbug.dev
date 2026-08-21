@@ -29,4 +29,3 @@ AB dış politika şefi Kaja Kallas, yeni adımların Rusya’nın savaş ekonom
 ## Kaynaklar
 
 - Ana kaynak: [Deutsche Welle World](https://www.dw.com/en/eu-proposes-entry-ban-for-russian-ukraine-combatants-in-new-sanctions-package/a-77474536?maca=en-rss-en-all-1573-xml-mrss)
-

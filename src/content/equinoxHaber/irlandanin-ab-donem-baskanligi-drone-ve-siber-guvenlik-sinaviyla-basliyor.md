@@ -27,4 +27,3 @@ Dublin yönetimi hazırlıklı olduğunu savunuyor. Hükümet bu yıl savunma b�
 ## Kaynaklar
 
 - Ana kaynak: [Politico Europe](https://www.politico.eu/article/ireland-faces-security-test-as-it-takes-over-eu-presidency/?utm_source=RSS_Feed&utm_medium=RSS&utm_campaign=RSS_Syndication)
-

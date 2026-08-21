@@ -27,4 +27,3 @@ Haber, savaşın yalnız cephede değil, diplomatik mesaj savaşında da sürdü
 ## Kaynaklar
 
 - Ana kaynak: [Politico Europe](https://www.politico.eu/article/russia-drone-blame-game-fails-split-ukraine-baltic-allies/?utm_source=RSS_Feed&utm_medium=RSS&utm_campaign=RSS_Syndication)
-

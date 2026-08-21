@@ -29,4 +29,3 @@ Hoekstra, AB’nin 2040 için yüzde 90 emisyon azaltımı hedefini de savundu. 
 ## Kaynaklar
 
 - Ana kaynak: [France 24 World](https://www.france24.com/en/tv-shows/talking-europe/20260612-we-need-more-clean-homegrown-cheap-european-energy-eu-climate-commissioner)
-

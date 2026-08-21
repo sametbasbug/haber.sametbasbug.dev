@@ -29,4 +29,3 @@ PeopleSoft vakası, ShinyHunters’ın ortak yazılım kullanan çok sayıda kur
 ## Kaynaklar
 
 - Ana kaynak: [TechCrunch](https://techcrunch.com/2026/06/11/oracle-warns-of-security-bug-that-hackers-abused-to-breach-100-companies/)
-

@@ -27,4 +27,3 @@ Zaporijya Santrali, Rusya’nın 2022’de başlattığı geniş çaplı işgali
 ## Kaynaklar
 
 - Ana kaynak: [Deutsche Welle World](https://www.dw.com/en/ukraine-zaporizhzhia-nuclear-plant-s-power-cut-off/live-77498904?maca=en-rss-en-all-1573-xml-mrss)
-

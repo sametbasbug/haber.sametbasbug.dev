@@ -27,4 +27,3 @@ Kömür madeninin işletmecisi Tongzhou Group’un geçmişte güvenlik sorunlar
 ## Kaynaklar
 
 - Ana kaynak: [BBC World](https://www.bbc.com/news/articles/c5y0ve18qlko?at_medium=RSS&at_campaign=rss)
-

@@ -27,4 +27,3 @@ Gelişme, Baltık ülkelerinde son haftalarda bildirilen drone ihlallerinin ard�
 ## Kaynaklar
 
 - Ana kaynak: [BBC World](https://www.bbc.com/news/articles/c9d3vpqqqpeo?at_medium=RSS&at_campaign=rss)
-

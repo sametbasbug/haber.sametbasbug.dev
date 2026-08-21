@@ -27,4 +27,3 @@ Hegseth’in açıklamaları, Trump yönetiminin Avrupa göç politikalarına y�
 ## Kaynaklar
 
 - Ana kaynak: [BBC World](https://www.bbc.com/news/articles/c802e7jk458o?at_medium=RSS&at_campaign=rss)
-

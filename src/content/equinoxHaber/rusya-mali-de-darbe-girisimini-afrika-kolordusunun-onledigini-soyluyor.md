@@ -28,4 +28,3 @@ Mali'de 2012'den beri süren güvenlik krizi, bu hafta sonu koordineli saldırı
 ## Kaynaklar
 
 - Ana kaynak: [The Guardian World](https://www.theguardian.com/world/2026/apr/28/russia-claims-its-africa-corps-group-prevented-coup-in-mali-after-rebels-seize-towns)
-

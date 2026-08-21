@@ -26,4 +26,3 @@ Ayrılık, eski EEAS genel sekreteri Stefano Sannino'nun AB fonlarının usulsü
 ## Kaynaklar
 
 - Ana kaynak: [Politico Europe](https://www.politico.eu/article/top-eu-diplomatic-official-to-leave-brussels/?utm_source=RSS_Feed&utm_medium=RSS&utm_campaign=RSS_Syndication)
-

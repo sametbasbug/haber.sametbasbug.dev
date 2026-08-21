@@ -27,4 +27,3 @@ Politico’nun aktardığına göre ülkede bugün yaklaşık 10 bin Amerikan as
 ## Kaynaklar
 
 - Ana kaynak: [Politico Europe](https://www.politico.eu/article/poland-permanent-us-base-donald-trump-soldiers/?utm_source=RSS_Feed&utm_medium=RSS&utm_campaign=RSS_Syndication)
-

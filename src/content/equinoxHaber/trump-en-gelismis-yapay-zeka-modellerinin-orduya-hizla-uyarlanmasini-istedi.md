@@ -27,4 +27,3 @@ Memorandumda savunma kurumlarının ifade özgürlüğünü sansürlemek, ideolo
 ## Kaynaklar
 
 - Ana kaynak: [Engadget](https://www.engadget.com/2188929/trump-latest-memo-puts-most-advanced-ai-in-the-world-into-military-hands/)
-

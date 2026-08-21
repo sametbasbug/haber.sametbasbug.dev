@@ -29,4 +29,3 @@ Normalleşmenin hızlı olmayacağı değerlendiriliyor. Uzmanlara göre boğazd
 ## Kaynaklar
 
 - Ana kaynak: [BBC World](https://www.bbc.com/news/articles/c6217106px6o?at_medium=RSS&at_campaign=rss)
-

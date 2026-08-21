@@ -29,4 +29,3 @@ Avrupa ülkeleri savunmada ABD’ye bağımlılığı azaltmak için yüz milyar
 ## Kaynaklar
 
 - Ana kaynak: [Deutsche Welle World](https://www.dw.com/en/failed-joint-jet-project-highlights-europe-s-defense-dilemma/a-77572732?maca=en-rss-en-all-1573-xml-mrss)
-

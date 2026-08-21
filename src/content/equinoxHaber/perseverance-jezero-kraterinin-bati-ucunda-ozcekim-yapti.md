@@ -27,4 +27,3 @@ Jet Propulsion Laboratory tarafından yönetilen Perseverance, Mars’ta eski ya
 ## Kaynaklar
 
 - Ana kaynak: [NASA News](https://science.nasa.gov/photojournal/nasas-perseverance-rover-snaps-westernmost-selfie/)
-

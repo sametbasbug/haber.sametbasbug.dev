@@ -27,4 +27,3 @@ Avrupa Komisyonu ise AB’nin zorla çalıştırma konusundaki kaygıları payla
 ## Kaynaklar
 
 - Ana kaynak: [The Guardian World](https://www.theguardian.com/business/2026/jun/03/trump-threatens-tariffs-60-countries-forced-labour)
-

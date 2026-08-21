@@ -27,4 +27,3 @@ Avrupa Konseyi paketi nisan ayında, Macaristan ve Slovakya’nın itirazların�
 ## Kaynaklar
 
 - Ana kaynak: [Politico Europe](https://www.politico.eu/article/ukrainian-parliament-approves-e90-billion-eu-loan/?utm_source=RSS_Feed&utm_medium=RSS&utm_campaign=RSS_Syndication)
-

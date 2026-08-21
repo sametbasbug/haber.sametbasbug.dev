@@ -28,4 +28,3 @@ Haberde, OpenAI'nin aralarında bulunduğu yatırımcı ve ortak ağının da bu
 ## Kaynaklar
 
 - Ana kaynak: [TechCrunch](https://techcrunch.com/2026/05/04/openais-cozy-partner-cerebras-is-on-track-for-a-blockbuster-ipo/)
-

@@ -27,4 +27,3 @@ Olayın ardından sosyal medyada ADA’ya yönelik eleştiriler hızla yayıldı
 ## Kaynaklar
 
 - Ana kaynak: [Ars Technica](https://arstechnica.com/science/2026/06/scientists-ejected-from-diabetes-conference-for-distributing-journal-reprints/)
-

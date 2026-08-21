@@ -27,4 +27,3 @@ Taşıma sürecinin başlaması için Kanada veterinerlerinin her balinanın yol
 ## Kaynaklar
 
 - Ana kaynak: [The Guardian World](https://www.theguardian.com/environment/2026/jun/04/canada-marineland-beluga-whale-deal)
-

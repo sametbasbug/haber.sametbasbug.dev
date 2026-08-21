@@ -29,4 +29,3 @@ Gündemin diğer başlıkları arasında yapay zekâ, küresel ticaret dengesizl
 ## Kaynaklar
 
 - Ana kaynak: [NPR World](https://www.npr.org/2026/06/15/nx-s1-5856340/g7-gets-underway-amid-tensions-between-europe-and-the-u-s)
-

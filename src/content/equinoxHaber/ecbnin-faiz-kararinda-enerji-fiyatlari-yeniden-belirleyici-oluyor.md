@@ -29,4 +29,3 @@ Yatırımcılar karar metninin yanı sıra ECB’nin yeni enflasyon ve büyüme 
 ## Kaynaklar
 
 - Ana kaynak: [CNBC World Economy](https://www.cnbc.com/2026/06/10/ecb-rate-hike-energy-prices-inflation.html)
-

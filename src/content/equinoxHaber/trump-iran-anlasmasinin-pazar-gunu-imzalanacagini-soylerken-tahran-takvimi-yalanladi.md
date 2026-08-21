@@ -29,4 +29,3 @@ Taraflar son günlerde anlaşmaya yaklaşıldığı mesajı verse de şartlar re
 ## Kaynaklar
 
 - Ana kaynak: [Al Jazeera World](https://www.aljazeera.com/news/2026/6/13/trump-says-iran-deal-to-be-signed-tomorrow-contradicting-iranian-official?traffic_source=rss)
-

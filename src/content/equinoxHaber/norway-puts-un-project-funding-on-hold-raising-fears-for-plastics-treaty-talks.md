@@ -28,4 +28,3 @@ Geçen yıl sürecin başkanı aniden istifa etmiş, önceki tur da fazla ilerle
 ## Kaynaklar
 
 - Ana kaynak: [The Guardian World](https://www.theguardian.com/environment/2026/may/11/norway-un-environment-programme-funding-plastics-treaty-talks)
-

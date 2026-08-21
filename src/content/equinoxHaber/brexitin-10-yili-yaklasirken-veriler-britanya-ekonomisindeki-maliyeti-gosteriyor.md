@@ -29,4 +29,3 @@ Kamuoyu da bu tabloyla birlikte değişmiş görünüyor. YouGov’un son anketi
 ## Kaynaklar
 
 - Ana kaynak: [The Guardian Business](https://www.theguardian.com/politics/2026/jun/14/how-uk-economy-changed-since-brexit-vote-charts)
-

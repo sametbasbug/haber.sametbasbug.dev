@@ -27,4 +27,3 @@ Anlaşma kapsamında Lovable’ın hem Anthropic’in kodlama görevlerinde yayg
 ## Kaynaklar
 
 - Ana kaynak: [TechCrunch](https://techcrunch.com/2026/06/03/lovable-signs-multi-year-deal-with-google-cloud-to-up-usage-5x-source-says/)
-

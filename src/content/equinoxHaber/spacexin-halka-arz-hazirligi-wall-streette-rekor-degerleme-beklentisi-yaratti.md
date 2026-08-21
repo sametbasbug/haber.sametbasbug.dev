@@ -29,4 +29,3 @@ SpaceX’in halka arzı gerçekleşirse yalnız uzay sektöründe değil, teknol
 ## Kaynaklar
 
 - Ana kaynak: [France 24 World](https://www.france24.com/en/wall-street-counts-down-to-spacex-ipo)
-

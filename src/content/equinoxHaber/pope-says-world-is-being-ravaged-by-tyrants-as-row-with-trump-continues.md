@@ -28,4 +28,3 @@ Bamenda'daki ayin, Vatikan'ın savaş dili ve dinin siyasette kullanımı konusu
 ## Kaynaklar
 
 - Ana kaynak: [Politico Europe](https://www.politico.eu/article/pope-leo-says-world-ravaged-tyrants-donald-trump/?utm_source=RSS_Feed&utm_medium=RSS&utm_campaign=RSS_Syndication)
-

@@ -27,4 +27,3 @@ Avrupa Komisyonu sözcüsü Thomas Regnier, siber güvenliğin ortak öncelik ol
 ## Kaynaklar
 
 - Ana kaynak: [CNBC Technology](https://www.cnbc.com/2026/05/29/mythos-ai-models-eu-talks-us.html)
-

@@ -27,4 +27,3 @@ Nissan’ın mali tablosu da baskı altında. Şirket geçen mali yılda 533 mil
 ## Kaynaklar
 
 - Ana kaynak: [The Guardian World](https://www.theguardian.com/business/2026/may/13/nissan-ponders-building-cars-for-chinese-rivals-at-sunderland-plant-chery)
-

@@ -27,4 +27,3 @@ Eğer yöntem başarılı olursa, lösemi gibi kan kanserleri, ölümcül kan bo
 ## Kaynaklar
 
 - Ana kaynak: [NASA News](https://www.nasa.gov/missions/station/iss-research/growing-stem-cells-in-space-to-improve-cancer-and-disease-treatments/)
-

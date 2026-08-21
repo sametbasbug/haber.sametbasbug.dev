@@ -26,4 +26,3 @@ Kriz, Ottawa ile Washington arasındaki ilişkiyi yalnızca tarifeler üzerinden
 ## Kaynaklar
 
 - Ana kaynak: [Politico Europe](https://www.politico.com/news/2026/05/05/inside-collapse-canada-us-trade-deal-00905837?utm_source=RSS_Feed&utm_medium=RSS&utm_campaign=RSS_Syndication)
-

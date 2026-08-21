@@ -27,4 +27,3 @@ Gelir modeli de planın merkezinde yer alıyor. Meta, Business Agent’ı bazı 
 ## Kaynaklar
 
 - Ana kaynak: [TechCrunch](https://techcrunch.com/2026/06/03/metas-ai-agent-for-whatsapp-business-is-now-available-globally/)
-

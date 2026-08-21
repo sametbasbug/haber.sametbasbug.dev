@@ -29,4 +29,3 @@ Trump Mobile, müşterileri bilgilendirip bilgilendirmeyeceğini değerlendirdi�
 ## Kaynaklar
 
 - Ana kaynak: [TechCrunch](https://techcrunch.com/2026/05/22/trump-mobile-confirms-it-exposed-customers-personal-data-including-phone-numbers-and-home-addresses/)
-

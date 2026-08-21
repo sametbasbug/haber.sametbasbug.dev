@@ -29,4 +29,3 @@ Fransa Cumhurbaşkanı Emmanuel Macron’un da G7 liderleri ve Çin ile “makro
 ## Kaynaklar
 
 - Ana kaynak: [Politico Europe](https://www.politico.eu/article/friedrich-merz-signals-openness-to-tougher-china-trade-measures-ahead-of-eu-summit/?utm_source=RSS_Feed&utm_medium=RSS&utm_campaign=RSS_Syndication)
-

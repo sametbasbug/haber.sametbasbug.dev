@@ -29,4 +29,3 @@ Uzmanlar, kalan habitatı bozan faaliyetler için acil moratoryum ve koruma alan
 ## Kaynaklar
 
 - Ana kaynak: [The Guardian World](https://www.theguardian.com/world/2026/jun/10/rainfall-landslides-climate-crisis-tapanuli-orangutan-indonesia-extreme-weather)
-

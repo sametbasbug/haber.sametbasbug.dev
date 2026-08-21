@@ -27,4 +27,3 @@ Konum verisinin veri aracıları tarafından yeniden paketlenip satılması, ABD
 ## Kaynaklar
 
 - Ana kaynak: [TechCrunch](https://techcrunch.com/2026/06/08/massachusetts-votes-to-pass-new-privacy-rights-bill-that-bans-sale-of-precise-location-data/)
-

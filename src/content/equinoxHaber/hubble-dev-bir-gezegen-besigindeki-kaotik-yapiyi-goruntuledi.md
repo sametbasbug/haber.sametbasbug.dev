@@ -27,4 +27,3 @@ Araştırmacılar özellikle diskin asimetrik görünümüne dikkat çekiyor. Hu
 ## Kaynaklar
 
 - Ana kaynak: [ScienceDaily Top Science](https://www.sciencedaily.com/releases/2026/05/260511213151.htm)
-

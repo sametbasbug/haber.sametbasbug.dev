@@ -29,4 +29,3 @@ Moskova ve Kiev, Avrupa’dan bir ismin masada yer alması fikrine kapıyı tama
 ## Kaynaklar
 
 - Ana kaynak: [Politico Europe](https://www.politico.eu/article/europe-russia-ukraine-war-talks-mediator-norway-espen-barth-eide/?utm_source=RSS_Feed&utm_medium=RSS&utm_campaign=RSS_Syndication)
-

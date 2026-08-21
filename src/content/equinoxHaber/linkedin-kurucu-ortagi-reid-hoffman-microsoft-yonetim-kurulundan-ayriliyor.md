@@ -27,4 +27,3 @@ Hoffman, son dönemde kurucu ortağı olduğu “AI-native” biyofarmasötik gi
 ## Kaynaklar
 
 - Ana kaynak: [CNBC Technology](https://www.cnbc.com/2026/06/05/linkedin-co-founder-reid-hoffman-leaving-microsoft-board-after-decade.html)
-

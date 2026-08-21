@@ -27,4 +27,3 @@ Portsmouth Üniversitesi’nden Prof. Alex Ford, su şirketlerinin bu maddeleri 
 ## Kaynaklar
 
 - Ana kaynak: [The Guardian Science](https://www.theguardian.com/environment/2026/may/19/toxic-pfa-forever-chemicals-channel-southern-england-solent)
-

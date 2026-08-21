@@ -29,4 +29,3 @@ Buna rağmen açık kaynak AI için sürdürülebilir gelir arayışı sürüyor
 ## Kaynaklar
 
 - Ana kaynak: [Rest of World](https://restofworld.org/2026/tiezhen-wang-china-us-open-source-ai/?utm_source=rss&utm_medium=rss&utm_campaign=feeds)
-

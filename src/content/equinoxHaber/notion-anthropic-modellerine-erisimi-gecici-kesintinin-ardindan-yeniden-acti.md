@@ -25,4 +25,3 @@ Anthropic de yaptığı açıklamada kısa süreli bir altyapı sorununun birden
 ## Kaynaklar
 
 - Ana kaynak: [TechCrunch](https://techcrunch.com/2026/06/07/notion-restores-access-to-anthropic-after-service-disruption/)
-

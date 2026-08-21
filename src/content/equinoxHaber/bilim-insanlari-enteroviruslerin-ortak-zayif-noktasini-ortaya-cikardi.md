@@ -27,4 +27,3 @@ Araştırmacılar bunun henüz doğrudan bir tedavi olmadığını vurguluyor, a
 ## Kaynaklar
 
 - Ana kaynak: [ScienceDaily Top Science](https://www.sciencedaily.com/releases/2026/05/260512202320.htm)
-

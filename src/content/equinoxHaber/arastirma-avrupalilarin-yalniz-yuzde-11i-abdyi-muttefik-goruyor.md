@@ -29,4 +29,3 @@ Ankete göre Avrupalılar savunma harcamalarının artırılmasına geçen yıla
 ## Kaynaklar
 
 - Ana kaynak: [Deutsche Welle World](https://www.dw.com/en/only-1-in-10-europeans-see-us-as-an-ally-study/a-77489708?maca=en-rss-en-all-1573-xml-mrss)
-

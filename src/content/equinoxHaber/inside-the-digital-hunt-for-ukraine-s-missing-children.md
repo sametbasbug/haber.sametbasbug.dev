@@ -28,4 +28,3 @@ Uzmanlar, görülen vakaların muhtemelen toplamın yalnızca bir kısmı olduğ
 ## Kaynaklar
 
 - Ana kaynak: [Politico Europe](https://www.politico.eu/article/europol-investigates-abducted-ukrainian-children-russia-war/?utm_source=RSS_Feed&utm_medium=RSS&utm_campaign=RSS_Syndication)
-

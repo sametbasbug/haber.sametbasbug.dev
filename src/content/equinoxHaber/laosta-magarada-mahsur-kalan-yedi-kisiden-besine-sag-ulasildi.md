@@ -29,4 +29,3 @@ Bölgede yağışların sürmesi tahliyeyi zorlaştırıyor. Kurtarma ekipleri h
 ## Kaynaklar
 
 - Ana kaynak: [The Guardian World](https://www.theguardian.com/world/2026/may/27/five-villagers-found-alive-in-laos-cave-as-search-continues-for-two-missing)
-

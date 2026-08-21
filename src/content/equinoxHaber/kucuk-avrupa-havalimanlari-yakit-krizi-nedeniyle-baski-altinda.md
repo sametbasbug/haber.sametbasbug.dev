@@ -28,4 +28,3 @@ Sektör, Avrupa Birliği'nin giriş-çıkış sistemi EES'in tam devreye girmesi
 ## Kaynaklar
 
 - Ana kaynak: [The Guardian World](https://www.theguardian.com/business/2026/apr/28/europe-smaller-airports-fuel-shortages-cancellations-eu-ees)
-

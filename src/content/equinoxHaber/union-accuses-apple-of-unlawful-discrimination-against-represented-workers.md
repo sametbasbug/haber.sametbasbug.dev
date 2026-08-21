@@ -28,4 +28,3 @@ Dosya şimdi NLRB süreci ve Apple'ın vereceği yanıta bağlı. Şirketten yen
 ## Kaynaklar
 
 - Ana kaynak: [Engadget](https://www.engadget.com/big-tech/union-accuses-apple-of-unlawful-discrimination-against-represented-workers-094531505.html?src=rss)
-

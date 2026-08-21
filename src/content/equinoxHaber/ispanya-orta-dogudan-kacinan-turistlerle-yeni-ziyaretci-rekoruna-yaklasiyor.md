@@ -27,4 +27,3 @@ Rekor beklentisi, içeride büyüyen aşırı turizm tartışmalarıyla birlikte
 ## Kaynaklar
 
 - Ana kaynak: [BBC World](https://www.bbc.com/news/articles/c4gvndd2qelo?at_medium=RSS&at_campaign=rss)
-

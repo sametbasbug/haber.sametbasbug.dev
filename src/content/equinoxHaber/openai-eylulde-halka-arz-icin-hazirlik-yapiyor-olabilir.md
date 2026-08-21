@@ -27,4 +27,3 @@ OpenAI ise habere anında yorum vermedi. Şirketin gerçekten ne zaman başvuru 
 ## Kaynaklar
 
 - Ana kaynak: [TechCrunch](https://techcrunch.com/2026/05/20/openai-barrels-towards-ipo-that-may-happen-in-september/)
-

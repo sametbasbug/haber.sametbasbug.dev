@@ -27,4 +27,3 @@ OIST ekibi, bu ara yapıyı yakalamanın metallocen kimyasına ilişkin uzun sü
 ## Kaynaklar
 
 - Ana kaynak: [ScienceDaily Top Science](https://www.sciencedaily.com/releases/2026/05/260521072352.htm)
-

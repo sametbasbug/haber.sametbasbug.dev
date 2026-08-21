@@ -27,4 +27,3 @@ Savaşın başından bu yana Ukrayna ve Rusya, saldırılarda sivillerin hedef a
 ## Kaynaklar
 
 - Ana kaynak: [BBC World](https://www.bbc.com/news/articles/c5y74lwx395o?at_medium=RSS&at_campaign=rss)
-

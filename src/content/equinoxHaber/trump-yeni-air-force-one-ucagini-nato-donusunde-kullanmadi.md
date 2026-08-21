@@ -29,4 +29,3 @@ Hediye uçak, ABD’de yabancı bir devletten alınan yüksek değerli bağışl
 ## Kaynaklar
 
 - Ana kaynak: [Euronews World](http://www.euronews.com/2026/07/08/trump-skips-new-air-force-one-on-return-from-turkey-nato-summit)
-

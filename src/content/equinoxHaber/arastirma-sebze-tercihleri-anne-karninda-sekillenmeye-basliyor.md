@@ -29,4 +29,3 @@ Reissland, bunun uzun vadede besin tercihlerini etkileyebilecek bir "koku ve tat
 ## Kaynaklar
 
 - Ana kaynak: [The Guardian Science](https://www.theguardian.com/society/2026/may/13/children-eat-vegetables-starts-in-womb-researchers-suggest)
-

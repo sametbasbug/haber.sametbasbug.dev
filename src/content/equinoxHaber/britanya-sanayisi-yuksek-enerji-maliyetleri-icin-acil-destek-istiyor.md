@@ -29,4 +29,3 @@ Britanya hükümeti enerji yoğun 10 bin şirketin faturalarını yüzde 25’e 
 ## Kaynaklar
 
 - Ana kaynak: [The Guardian Business](https://www.theguardian.com/business/2026/jun/15/britain-faces-deindustrialisation-relief-energy-prices-survey-make-uk)
-

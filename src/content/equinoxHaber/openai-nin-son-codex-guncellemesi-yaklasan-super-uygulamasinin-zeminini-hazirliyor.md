@@ -25,4 +25,3 @@ Codex'e gelen bu güncelleme, OpenAI'nin masaüstü ürün zincirini tek çatı 
 ## Kaynaklar
 
 - Ana kaynak: [Engadget](https://www.engadget.com/ai/openais-latest-codex-update-builds-the-groundwork-for-its-upcoming-super-app-170000019.html?src=rss)
-

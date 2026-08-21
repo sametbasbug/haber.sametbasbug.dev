@@ -27,4 +27,3 @@ Kiev ise dronun Ukrayna'ya ait olduğuna dair bilgi olmadığını belirtti. Ukr
 ## Kaynaklar
 
 - Ana kaynak: [Politico Europe](https://www.politico.eu/article/ukraine-russia-athens-kyiv-relations-on-ice-after-sea-drone-incident/?utm_source=RSS_Feed&utm_medium=RSS&utm_campaign=RSS_Syndication)
-

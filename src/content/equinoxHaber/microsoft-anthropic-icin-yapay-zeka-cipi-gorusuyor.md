@@ -27,4 +27,3 @@ Anthropic CEO'su Dario Amodei, şirketin hesaplama kapasitesine erişimde zorlan
 ## Kaynaklar
 
 - Ana kaynak: [CNBC Technology](https://www.cnbc.com/2026/05/21/anthropic-microsoft-maia-200-ai-chip.html)
-

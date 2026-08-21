@@ -29,4 +29,3 @@ Yaptırımlar ve petrol arzındaki daralma, Küba’da yakıt, ilaç ve gıda k�
 ## Kaynaklar
 
 - Ana kaynak: [BBC World](https://www.bbc.com/news/articles/ckg8zrm20jjo?at_medium=RSS&at_campaign=rss)
-

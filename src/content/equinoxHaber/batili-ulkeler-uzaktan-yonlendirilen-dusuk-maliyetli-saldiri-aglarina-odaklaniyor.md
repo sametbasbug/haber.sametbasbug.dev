@@ -29,4 +29,3 @@ Haberde, İran bağlantılı olduğu iddia edilen bazı girişimlerde düşük m
 ## Kaynaklar
 
 - Ana kaynak: [The Guardian World](https://www.theguardian.com/world/2026/may/18/disposable-terrorists-for-hire-menace-western-countries)
-

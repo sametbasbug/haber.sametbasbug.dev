@@ -29,4 +29,3 @@ AB liderleri kararın yalnız Ukrayna’ya destek mesajı değil, genişleme pol
 ## Kaynaklar
 
 - Ana kaynak: [France 24 World](https://www.france24.com/en/europe/20260612-ukraine-s-eu-accession-bid-gains-traction-as-hungary-lifts-veto)
-

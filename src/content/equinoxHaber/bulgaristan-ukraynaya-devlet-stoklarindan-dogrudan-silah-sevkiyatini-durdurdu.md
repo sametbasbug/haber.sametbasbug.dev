@@ -29,4 +29,3 @@ Kararın Sofya’nın Avrupa içindeki güvenilirliği açısından sonuç doğu
 ## Kaynaklar
 
 - Ana kaynak: [Deutsche Welle World](https://www.dw.com/en/why-is-bulgaria-banning-arms-supplies-to-ukraine/a-77523515?maca=en-rss-en-all-1573-xml-mrss)
-

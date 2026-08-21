@@ -29,4 +29,3 @@ Dünya Sağlık Örgütü salgını uluslararası öneme sahip halk sağlığı 
 ## Kaynaklar
 
 - Ana kaynak: [Deutsche Welle World](https://www.dw.com/en/eu-g7-pledge-support-amid-drc-ebola-outbreak/a-77588901?maca=en-rss-en-all-1573-xml-mrss)
-

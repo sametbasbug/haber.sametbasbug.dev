@@ -27,4 +27,3 @@ Paket ayrıca açık kaynak girişimlerine, siber güvenlik projelerine ve enerj
 ## Kaynaklar
 
 - Ana kaynak: [Engadget](https://www.engadget.com/2186709/the-european-union-reveals-details-of-its-tech-sovereignity-package/)
-

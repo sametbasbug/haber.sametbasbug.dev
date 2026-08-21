@@ -27,4 +27,3 @@ Krishnan, bundan sonra ABD ve müttefiklerinin enerji, veri merkezleri ve yapay 
 ## Kaynaklar
 
 - Ana kaynak: [TechCrunch](https://techcrunch.com/2026/06/06/sriram-krishnan-is-leaving-his-role-as-white-house-ai-advisor/)
-
