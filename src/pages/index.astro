@@ -85,14 +85,43 @@ function escapeRegExp(value: string) {
 	return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
+/* Kalıplar MODÜL SEVİYESİNDE bir kez derleniyor.
+ *
+ * Eskiden her `hasGlobalSignal` çağrısında 23 terim için yeniden `RegExp`
+ * kuruluyordu. `\p{L}` içeren kalıpların derlenmesi pahalı ve bu fonksiyon
+ * istek başına binlerce kez çağrılıyordu. */
+const GLOBAL_SIGNAL_PATTERNS = GLOBAL_SIGNAL_TERMS.map(
+	(term) => new RegExp(`(^|[^\\p{L}\\p{N}])${escapeRegExp(term)}([^\\p{L}\\p{N}]|$)`, 'u'),
+);
+
 function hasGlobalSignal(entry: EquinoxHaberEntry) {
 	const haystack = [entry.data.title, entry.data.description, ...(entry.data.tags ?? [])]
 		.join(' ')
 		.toLocaleLowerCase('tr-TR');
-	return GLOBAL_SIGNAL_TERMS.some((term) => new RegExp(`(^|[^\\p{L}\\p{N}])${escapeRegExp(term)}([^\\p{L}\\p{N}]|$)`, 'u').test(haystack));
+	return GLOBAL_SIGNAL_PATTERNS.some((pattern) => pattern.test(haystack));
 }
 
+/* Skorlar istek başına bir kez hesaplanıyor.
+ *
+ * Sayfa beş panel kuruyor ('Tümü' ve dört kategori) ve her panel kendi
+ * listesini sıralıyordu; aynı haber böylece iki kez skorlanıyordu. Skor
+ * girdiye göre sabit olduğu için tekrar gereksiz.
+ *
+ * Önbellek İSTEK BAŞINA: skor `hoursSince` üzerinden zamana bağlı, modül
+ * seviyesinde tutulsa isolate yaşadıkça bayatlar ve haberler eskidikçe
+ * yanlış sıralanırdı. Astro frontmatter'ı her istekte baştan çalıştığı için
+ * bu Map de her istekte taze kuruluyor. */
+const signalScoreCache = new Map<string, number>();
+
 function scoreSignalEntry(entry: EquinoxHaberEntry) {
+	const cached = signalScoreCache.get(entry.id);
+	if (cached !== undefined) return cached;
+	const computed = computeSignalScore(entry);
+	signalScoreCache.set(entry.id, computed);
+	return computed;
+}
+
+function computeSignalScore(entry: EquinoxHaberEntry) {
 	const ageHours = hoursSince(entry.data.pubDate);
 	const sourceCount = entry.data.sources?.length ?? 0;
 	let score = 0;
@@ -113,11 +142,21 @@ function scoreSignalEntry(entry: EquinoxHaberEntry) {
 }
 
 function selectSideEntries(entries: EquinoxHaberEntry[], options: { diversifyCategories: boolean }) {
-	const rankedEntries = [...entries].sort((a, b) => {
-		const scoreDelta = scoreSignalEntry(b) - scoreSignalEntry(a);
-		if (scoreDelta !== 0) return scoreDelta;
-		return b.data.pubDate.valueOf() - a.data.pubDate.valueOf();
-	});
+	/* Skor SIRALAMADAN ÖNCE bir kez hesaplanıyor.
+	 *
+	 * Eskiden `scoreSignalEntry` karşılaştırma fonksiyonunun içindeydi; 587
+	 * haberlik bir dizide sıralama ~11.400 kez karşılaştırma yapıyor ve her
+	 * karşılaştırma iki skor hesaplıyordu. Skor girdiye göre sabit olduğu için
+	 * bu iş tekrar tekrar yapılıyordu. Sıra değişmiyor: aynı skorlar, aynı
+	 * eşitlik bozma kuralı, sıralama da kararlı. */
+	const rankedEntries = entries
+		.map((entry) => ({ entry, score: scoreSignalEntry(entry) }))
+		.sort((a, b) => {
+			const scoreDelta = b.score - a.score;
+			if (scoreDelta !== 0) return scoreDelta;
+			return b.entry.data.pubDate.valueOf() - a.entry.data.pubDate.valueOf();
+		})
+		.map((ranked) => ranked.entry);
 
 	if (!options.diversifyCategories) return rankedEntries.slice(0, SIDE_SLOT_COUNT);
 
