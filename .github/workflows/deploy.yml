@@ -1,4 +1,4 @@
-name: Deploy Haber to GitHub Pages
+name: Deploy Haber to Cloudflare
 
 on:
   push:
@@ -7,32 +7,131 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
+
+# İki dağıtım aynı anda koşmamalı: ikisi de aynı Worker'a ve aynı D1'e
+# yazıyor. `cancel-in-progress` yok — yarıda kesilen bir göç uygulaması,
+# şemayı iki sürüm arasında bırakabilir.
+concurrency:
+  group: haber-production
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: production
+      url: https://haber.sametbasbug.dev
+
     steps:
       - name: Checkout
         uses: actions/checkout@v7
-      - name: Install, build, and upload site
-        uses: withastro/action@v6
+
+      - name: Set up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Statik derleme dağıtılmıyor ama koşuluyor: iki config aynı `src/`
+      # ağacını paylaşıyor ve yalnız birinde patlayan değişiklikler oluyor.
+      - name: Build the static site as a cross-check
         env:
           PUBLIC_SITE_URL: https://haber.sametbasbug.dev
           PUBLIC_NEWS_SITE_URL: https://haber.sametbasbug.dev
           PUBLIC_MAIN_SITE_URL: https://sametbasbug.dev
           PUBLIC_NEWS_SUBDOMAIN_ENABLED: 'true'
-        with:
-          node-version: 24
+        run: npm run build
 
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v5
+      - name: Build the Worker
+        env:
+          PUBLIC_SITE_URL: https://haber.sametbasbug.dev
+          PUBLIC_NEWS_SITE_URL: https://haber.sametbasbug.dev
+          PUBLIC_MAIN_SITE_URL: https://sametbasbug.dev
+          PUBLIC_NEWS_SUBDOMAIN_ENABLED: 'true'
+        run: npm run build:ssr
+
+      - name: Apply D1 migrations
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: npx wrangler d1 migrations apply DB --remote --config wrangler.ssr.jsonc
+
+      - name: Deploy the Worker
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          short_sha="${GITHUB_SHA::12}"
+          npx wrangler deploy \
+            --config wrangler.ssr.jsonc \
+            --message "Automatic deploy from main ${short_sha}"
+
+      # Bu adım bu deponun geçmişinden geliyor ve tek 200 kontrolü DEĞİL.
+      #
+      # 2026-08-21'de site Error 1102 ile kapandı: ana sayfa istek başına
+      # 612 ms CPU harcıyordu, ücretsiz planın sınırı 10 ms. O sürüm sorunsuz
+      # DERLENİYORDU. Yani derlemenin yeşili, sitenin ayakta olduğunu
+      # söylemiyor — kusur yalnız çalışma anında görünüyordu.
+      #
+      # Ana sayfaya arka arkaya istek atılıyor ve HERHANGİ biri 200 dışında
+      # dönerse dağıtım düşüyor. `--retry` bilerek yok: tekrar denemek, geçici
+      # olmayan bir CPU aşımını geçiciymiş gibi gösterirdi.
+      - name: Verify the live site
+        run: |
+          fail=0
+          for i in $(seq 1 8); do
+            code="$(curl --silent --output /dev/null --write-out '%{http_code}' \
+              "https://haber.sametbasbug.dev/?cachebust=${GITHUB_SHA}-${i}")"
+            echo "ana sayfa #${i}: ${code}"
+            [[ "$code" == '200' ]] || fail=1
+          done
+
+          # `/sayfa/2/` sayfalanmış listeyi, `/hakkimizda/` statik sayfayı
+          # kapsıyor. Arşiv kökü (`/arsiv/`) BİLEREK yok: canlıda 404 dönüyor,
+          # yani listeye konsaydı her dağıtımı düşürürdü.
+          for path in /rss.xml /sayfa/2/ /hakkimizda/; do
+            code="$(curl --silent --output /dev/null --write-out '%{http_code}' \
+              "https://haber.sametbasbug.dev${path}")"
+            echo "${path}: ${code}"
+            [[ "$code" == '200' ]] || fail=1
+          done
+
+          # Bir haber sayfası. Slug sabit yazılmıyor: haberler birleştirilebilir
+          # veya kaldırılabilir ve sabit bir slug, içerik değiştiği gün
+          # dağıtımı bozardı. En yeni haberin adresi RSS'ten okunuyor.
+          article="$(curl --silent https://haber.sametbasbug.dev/rss.xml \
+            | sed -n 's|.*<link>\(https://haber\.sametbasbug\.dev/[^<]*/\)</link>.*|\1|p' \
+            | head -1)"
+          if [[ -z "$article" ]]; then
+            echo 'RSS içinden bir haber adresi çıkarılamadı.' >&2
+            fail=1
+          else
+            code="$(curl --silent --output /dev/null --write-out '%{http_code}' "$article")"
+            echo "haber (${article}): ${code}"
+            [[ "$code" == '200' ]] || fail=1
+          fi
+
+          headers="$(mktemp)"
+          trap 'rm -f "$headers"' EXIT
+          curl --silent --output /dev/null --dump-header "$headers" \
+            https://haber.sametbasbug.dev/
+
+          # Cloudflare'den mi geliyor? `cf-ray` yoksa istek Worker'a hiç
+          # ulaşmamıştır.
+          grep -qi '^cf-ray:' "$headers" || { echo 'cf-ray yok: istek Cloudflare üzerinden gelmedi.' >&2; fail=1; }
+
+          # Pages'e düşme kontrolü. Pages dağıtımı bu commit'te kaldırıldı ama
+          # alan adı üzerindeki eski iddia bir gün geri gelirse, sessizce eski
+          # bir kopyayı sunmaya başlar. O durumu hata sayıyoruz.
+          if grep -qi '^server: GitHub.com' "$headers"; then
+            echo 'Site beklenmedik biçimde GitHub Pages üzerinden çözüldü.' >&2
+            fail=1
+          fi
+
+          exit "$fail"

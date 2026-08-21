@@ -16,6 +16,8 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
+    "build:ssr": "astro build --config astro.config.ssr.mjs",
+    "deploy": "wrangler deploy --config wrangler.ssr.jsonc",
     "preview": "astro preview",
     "astro": "astro",
     "ozet:new": "node scripts/new-gunluk-ozet.mjs",
@@ -36,7 +38,8 @@
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
     "@astrojs/cloudflare": "^14.2.3",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "wrangler": "4.125.0"
   },
   "overrides": {
     "volar-service-yaml": "^0.0.71",
