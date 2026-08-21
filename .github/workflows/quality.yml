@@ -44,20 +44,16 @@ jobs:
       - name: Install Node dependencies
         run: npm ci
 
-      # `worker-configuration.d.ts` üretilmiş bir dosya ama depoda duruyor:
-      # tür kontrolü onsuz `D1Database`, `R2Bucket` ve `ExportedHandler`ı
-      # bulamıyor. Depodaki kopya `wrangler.ssr.jsonc` değiştiğinde sessizce
-      # bayatlayabilir; bu adım yeniden üretip fark varsa düşüyor.
-      - name: Check the generated Worker types are current
-        run: |
-          cp worker-configuration.d.ts /tmp/worker-types-committed.d.ts
-          npm run types:gen
-          diff --unified /tmp/worker-types-committed.d.ts worker-configuration.d.ts \
-            || { echo 'worker-configuration.d.ts bayat: `npm run types:gen` çalıştırıp commit edin.' >&2; exit 1; }
-
       # Tür kontrolü 2026-08-21'e kadar HİÇ koşmuyordu: tsconfig'deki
       # deprecated `baseUrl` TS 6'da hata verip tsc'yi daha başlamadan
-      # düşürüyordu. Kaldırıldığında 14 gerçek hata çıktı.
+      # düşürüyordu. Kaldırıldığında 14 gerçek hata çıktı; onikisi Worker
+      # tiplerinin (`D1Database`, `R2Bucket`, `ExportedHandler`) hiç tanımlı
+      # olmamasındandı.
+      #
+      # O tipleri `wrangler types` üretiyor ve `npm run typecheck` her koşuda
+      # yeniden üretiyor — dosya depoda TUTULMUYOR. Bir kez commit'lemeyi
+      # denedim ve CI düştü: üretilen içerik `.dev.vars`, `.env` ve `dist-ssr`
+      # varlığına göre değişiyor, yani "güncel kopya" diye bir şey yok.
       - name: Typecheck
         run: npm run typecheck
 

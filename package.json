@@ -18,7 +18,7 @@
     "build": "astro build",
     "build:ssr": "astro build --config astro.config.ssr.mjs",
     "deploy": "wrangler deploy --config wrangler.ssr.jsonc",
-    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "typecheck": "npm run types:gen && tsc --noEmit -p tsconfig.json",
     "types:gen": "wrangler types --config wrangler.ssr.jsonc",
     "preview": "astro preview",
     "astro": "astro",
