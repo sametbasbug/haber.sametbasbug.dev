@@ -47,3 +47,4 @@ dist-ssr/
 
 # yerel geliştirme sırları
 .dev.vars
+dist-serve/
