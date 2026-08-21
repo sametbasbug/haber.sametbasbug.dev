@@ -18,6 +18,8 @@
     "build": "astro build",
     "build:ssr": "astro build --config astro.config.ssr.mjs",
     "deploy": "wrangler deploy --config wrangler.ssr.jsonc",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "types:gen": "wrangler types --config wrangler.ssr.jsonc",
     "preview": "astro preview",
     "astro": "astro",
     "ozet:new": "node scripts/new-gunluk-ozet.mjs",
@@ -27,7 +29,7 @@
     "haber:ayna": "node scripts/haber-ayna.mjs",
     "haber:ayna:kuru": "node scripts/haber-ayna.mjs --kuru",
     "test:newsroom": "newsroom/.venv/bin/python -m pytest newsroom/tests",
-    "quality": "npm run test:newsroom && npm run build"
+    "quality": "npm run test:newsroom && npm run typecheck && npm run build"
   },
   "dependencies": {
     "@astrojs/markdown-remark": "^7.2.4",

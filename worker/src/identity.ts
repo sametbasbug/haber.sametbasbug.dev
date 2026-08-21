@@ -64,7 +64,12 @@ const JWKS_TTL_MS = 10 * 60 * 1000;
 interface JwksCache { keys: Map<string, CryptoKey>; fetchedAt: number; }
 let jwksCache: JwksCache | null = null;
 
-function base64UrlToBytes(value: string): Uint8Array {
+/* Dönüş türü `Uint8Array<ArrayBuffer>`, çıplak `Uint8Array` değil. Çıplak
+ * biçim `Uint8Array<ArrayBufferLike>`e denk ve o, paylaşımlı belleği
+ * (`SharedArrayBuffer`) de kapsıyor; `crypto.subtle.verify` ise yalnız
+ * `ArrayBuffer` tabanlı bir görünüm kabul ediyor. `new Uint8Array(n)` zaten
+ * ArrayBuffer üretiyor, yani burada daraltılan şey gerçeklik değil beyan. */
+function base64UrlToBytes(value: string): Uint8Array<ArrayBuffer> {
   const base64 = value.replaceAll("-", "+").replaceAll("_", "/");
   const padded = base64.padEnd(Math.ceil(base64.length / 4) * 4, "=");
   const binary = atob(padded);

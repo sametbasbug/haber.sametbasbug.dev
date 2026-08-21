@@ -23,6 +23,7 @@ function yayinUclari() {
   return {
     name: 'haber-yayin-uclari',
     hooks: {
+      /** @param {{ injectRoute: (route: { pattern: string, entrypoint: string }) => void }} ctx */
       'astro:config:setup': ({ injectRoute }) => {
         injectRoute({ pattern: '/api/brief', entrypoint: './src/server/routes/brief.ts' });
         injectRoute({ pattern: '/api/publish', entrypoint: './src/server/routes/publish.ts' });

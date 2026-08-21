@@ -9,13 +9,17 @@
     "dist-ssr"
   ],
   "compilerOptions": {
-    "baseUrl": ".",
+    // `baseUrl` YOK ve olmamalı: TypeScript 5'ten beri `paths` ona bağlı
+    // değil, değerler tsconfig'in bulunduğu dizine göre çözülüyor. TS 6'da
+    // `baseUrl` doğrudan hata veriyordu ve `tsc --noEmit` hiç koşmuyordu —
+    // yani tür kontrolünün tamamı kapalıydı. Aynı satır TS 7 geçişinin de
+    // engeliydi.
     "paths": {
       "#runtime-env": [
-        "src/data/runtimeEnv.ts"
+        "./src/data/runtimeEnv.ts"
       ],
       "#news-source": [
-        "src/data/newsSource.ts"
+        "./src/data/newsSource.ts"
       ]
     }
   }
