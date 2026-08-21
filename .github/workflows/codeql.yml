@@ -1,0 +1,73 @@
+name: CodeQL
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  # Haftalık tarama. Kod değişmese de kural veritabanı değişiyor: bugün temiz
+  # görünen bir kalıp, yarın yayımlanan bir kuralla bulgu hâline gelebilir.
+  # Bu yüzden tetikleyici yalnız push olamaz.
+  schedule:
+    - cron: '19 4 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  analyze:
+    name: Analyze (${{ matrix.language }})
+    runs-on: ubuntu-latest
+
+    permissions:
+      # Bulguları Security sekmesine yazmak için gerekli olan tek yazma izni.
+      security-events: write
+      # `actions` dili iş akışı dosyalarını okuyor.
+      actions: read
+      contents: read
+
+    strategy:
+      # Bir dil düşerse diğerinin sonucu yine de yüklensin. Aksi hâlde Python
+      # tarafındaki bir hata, JavaScript bulgularını da görünmez yapardı.
+      fail-fast: false
+      matrix:
+        include:
+          # DİKKAT: CodeQL'in JavaScript çıkarıcısı `.astro` dosyalarını
+          # okumuyor. Bu depoda Astro en büyük kaynak yüzeyi, yani bu tarama
+          # `src/pages` ve `src/layouts` içindeki sayfa mantığını KAPSAMAZ.
+          # Kapsanan yer `.ts` ve `.mjs`: Worker (`worker/src`), middleware ve
+          # `scripts/`. İlk koşumun günlüğünde çıkarılan dosya sayısı görünür;
+          # kapsamı oradan doğrulayın, buradaki cümleye güvenmeyin.
+          - language: javascript-typescript
+            build-mode: none
+          - language: python
+            build-mode: none
+          # İş akışlarının kendisi. Bu depoda deploy iş akışı Cloudflare ve
+          # Pages kimlikleriyle çalışıyor; izin genişlemesi ve güvenilmeyen
+          # girdi kalıpları burada yakalanıyor.
+          - language: actions
+            build-mode: none
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.build-mode }}
+          # Varsayılan takımın üstüne güvenlik odaklı ek sorgular. Daha çok
+          # bulgu üretir. Kendiliğinden sönmeyen gürültü çıkarsa bu satır
+          # silinir ve varsayılan takıma dönülür — kalıcı kırmızı, gerçekten
+          # acil olanı da görünmez yapar.
+          queries: security-extended
+
+      - name: Perform CodeQL analysis
+        uses: github/codeql-action/analyze@v4
+        with:
+          category: /language:${{ matrix.language }}
