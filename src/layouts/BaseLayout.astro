@@ -98,9 +98,43 @@ const fullTitle = title === publicationName ? publicationName : `${publicationNa
 		<meta name="twitter:image" content={ogImageURL} />
 		<meta name="twitter:image:alt" content={ogImageAltText} />
 
-		<link rel="preconnect" href="https://fonts.googleapis.com">
-		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-		<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+		<!-- Inter kendi sunucumuzdan.
+		     Google Fonts'tan gelirken sayfa ilk saniyede gözle görülür biçimde
+		     yeniden diziliyordu: metin önce yedek yazı tipiyle (Windows'ta
+		     Arial) çiziliyor, font sonradan gelince satır sayıları değişip
+		     kartlar kısalıyordu. Ölçüldü: 275 ms'de kayma, yan kartlar
+		     234 px'den 215 px'e iniyordu.
+
+		     Türkçe bunu iki katına çıkarıyordu: `ı` `latin` alt kümesinde ama
+		     `ğ ş İ Ğ Ş` `latin-ext`'te, yani tek bir başlık iki ayrı dosyaya
+		     bağlıydı ve ikisi ayrı anlarda geliyordu.
+
+		     Inter değişken bir font; üç ağırlık (400/600/800) tek dosyadan
+		     geliyor, bu yüzden toplam iki dosya yetiyor. İkisi de `preload`
+		     ile HTML'le birlikte isteniyor. `font-display: optional`: font ilk
+		     boyamaya yetişemezse o yüklemede HİÇ kullanılmıyor, yani kayma
+		     olamaz; önbelleğe girdiği için sonraki ziyaretlerde anında
+		     görünüyor. -->
+		<link rel="preload" href="/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
+		<link rel="preload" href="/fonts/inter-latin-ext.woff2" as="font" type="font/woff2" crossorigin>
+		<style is:inline>
+			@font-face {
+				font-family: 'Inter';
+				font-style: normal;
+				font-weight: 100 900;
+				font-display: optional;
+				src: url('/fonts/inter-latin-ext.woff2') format('woff2');
+				unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+			}
+			@font-face {
+				font-family: 'Inter';
+				font-style: normal;
+				font-weight: 100 900;
+				font-display: optional;
+				src: url('/fonts/inter-latin.woff2') format('woff2');
+				unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+			}
+		</style>
 
 		<!-- FOUC engeli: tema ilk paint'ten önce uygulanır -->
 		<script is:inline>
