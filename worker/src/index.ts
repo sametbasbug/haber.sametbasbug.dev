@@ -92,7 +92,17 @@ export function slugify(title: string): string {
     .join("")
     .toLowerCase();
 
-  let slug = mapped.replace(/[^a-z0-9]+/gu, "-").replace(/^-+|-+$/gu, "");
+  /* İkinci kalıpta `-+` değil `-` var ve bu bilinçli.
+   *
+   * İlk `replace` alfanümerik olmayan her DİZİYİ tek bir tireye indiriyor,
+   * yani çıktısında ardışık tire bulunması imkânsız. `-+$` yazmak, hiç
+   * oluşamayacak bir diziyi geri izlemeyle aramak demek: CodeQL bunu
+   * polinom ReDoS olarak işaretliyor (js/polynomial-redos) ve kalıp olarak
+   * haklı, yalnız buradaki girdiyle erişilemiyor.
+   *
+   * Tek tire yazmak hem denk hem geri izlemesiz. Ama denklik ilk `replace`'in
+   * daraltmasına DAYANIYOR: o kaldırılırsa burası da bozulur. */
+  let slug = mapped.replace(/[^a-z0-9]+/gu, "-").replace(/^-|-$/gu, "");
 
   if (slug.length > MAX_SLUG_LENGTH) {
     const cut = slug.slice(0, MAX_SLUG_LENGTH);

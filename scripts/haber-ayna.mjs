@@ -25,7 +25,7 @@
  * aksi halde ayrı veritabanlarına bakıyor.
  */
 import { execFileSync } from "node:child_process";
-import { readFileSync, writeFileSync, readdirSync, unlinkSync, existsSync } from "node:fs";
+import { readFileSync, writeFileSync, readdirSync, unlinkSync } from "node:fs";
 import { join } from "node:path";
 
 const ARGS = process.argv.slice(2);
@@ -115,7 +115,16 @@ for (const a of makaleler) {
   const yol = join(DIZIN, `${a.slug}.md`);
   beklenen.add(`${a.slug}.md`);
   const yeni = markdownUret(a, etiketler.get(a.slug) ?? [], kaynaklar.get(a.slug) ?? []);
-  const eski = existsSync(yol) ? readFileSync(yol, "utf-8") : null;
+  /* Önce `existsSync` sorup sonra okumak iki ayrı sistem çağrısı: arada
+   * dosya kaybolursa okuma patlar. Doğrudan okuyup ENOENT'i yokluk sayıyoruz
+   * — tek çağrı, yarış yok (js/file-system-race). Diğer hatalar yutulmuyor:
+   * izin hatasını "dosya yok" saymak, arşivi sessizce yeniden yazdırırdı. */
+  let eski = null;
+  try {
+    eski = readFileSync(yol, "utf-8");
+  } catch (hata) {
+    if (hata.code !== "ENOENT") throw hata;
+  }
   if (eski === yeni) { degismeyen++; continue; }
   if (eski !== null && eski.trimEnd() === yeni.trimEnd()) sadeceSonBosluk++;
   else if (eski !== null) { farkliIcerik++; if (farkliIcerik <= 5) console.log(`  İÇERİK FARKI: ${a.slug}`); }

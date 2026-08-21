@@ -11,7 +11,20 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
-const BASE = process.argv[2] ?? "http://localhost:8790";
+/* Bu araç yerel test verisini — yayın külliyatı ve üretilmiş görseller — gövdeye koyup BASE'e gönderiyor.
+ * BASE komut satırından geliyor ve varsayılanı düz `http`. Yanlış bir adres
+ * verilirse test verisi şifresiz olarak oraya gider (js/file-access-to-http).
+ * Bu yüzden hedef ya yereldir ya da `https` olmak zorunda. */
+function hedefiDogrula(base) {
+  const url = new URL(base);
+  const yerel = ["localhost", "127.0.0.1", "[::1]", "::1"].includes(url.hostname);
+  if (!yerel && url.protocol !== "https:") {
+    throw new Error(`Yerel olmayan hedefe düz http ile gidilmez: ${base}`);
+  }
+  return base;
+}
+
+const BASE = hedefiDogrula(process.argv[2] ?? "http://localhost:8790");
 const TOKEN = process.env.DEV_PUBLISH_TOKEN ?? "yerel-gelistirme-tokeni-degistirilecek";
 const ROOT = fileURLToPath(new URL("../..", import.meta.url));
 

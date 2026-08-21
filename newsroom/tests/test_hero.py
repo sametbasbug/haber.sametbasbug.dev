@@ -142,7 +142,10 @@ class TestPexels:
 
         class Client:
             def get(self, url, **kwargs):
-                if "api.pexels.com" in url:
+                # `in` yerine `startswith`: alt dize kontrolü
+                # "https://kotu.example/?x=api.pexels.com" adresini de
+                # Pexels sanardı (py/incomplete-url-substring-sanitization).
+                if url.startswith("https://api.pexels.com/"):
                     return Response(payload={"photos": photos})
                 return Response(content=image)
 
