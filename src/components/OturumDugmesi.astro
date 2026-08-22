@@ -33,8 +33,6 @@ if (veritabani) {
 
 /* Girişten sonra aynı sayfaya dönülüyor. */
 const donus = Astro.url.pathname + Astro.url.search;
----
-
 
 /* `data-astro-reload` KALDIRILAMAZ.
  *
@@ -49,6 +47,9 @@ const donus = Astro.url.pathname + Astro.url.search;
  *
  * Bu öznitelik yönlendiriciye "bu gönderime karışma" diyor: tarayıcı kendi
  * navigasyonunu yapıyor, 303 normal şekilde izleniyor. */
+---
+
+
 {okuyucu && (
 	<form class="oturum" method="POST" action="/cikis" data-astro-reload>
 		<span class="oturum-ad" title={okuyucu.displayName ?? 'Orbit hesabı'}>
