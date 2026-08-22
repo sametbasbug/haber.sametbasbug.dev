@@ -50,6 +50,12 @@ const MAX_HERO_BASE64_BYTES = 1_400_000;
 export interface Env extends AuthEnv {
   DB: D1Database;
   HERO: R2Bucket;
+  /* Orbit ile giriş. `ORBIT_ISSUER` `AuthEnv`ten geliyor ve iki işi birden
+   * yapıyor: tanımlıysa hem yayın ucu Orbit token'ı kabul eder hem de giriş
+   * akışı açılır. Üçü de yoksa giriş düğmesi hiç görünmüyor — yarım
+   * yapılandırılmış bir kapı, kapalı bir kapıdan kötüdür. */
+  ORBIT_CLIENT_ID?: string;
+  ORBIT_CLIENT_SECRET?: string;
 }
 
 function json(body: unknown, status = 200): Response {

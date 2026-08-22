@@ -25,6 +25,12 @@ function yayinUclari() {
     hooks: {
       /** @param {{ injectRoute: (route: { pattern: string, entrypoint: string }) => void }} ctx */
       'astro:config:setup': ({ injectRoute }) => {
+        /* Orbit ile giriş. Üçü de yalnız sunucu modunda var: statik
+           derlemede oturum diye bir şey yok. */
+        injectRoute({ pattern: '/giris/orbit', entrypoint: './src/server/routes/giris.ts' });
+        injectRoute({ pattern: '/giris/orbit/donus', entrypoint: './src/server/routes/giris-donus.ts' });
+        injectRoute({ pattern: '/cikis', entrypoint: './src/server/routes/cikis.ts' });
+
         injectRoute({ pattern: '/api/brief', entrypoint: './src/server/routes/brief.ts' });
         injectRoute({ pattern: '/api/publish', entrypoint: './src/server/routes/publish.ts' });
         injectRoute({ pattern: '/images/generated/[...path]', entrypoint: './src/server/routes/hero.ts' });

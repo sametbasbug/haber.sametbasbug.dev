@@ -1,5 +1,6 @@
 import type { MiddlewareHandler } from 'astro';
 import { getDatabase } from '#runtime-env';
+import { oturumCereziVarMi } from './server/session';
 
 /* Kenar önbelleği.
  *
@@ -60,13 +61,17 @@ const BIRLESTIRILEN: Record<string, string> = {
 		'google-mac-icin-gemini-uygulamasini-kullanima-acti',
 };
 
+/* Giriş akışının adresleri. Önbelleğe hiç girmiyorlar. */
+const GIRIS_YOLLARI = ['/giris/', '/cikis'];
+
 const TTL_SECONDS = 60;
 const STALE_SECONDS = 300;
 
 export const onRequest: MiddlewareHandler = async (context, next) => {
 	/* Yönlendirme önbellekten önce: kaldırılan adresin eski bir kopyası
 	   önbellekte kalmış olsa bile eşine gitmeli. */
-	const yol = new URL(context.request.url).pathname.replace(/^\/+|\/+$/g, '');
+	const yolAdi = new URL(context.request.url).pathname;
+	const yol = yolAdi.replace(/^\/+|\/+$/g, '');
 	const hedef = BIRLESTIRILEN[yol];
 	if (hedef) return context.redirect(`/${hedef}/`, 301);
 
@@ -76,6 +81,35 @@ export const onRequest: MiddlewareHandler = async (context, next) => {
 	   isteği ikinci kez gönderildiğinde gerçekte hiç çalışmadan "başarılı"
 	   cevabı dönerdi. */
 	if (!cache || context.request.method !== 'GET') return next();
+
+	/* GİRİŞ YAPMIŞ İSTEK ÖNBELLEĞE HİÇ UĞRAMAZ.
+	 *
+	 * Önbellek anahtarı adres + içerik sürümünden ibaret; çereze göre
+	 * DEĞİŞMİYOR. Kişiye özel bir cevap bir kez oraya girse, aynı adresi
+	 * isteyen herkese o cevap dönerdi — bir kullanıcının adı başkasının
+	 * ekranında görünürdü.
+	 *
+	 * "Kişisel sayfaları listeleyip onları atla" diye çözmedim: liste eksik
+	 * kaldığı gün sızıntı sessizce başlar. Kural tersine kuruluyor — oturum
+	 * çerezi taşıyan HER istek önbelleği baştan sona atlıyor ve cevabı
+	 * hiçbir paylaşımlı önbelleğe koydurmuyor.
+	 *
+	 * Bedeli: giriş yapmış kullanıcı her sayfada D1'e gidiyor. Kabul
+	 * edilebilir — giriş yapmış kullanıcı azdır ve doğru cevap ucuz cevaptan
+	 * önce gelir. */
+	if (oturumCereziVarMi(context.request)) {
+		const kisisel = await next();
+		kisisel.headers.set('cache-control', 'private, no-store');
+		return kisisel;
+	}
+
+	/* Giriş akışının adresleri: çerez henüz yokken de önbelleğe girmemeliler.
+	   `/giris/orbit/donus` tek kullanımlık bir kod taşıyor. */
+	if (GIRIS_YOLLARI.some((yol) => yolAdi.startsWith(yol))) {
+		const akis = await next();
+		akis.headers.set('cache-control', 'private, no-store');
+		return akis;
+	}
 
 	const version = await contentVersion();
 	const key = versionedKey(context.request, version);

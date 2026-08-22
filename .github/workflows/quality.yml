@@ -44,6 +44,13 @@ jobs:
       - name: Install Node dependencies
         run: npm ci
 
+      # Orbit kimlik katmanı: ID token doğrulaması (gerçek ES256 kriptosuyla)
+      # ve giriş akışının reddetme kararları. `orbit-token-tests.mjs` yazıldığı
+      # günden beri VARDI ama hiçbir yerden koşulmuyordu — koşulmayan test,
+      # test değil belgedir.
+      - name: Orbit identity tests
+        run: npm run test:orbit
+
       # Tür kontrolü 2026-08-21'e kadar HİÇ koşmuyordu: tsconfig'deki
       # deprecated `baseUrl` TS 6'da hata verip tsc'yi daha başlamadan
       # düşürüyordu. Kaldırıldığında 14 gerçek hata çıktı; onikisi Worker
