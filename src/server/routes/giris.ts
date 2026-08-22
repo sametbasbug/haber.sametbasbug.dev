@@ -69,3 +69,14 @@ export const POST: APIRoute = async ({ request }) => {
     },
   });
 };
+
+/* GET bilerek desteklenmiyor (yukarıdaki gerekçe), ama 404 yerine 405
+ * dönüyor: 404 "böyle bir sayfa yok" demek ve bu bir kez teşhisi saatlerce
+ * yanlış yöne çekti — rota canlıda çalışıyorken istemci yönlendiricisi
+ * gönderimi GET'e düşürmüştü. 405 doğru cümleyi kuruyor: adres var, yöntem
+ * yanlış. */
+export const GET: APIRoute = () =>
+  new Response('Bu adres yalnız POST kabul ediyor; girişi sayfadaki düğmeden başlat.', {
+    status: 405,
+    headers: { allow: 'POST', 'cache-control': 'no-store' },
+  });

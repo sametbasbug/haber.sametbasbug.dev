@@ -35,8 +35,22 @@ if (veritabani) {
 const donus = Astro.url.pathname + Astro.url.search;
 ---
 
+
+/* `data-astro-reload` KALDIRILAMAZ.
+ *
+ * `BaseLayout` bir `ClientRouter` (Astro view transitions) kuruyor ve o
+ * yönlendirici sayfadaki form gönderimlerini kendi `fetch`'ine alıyor.
+ * Buradaki iki form da cevabı sayfaya basılacak bir HTML değil, BAŞKA BİR
+ * KAYNAĞA giden 303 yönlendirmesi döndürüyor. İstemci yönlendiricisi
+ * cross-origin yönlendirmeyi taşıyamıyor ve gönderimi aynı adrese GET
+ * olarak düşürüyor; `/giris/orbit` yalnız POST tanıdığı için ziyaretçi
+ * 404 görüyor. Sunucu tarafı bu sırada tamamen doğru çalışıyordu — curl
+ * ile 303 ölçülüyordu, tarayıcıda 404 çıkıyordu.
+ *
+ * Bu öznitelik yönlendiriciye "bu gönderime karışma" diyor: tarayıcı kendi
+ * navigasyonunu yapıyor, 303 normal şekilde izleniyor. */
 {okuyucu && (
-	<form class="oturum" method="POST" action="/cikis">
+	<form class="oturum" method="POST" action="/cikis" data-astro-reload>
 		<span class="oturum-ad" title={okuyucu.displayName ?? 'Orbit hesabı'}>
 			{okuyucu.displayName ?? 'Hesabım'}
 		</span>
@@ -44,7 +58,7 @@ const donus = Astro.url.pathname + Astro.url.search;
 	</form>
 )}
 {!okuyucu && girisAcik && (
-	<form class="oturum" method="POST" action="/giris/orbit">
+	<form class="oturum" method="POST" action="/giris/orbit" data-astro-reload>
 		<input type="hidden" name="donus" value={donus} />
 		<button type="submit" class="oturum-dugme">Orbit ile giriş</button>
 	</form>
