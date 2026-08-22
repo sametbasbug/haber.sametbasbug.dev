@@ -292,8 +292,14 @@ skip themselves when it is absent.
 ## Development commands
 
 ```bash
-# Run the Astro dev server
+# Run the Astro dev server (static preview, no Worker bindings)
 npm run dev
+
+# Run the deployed Worker locally, with D1/R2 bindings and server routes.
+# This also applies pending migrations to the LOCAL database — skipping that
+# step leaves the local D1 empty and every page fails with
+# "no such table: site_state".
+npm run dev:ssr
 
 # Build the static site
 npm run build

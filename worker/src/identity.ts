@@ -246,7 +246,18 @@ export async function authenticate(request: Request, env: AuthEnv): Promise<Auth
     };
   }
 
-  if (env.ORBIT_ISSUER && env.ORBIT_AUDIENCE) {
+  /* Kapı `ORBIT_ISSUER`: tanımlıysa bu bloktan CANLI ÇIKIŞ YOK, yani aşağıdaki
+   * yerel geliştirme dalına düşmek imkânsız. Koşul önceden
+   * `ORBIT_ISSUER && ORBIT_AUDIENCE` idi ve üretimde tam olarak bu boşluk
+   * açıktı: `ORBIT_ISSUER` tanımlı, `ORBIT_AUDIENCE` tanımlı değil, dolayısıyla
+   * blok atlanıp dev dalına düşülüyordu. `DEV_PUBLISH_TOKEN` tanımlı olmadığı
+   * için sonuç 401'di — ama yukarıdaki yorumun verdiği "Orbit tanımlanır
+   * tanımlanmaz dev yolu kapanır" garantisi yürürlükte değildi. Eksik ayar
+   * artık sessizce başka bir yola sapmıyor, 503 ile duruyor. */
+  if (env.ORBIT_ISSUER) {
+    if (!env.ORBIT_AUDIENCE) {
+      return { ok: false, status: 503, error: "Orbit yapılandırması eksik: ORBIT_AUDIENCE tanımlı değil" };
+    }
     const verified = await verifyOrbitToken(token, env.ORBIT_ISSUER, env.ORBIT_AUDIENCE);
     if ("error" in verified) return { ok: false, ...verified };
 
@@ -273,9 +284,10 @@ export async function authenticate(request: Request, env: AuthEnv): Promise<Auth
     };
   }
 
-  /* Orbit yapılandırılmamış: yalnız yerel geliştirme yolu. Bu dal üretimde
-   * çalışmamalı ve `ORBIT_ISSUER` tanımlanır tanımlanmaz kendiliğinden
-   * devre dışı kalır — unutulup açık kalabilecek ayrı bir bayrak yok. */
+  /* Orbit yapılandırılmamış: yalnız yerel geliştirme yolu. Buraya ancak
+   * `ORBIT_ISSUER` HİÇ tanımlı değilken gelinir — yukarıdaki blok tanımlıysa
+   * her durumda kendi içinde sonuçlanıyor. Unutulup açık kalabilecek ayrı bir
+   * bayrak yok. */
   if (env.DEV_PUBLISH_TOKEN && timingSafeEqual(token, env.DEV_PUBLISH_TOKEN)) {
     return {
       ok: true,

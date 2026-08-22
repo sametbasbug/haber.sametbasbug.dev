@@ -15,6 +15,8 @@
   },
   "scripts": {
     "dev": "astro dev",
+    "dev:ssr": "npm run build:ssr && npm run dev:db && wrangler dev --config wrangler.ssr.jsonc",
+    "dev:db": "wrangler d1 migrations apply haber --local --config wrangler.ssr.jsonc",
     "build": "astro build",
     "build:ssr": "astro build --config astro.config.ssr.mjs",
     "deploy": "wrangler deploy --config wrangler.ssr.jsonc",
@@ -29,7 +31,7 @@
     "haber:ayna": "node scripts/haber-ayna.mjs",
     "haber:ayna:kuru": "node scripts/haber-ayna.mjs --kuru",
     "test:newsroom": "newsroom/.venv/bin/python -m pytest newsroom/tests",
-    "test:orbit": "node worker/tools/orbit-token-tests.mjs && node worker/tools/orbit-giris-tests.mjs",
+    "test:orbit": "node worker/tools/orbit-token-tests.mjs && node worker/tools/orbit-giris-tests.mjs && node worker/tools/identity-tests.mjs",
     "quality": "npm run test:newsroom && npm run test:orbit && npm run typecheck && npm run build"
   },
   "dependencies": {
