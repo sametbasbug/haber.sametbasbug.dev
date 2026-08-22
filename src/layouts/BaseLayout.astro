@@ -1,8 +1,6 @@
 ---
 import { ClientRouter } from 'astro:transitions';
 import { getMainSiteUrl } from '../data/newsSite';
-import { getDatabase, getWorkerEnv } from '#runtime-env';
-import { oturumCereziVarMi, oturumOku } from '../server/session';
 interface Props {
 	title: string;
 	description: string;
@@ -16,35 +14,6 @@ interface Props {
 	shellLayout?: boolean;
 	hideHeader?: boolean;
 }
-
-/* Oturum durumu.
- *
- * Sıra bilinçli ve ucuzdan pahalıya: veritabanı yoksa (statik derleme) hiç
- * sorulmuyor; çerez yoksa D1'e HİÇ gidilmiyor. Yani giriş yapmamış ziyaretçi
- * — yani ziyaretçilerin çoğu — bu blok yüzünden tek satır bile okumuyor.
- *
- * Giriş yapmış istekler ara katmanda önbelleği zaten atlıyor; oradaki kural
- * olmasaydı burada okunan ad başkasının ekranına önbelleklenebilirdi.
- */
-const veritabani = getDatabase();
-const okuyucu = veritabani && oturumCereziVarMi(Astro.request)
-	? await oturumOku(veritabani, Astro.request, Date.now())
-	: null;
-
-/* Giriş düğmesi yalnız Orbit TAM yapılandırılmışsa çıkıyor. Yarım
- * yapılandırmada düğmeyi göstermek, basana 503 vermek olurdu. */
-let girisAcik = false;
-if (veritabani) {
-	try {
-		const env = getWorkerEnv();
-		girisAcik = Boolean(env.ORBIT_ISSUER && env.ORBIT_CLIENT_ID && env.ORBIT_CLIENT_SECRET);
-	} catch {
-		girisAcik = false;
-	}
-}
-
-/* Girişten sonra aynı sayfaya dönülüyor. */
-const suankiYol = Astro.url.pathname + Astro.url.search;
 
 const {
 	title,
@@ -209,20 +178,6 @@ const fullTitle = title === publicationName ? publicationName : `${publicationNa
 							<a href="/iletisim/">İletişim</a>
 							<a href="/rss.xml">RSS</a>
 						</div>
-						{okuyucu && (
-							<form class="oturum" method="POST" action="/cikis">
-								<span class="oturum-ad" title={okuyucu.displayName ?? 'Orbit hesabı'}>
-									{okuyucu.displayName ?? 'Hesabım'}
-								</span>
-								<button type="submit" class="oturum-dugme">Çıkış</button>
-							</form>
-						)}
-						{!okuyucu && girisAcik && (
-							<form class="oturum" method="POST" action="/giris/orbit">
-								<input type="hidden" name="donus" value={suankiYol} />
-								<button type="submit" class="oturum-dugme oturum-giris">Orbit ile giriş</button>
-							</form>
-						)}
 						<div class="theme-switch-wrapper" id="theme-switch-wrapper">
 							<button id="theme-toggle" class="theme-switch" aria-label="Temayı Değiştir">
 								<div class="switch-handle">
@@ -544,10 +499,6 @@ const fullTitle = title === publicationName ? publicationName : `${publicationNa
 
 			.logo-area { display: inline-flex; align-items: center; gap: 0.7rem; flex-shrink: 0; }
 			.nav-right { display: flex; align-items: center; gap: 1.5rem; min-width: 0; }
-			.oturum { display: flex; align-items: center; gap: .6rem; margin: 0; }
-			.oturum-ad { max-width: 12ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .85rem; opacity: .85; }
-			.oturum-dugme { padding: .3rem .7rem; border: 1px solid currentColor; border-radius: 999px; background: none; color: inherit; font: inherit; font-size: .8rem; cursor: pointer; opacity: .8; }
-			.oturum-dugme:hover { opacity: 1; }
 			.links { display: flex; align-items: center; gap: 0.5rem; }
 
 			.links a, .dropbtn {

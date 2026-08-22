@@ -1,0 +1,60 @@
+---
+/* Orbit oturum düğmesi.
+ *
+ * Başlıkta iki kez görünüyor (mobil ve masaüstü blokları ayrı), o yüzden
+ * bileşen: oturum okuması ve yapılandırma kontrolü tek yerde kalsın.
+ *
+ * Okuma sırası ucuzdan pahalıya: veritabanı yoksa (statik derleme) hiç
+ * sorulmuyor, çerez yoksa D1'e HİÇ gidilmiyor. Giriş yapmamış ziyaretçi —
+ * yani ziyaretçilerin çoğu — bu bileşen yüzünden tek satır okumuyor.
+ *
+ * Giriş yapmış istekler ara katmanda önbelleği zaten atlıyor; o kural
+ * olmasaydı burada basılan ad başkasının ekranına önbelleklenebilirdi.
+ */
+import { getDatabase, getWorkerEnv } from '#runtime-env';
+import { oturumCereziVarMi, oturumOku } from '../server/session';
+
+const veritabani = getDatabase();
+const okuyucu = veritabani && oturumCereziVarMi(Astro.request)
+	? await oturumOku(veritabani, Astro.request, Date.now())
+	: null;
+
+/* Düğme yalnız Orbit TAM yapılandırılmışsa çıkıyor: yarım yapılandırmada
+ * basana 503 veren bir düğme, hiç düğme olmamasından kötüdür. */
+let girisAcik = false;
+if (veritabani) {
+	try {
+		const env = getWorkerEnv();
+		girisAcik = Boolean(env.ORBIT_ISSUER && env.ORBIT_CLIENT_ID && env.ORBIT_CLIENT_SECRET);
+	} catch {
+		girisAcik = false;
+	}
+}
+
+/* Girişten sonra aynı sayfaya dönülüyor. */
+const donus = Astro.url.pathname + Astro.url.search;
+---
+
+{okuyucu && (
+	<form class="oturum" method="POST" action="/cikis">
+		<span class="oturum-ad" title={okuyucu.displayName ?? 'Orbit hesabı'}>
+			{okuyucu.displayName ?? 'Hesabım'}
+		</span>
+		<button type="submit" class="news-action-pill oturum-dugme">Çıkış</button>
+	</form>
+)}
+{!okuyucu && girisAcik && (
+	<form class="oturum" method="POST" action="/giris/orbit">
+		<input type="hidden" name="donus" value={donus} />
+		<button type="submit" class="news-action-pill oturum-dugme">Orbit ile giriş</button>
+	</form>
+)}
+
+<style>
+	.oturum { display: flex; align-items: center; gap: .5rem; margin: 0; }
+	.oturum-ad {
+		max-width: 14ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+		font-size: .82rem; opacity: .8;
+	}
+	.oturum-dugme { border: inherit; font: inherit; cursor: pointer; }
+</style>

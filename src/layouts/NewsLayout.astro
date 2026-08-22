@@ -1,5 +1,6 @@
 ---
 import BaseLayout from './BaseLayout.astro';
+import OturumDugmesi from '../components/OturumDugmesi.astro';
 import { getNewsCategoryHref } from '../data/equinoxHaber';
 import { getMainSiteUrl, getNewsArchiveHref, getNewsHomePath, getNewsHomeHref, getSourceCodeHref, isNewsSubdomainEnabled } from '../data/newsSite';
 
@@ -68,6 +69,7 @@ const blogHomeHref = isNewsSubdomainEnabled() ? getMainSiteUrl() : '/';
 							<button class="news-theme-pill" type="button" aria-label="Temayı Değiştir" data-news-theme-toggle>
 								<span data-news-theme-icon>🌙</span>
 							</button>
+							<OturumDugmesi />
 							<a href={blogHomeHref} class="news-action-pill">Blog'a dön</a>
 						</div>
 					</div>
@@ -95,6 +97,7 @@ const blogHomeHref = isNewsSubdomainEnabled() ? getMainSiteUrl() : '/';
 					<button class="news-theme-pill" type="button" aria-label="Temayı Değiştir" data-news-theme-toggle>
 						<span data-news-theme-icon>🌙</span>
 					</button>
+					<OturumDugmesi />
 					<a href={blogHomeHref} class="news-action-pill">Blog'a dön</a>
 				</div>
 			</div>
