@@ -73,8 +73,26 @@ console.log("── geçerli token ──");
 console.log("\n── imza ──");
 {
   const token = await mint(key);
-  // Son karakteri değiştir: imza artık geçersiz.
-  const tampered = token.slice(0, -1) + (token.at(-1) === "A" ? "B" : "A");
+
+  /* İmza BAYT düzeyinde bozuluyor, metnin son karakteri değiştirilerek değil.
+   *
+   * Bu test önce son karakteri "A" yapıyordu ve KARARSIZDI — beş koşumun
+   * ikisinde düşüyordu. Sebep: ECDSA P-256 imzası 64 bayt, 64 = 3×21 + 1,
+   * yani son base64 grubu tek bayt taşıyor. O grubun ikinci karakterinin
+   * dört biti dolgu ve çözümde yok sayılıyor; geriye iki anlamlı bit
+   * kalıyor. Yani 64 karakterin 16'sı ("A"–"P") aynı bayta çözülüyor.
+   * Son karakter o aralıktaysa "A" yazmak HİÇBİR ŞEYİ değiştirmiyordu:
+   * imza aynı kalıyor, doğrulama haklı olarak geçiyor, test düşüyordu.
+   *
+   * Testin kendisi kararsızdı, sınadığı kod değil. Ama kararsız bir güvenlik
+   * testi, düştüğünde "gürültü" diye geçiştirilir ve bir gün gerçek bir
+   * gerilemeyi de öyle geçiştirir. */
+  const [h, p, s] = token.split(".");
+  const baytlar = Buffer.from(s, "base64url");
+  baytlar[0] ^= 0x01;
+  const tampered = `${h}.${p}.${baytlar.toString("base64url")}`;
+  if (tampered === token) throw new Error("bozma işe yaramadı: token değişmedi");
+
   const r = await verifyOrbitToken(tampered, ISSUER, AUDIENCE);
   check("bozulmuş imza reddediliyor", outcome(r), "401 imza doğrulanmadı");
 }
