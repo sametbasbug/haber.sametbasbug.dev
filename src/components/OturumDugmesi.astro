@@ -40,21 +40,51 @@ const donus = Astro.url.pathname + Astro.url.search;
 		<span class="oturum-ad" title={okuyucu.displayName ?? 'Orbit hesabı'}>
 			{okuyucu.displayName ?? 'Hesabım'}
 		</span>
-		<button type="submit" class="news-action-pill oturum-dugme">Çıkış</button>
+		<button type="submit" class="oturum-dugme">Çıkış</button>
 	</form>
 )}
 {!okuyucu && girisAcik && (
 	<form class="oturum" method="POST" action="/giris/orbit">
 		<input type="hidden" name="donus" value={donus} />
-		<button type="submit" class="news-action-pill oturum-dugme">Orbit ile giriş</button>
+		<button type="submit" class="oturum-dugme">Orbit ile giriş</button>
 	</form>
 )}
 
 <style>
+	/* Görünüm `NewsLayout`taki `.news-action-pill` ile aynı ama o sınıf
+	 * BURADA KULLANILAMAZ: Astro stilleri bileşene kapsıyor, yani başka bir
+	 * bileşende tanımlı sınıf adı buradaki elemana uygulanmıyor. Sınıfı
+	 * yazmak yetiyormuş gibi görünüyor — düğme çıkıyor ama tarayıcının
+	 * varsayılan beyaz düğmesi olarak. Bir kez öyle yayımladım.
+	 *
+	 * Değerler `--news-*` değişkenlerinden geliyor, yani tema değişince ikisi
+	 * birlikte değişiyor ve kopya bir palet oluşmuyor. */
 	.oturum { display: flex; align-items: center; gap: .5rem; margin: 0; }
 	.oturum-ad {
-		max-width: 14ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-		font-size: .82rem; opacity: .8;
+		max-width: 14ch;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		font-size: 0.8rem;
+		color: var(--news-muted-strong);
 	}
-	.oturum-dugme { border: inherit; font: inherit; cursor: pointer; }
+	.oturum-dugme {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		align-self: center;
+		padding: 0.28rem 0.58rem;
+		border: 1px solid color-mix(in srgb, var(--news-border) 88%, transparent);
+		border-radius: 999px;
+		font-family: inherit;
+		font-size: 0.8rem;
+		font-weight: 700;
+		color: var(--news-muted-strong);
+		background: color-mix(in srgb, var(--news-panel) 85%, transparent);
+		cursor: pointer;
+	}
+	.oturum-dugme:hover {
+		color: var(--news-text);
+		border-color: var(--news-accent);
+	}
 </style>
