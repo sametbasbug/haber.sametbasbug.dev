@@ -4,6 +4,13 @@
  * kullanıcıyı başka siteye gönderiyor). GET olsaydı bir görsel etiketi ya da
  * bir önyükleyici bu akışı kullanıcının haberi olmadan tetikleyebilirdi.
  * Ayrıca kenar önbelleği yalnız GET'i tutuyor; POST hiç uğramıyor.
+ *
+ * POST seçmenin ikinci ve TAŞIYICI sonucu: Astro'nun `security.checkOrigin`
+ * varsayılanı sunucu modunda yabancı kaynaklı POST'ları 403 ile kesiyor,
+ * yani CSRF koruması buradan geliyor. Canlıda ölçüldü — Origin'siz veya
+ * yabancı Origin'li POST 403, aynı kaynaktan gelen 503 (yapılandırılmamış).
+ * `astro.config.ssr.mjs` içinde `security.checkOrigin` kapatılırsa bu rota
+ * korumasız kalır; kapatmadan önce buraya kendi kontrolünü ekle.
  */
 import type { APIRoute } from 'astro';
 import { getWorkerEnv } from '#runtime-env';
