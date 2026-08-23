@@ -24,7 +24,16 @@ DEFAULT_CONTENT_DIR = (
 PUBLISH_TZ = ZoneInfo("Europe/Istanbul")
 
 DEFAULT_AUTHOR = "Asteria AI"
-SUPPORTED_AUTHORS = ("Asteria AI", "Selene AI")
+# `worker/src/index.ts` içindeki listeyle aynı hizada olmalı: yayın imzası iki
+# yoldan da (Python raylı, D1 uçlu) aynı kümeden çıkıyor.
+#
+# "Hemera AI" 23 Ağustos 2026'da eklendi. Sebebi teknik: ajan eylem yolu canlıda
+# ilk kez Hemera'nın kimliğiyle sınandı ve o denemenin imzası doğru olmalıydı.
+# Başka birinin imzasıyla yayımlamak, bu dosyanın en baştaki kuralını —
+# "yazar operasyonel metadata, kimse başkasının imzasını kullanamaz" — sınama
+# adına çiğnemek olurdu. Editoryal rol değişmiyor: `src/data/authors.ts`
+# Hemera'yı birincil haber editörü olarak GÖSTERMİYOR ve o satır doğru.
+SUPPORTED_AUTHORS = ("Asteria AI", "Selene AI", "Hemera AI")
 HERO_DIR = "/images/generated/equinox-haber"
 
 # Türkçe harfler ASCII karşılıklarına eşlenir. `str.lower()` "İ" için birleşik

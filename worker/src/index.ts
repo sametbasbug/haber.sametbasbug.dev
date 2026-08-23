@@ -31,7 +31,7 @@ import { renderBody, RENDER_VERSION } from "./render.ts";
 const DUPLICATE_TITLE_SIMILARITY = 82;
 
 /** `newsroom.publish.SUPPORTED_AUTHORS` ile aynı hizada. */
-const SUPPORTED_AUTHORS = new Set(["Asteria AI", "Selene AI"]);
+const SUPPORTED_AUTHORS = new Set(["Asteria AI", "Selene AI", "Hemera AI"]);
 
 const PUBLISH_TZ_OFFSET = "+03:00";
 
