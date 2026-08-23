@@ -10,7 +10,7 @@
  * Orbit üzerinden ayrıca doğrulandı. Buradaki iş kapı mantığı.
  */
 import { OPERATIONS, siteAction } from "../src/orbit-eylem.ts";
-import { restoreAs, withdrawAs } from "../src/index.ts";
+import { listPublished, restoreAs, withdrawAs } from "../src/index.ts";
 
 const ISSUER = "https://orbit.example.test";
 const AUDIENCE = "orbit-haber";
@@ -327,6 +327,65 @@ console.log("\n── yayından kaldırma ──");
   }
 }
 
+console.log("\n── arşiv okuma ──");
+{
+  const sorgular = [];
+  const arsivDB = (satirlar) => ({
+    DB: {
+      prepare(sql) {
+        return {
+          bind(...args) {
+            sorgular.push({ sql, args });
+            return {
+              async first() { return { n: 42 }; },
+              async all() { return { results: satirlar }; },
+              async run() { return { success: true }; },
+            };
+          },
+        };
+      },
+    },
+  });
+  const satir = { slug: "s1", title: "Bir haber", description: "özet", category: "Bilim",
+    author: "Selene AI", pub_date: "2026-08-23T10:00:00Z", hero_image: null, body_md: "Gövde" };
+
+  {
+    sorgular.length = 0;
+    const r = await listPublished({}, arsivDB([satir]));
+    const g = await r.json();
+    check("boş girdi çalışıyor", `${g.donen} ${g.toplam} ${g.dahaVar}`, "1 42 true");
+    check("  gövde istenmedikçe dönmüyor", g.haberler[0].govde, undefined);
+  }
+  {
+    sorgular.length = 0;
+    const g = await (await listPublished({ govde: true }, arsivDB([satir]))).json();
+    check("govde:true gövdeyi getiriyor", g.haberler[0].govde, "Gövde");
+  }
+  {
+    sorgular.length = 0;
+    await listPublished({ arama: "iklim", kategori: "Bilim", etiket: "uzay", tarihten: "2026-01-01" }, arsivDB([]));
+    const sorgu = sorgular.at(-1);
+    check("süzgeçler sorguya giriyor",
+      ["a.category = ?", "article_tags", "a.pub_date >= ?", "LIKE ?"].every((p) => sorgu.sql.includes(p)), true);
+    check("  arama değeri bağlanıyor", sorgu.args.includes("%iklim%"), true);
+  }
+  {
+    /* JOKER KAÇIRMA. `%` gönderen biri süzgeci sessizce etkisiz hale
+     * getirirdi: "hepsini getir" demek olurdu ve arama yaptığını sanırdı. */
+    sorgular.length = 0;
+    await listPublished({ arama: "%100_lük" }, arsivDB([]));
+    const kalip = sorgular.at(-1).args.find((a) => typeof a === "string" && a.includes("100"));
+    check("joker karakterler kaçırılıyor", kalip, "%\\%100\\_lük%");
+  }
+  {
+    sorgular.length = 0;
+    await listPublished({ limit: 5000, offset: -3 }, arsivDB([]));
+    const args = sorgular.at(-1).args;
+    check("limit tavana çekiliyor", args.at(-2), 100);
+    check("negatif offset sıfırlanıyor", args.at(-1), 0);
+  }
+}
+
 console.log("\n── yetki katmanları ──");
 {
   /* Yayıncı satırı OLMAYAN bir ajan yayımlanmış haberleri okuyabilmeli:
@@ -406,7 +465,7 @@ console.log("\n── denetim izi ──");
 {
   /* Editoryal karar reddetme DEĞİL: cevaplandı, sebebi gövdede. */
   const db = sahteDB({ yayinciSatiri: SELENE });
-  const r = await siteAction(istek(await belge(), { operationId: "haber.panoYaz", input: { board: "dizi değil" } }), { DB: db, ...ORTAM });
+  const r = await siteAction(istek(await belge(), { operationId: "haber.panoYaz", input: { board: [] } }), { DB: db, ...ORTAM });
   const govde = await r.json();
   check("editoryal karar 2xx ile dönüyor", `${r.status} ${govde.output.uygulandi}`, "200 false");
   check("  ve denetim izine yazılmıyor", db.reddedilenler.length, 0);

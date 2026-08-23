@@ -186,6 +186,18 @@ export async function writeBriefAs(identity: Identity, brief: any, env: Env): Pr
     return json({ problems: ["brief `board` dizisi taşımıyor"] }, 400);
   }
 
+  /* BOŞ PANO KABUL EDİLMİYOR.
+   *
+   * Panonun tamamı "şu adaylar arasından seç" demek; sıfır adaylı bir pano
+   * kendi kendisiyle çelişiyor ve `selectCount: 1` ile birlikte anlamsız.
+   * Bu kapı bir karışıklıktan sonra eklendi: yerel bir denemede boş pano
+   * yazmıştım, o pano altı saat boyunca "aktif" kaldı ve `panoOku`yu deneyen
+   * biri boş `board` görüp kusur sandı. Kusur okumada değil, o panonun
+   * yazılabilmiş olmasındaydı. */
+  if (brief.board.length === 0) {
+    return json({ problems: ["pano boş: en az bir aday gerekiyor"] }, 400);
+  }
+
   const id = crypto.randomUUID();
   const now = new Date();
   await env.DB.prepare(
@@ -445,20 +457,73 @@ export async function readBoardAs(identity: Identity, env: Env): Promise<Respons
   });
 }
 
-/** Yayımlanmış haberleri döndürür. Yetki İSTEMEZ — bkz. `orbit-eylem.ts`. */
+/** Yayımlanmış haberleri döndürür. Yayıncı yetkisi İSTEMEZ — bkz. `orbit-eylem.ts`.
+ *
+ * BU UÇ RSS'İN KOPYASI DEĞİL ve olmamalı; olsaydı Orbit'ten geçmenin bir
+ * karşılığı olmazdı. RSS son haberleri veriyor ve orada duruyor: kimseden bir
+ * şey alınmadı. Buradan gelen fark arşivin kendisi —
+ *
+ *   RSS  → son haberler, sabit sayı, süzgeç yok, arama yok
+ *   Orbit → 580 haberin tamamı; arama, etiket, kategori, tarih aralığı,
+ *           sayfalama ve istenirse haber gövdesi
+ *
+ * Yani "Orbit hesabı olanın erişimi daha iyi" cümlesi bir kısıtla değil, bir
+ * fazlalıkla kuruluyor. */
 export async function listPublished(input: any, env: Env): Promise<Response> {
   const limit = Math.min(Math.max(Number(input?.limit ?? 20) || 20, 1), 100);
-  const kategori = typeof input?.kategori === "string" ? input.kategori : null;
+  const offset = Math.max(Number(input?.offset ?? 0) || 0, 0);
+  const govdeIstendi = input?.govde === true;
+
+  const kosullar: string[] = ["a.is_draft = 0"];
+  const degerler: unknown[] = [];
+
+  if (typeof input?.kategori === "string" && input.kategori.length > 0) {
+    kosullar.push("a.category = ?");
+    degerler.push(input.kategori);
+  }
+  if (typeof input?.etiket === "string" && input.etiket.length > 0) {
+    kosullar.push("EXISTS (SELECT 1 FROM article_tags t WHERE t.slug = a.slug AND t.tag = ?)");
+    degerler.push(input.etiket);
+  }
+  if (typeof input?.tarihten === "string" && input.tarihten.length > 0) {
+    kosullar.push("a.pub_date >= ?");
+    degerler.push(input.tarihten);
+  }
+  if (typeof input?.tarihe === "string" && input.tarihe.length > 0) {
+    kosullar.push("a.pub_date <= ?");
+    degerler.push(input.tarihe);
+  }
+
+  /* Arama başlık ve özette, LIKE ile.
+   *
+   * FTS5 tablosu kurmadım: 580 satırlık bir arşivde tarama zaten ucuz ve ayrı
+   * bir indeks, senkron tutulması gereken ikinci bir gerçek demek. Kullanıcı
+   * girdisi jokerleri KAÇIRILIYOR — kaçırılmasaydı `%` gönderen biri süzgeci
+   * sessizce etkisiz hale getirirdi. */
+  const arama = typeof input?.arama === "string" ? input.arama.trim() : "";
+  if (arama.length > 0) {
+    const kalip = `%${arama.replaceAll("\\", "\\\\").replaceAll("%", "\\%").replaceAll("_", "\\_")}%`;
+    kosullar.push("(a.title LIKE ? ESCAPE '\\' OR a.description LIKE ? ESCAPE '\\')");
+    degerler.push(kalip, kalip);
+  }
+
+  const nerede = kosullar.join(" AND ");
+  const sayim = await env.DB.prepare(
+    `SELECT count(*) AS n FROM articles a WHERE ${nerede}`,
+  ).bind(...degerler).first<{ n: number }>();
+
+  const alanlar = govdeIstendi
+    ? "a.slug, a.title, a.description, a.category, a.author, a.pub_date, a.hero_image, a.body_md"
+    : "a.slug, a.title, a.description, a.category, a.author, a.pub_date, a.hero_image";
 
   const rows = await env.DB.prepare(
-    `SELECT slug, title, description, category, author, pub_date, hero_image
-       FROM articles
-      WHERE is_draft = 0 ${kategori ? "AND category = ?" : ""}
-      ORDER BY pub_date DESC LIMIT ?`,
-  ).bind(...(kategori ? [kategori, limit] : [limit])).all<any>();
+    `SELECT ${alanlar} FROM articles a
+      WHERE ${nerede} ORDER BY a.pub_date DESC LIMIT ? OFFSET ?`,
+  ).bind(...degerler, limit, offset).all<any>();
 
+  const sonuc = rows.results ?? [];
   return json({
-    haberler: (rows.results ?? []).map((row) => ({
+    haberler: sonuc.map((row) => ({
       slug: row.slug,
       baslik: row.title,
       ozet: row.description,
@@ -467,8 +532,14 @@ export async function listPublished(input: any, env: Env): Promise<Response> {
       yayinTarihi: row.pub_date,
       url: `/${row.slug}/`,
       gorsel: row.hero_image,
+      ...(govdeIstendi ? { govde: row.body_md } : {}),
     })),
-    toplam: (rows.results ?? []).length,
+    donen: sonuc.length,
+    /* Süzgece uyan TOPLAM sayı; dönen sayı değil. Ajan "kaç tane var" ile
+       "kaç tane aldım"ı ayırt edemezse sayfalamayı kuramaz. */
+    toplam: sayim?.n ?? sonuc.length,
+    offset,
+    dahaVar: offset + sonuc.length < (sayim?.n ?? 0),
   });
 }
 

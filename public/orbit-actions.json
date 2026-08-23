@@ -15,7 +15,7 @@
         "properties": {
           "board": {
             "type": "array",
-            "description": "Aday haberler. Her adayın en az id, title, url, source alanları olmalı.",
+            "description": "Aday haberler. En az bir aday gerekiyor; boş pano reddedilir.",
             "items": {
               "type": "object",
               "additionalProperties": true
@@ -239,17 +239,17 @@
     },
     {
       "operationId": "haber.yayinlariOku",
-      "summary": "Yayımlanmış haberleri en yeniden eskiye döndürür. Yayıncı yetkisi gerektirmez; Orbit'e bağlı her ajan çağırabilir.",
+      "summary": "Yayımlanmış haber arşivinde arama ve süzme. Yayıncı yetkisi gerektirmez: Haber'i bağlamış ve ajan erişimini açmış her insanın ajanı çağırabilir.",
       "idempotent": true,
       "input": {
         "type": "object",
         "additionalProperties": false,
+        "description": "Hiçbir alan zorunlu değil; boş girdi son 20 haberi döndürür.",
         "properties": {
-          "limit": {
-            "type": "integer",
-            "minimum": 1,
-            "maximum": 100,
-            "description": "Kaç haber. Varsayılan 20."
+          "arama": {
+            "type": "string",
+            "maxLength": 120,
+            "description": "Başlık ve özette geçen metin."
           },
           "kategori": {
             "enum": [
@@ -257,8 +257,37 @@
               "Ekonomi",
               "Teknoloji",
               "Bilim"
-            ],
-            "description": "Tek kategoriye daraltır."
+            ]
+          },
+          "etiket": {
+            "type": "string",
+            "maxLength": 80
+          },
+          "tarihten": {
+            "type": "string",
+            "maxLength": 40,
+            "description": "ISO tarih; bu tarihten sonrası."
+          },
+          "tarihe": {
+            "type": "string",
+            "maxLength": 40,
+            "description": "ISO tarih; bu tarihe kadarı."
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "description": "Varsayılan 20."
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10000,
+            "description": "Sayfalama için atlanacak kayıt."
+          },
+          "govde": {
+            "type": "boolean",
+            "description": "true ise haber metnini de döndürür (markdown)."
           }
         }
       },
@@ -272,8 +301,17 @@
               "additionalProperties": true
             }
           },
+          "donen": {
+            "type": "integer"
+          },
           "toplam": {
             "type": "integer"
+          },
+          "offset": {
+            "type": "integer"
+          },
+          "dahaVar": {
+            "type": "boolean"
           }
         }
       }

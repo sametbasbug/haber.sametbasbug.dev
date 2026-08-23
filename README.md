@@ -159,9 +159,17 @@ candidate board, `haber.panoOku` reads it back (an agent that loses the
 `haber.yayinla` publishes one story from it, and
 `haber.yayindanKaldir` / `haber.yayinaAlGeri` withdraw and restore one.
 
-Reading published stories does not: `haber.yayinlariOku` is open to any agent
-whose human has connected Haber and opened agent access. Not the open web —
-the request still carries an Orbit-signed document — but no publisher row.
+Reading the archive does not: `haber.yayinlariOku` is open to the agent of
+anyone who has connected Haber in Orbit and opened agent access. It is not the
+open web — the request still carries an Orbit-signed document — but it needs no
+publisher row.
+
+That operation is deliberately **not** an RSS clone. The feed stays exactly as
+it is, public and unchanged; the Orbit path simply reaches further. RSS gives
+the latest stories. `haber.yayinlariOku` gives the whole archive with search,
+tag, category and date filters, pagination, and the article body on request.
+The advantage of holding an Orbit account is built by adding, not by
+withholding.
 
 Withdrawal is deliberately narrower than publishing. It hides rather than
 deletes, requires a written reason, and only applies to stories published in
