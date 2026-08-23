@@ -22,7 +22,7 @@ function json(body: unknown, status = 200): Response {
   });
 }
 
-/* Her reddetme loglanıyor.
+/* Her reddetme günlüğe yazılıyor.
  *
  * Orbit sitenin hata GÖVDESİNİ ajana taşımıyor — bilerek, çünkü içeriğini
  * bilmediği bir metni kendi cevabı gibi göstermek olurdu. Doğru karar ama
@@ -31,6 +31,44 @@ function json(body: unknown, status = 200): Response {
 function reddet(status: number, mesaj: string): Response {
   console.error(`orbit-eylem reddetti: ${status} ${mesaj}`);
   return json({ error: mesaj }, status);
+}
+
+/* İmzası doğrulanmış bir isteğin reddi ayrıca VERİTABANINA yazılıyor.
+ *
+ * Sebebi: reddedilen deneme ajanın ekranında içeriksiz bir 502 olarak
+ * görünüyor, yani "kim denedi" sorusunun cevabı yalnız bizde olabilir. Site
+ * başkalarına açıldığında bu tek denetim izi.
+ *
+ * Kapı `verified`: imzasız istekler buraya HİÇ gelmiyor, yalnız Worker
+ * günlüğüne düşüyor. `/api/orbit-eylem` herkese açık bir adres ve imzasız çöp
+ * her istekte bir satır yazdırabilseydi bu bir yazma silahı olurdu.
+ *
+ * Yazma başarısız olursa istek reddedilmeye devam ediyor: denetim izi
+ * tutulamaması güvenlik kararını değiştirmez, sadece kaydı eksiltir. */
+async function denetimeYaz(
+  env: Env,
+  verified: { subject: string; actorSubject: string; operation: string },
+  operationId: string,
+  status: number,
+  reason: string,
+): Promise<void> {
+  try {
+    await env.DB.prepare(
+      `INSERT INTO orbit_action_denials
+         (subject, actor_subject, operation_id, document_operation, status, reason, created_at)
+       VALUES (?,?,?,?,?,?,?)`,
+    ).bind(
+      verified.subject,
+      verified.actorSubject,
+      operationId.length > 0 ? operationId : null,
+      verified.operation,
+      status,
+      reason,
+      new Date().toISOString(),
+    ).run();
+  } catch (error) {
+    console.error(`orbit-eylem: reddetme kaydedilemedi: ${String(error)}`);
+  }
 }
 
 async function digest(value: string): Promise<string> {
@@ -54,15 +92,20 @@ async function digest(value: string): Promise<string> {
  * reddetme olarak çıkıyor. */
 const KARAR_DURUMLARI = new Set([400, 404, 409, 413, 422]);
 
-async function sonucaCevir(response: Response): Promise<{ output: Record<string, unknown> } | Response> {
+async function sonucaCevir(
+  response: Response,
+  reddetVeYaz: (status: number, mesaj: string) => Promise<Response>,
+): Promise<{ output: Record<string, unknown> } | Response> {
   const govde = await response.json<any>().catch(() => ({}));
   if (response.ok) return { output: { uygulandi: true, ...govde } };
 
+  /* Editoryal karar denetim izine yazılmıyor: reddedilmedi, cevaplandı.
+   * Ajan sebebini gövdede görüyor ve "kim denedi" sorusu doğmuyor. */
   if (KARAR_DURUMLARI.has(response.status)) {
     console.error(`orbit-eylem: yayın kapısı reddetti ${response.status} ${JSON.stringify(govde).slice(0, 300)}`);
     return { output: { uygulandi: false, durum: response.status, ...govde } };
   }
-  return reddet(response.status, `yayın hattı reddetti: ${JSON.stringify(govde).slice(0, 300)}`);
+  return reddetVeYaz(response.status, `yayın hattı reddetti: ${JSON.stringify(govde).slice(0, 300)}`);
 }
 
 export async function siteAction(request: Request, env: Env): Promise<Response> {
@@ -99,15 +142,22 @@ export async function siteAction(request: Request, env: Env): Promise<Response> 
 
   /* Belgedeki işlem gövdedekiyle aynı olmak ZORUNDA. Aksi halde "pano yaz"
    * için alınmış bir belge, gövdesi değiştirilerek "yayımla"ya çevrilirdi. */
+  /* Buradan sonraki her reddetme denetim izine de yazılıyor: belge doğrulandı,
+   * yani istek gerçekten Orbit'ten geliyor ve arkasında bir kimlik var. */
+  const reddetVeYaz = async (status: number, mesaj: string) => {
+    await denetimeYaz(env, verified, operationId, status, mesaj);
+    return reddet(status, mesaj);
+  };
+
   if (verified.operation !== operationId) {
-    return reddet(403, "belge bu işlem için verilmemiş");
+    return reddetVeYaz(403, "belge bu işlem için verilmemiş");
   }
   if (!(OPERATIONS as readonly string[]).includes(operationId)) {
-    return reddet(404, `bilinmeyen işlem: ${operationId}`);
+    return reddetVeYaz(404, `bilinmeyen işlem: ${operationId}`);
   }
 
   const auth = await authorizeAction(verified, env);
-  if (!auth.ok) return reddet(auth.status, auth.error);
+  if (!auth.ok) return reddetVeYaz(auth.status, auth.error);
 
   const inputDigest = await digest(JSON.stringify({ operationId, input }));
 
@@ -123,7 +173,7 @@ export async function siteAction(request: Request, env: Env): Promise<Response> 
      * Sessizce ilk cevabı döndürmek, ajanın yaptığını sandığı işin hiç
      * yapılmaması olurdu. */
     if (gecmis.input_digest !== inputDigest) {
-      return reddet(409, "aynı Idempotency-Key farklı bir istekle kullanıldı");
+      return reddetVeYaz(409, "aynı Idempotency-Key farklı bir istekle kullanıldı");
     }
     return json({ status: "replayed", output: JSON.parse(gecmis.output) });
   }
@@ -132,7 +182,7 @@ export async function siteAction(request: Request, env: Env): Promise<Response> 
     ? await writeBriefAs(auth.identity, input, env)
     : await publishAs(auth.identity, input, env);
 
-  const sonuc = await sonucaCevir(response);
+  const sonuc = await sonucaCevir(response, reddetVeYaz);
   if (sonuc instanceof Response) return sonuc;
 
   /* Kayıt yazmadan önce iş bitmiş oluyor ve bu sıra bilerek: kaydı önce

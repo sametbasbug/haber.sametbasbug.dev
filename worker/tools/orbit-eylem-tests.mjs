@@ -52,8 +52,10 @@ async function belge({ claims = {}, key = pair.privateKey } = {}) {
  * biriktiriyor ki tekrar kaydının gerçekten yazıldığı görülebilsin. */
 function sahteDB({ yayinciSatiri, gecmis = null }) {
   const yazilanlar = [];
+  const reddedilenler = [];
   return {
     yazilanlar,
+    reddedilenler,
     prepare(sql) {
       return {
         bind(...args) {
@@ -74,7 +76,11 @@ function sahteDB({ yayinciSatiri, gecmis = null }) {
               if (sql.includes("FROM orbit_action_log")) return gecmis;
               return null;
             },
-            async run() { yazilanlar.push({ sql, args }); return { success: true }; },
+            async run() {
+              if (sql.includes("orbit_action_denials")) reddedilenler.push({ sql, args });
+              else yazilanlar.push({ sql, args });
+              return { success: true };
+            },
           };
         },
       };
@@ -245,6 +251,48 @@ console.log("\n── katalog ──");
   check("her işlem şema ve özet taşıyor",
     katalog.operations.every((o) => typeof o.summary === "string" && o.summary.length > 0 && o.input?.type === "object"),
     true);
+}
+
+console.log("\n── denetim izi ──");
+{
+  /* İmzası doğrulanmış bir isteğin reddi kaydedilmeli: ajan içeriksiz bir 502
+   * görüyor, "kim denedi" sorusunun cevabı yalnız bizde olabilir. */
+  const db = sahteDB({ yayinciSatiri: null });
+  await siteAction(istek(await belge(), { operationId: "haber.panoYaz", input: PANO }), { DB: db, ...ORTAM });
+  check("yetkisiz ajan denetim izine yazılıyor", db.reddedilenler.length, 1);
+  const [, actor, opId, belgeIslem, status, sebep] = db.reddedilenler[0].args;
+  check("  aktör kaydediliyor", actor, AJAN);
+  check("  işlem kaydediliyor", `${opId} · ${belgeIslem}`, "haber.panoYaz · haber.panoYaz");
+  check("  durum ve sebep kaydediliyor", `${status} ${sebep}`, "403 bu ajan yayıncı listesinde değil");
+}
+{
+  const db = sahteDB({ yayinciSatiri: SELENE });
+  await siteAction(istek(await belge(), { operationId: "haber.yayinla", input: {} }), { DB: db, ...ORTAM });
+  check("işlem uyuşmazlığı kaydediliyor", db.reddedilenler[0].args[4], 403);
+  check("  gövdedeki ve belgedeki işlem ayrı tutuluyor",
+    `${db.reddedilenler[0].args[2]} · ${db.reddedilenler[0].args[3]}`, "haber.yayinla · haber.panoYaz");
+}
+{
+  /* İMZASIZ istek denetim izine YAZILMAMALI. `/api/orbit-eylem` herkese açık;
+   * imzasız çöpün her istekte satır yazdırması bir yazma silahı olurdu. */
+  const db = sahteDB({ yayinciSatiri: SELENE });
+  await siteAction(istek(null, { operationId: "haber.panoYaz", input: PANO }), { DB: db, ...ORTAM });
+  const yabanci = await crypto.subtle.generateKey({ name: "ECDSA", namedCurve: "P-256" }, true, ["sign", "verify"]);
+  await siteAction(istek(await belge({ key: yabanci.privateKey }), { operationId: "haber.panoYaz", input: PANO }), { DB: db, ...ORTAM });
+  check("imzasız ve sahte imzalı istekler yazılmıyor", db.reddedilenler.length, 0);
+}
+{
+  const db = sahteDB({ yayinciSatiri: SELENE, gecmis: { input_digest: "baska-ozet", output: "{}" } });
+  await siteAction(istek(await belge(), { operationId: "haber.panoYaz", input: PANO }), { DB: db, ...ORTAM });
+  check("anahtar çakışması kaydediliyor", db.reddedilenler[0].args[4], 409);
+}
+{
+  /* Editoryal karar reddetme DEĞİL: cevaplandı, sebebi gövdede. */
+  const db = sahteDB({ yayinciSatiri: SELENE });
+  const r = await siteAction(istek(await belge(), { operationId: "haber.panoYaz", input: { board: "dizi değil" } }), { DB: db, ...ORTAM });
+  const govde = await r.json();
+  check("editoryal karar 2xx ile dönüyor", `${r.status} ${govde.output.uygulandi}`, "200 false");
+  check("  ve denetim izine yazılmıyor", db.reddedilenler.length, 0);
 }
 
 const failed = results.filter((r) => !r.ok);
