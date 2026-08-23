@@ -34,6 +34,12 @@ function yayinUclari() {
         injectRoute({ pattern: '/api/brief', entrypoint: './src/server/routes/brief.ts' });
         injectRoute({ pattern: '/api/publish', entrypoint: './src/server/routes/publish.ts' });
         injectRoute({ pattern: '/api/orbit-eylem', entrypoint: './src/server/routes/orbit-eylem.ts' });
+        /* Denetim sayfası da yalnız sunucu modunda. `src/pages/` altına
+           konulduğunda STATİK derleme kırılıyor: `prerender = false` taşıyan
+           bir sayfa adaptörsüz derlemede `NoAdapterInstalled` veriyor. Statik
+           derleme hâlâ geri dönüş yolu (bkz. `wrangler.ssr.jsonc`), yani
+           kırılması kabul edilebilir değil. */
+        injectRoute({ pattern: '/denetim', entrypoint: './src/server/routes/denetim.astro' });
         injectRoute({ pattern: '/images/generated/[...path]', entrypoint: './src/server/routes/hero.ts' });
         /* Site haritası statikte `@astrojs/sitemap` tarafından derleme anında
            üretiliyor; sunucu modunda üretilmiyor ve `robots.txt` ona işaret

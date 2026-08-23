@@ -16,9 +16,9 @@
  */
 export const prerender = false;
 
-import BaseLayout from '../layouts/BaseLayout.astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
 import { getDatabase } from '#runtime-env';
-import { oturumCereziVarMi, oturumOku } from '../server/session';
+import { oturumCereziVarMi, oturumOku } from '../session';
 
 const veritabani = getDatabase();
 const okuyucu = veritabani && oturumCereziVarMi(Astro.request)
