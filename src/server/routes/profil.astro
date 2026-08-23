@@ -1,0 +1,141 @@
+---
+/* Orbit ile giren okuyucunun profili.
+ *
+ * Bugün gösterecek çok şey yok ve bu bilinçli: sayfa ileride eklenecek
+ * şeylerin (kaydedilen haberler, bildirim tercihleri, oturum yönetimi) duracağı
+ * yeri şimdiden açıyor. Boş bir kabuk değil ama — burada duran her şey gerçek
+ * ve doğrulanmış veri; doldurmak için uydurma alan koymadım.
+ *
+ * Denetim bağlantısı burada, çünkü `/denetim` hiçbir yerden bağlanmamış bir
+ * adres olarak unutulmaya çok müsaitti.
+ *
+ * `src/pages/` altında DEĞİL: oturum okuyor, yani `prerender = false`
+ * gerektiriyor ve adaptörsüz statik derlemeyi kırardı. Sunucu uçlarının
+ * tamamı gibi `injectRoute` ile geliyor.
+ */
+export const prerender = false;
+
+import InfoPageLayout from '../../layouts/InfoPageLayout.astro';
+import { getDatabase } from '#runtime-env';
+import { oturumCereziVarMi, oturumOku } from '../session';
+
+const veritabani = getDatabase();
+const okuyucu = veritabani && oturumCereziVarMi(Astro.request)
+	? await oturumOku(veritabani, Astro.request, Date.now())
+	: null;
+
+Astro.response.headers.set('cache-control', 'private, no-store');
+Astro.response.headers.set('x-robots-tag', 'noindex');
+
+/* Girmemiş biri buraya gelirse ana sayfaya değil, girişe yönlendirmek daha
+   doğru olurdu — ama giriş POST ile başlıyor (CSRF için) ve GET yönlendirmesi
+   onu kuramaz. Ana sayfada giriş düğmesi zaten var. */
+if (!veritabani || !okuyucu) {
+	return new Response(null, { status: 302, headers: { location: '/' } });
+}
+
+/* Yayıncı mı? Kendi satırı ya da adına çalışan bir ajanın satırı sayılıyor —
+   `/denetim` ile aynı kural, tek yerde iki kez yazılmasın diye aynı sorgu. */
+const yetki = await veritabani
+	.prepare('SELECT count(*) AS n FROM publishers WHERE subject = ? OR acts_for = ?')
+	.bind(okuyucu.orbitSubject, okuyucu.orbitSubject)
+	.first<{ n: number }>();
+const yayinci = (yetki?.n ?? 0) > 0;
+
+/* Adına çalışan ajanlar. Kendi satırı ajan satırı değil, o yüzden `acts_for`
+   üzerinden aranıyor. */
+const ajanlar = yayinci
+	? await veritabani
+		.prepare('SELECT author, disabled_at FROM publishers WHERE acts_for = ? ORDER BY created_at')
+		.bind(okuyucu.orbitSubject)
+		.all<{ author: string; disabled_at: string | null }>()
+	: null;
+
+const katilim = await veritabani
+	.prepare('SELECT created_at FROM readers WHERE orbit_subject = ?')
+	.bind(okuyucu.orbitSubject)
+	.first<{ created_at: number }>();
+
+const tarih = katilim
+	? new Intl.DateTimeFormat('tr-TR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Istanbul' })
+		.format(new Date(katilim.created_at))
+	: null;
+---
+
+<InfoPageLayout
+	title="Profil"
+	description="Orbit hesabınla Equinox Haber'de neye erişebildiğin."
+	kicker="Hesap"
+	updatedLabel=""
+>
+	<section class="profil-kimlik">
+		{okuyucu.pictureUrl && (
+			<img class="profil-avatar" src={okuyucu.pictureUrl} alt="" width="72" height="72" loading="lazy" />
+		)}
+		<div>
+			<h2>{okuyucu.displayName ?? 'Orbit hesabı'}</h2>
+			<p class="profil-alt">
+				Orbit ile giriş yaptın{tarih ? ` · ${tarih} tarihinden beri` : ''}.
+			</p>
+		</div>
+	</section>
+
+	<h2>Erişimin</h2>
+	<ul class="profil-liste">
+		<li><strong>Haber okuma</strong> — giriş gerekmiyor, herkese açık.</li>
+		{yayinci
+			? <li><strong>Yayıncı</strong> — haber yayımlayabilir, yayından kaldırabilir ve panoyu görebilirsin.</li>
+			: <li>Yayıncı yetkin yok. Bu sayfada şimdilik gösterilecek başka bir şey de yok; kaydedilen haberler ve tercihler buraya gelecek.</li>}
+	</ul>
+
+	{ajanlar && (ajanlar.results ?? []).length > 0 && (
+		<Fragment>
+			<h2>Senin adına çalışan ajanlar</h2>
+			<p>
+				Bu ajanlar Orbit üzerinden, senin adına yayın yapabiliyor. Erişimi
+				Orbit panelindeki <em>Bağlı siteler</em> kartından kapatabilirsin;
+				kapattığın an bir sonraki çağrı reddedilir.
+			</p>
+			<ul class="profil-liste">
+				{(ajanlar.results ?? []).map((a) => (
+					<li><strong>{a.author}</strong>{a.disabled_at ? ' — erişimi kapalı' : ''}</li>
+				))}
+			</ul>
+		</Fragment>
+	)}
+
+	{yayinci && (
+		<Fragment>
+			<h2>Denetim</h2>
+			<p>
+				Ajan eylemlerinin izi: yapılanlar, reddedilenler ve yayından
+				kaldırmalar. Reddedilen bir istek çağıran ajana içeriksiz bir hata
+				olarak döner — sebebin okunabildiği tek yer burası.
+			</p>
+			<p><a class="profil-baglanti" href="/denetim/">Denetim kayıtlarını aç →</a></p>
+		</Fragment>
+	)}
+
+	<h2>Çıkış</h2>
+	<p>Oturumun otuz gün sonra kendiliğinden sona eriyor; yenilenmiyor.</p>
+	<form method="POST" action="/cikis" data-astro-reload>
+		<button type="submit" class="profil-cikis">Çıkış yap</button>
+	</form>
+</InfoPageLayout>
+
+<style>
+	.profil-kimlik { display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; }
+	.profil-avatar { border-radius: 50%; object-fit: cover; }
+	.profil-kimlik h2 { margin: 0 0 .25rem; font-size: 1.15rem; }
+	.profil-alt { margin: 0; font-size: .9rem; opacity: .75; }
+	.profil-liste { margin: 0 0 1.5rem; padding-left: 1.15rem; }
+	.profil-liste li { margin-bottom: .4rem; }
+	.profil-baglanti { font-weight: 600; }
+	.profil-cikis {
+		font: inherit; font-size: .9rem; cursor: pointer;
+		padding: .5rem 1rem; border-radius: .5rem;
+		background: transparent; color: inherit;
+		border: 1px solid currentColor; opacity: .8;
+	}
+	.profil-cikis:hover { opacity: 1; }
+</style>

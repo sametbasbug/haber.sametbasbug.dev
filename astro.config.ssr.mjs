@@ -39,6 +39,7 @@ function yayinUclari() {
            bir sayfa adaptörsüz derlemede `NoAdapterInstalled` veriyor. Statik
            derleme hâlâ geri dönüş yolu (bkz. `wrangler.ssr.jsonc`), yani
            kırılması kabul edilebilir değil. */
+        injectRoute({ pattern: '/profil', entrypoint: './src/server/routes/profil.astro' });
         injectRoute({ pattern: '/denetim', entrypoint: './src/server/routes/denetim.astro' });
         injectRoute({ pattern: '/images/generated/[...path]', entrypoint: './src/server/routes/hero.ts' });
         /* Site haritası statikte `@astrojs/sitemap` tarafından derleme anında

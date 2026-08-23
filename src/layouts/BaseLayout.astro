@@ -11,8 +11,6 @@ interface Props {
 	 * adresten sunan sayfalar (arşivin ilk sayfası ile ana sayfa) için. */
 	canonicalPath?: string;
 	type?: string;
-	shellLayout?: boolean;
-	hideHeader?: boolean;
 }
 
 const {
@@ -23,8 +21,6 @@ const {
 	noindex = false,
 	canonicalPath,
 	type = 'website',
-	shellLayout = false,
-	hideHeader = false
 } = Astro.props;
 
 // SEO Hardening Logic
@@ -33,6 +29,23 @@ const finalOgImage = ogImage && typeof ogImage === 'string' && ogImage.trim() !=
 	: '/og-default.jpg';
 
 const canonicalURL = new URL(canonicalPath || Astro.url.pathname, Astro.site).toString();
+
+/* Bu kabukta SAYFA BAŞLIĞI YOK ve olmamalı.
+ *
+ * Bir dönem burada blog döneminden kalma bir header duruyordu: "Samet Başbuğ"
+ * logosu, eski gezinme bağlantıları, bozuk emoji taşıyan bir tema düğmesi.
+ * Üretime hiç çıkmıyordu — `NewsLayout` hem `hideHeader` geçiyor hem de
+ * `#main-header { display: none }` yazıyordu, yani aynı ölü şey iki ayrı
+ * mekanizmayla saklanıyordu.
+ *
+ * Ama ölü değil UYUYORDU. `BaseLayout`u doğrudan kullanan yeni bir sayfa
+ * yazdım ve hayalet tasarım ekrana geldi; hangi kabuğun ne çizdiğini bilmeden
+ * "temel" adını taşıyan şeyi seçmiştim. Header, betiği ve stilleri
+ * kaldırıldı, `hideHeader`/`shellLayout` propları da: tek değer alan bir prop
+ * prop değil, saklanmış bir karardır.
+ *
+ * Başlık `NewsLayout`un işi. Yeni bir sayfa `InfoPageLayout` kullanır. */
+
 const ogImageURL = new URL(finalOgImage, Astro.site).toString();
 // Paylaşım kartlarında görselin alternatif metni. Sayfa içindeki hero
 // görselleri aria-hidden bir sarmalayıcıda durduğu ve komşu başlık linkinin
@@ -151,7 +164,7 @@ const fullTitle = title === publicationName ? publicationName : `${publicationNa
 		</script>
 		<ClientRouter />
 	</head>
-	<body class={shellLayout ? 'app-shell-layout' : undefined}>
+	<body>
 		<div id="progress-bar"></div>
 
 		<!-- Back to Top Button -->
@@ -164,32 +177,6 @@ const fullTitle = title === publicationName ? publicationName : `${publicationNa
 			<img id="lightbox-img" src="" alt="" />
 		</div>
 
-		{!hideHeader && (
-			<header transition:persist id="main-header">
-				<nav>
-					<div class="logo-area" id="logo-area">
-						<a href="/" class="logo"><span class="logo-text">Samet Başbuğ</span></a>
-					</div>
-					<div class="nav-right" id="nav-right">
-						<div class="links">
-							<a href="/">Ana Sayfa</a>
-							<a href="/hakkimizda/">Hakkımızda</a>
-							<a href="/yazarlar/">Yazarlar</a>
-							<a href="/iletisim/">İletişim</a>
-							<a href="/rss.xml">RSS</a>
-						</div>
-						<div class="theme-switch-wrapper" id="theme-switch-wrapper">
-							<button id="theme-toggle" class="theme-switch" aria-label="Temayı Değiştir">
-								<div class="switch-handle">
-									<span class="sun-icon">??</span>
-									<span class="moon-icon">??</span>
-								</div>
-							</button>
-						</div>
-					</div>
-				</nav>
-			</header>
-		)}
 
 		<main>
 			<slot />
@@ -215,46 +202,9 @@ const fullTitle = title === publicationName ? publicationName : `${publicationNa
 
 			applyTheme();
 
-			function attachThemeToggle() {
-				const toggle = document.getElementById('theme-toggle');
-				if (toggle) {
-					toggle.replaceWith(toggle.cloneNode(true));
-					const newToggle = document.getElementById('theme-toggle');
-					newToggle.addEventListener('click', () => {
-						const currentTheme = document.documentElement.getAttribute('data-theme');
-						const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-						setTheme(newTheme);
-					});
-				}
-			}
-
-			function placeThemeSwitch() {
-				const wrapper = document.getElementById('theme-switch-wrapper');
-				const logoArea = document.getElementById('logo-area');
-				const navRight = document.getElementById('nav-right');
-				if (!wrapper || !logoArea || !navRight) return;
-
-				const isMobile = window.matchMedia('(max-width: 700px)').matches;
-				if (isMobile) {
-					if (wrapper.parentElement !== logoArea) logoArea.appendChild(wrapper);
-				} else {
-					if (wrapper.parentElement !== navRight) navRight.appendChild(wrapper);
-				}
-			}
-
 			// Header Scroll, Reading Progress & Back to Top
 			function handleScroll() {
-				const header = document.getElementById('main-header');
 				const backToTop = document.getElementById('back-to-top');
-
-				if (header) {
-					if (window.scrollY > 20) {
-						header.classList.add('scrolled');
-					} else {
-						header.classList.remove('scrolled');
-					}
-				}
-
 
 				if (backToTop) {
 					if (window.scrollY > 300) {
@@ -311,8 +261,6 @@ const fullTitle = title === publicationName ? publicationName : `${publicationNa
 
 			document.addEventListener('astro:page-load', () => {
 				applyTheme();
-				placeThemeSwitch();
-				attachThemeToggle();
 				initLightbox();
 				initCopyShare();
 				initBackToTop();
@@ -323,7 +271,6 @@ const fullTitle = title === publicationName ? publicationName : `${publicationNa
 
 			if (!window.__themeSwitchPlacementBound) {
 				window.__themeSwitchPlacementBound = true;
-				window.addEventListener('resize', placeThemeSwitch);
 			}
 
 			document.addEventListener('astro:before-swap', (event) => {
@@ -481,114 +428,6 @@ const fullTitle = title === publicationName ? publicationName : `${publicationNa
 				to { opacity: 1; transform: translateY(0); }
 			}
 			main { animation: fadeInUp 0.5s ease-out forwards; flex: 1; padding: 3rem 1rem; max-width: 850px; margin: 0 auto; width: 100%; }
-			body.app-shell-layout main { animation: none; max-width: 1240px; padding-top: 0; }
-			body.app-shell-layout header { display: none; }
-
-			header {
-				padding: 1rem 1.5rem; max-width: 900px; margin: 1rem auto;
-				width: calc(100% - 2rem); background: var(--card-bg);
-				border-radius: 1rem; border: 1px solid var(--border);
-				box-shadow: var(--shadow); backdrop-filter: blur(12px);
-				position: sticky; top: 1rem; z-index: 50;
-				display: flex; flex-direction: column; align-items: stretch; gap: 0.75rem;
-				transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-			}
-
-			header.scrolled { background: rgba(var(--card-bg-rgb), 0.8); max-width: 850px; margin-top: 0.5rem; }
-			nav { display: flex; justify-content: space-between; align-items: center; width: 100%; gap: 1rem; }
-
-			.logo-area { display: inline-flex; align-items: center; gap: 0.7rem; flex-shrink: 0; }
-			.nav-right { display: flex; align-items: center; gap: 1.5rem; min-width: 0; }
-			.links { display: flex; align-items: center; gap: 0.5rem; }
-
-			.links a, .dropbtn {
-				text-decoration: none; color: var(--secondary); font-weight: 500; font-size: 0.95rem;
-				transition: all 0.2s; padding: 0.5rem 0.75rem; border-radius: 0.5rem;
-			}
-			.links a:hover, .dropdown:hover .dropbtn { color: var(--accent); background: var(--accent-light); }
-
-			/* Mobil Responsive Ayarlar� */
-			@media (max-width: 700px) {
-				header {
-					height: auto;
-					padding: 1rem;
-					top: 0.5rem;
-				}
-				header.scrolled {
-					height: auto;
-				}
-				nav {
-					flex-direction: column;
-					gap: 1rem;
-				}
-				.logo-area {
-					width: 100%;
-					justify-content: space-between;
-				}
-				.logo {
-					font-size: clamp(1.02rem, 4.6vw, 1.2rem);
-				}
-				.nav-right {
-					width: 100%;
-					display: flex;
-					justify-content: center;
-				}
-				.links {
-					display: flex;
-					flex-wrap: nowrap;
-					justify-content: space-between;
-					align-items: center;
-					gap: 0.3rem;
-					width: 100%;
-				}
-				.links a {
-					font-size: clamp(0.78rem, 3.2vw, 0.9rem);
-					padding: 0.3rem 0.2rem;
-					white-space: nowrap;
-					line-height: 1.25;
-				}
-
-				.theme-switch-wrapper {
-					padding-left: 0;
-					border-left: 0;
-					margin-left: auto;
-				}
-			}
-
-			/* Dropdown Stilleri */
-			.dropdown { position: relative; display: inline-block; }
-			.dropbtn { background: none; border: none; font-family: inherit; cursor: pointer; display: flex; align-items: center; gap: 0.25rem; }
-			.chevron-icon { width: 1rem; height: 1rem; transition: transform 0.3s ease; }
-			.dropdown:hover .chevron-icon { transform: rotate(180deg); }
-
-			.dropdown-content {
-				position: absolute; top: 100%; left: 50%; transform: translateX(-50%) translateY(10px);
-				background: var(--card-bg); border: 1px solid var(--border); min-width: 140px;
-				box-shadow: var(--shadow); border-radius: 0.75rem; opacity: 0; visibility: hidden;
-				transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 100; padding: 0.5rem; backdrop-filter: blur(10px);
-			}
-			.dropdown:hover .dropdown-content { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(5px); }
-			.dropdown-content a { color: var(--text); padding: 0.6rem 1rem; display: block; font-size: 0.9rem; margin: 0; }
-
-			.theme-switch-wrapper { display: inline-flex; align-items: center; border-left: 0; padding-left: 0; }
-			@media (min-width: 701px) {
-				.theme-switch-wrapper { border-left: 1px solid var(--border); padding-left: 1.2rem; }
-			}
-			.theme-switch { background: var(--muted); border: 1px solid var(--border); width: 3.5rem; height: 1.8rem; border-radius: 2rem; cursor: pointer; position: relative; padding: 0; transition: all 0.3s ease; }
-			.switch-handle { width: 1.4rem; height: 1.4rem; background: var(--card-bg); border-radius: 50%; position: absolute; left: 0.2rem; top: 50%; transform: translateY(-50%); display: flex; align-items: center; justify-content: center; font-size: 0.8rem; box-shadow: var(--shadow); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-			.sun-icon { opacity: 1; } .moon-icon { opacity: 1; }
-			.switch-handle .sun-icon { display: block; } .switch-handle .moon-icon { display: none; }
-			[data-theme="dark"] .switch-handle { left: calc(100% - 1.6rem); background: #1e293b; }
-			[data-theme="dark"] .switch-handle .sun-icon { display: none; } [data-theme="dark"] .switch-handle .moon-icon { display: block; }
-
-			@media (prefers-color-scheme: dark) {
-				:root:not([data-theme="light"]) .switch-handle { left: calc(100% - 1.6rem); background: #1e293b; }
-				:root:not([data-theme="light"]) .switch-handle .sun-icon { display: none; }
-				:root:not([data-theme="light"]) .switch-handle .moon-icon { display: block; }
-			}
-
-			.logo { font-size: 1.25rem; font-weight: 800; color: var(--accent); text-decoration: none; }
-			.logo-text { background: linear-gradient(to right, var(--accent), #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 
 			h1, h2, h3 { line-height: 1.3; margin-bottom: 1.5rem; color: var(--text); font-weight: 800; }
 			.hero-title { font-size: 3.5rem; background: linear-gradient(to right, var(--accent), #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; display: inline-block; }

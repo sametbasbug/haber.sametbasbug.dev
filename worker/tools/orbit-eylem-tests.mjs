@@ -384,6 +384,19 @@ console.log("\n── arşiv okuma ──");
     check("limit tavana çekiliyor", args.at(-2), 100);
     check("negatif offset sıfırlanıyor", args.at(-1), 0);
   }
+  {
+    /* Gövde istendiğinde tavan düşüyor: yüz haber gövdesi, çağıran ajanın
+     * bağlamına yüzlerce kilobayt boşaltmak demek. */
+    sorgular.length = 0;
+    const g = await (await listPublished({ govde: true, limit: 100 }, arsivDB([satir]))).json();
+    check("gövdeyle birlikte tavan 10", sorgular.at(-1).args.at(-2), 10);
+    check("  uygulanan tavan cevapta", g.limit, 10);
+  }
+  {
+    sorgular.length = 0;
+    await listPublished({ govde: true }, arsivDB([]));
+    check("gövdede varsayılan da tavanı aşmıyor", sorgular.at(-1).args.at(-2), 10);
+  }
 }
 
 console.log("\n── yetki katmanları ──");

@@ -425,6 +425,11 @@ const WITHDRAW_WINDOW_MS = 24 * 60 * 60 * 1000;
 
 const MIN_WITHDRAW_REASON = 10;
 
+/** Arşiv okumada tek çağrıda dönebilecek en fazla kayıt. */
+const LISTE_LIMIT = 100;
+/** Gövde de istendiğinde tavan; bkz. `listPublished`. */
+const GOVDE_LIMIT = 10;
+
 /** Panonun mevcut durumunu okur.
  *
  * `panoYaz` bir `briefId` döndürüyor ve ajanın onu kaybetmesi mümkün —
@@ -470,9 +475,16 @@ export async function readBoardAs(identity: Identity, env: Env): Promise<Respons
  * Yani "Orbit hesabı olanın erişimi daha iyi" cümlesi bir kısıtla değil, bir
  * fazlalıkla kuruluyor. */
 export async function listPublished(input: any, env: Env): Promise<Response> {
-  const limit = Math.min(Math.max(Number(input?.limit ?? 20) || 20, 1), 100);
-  const offset = Math.max(Number(input?.offset ?? 0) || 0, 0);
   const govdeIstendi = input?.govde === true;
+  /* Gövde istendiğinde tavan düşüyor.
+   *
+   * Üstbilgi satırı birkaç yüz bayt; haber gövdesi birkaç kilobayt. Yüz
+   * gövde, çağıran ajanın bağlamına yüzlerce kilobayt boşaltmak demek — ve o
+   * bağlam sınırlı. Ajan "hepsini getir" diyebilir, biz veremeyiz; sayfalama
+   * zaten var (`offset`, `dahaVar`). */
+  const tavan = govdeIstendi ? GOVDE_LIMIT : LISTE_LIMIT;
+  const limit = Math.min(Math.max(Number(input?.limit ?? Math.min(20, tavan)) || 20, 1), tavan);
+  const offset = Math.max(Number(input?.offset ?? 0) || 0, 0);
 
   const kosullar: string[] = ["a.is_draft = 0"];
   const degerler: unknown[] = [];
@@ -535,6 +547,9 @@ export async function listPublished(input: any, env: Env): Promise<Response> {
       ...(govdeIstendi ? { govde: row.body_md } : {}),
     })),
     donen: sonuc.length,
+    /* Tavan cevapta yazılı: ajan neden istediğinden az aldığını görebilmeli,
+       yoksa eksik veriyi eksik sanmaz, "hepsi bu" sanar. */
+    limit,
     /* Süzgece uyan TOPLAM sayı; dönen sayı değil. Ajan "kaç tane var" ile
        "kaç tane aldım"ı ayırt edemezse sayfalamayı kuramaz. */
     toplam: sayim?.n ?? sonuc.length,

@@ -16,7 +16,7 @@
  */
 export const prerender = false;
 
-import BaseLayout from '../../layouts/BaseLayout.astro';
+import InfoPageLayout from '../../layouts/InfoPageLayout.astro';
 import { getDatabase } from '#runtime-env';
 import { oturumCereziVarMi, oturumOku } from '../session';
 
@@ -83,10 +83,9 @@ const kisa = (value: string | null) => {
 };
 ---
 
-<BaseLayout title="Denetim" description="Ajan eylemlerinin izi." noindex>
-	<main class="denetim">
-		<h1>Denetim</h1>
-		<p class="alt">Ajan eylemlerinin izi. Bu sayfa önbelleğe girmiyor ve arama motorlarına kapalı.</p>
+<InfoPageLayout title="Denetim" description="Ajan eylemlerinin izi: yapılanlar, reddedilenler, yayından kaldırmalar." kicker="Hesap" updatedLabel="">
+	<div class="denetim">
+		<p class="alt"><a href="/profil/">← Profil</a> · Bu sayfa önbelleğe girmiyor ve arama motorlarına kapalı.</p>
 
 		<section>
 			<h2>Yayıncılar</h2>
@@ -163,12 +162,10 @@ const kisa = (value: string | null) => {
 					</tbody>
 				</table>}
 		</section>
-	</main>
-</BaseLayout>
+	</div>
+</InfoPageLayout>
 
 <style>
-	.denetim { max-width: 68rem; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
-	h1 { font-size: 1.75rem; margin: 0 0 .35rem; }
 	.alt { color: var(--secondary); margin: 0 0 2.5rem; font-size: .95rem; }
 	section { margin-bottom: 2.75rem; }
 	h2 { font-size: 1.05rem; margin: 0 0 .75rem; font-weight: 600; }

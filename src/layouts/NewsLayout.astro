@@ -52,7 +52,7 @@ const newsHomePath = getNewsHomePath();
 const blogHomeHref = isNewsSubdomainEnabled() ? getMainSiteUrl() : '/';
 ---
 
-<BaseLayout title={title} description={description} hideHeader={true} noindex={noindex} canonicalPath={canonicalPath} ogImage={ogImage} ogImageAlt={ogImageAlt}>
+<BaseLayout title={title} description={description} noindex={noindex} canonicalPath={canonicalPath} ogImage={ogImage} ogImageAlt={ogImageAlt}>
 	<section class="news-app-shell" data-news-home-path={newsHomePath}>
 		<header class="news-masthead">
 			<div class="news-masthead-wrap">
@@ -223,9 +223,9 @@ const blogHomeHref = isNewsSubdomainEnabled() ? getMainSiteUrl() : '/';
 	:global([data-theme='light'] body) {
 		background: #f6f4ef;
 	}
-	:global(#main-header) {
-		display: none;
-	}
+	/* `#main-header` gizleme kuralı KALDIRILDI: gizlenecek bir şey kalmadı.
+	   Blog döneminden kalma header `BaseLayout`tan silindi; burada durması
+	   "hâlâ bir header var ve saklıyoruz" izlenimi verirdi. */
 	:global(main) {
 		width: 100% !important;
 		max-width: none !important;

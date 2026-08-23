@@ -52,9 +52,13 @@ const donus = Astro.url.pathname + Astro.url.search;
 
 {okuyucu && (
 	<form class="oturum" method="POST" action="/cikis" data-astro-reload>
-		<span class="oturum-ad" title={okuyucu.displayName ?? 'Orbit hesabı'}>
+		{/* Ad artık profile GİDİYOR. Önce düz metindi ve profil sayfası hiçbir
+		    yerden bağlanmıyordu — var olan ama kimsenin bulamayacağı bir adres,
+		    olmayan adresten farksız. Giriş yapmış kullanıcının adına tıklamak
+		    hesap sayfasına gitmenin en beklenen yolu. */}
+		<a class="oturum-ad" href="/profil/" title={okuyucu.displayName ?? 'Orbit hesabı'}>
 			{okuyucu.displayName ?? 'Hesabım'}
-		</span>
+		</a>
 		<button type="submit" class="oturum-dugme">Çıkış</button>
 	</form>
 )}
@@ -82,6 +86,12 @@ const donus = Astro.url.pathname + Astro.url.search;
 		white-space: nowrap;
 		font-size: 0.8rem;
 		color: var(--news-muted-strong);
+		text-decoration: none;
+	}
+
+	.oturum-ad:hover,
+	.oturum-ad:focus-visible {
+		text-decoration: underline;
 	}
 	.oturum-dugme {
 		display: inline-flex;

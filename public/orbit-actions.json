@@ -277,7 +277,7 @@
             "type": "integer",
             "minimum": 1,
             "maximum": 100,
-            "description": "Varsayılan 20."
+            "description": "Varsayılan 20, tavan 100. govde:true ise tavan 10."
           },
           "offset": {
             "type": "integer",
@@ -287,7 +287,7 @@
           },
           "govde": {
             "type": "boolean",
-            "description": "true ise haber metnini de döndürür (markdown)."
+            "description": "true ise haber metnini de döndürür (markdown). Bu durumda limit tavanı 10'a iner."
           }
         }
       },
@@ -312,6 +312,10 @@
           },
           "dahaVar": {
             "type": "boolean"
+          },
+          "limit": {
+            "type": "integer",
+            "description": "Uygulanan tavan; istenenden küçük olabilir."
           }
         }
       }
