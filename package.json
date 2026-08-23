@@ -31,7 +31,7 @@
     "haber:ayna": "node scripts/haber-ayna.mjs",
     "haber:ayna:kuru": "node scripts/haber-ayna.mjs --kuru",
     "test:newsroom": "newsroom/.venv/bin/python -m pytest newsroom/tests",
-    "test:orbit": "node worker/tools/orbit-token-tests.mjs && node worker/tools/orbit-giris-tests.mjs && node worker/tools/identity-tests.mjs",
+    "test:orbit": "node worker/tools/orbit-token-tests.mjs && node worker/tools/orbit-giris-tests.mjs && node worker/tools/identity-tests.mjs && node worker/tools/orbit-eylem-tests.mjs",
     "quality": "npm run test:newsroom && npm run test:orbit && npm run typecheck && npm run build"
   },
   "dependencies": {

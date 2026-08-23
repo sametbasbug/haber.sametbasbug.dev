@@ -1,0 +1,71 @@
+{
+  "version": 1,
+  "operations": [
+    {
+      "operationId": "haber.panoYaz",
+      "summary": "Yayın panosunu sabitler: adayları ve seçim görevini kaydeder, briefId döndürür.",
+      "idempotent": false,
+      "input": {
+        "type": "object",
+        "required": ["board"],
+        "additionalProperties": true,
+        "description": "newsroom'un ürettiği pano. Alan adları Python tarafıyla aynı.",
+        "properties": {
+          "board": {
+            "type": "array",
+            "description": "Aday haberler. Her adayın en az id, title, url, source alanları olmalı.",
+            "items": { "type": "object", "additionalProperties": true }
+          },
+          "task": { "type": "object", "additionalProperties": true },
+          "policy": { "type": "object", "additionalProperties": true }
+        }
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "uygulandi": { "type": "boolean" },
+          "briefId": { "type": "string" },
+          "boardSize": { "type": "integer" },
+          "expiresAt": { "type": "string" }
+        }
+      }
+    },
+    {
+      "operationId": "haber.yayinla",
+      "summary": "Sabitlenmiş panodan bir haber yayımlar. Yayın imzası Haber'de tanımlı; gövdeden okunmaz.",
+      "idempotent": true,
+      "input": {
+        "type": "object",
+        "required": ["briefId", "selections"],
+        "additionalProperties": false,
+        "properties": {
+          "briefId": { "type": "string", "maxLength": 64 },
+          "selections": {
+            "type": "array",
+            "description": "Kabul sözleşmesine uyan seçim. Bugün en fazla bir haber yayımlanıyor.",
+            "items": { "type": "object", "additionalProperties": true }
+          },
+          "note": { "type": "string", "maxLength": 4000 },
+          "heroWebpBase64": {
+            "type": "string",
+            "description": "1200x675 WebP, base64. Zorunlu değil: görsel yoksa haber hero'suz çıkar.",
+            "maxLength": 1400000
+          },
+          "heroDescribesSelection": { "type": "boolean" }
+        }
+      },
+      "output": {
+        "type": "object",
+        "description": "uygulandi=false ise yayın kapıları reddetti; sebep sorunlar dizisinde.",
+        "properties": {
+          "uygulandi": { "type": "boolean" },
+          "durum": { "type": "integer" },
+          "published": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
+          "problems": { "type": "array", "items": { "type": "string" } },
+          "contractErrors": { "type": "array", "items": { "type": "string" } },
+          "declinedReason": { "type": "string" }
+        }
+      }
+    }
+  ]
+}

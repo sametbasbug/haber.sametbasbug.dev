@@ -70,18 +70,18 @@
     }
   ],
 
-  // Yayın uçları için kimlik ayarı BİLEREK yok.
+  // Kimliğimiz Orbit'te: `oauth_clients.client_id`. Sır DEĞİL — hangi sitenin
+  // token'ı olduğunu söyleyen bir ad. Secret olarak tutulsaydı ne olduğu
+  // panele bakmadan görünmezdi; burada duruyor, sürümleniyor, gözle
+  // doğrulanabiliyor.
   //
-  // `ORBIT_ISSUER`/`ORBIT_AUDIENCE` tanımlanana kadar `authenticate()` hiçbir
-  // isteği kabul etmiyor ve /api/publish her çağrıya 401 dönüyor. Okuma yolu
-  // etkilenmiyor. Bu, "yayın açık ama kimlik yarım" durumundan iyidir:
-  // paylaşılan bir sırla açılan yazma ucu, herkese açık bir adreste kalıcı
-  // hale gelmeye çok müsait.
-  //
-  // Orbit'te istemci kaydı yapıldığında:
-  //   npx wrangler secret put ORBIT_ISSUER   --config wrangler.ssr.jsonc
-  //   npx wrangler secret put ORBIT_AUDIENCE --config wrangler.ssr.jsonc
-  // ve `publishers` tablosuna Selene'nin `sub` değeri eklenir.
+  // İki işi birden yapıyor. `ORBIT_ISSUER` (secret) ile birlikte tanımlıysa
+  // /api/publish Orbit ID token'ı kabul eder, ve /api/orbit-eylem Orbit'in
+  // ajan eylem belgelerini karşılar. Biri eksikse ikisi de 503 verir —
+  // yarım yapılandırılmış bir kapı, kapalı bir kapıdan kötüdür.
+  "vars": {
+    "ORBIT_AUDIENCE": "orbit-haber"
+  },
 
   "observability": { "enabled": true }
 }

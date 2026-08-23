@@ -33,6 +33,7 @@ function yayinUclari() {
 
         injectRoute({ pattern: '/api/brief', entrypoint: './src/server/routes/brief.ts' });
         injectRoute({ pattern: '/api/publish', entrypoint: './src/server/routes/publish.ts' });
+        injectRoute({ pattern: '/api/orbit-eylem', entrypoint: './src/server/routes/orbit-eylem.ts' });
         injectRoute({ pattern: '/images/generated/[...path]', entrypoint: './src/server/routes/hero.ts' });
         /* Site haritası statikte `@astrojs/sitemap` tarafından derleme anında
            üretiliyor; sunucu modunda üretilmiyor ve `robots.txt` ona işaret

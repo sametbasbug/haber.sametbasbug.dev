@@ -24,7 +24,7 @@
 
 import { validate } from "./accept.ts";
 import { tokenSetRatio } from "./fuzz.ts";
-import { authenticate, type AuthEnv } from "./identity.ts";
+import { authenticate, type AuthEnv, type Identity } from "./identity.ts";
 import { renderBody, RENDER_VERSION } from "./render.ts";
 
 /** `newsroom.live.DUPLICATE_TITLE_SIMILARITY` ile aynı olmak zorunda. */
@@ -155,18 +155,31 @@ export function bodyMarkdown(body: string, sources: { name: string; url: string 
   return parts.join("\n").trim();
 }
 
+/* HTTP kabuğu ile işin kendisi ayrı.
+ *
+ * İki çağıran var ve ikisi kimliği farklı yerden alıyor: `/api/brief`
+ * `Authorization` başlığından, `/api/orbit-eylem` ise Orbit'in imzalı eylem
+ * belgesinden. Ayrım burada bitiyor — belgeden gelen istek de aynı yetki
+ * kontrollerinden, aynı doğrulamalardan ve aynı yazma yolundan geçiyor.
+ * İkinci bir yayın yolu açsaydık kapılardan biri er geç ötekinden geri
+ * kalırdı. */
 export async function writeBrief(request: Request, env: Env): Promise<Response> {
   const auth = await authenticate(request, env);
   if (!auth.ok) return json({ error: auth.error }, auth.status);
-  if (!auth.identity.mayWriteBrief) {
-    return json({ error: "bu kimlik pano yazamaz" }, 403);
-  }
 
   let brief: any;
   try {
     brief = await request.json();
   } catch {
     return json({ error: "gövde JSON değil" }, 400);
+  }
+
+  return writeBriefAs(auth.identity, brief, env);
+}
+
+export async function writeBriefAs(identity: Identity, brief: any, env: Env): Promise<Response> {
+  if (!identity.mayWriteBrief) {
+    return json({ error: "bu kimlik pano yazamaz" }, 403);
   }
 
   if (!brief || typeof brief !== "object" || !Array.isArray(brief.board)) {
@@ -198,24 +211,31 @@ export async function writeBrief(request: Request, env: Env): Promise<Response> 
 export async function publish(request: Request, env: Env): Promise<Response> {
   const auth = await authenticate(request, env);
   if (!auth.ok) return json({ error: auth.error }, auth.status);
-  if (!auth.identity.mayPublish) {
-    return json({ error: "bu kimlik yayımlayamaz" }, 403);
-  }
-
-  /* Yayın imzası kimlikten gelir, yükten değil. `newsroom` tarafındaki kural
-   * aynen korunuyor: yazar adı model yanıtının parçası değildir, operasyonel
-   * metadata olarak sistem belirler. Böylece bir operatör — kasten ya da
-   * yanlışlıkla — başkasının imzasıyla yayımlayamaz. */
-  const author = auth.identity.author;
-  if (!SUPPORTED_AUTHORS.has(author)) {
-    return json({ problems: [`desteklenmeyen yazar: ${author}`] }, 500);
-  }
 
   let payload: any;
   try {
     payload = await request.json();
   } catch {
     return json({ error: "gövde JSON değil" }, 400);
+  }
+
+  return publishAs(auth.identity, payload, env);
+}
+
+export async function publishAs(identity: Identity, payload: any, env: Env): Promise<Response> {
+  if (!identity.mayPublish) {
+    return json({ error: "bu kimlik yayımlayamaz" }, 403);
+  }
+
+  /* Yayın imzası kimlikten gelir, yükten değil. `newsroom` tarafındaki kural
+   * aynen korunuyor: yazar adı model yanıtının parçası değildir, operasyonel
+   * metadata olarak sistem belirler. Böylece bir operatör — kasten ya da
+   * yanlışlıkla — başkasının imzasıyla yayımlayamaz. Ajan devretmesinde de
+   * aynen geçerli: imza `publishers.author`tan okunuyor, ajanın gönderdiği
+   * gövdeden değil. */
+  const author = identity.author;
+  if (!SUPPORTED_AUTHORS.has(author)) {
+    return json({ problems: [`desteklenmeyen yazar: ${author}`] }, 500);
   }
 
   if (typeof payload.briefId !== "string" || payload.briefId.length === 0) {

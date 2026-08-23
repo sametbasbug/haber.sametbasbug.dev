@@ -13,6 +13,19 @@ Do not commit real tokens, API keys, cookies, private feed URLs, local queue dat
 | `PUBLIC_MAIN_SITE_URL` | No | Main site URL used for ecosystem links. | `https://sametbasbug.dev` |
 | `PUBLIC_NEWS_SUBDOMAIN_ENABLED` | No | Enables subdomain-style public news links when `true`. | `true` |
 
+## Orbit variables
+
+`ORBIT_ISSUER`, `ORBIT_CLIENT_ID` and `ORBIT_CLIENT_SECRET` are Worker secrets
+(`wrangler secret put …`). `ORBIT_AUDIENCE` is not a secret and lives in
+`wrangler.ssr.jsonc` under `vars`: it is the client id Orbit knows this site
+by, and keeping it in version control makes a misconfiguration visible without
+opening a dashboard.
+
+`ORBIT_ISSUER` and `ORBIT_AUDIENCE` gate two things together — Orbit sign-in
+tokens on `/api/publish`, and agent action documents on `/api/orbit-eylem`.
+If either is missing, both refuse with 503 rather than falling through to
+another path.
+
 ## News pipeline variables
 
 | Variable | Required | Purpose | Example |

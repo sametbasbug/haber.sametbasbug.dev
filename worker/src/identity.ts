@@ -15,21 +15,22 @@
  * Orbit'in kasten kapattığı kapıyı arkadan açmak olurdu.
  *
  * ————————————————————————————————————————————————————————————————
- * BUGÜN İKİ KİMLİK YOLU VAR VE BUNUN GEÇİCİ BİR SEBEBİ VAR
+ * ÜÇ KİMLİK YOLU VAR
  *
- * Orbit'te bir AJANIN alabileceği kimlik henüz yok: site kapısı tarayıcı
- * tabanlı kullanıcı girişi akışıdır, MCP yetkileri ise ajanın Orbit ÜZERİNDE
- * iş yapması içindir. Selene'nin haber'e sunabileceği bir token üreten yol
- * yok ve bunu eklemek Orbit'in token ucunu değiştirmek demek — Orbit anime
- * sitesinin de kimlik sağlayıcısı, o ayrı bir karar.
+ *   1. Yayıncı anahtarı (`hbr_pub_v1_…`) — bugün Selene'nin kullandığı yol.
+ *   2. Orbit ID token'ı — insanın kendisi yayımlarsa.
+ *   3. Orbit EYLEM BELGESİ — ajan, insanın adına. `orbit-eylem.ts`.
  *
- * Bu yüzden yayıncı anahtarı yolu var. Orbit'in yerine geçmiyor, boşluğu
- * dolduruyor; Orbit doğrulaması aşağıda duruyor ve sınanmış durumda.
- * `ORBIT_ISSUER` tanımlandığı gün Orbit yolu devreye girer. Anahtar yolu
- * kendiliğinden kapanmaz ve kapanmamalı: geçiş sırasında ikisinin birden
- * çalışması gerekiyor, yoksa Orbit açıldığı an Selene yayımlayamaz hale
- * gelir. Anahtar yolunu kapatmak `publishers.key_digest` sütununu boşaltmakla
- * olur — açık ve geri alınabilir bir işlem.
+ * Üçüncüsü 23 Ağustos 2026'da eklendi ve anahtar yolunun gerekçesini
+ * geçersiz kıldı: o tarihe kadar Orbit'te bir ajanın alabileceği kimlik
+ * yoktu, artık var. Ajan Haber'e doğrudan konuşmuyor — Orbit konuşuyor, 60
+ * saniyelik imzalı bir belgeyle. Ajanın elinde saklanan hiçbir sır yok,
+ * dolayısıyla iptal tek yerde: insan Orbit panelinden kapatır, kapanır.
+ *
+ * Anahtar yolu kendiliğinden kapanmıyor ve kapanmamalı: geçiş sırasında
+ * ikisinin birden çalışması gerekiyor, yoksa açıldığı an Selene yayımlayamaz
+ * hale gelir. Kapatmak `publishers.key_digest` sütununu boşaltmakla olur —
+ * açık ve geri alınabilir bir işlem.
  * ———————————————————————————————————————————————————————————————— */
 
 export interface Identity {
@@ -40,7 +41,9 @@ export interface Identity {
   mayWriteBrief: boolean;
   mayPublish: boolean;
   /** Kimliğin nasıl kanıtlandığı. Denetim ve hata mesajları için. */
-  via: "orbit" | "publisher-key" | "shared-secret";
+  via: "orbit" | "orbit-action" | "publisher-key" | "shared-secret";
+  /** İşi fiilen yapan ajan (`agent:<id>`), varsa. İş `subject`in adına. */
+  actor?: string;
 }
 
 export interface AuthFailure {
@@ -118,12 +121,16 @@ async function loadJwks(issuer: string, force: boolean): Promise<Map<string, Cry
   return keys;
 }
 
-/** Orbit ID token'ını doğrular ve `sub`'u döner. Yetki kararı vermez. */
-export async function verifyOrbitToken(
+/* Orbit'in imzaladığı bir token'ın ORTAK doğrulaması: imza, `iss`, `aud`,
+ * `exp`, `iat`, `sub`. Buradan sonrası token'ın türüne göre değişiyor ve o
+ * fark bilerek dışarıda tutuldu — ID token ile eylem belgesi aynı anahtarla
+ * imzalanıyor, ayrılan tek şey taşıdıkları iddialar. İki kopya doğrulama
+ * tutmak, birinde yapılan düzeltmenin diğerine geçmemesi demekti. */
+async function verifySignedOrbitToken(
   token: string,
   issuer: string,
   audience: string,
-): Promise<{ subject: string } | AuthFailure> {
+): Promise<{ claims: any } | AuthFailure> {
   const parts = token.split(".");
   if (parts.length !== 3) return { status: 401, error: "token biçimi geçersiz" };
 
@@ -181,7 +188,74 @@ export async function verifyOrbitToken(
     return { status: 401, error: "token sub taşımıyor" };
   }
 
-  return { subject: claims.sub };
+  return { claims };
+}
+
+/** Orbit ID token'ını doğrular ve `sub`'u döner. Yetki kararı vermez. */
+export async function verifyOrbitToken(
+  token: string,
+  issuer: string,
+  audience: string,
+): Promise<{ subject: string } | AuthFailure> {
+  const verified = await verifySignedOrbitToken(token, issuer, audience);
+  if ("error" in verified) return verified;
+
+  /* Eylem belgesi ID token yerine geçemez. İkisi de Orbit'in aynı site
+   * anahtarıyla imzalanıyor ve `aud` ikisinde de bu site; ayıran şey `scope`.
+   * Kontrol olmasaydı, bir işlem için alınmış 60 saniyelik belge doğrudan
+   * `/api/publish`e sunulabilirdi — üstelik `act` iddiası okunmadan, yani
+   * kimin yaptığı kaydedilmeden. */
+  if (verified.claims.scope === SITE_ACTION_SCOPE) {
+    return { status: 401, error: "eylem belgesi kimlik token'ı yerine kullanılamaz" };
+  }
+
+  return { subject: verified.claims.sub };
+}
+
+/** Orbit'in eylem belgesindeki `scope`. Kontrat: `orbit-project/docs/baglisite-ajan-eylemleri.md`. */
+export const SITE_ACTION_SCOPE = "site.actions";
+
+export interface OrbitAction {
+  /** İnsanın pairwise `sub`'u — giriş sırasında tanıdığımız kimliğin aynısı. */
+  subject: string;
+  /** Aktör: `agent:<orbit ajan kimliği>` (RFC 8693 `act`). */
+  actorSubject: string;
+  actorHandle: string | null;
+  /** Belgeye gömülü işlem. Gövdedeki `operationId` ile eşleşmek zorunda. */
+  operation: string;
+}
+
+/** Orbit'in ajan eylem belgesini doğrular. Yetki kararı vermez. */
+export async function verifyOrbitActionToken(
+  token: string,
+  issuer: string,
+  audience: string,
+): Promise<OrbitAction | AuthFailure> {
+  const verified = await verifySignedOrbitToken(token, issuer, audience);
+  if ("error" in verified) return verified;
+  const claims = verified.claims;
+
+  if (claims.scope !== SITE_ACTION_SCOPE) {
+    return { status: 401, error: "token eylem belgesi değil" };
+  }
+  if (typeof claims.operation !== "string" || claims.operation.length === 0) {
+    return { status: 401, error: "belge işlem taşımıyor" };
+  }
+
+  /* `act` olmadan belge kabul edilmiyor. Aktörsüz bir eylem belgesi, işi
+   * insanın kendisinin yaptığı anlamına gelirdi ve denetim izinde ajan
+   * görünmezdi; ayrıca yayın imzasını çözecek satırı bulamazdık. */
+  const actor = claims.act;
+  if (!actor || typeof actor !== "object" || typeof actor.sub !== "string" || actor.sub.length === 0) {
+    return { status: 401, error: "belge aktör (act) taşımıyor" };
+  }
+
+  return {
+    subject: claims.sub,
+    actorSubject: actor.sub,
+    actorHandle: typeof actor.handle === "string" ? actor.handle : null,
+    operation: claims.operation,
+  };
 }
 
 /** Anahtarın SHA-256 özeti, onaltılık.
@@ -302,4 +376,43 @@ export async function authenticate(request: Request, env: AuthEnv): Promise<Auth
   }
 
   return { ok: false, status: 401, error: "yetkisiz" };
+}
+
+/** Eylem belgesindeki aktörü `publishers` satırına bağlar.
+ *
+ * İki koşul birlikte aranıyor: satırın `subject`i aktörün kimliği OLMALI ve
+ * `acts_for`u belgedeki insan OLMALI. Tek başına aktör aransaydı satır
+ * "Selene yayımlayabilir" derdi; iki koşulla "Selene, Samet'in adına
+ * yayımlayabilir" diyor. Fark bugün görünmüyor çünkü tek insan var, ama
+ * ikinci insan Haber'e girip ajan erişimini açtığı gün görünür hale gelir.
+ *
+ * Yayın imzası `author` sütunundan geliyor, belgedeki `act.handle`tan değil.
+ * Handle Orbit'te geri alınabiliyor ve devredilebiliyor; imzayı ona bağlamak
+ * ilk devir tesliminde arşivdeki yazarı değiştirirdi. */
+export async function authorizeAction(
+  action: OrbitAction,
+  env: AuthEnv,
+): Promise<AuthResult> {
+  const row = await env.DB.prepare(
+    `SELECT subject, author, may_write_brief, may_publish, disabled_at
+       FROM publishers WHERE subject = ? AND acts_for = ?`,
+  ).bind(action.actorSubject, action.subject).first<any>();
+
+  // Kimliği kanıtlanmış ama listede olmayan aktör: 403, 401 değil. Orbit
+  // erişimi açmış olabilir — o "bu ajan Haber'e gelebilir" demek; "bu ajan
+  // yayımlayabilir" demek değil ve o kararı Haber veriyor.
+  if (!row) return { ok: false, status: 403, error: "bu ajan yayıncı listesinde değil" };
+  if (row.disabled_at) return { ok: false, status: 403, error: "bu ajanın erişimi kapatılmış" };
+
+  return {
+    ok: true,
+    identity: {
+      subject: action.subject,
+      author: row.author,
+      mayWriteBrief: row.may_write_brief === 1,
+      mayPublish: row.may_publish === 1,
+      via: "orbit-action",
+      actor: action.actorSubject,
+    },
+  };
 }

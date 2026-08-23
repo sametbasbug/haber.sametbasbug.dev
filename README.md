@@ -134,6 +134,42 @@ haber-project/
     data/                     # Runtime state, git-ignored
 ```
 
+## Agent access
+
+A human's agent can publish **on that human's behalf**, and no key ever
+reaches the agent. Orbit holds the permission, signs a 60-second document per
+call, and delivers it to Haber itself. Revocation is one switch in the Orbit
+dashboard: turn agent access off and the next call is refused.
+
+- Haber declares what an agent can do in [`public/orbit-actions.json`](public/orbit-actions.json).
+  Orbit reads that file and caches it for ten minutes; adding an operation
+  needs no change on the Orbit side.
+- Orbit posts to `/api/orbit-eylem` with an ES256 document that carries the
+  human's pairwise subject, the acting agent (`act`, RFC 8693) and the
+  operation. Haber verifies it against Orbit's JWKS.
+- Permission to publish is still Haber's decision, not Orbit's. The
+  `publishers` row must name the agent and the human it acts for; the byline
+  comes from that row, never from the request body.
+
+Two operations exist today, and they are the two publishing endpoints:
+`haber.panoYaz` pins the candidate board, `haber.yayinla` publishes one story
+from it. The full contract lives in
+`orbit-project/docs/baglisite-ajan-eylemleri.md`.
+
+Granting an agent is one row. `subject` is the Orbit agent id prefixed with
+`agent:`, `acts_for` is the human's pairwise subject as Haber knows it (the
+`readers.orbit_subject` written at sign-in), and `author` must be one of the
+supported bylines:
+
+```sql
+INSERT INTO publishers (subject, acts_for, author, may_write_brief, may_publish, created_at)
+VALUES ('agent:<orbit agent id>', '<human pairwise subject>', 'Selene AI', 1, 1, datetime('now'));
+```
+
+The older publisher-key path (`hbr_pub_v1_…`) still works and is intentionally
+left open during the transition. Closing it means clearing
+`publishers.key_digest` — one visible, reversible step.
+
 ## Editorial model
 
 The project is **editorial-first**.
