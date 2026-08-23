@@ -398,6 +398,154 @@ export async function publishAs(identity: Identity, payload: any, env: Env): Pro
   }, 201);
 }
 
+/* Kaldırma penceresi.
+ *
+ * Gerçek kullanım "az önce yanlış bir şey yayımladık"; dört ay önceki bir
+ * haberi kaldırmak editoryal bir karardır ve tek bir çağrının arkasında
+ * olmamalı. Asimetri bilerek kapatılıyor: yayımlamak pano, kabul sözleşmesi,
+ * tekrar kapıları ve render'dan geçiyor; kaldırmak tek çağrı. Yanlış yayını
+ * durduran kapı var, DOĞRU yayını kaldıranı yok. Pencere o boşluğun yerini
+ * tutmuyor ama zararı sınırlıyor.
+ *
+ * Daha eskisini kaldırmak isteyen insan doğrudan veritabanından yapar; bu
+ * bir eksiklik değil, kararın insanda kalması. */
+const WITHDRAW_WINDOW_MS = 24 * 60 * 60 * 1000;
+
+const MIN_WITHDRAW_REASON = 10;
+
+/** Panonun mevcut durumunu okur.
+ *
+ * `panoYaz` bir `briefId` döndürüyor ve ajanın onu kaybetmesi mümkün —
+ * konuşma biter, oturum değişir, kalıcı hafıza yoktur. O zaman pano altı saat
+ * boyunca kimsenin ulaşamadığı bir yerde asılı kalıyordu. İki adımlı bir
+ * akışta ilk adımın çıktısını okuyamamak tasarım hatasıydı. */
+export async function readBoardAs(identity: Identity, env: Env): Promise<Response> {
+  if (!identity.mayWriteBrief) {
+    return json({ error: "bu kimlik panoyu okuyamaz" }, 403);
+  }
+
+  const row = await env.DB.prepare(
+    `SELECT id, payload, created_at, expires_at, consumed_at
+       FROM briefs WHERE consumed_at IS NULL AND expires_at > ?
+       ORDER BY created_at DESC LIMIT 1`,
+  ).bind(new Date().toISOString()).first<any>();
+
+  if (!row) return json({ aktifPano: null });
+
+  const brief = JSON.parse(row.payload);
+  return json({
+    aktifPano: {
+      briefId: row.id,
+      olusturuldu: row.created_at,
+      gecerlilikSonu: row.expires_at,
+      selectCount: brief.task?.selectCount ?? 1,
+      policyFingerprint: brief.policy?.fingerprint ?? null,
+      board: brief.board ?? [],
+    },
+  });
+}
+
+/** Yayımlanmış haberleri döndürür. Yetki İSTEMEZ — bkz. `orbit-eylem.ts`. */
+export async function listPublished(input: any, env: Env): Promise<Response> {
+  const limit = Math.min(Math.max(Number(input?.limit ?? 20) || 20, 1), 100);
+  const kategori = typeof input?.kategori === "string" ? input.kategori : null;
+
+  const rows = await env.DB.prepare(
+    `SELECT slug, title, description, category, author, pub_date, hero_image
+       FROM articles
+      WHERE is_draft = 0 ${kategori ? "AND category = ?" : ""}
+      ORDER BY pub_date DESC LIMIT ?`,
+  ).bind(...(kategori ? [kategori, limit] : [limit])).all<any>();
+
+  return json({
+    haberler: (rows.results ?? []).map((row) => ({
+      slug: row.slug,
+      baslik: row.title,
+      ozet: row.description,
+      kategori: row.category,
+      yazar: row.author,
+      yayinTarihi: row.pub_date,
+      url: `/${row.slug}/`,
+      gorsel: row.hero_image,
+    })),
+    toplam: (rows.results ?? []).length,
+  });
+}
+
+/** Haberi yayından kaldırır. Silmez: `is_draft` ile gizler, satır durur. */
+export async function withdrawAs(identity: Identity, input: any, env: Env): Promise<Response> {
+  if (!identity.mayPublish) return json({ error: "bu kimlik yayından kaldıramaz" }, 403);
+
+  const slug = typeof input?.slug === "string" ? input.slug.trim() : "";
+  const reason = typeof input?.reason === "string" ? input.reason.trim() : "";
+  if (slug.length === 0) return json({ problems: ["slug eksik"] }, 400);
+  /* `reason` ZORUNLU ve bu "mümkünse" değil. Gerekçesiz bir kaldırma, altı ay
+   * sonra bakan biri için sebebi kaybolmuş bir boşluktur; kaldırma kararının
+   * tek denetim izi bu alan. */
+  if (reason.length < MIN_WITHDRAW_REASON) {
+    return json({ problems: [`reason en az ${MIN_WITHDRAW_REASON} karakter olmalı`] }, 400);
+  }
+
+  const row = await env.DB.prepare(
+    "SELECT slug, title, pub_date, is_draft FROM articles WHERE slug = ?",
+  ).bind(slug).first<any>();
+
+  if (!row) return json({ problems: [`haber bulunamadı: ${slug}`] }, 404);
+  if (row.is_draft === 1) return json({ problems: ["bu haber zaten yayında değil"] }, 409);
+
+  const yas = Date.now() - new Date(row.pub_date).getTime();
+  if (yas > WITHDRAW_WINDOW_MS) {
+    return json({
+      problems: [`bu haber 24 saatten eski (${Math.floor(yas / 3_600_000)} saat); kaldırma insan kararı`],
+    }, 409);
+  }
+
+  const stamp = new Date().toISOString();
+  await env.DB.batch([
+    env.DB.prepare("UPDATE articles SET is_draft = 1, updated_at = ? WHERE slug = ?").bind(stamp, slug),
+    env.DB.prepare(
+      `INSERT INTO article_withdrawals (slug, action, reason, subject, actor_subject, created_at)
+       VALUES (?,'withdraw',?,?,?,?)`,
+    ).bind(slug, reason, identity.subject, identity.actor ?? null, stamp),
+    /* İçerik sürümü aynı partide artıyor: artmasaydı kaldırılan haber liste
+       sayfalarında önbellek süresi dolana kadar görünmeye devam ederdi. */
+    env.DB.prepare("UPDATE site_state SET content_version = content_version + 1, updated_at = ? WHERE id = 1").bind(stamp),
+  ]);
+
+  return json({ slug, baslik: row.title, kaldirildi: true, tarih: stamp });
+}
+
+/** Kaldırılan haberi geri alır.
+ *
+ * Kaldırma ajan yapabiliyorsa geri alma da yapabilmeli. Aksi halde "geri
+ * alınabilir" demek "biri veritabanına girerse geri alınabilir" demek olurdu
+ * ve geri almak kaldırmaktan daha güvenli bir işlem. */
+export async function restoreAs(identity: Identity, input: any, env: Env): Promise<Response> {
+  if (!identity.mayPublish) return json({ error: "bu kimlik yayına alamaz" }, 403);
+
+  const slug = typeof input?.slug === "string" ? input.slug.trim() : "";
+  if (slug.length === 0) return json({ problems: ["slug eksik"] }, 400);
+
+  const row = await env.DB.prepare(
+    "SELECT slug, title, is_draft FROM articles WHERE slug = ?",
+  ).bind(slug).first<any>();
+
+  if (!row) return json({ problems: [`haber bulunamadı: ${slug}`] }, 404);
+  if (row.is_draft === 0) return json({ problems: ["bu haber zaten yayında"] }, 409);
+
+  const stamp = new Date().toISOString();
+  await env.DB.batch([
+    env.DB.prepare("UPDATE articles SET is_draft = 0, updated_at = ? WHERE slug = ?").bind(stamp, slug),
+    env.DB.prepare(
+      `INSERT INTO article_withdrawals (slug, action, reason, subject, actor_subject, created_at)
+       VALUES (?,'restore','yayına geri alındı',?,?,?)`,
+    ).bind(slug, identity.subject, identity.actor ?? null, stamp),
+    env.DB.prepare("UPDATE site_state SET content_version = content_version + 1, updated_at = ? WHERE id = 1").bind(stamp),
+  ]);
+
+  return json({ slug, baslik: row.title, yayinda: true, tarih: stamp });
+}
+
 export async function readArticle(slug: string, env: Env): Promise<Response> {
   const row = await env.DB.prepare(
     `SELECT slug, title, description, category, author, body_html,

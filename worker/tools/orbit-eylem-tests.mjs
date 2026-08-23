@@ -10,6 +10,7 @@
  * Orbit üzerinden ayrıca doğrulandı. Buradaki iş kapı mantığı.
  */
 import { OPERATIONS, siteAction } from "../src/orbit-eylem.ts";
+import { restoreAs, withdrawAs } from "../src/index.ts";
 
 const ISSUER = "https://orbit.example.test";
 const AUDIENCE = "orbit-haber";
@@ -50,7 +51,7 @@ async function belge({ claims = {}, key = pair.privateKey } = {}) {
 
 /* Sahte D1. SQL'e bakıp cevap veriyor; yazılanları `yazilanlar` içinde
  * biriktiriyor ki tekrar kaydının gerçekten yazıldığı görülebilsin. */
-function sahteDB({ yayinciSatiri, gecmis = null }) {
+function sahteDB({ yayinciSatiri, gecmis = null, satirlar = [] }) {
   const yazilanlar = [];
   const reddedilenler = [];
   return {
@@ -76,6 +77,7 @@ function sahteDB({ yayinciSatiri, gecmis = null }) {
               if (sql.includes("FROM orbit_action_log")) return gecmis;
               return null;
             },
+            async all() { return { results: satirlar }; },
             async run() {
               if (sql.includes("orbit_action_denials")) reddedilenler.push({ sql, args });
               else yazilanlar.push({ sql, args });
@@ -232,6 +234,121 @@ console.log("\n── tekrar ──");
   const r = await siteAction(istek(await belge(), { operationId: "haber.panoYaz", input: PANO }), { DB: db, ...ORTAM });
   check("aynı anahtar farklı gövde çakışma", await sonuc(r), '409 {"error":"aynı Idempotency-Key farklı bir istekle kullanıldı"}');
   check("  ve hiçbir şey yazılmıyor", db.yazilanlar.length, 0);
+}
+
+console.log("\n── yayından kaldırma ──");
+{
+  /* Sahte veritabanı SORGUYA bakıyor, argümanlara değil — mutasyon turunda
+   * bir kez bunun tersini yapıp testi kör bırakmıştım. */
+  const haberDBHam = (haber, olaylar = []) => ({
+    olaylar,
+    prepare(sql) {
+      return {
+        bind(...args) {
+          return {
+            async first() { return sql.includes("FROM articles") ? haber : null; },
+            async all() { return { results: [] }; },
+            async run() { return { success: true }; },
+            __sql: sql, __args: args,
+          };
+        },
+      };
+    },
+    async batch(ifadeler) { olaylar.push(...ifadeler.map((i) => ({ sql: i.__sql, args: i.__args }))); return []; },
+  });
+  /* `withdrawAs` bir `Env` alıyor, çıplak veritabanı değil. */
+  const haberDB = (haber) => { const olaylar = []; return { DB: haberDBHam(haber, olaylar), olaylar }; };
+
+  const SAAT = 3_600_000;
+  const taze = { slug: "taze-haber", title: "Taze", pub_date: new Date(Date.now() - 2 * SAAT).toISOString(), is_draft: 0 };
+  const eski = { slug: "eski-haber", title: "Eski", pub_date: new Date(Date.now() - 30 * SAAT).toISOString(), is_draft: 0 };
+  const kimlik = { subject: INSAN, author: "Selene AI", mayWriteBrief: true, mayPublish: true, via: "orbit-action", actor: AJAN };
+
+  const cikti = async (r) => ({ status: r.status, govde: await r.json() });
+
+  {
+    const db = haberDB(taze);
+    const { status, govde } = await cikti(await withdrawAs(kimlik, { slug: taze.slug, reason: "kaynak yanlış çıktı, teyit bekliyoruz" }, db));
+    check("taze haber kaldırılabiliyor", `${status} ${govde.kaldirildi}`, "200 true");
+    check("  is_draft 1 yapılıyor", db.olaylar.some((o) => o.sql.includes("is_draft = 1")), true);
+    check("  olay kaydediliyor", db.olaylar.some((o) => o.sql.includes("article_withdrawals")), true);
+    check("  aktör olayda", db.olaylar.find((o) => o.sql.includes("article_withdrawals")).args[3], AJAN);
+    check("  içerik sürümü artıyor", db.olaylar.some((o) => o.sql.includes("content_version + 1")), true);
+  }
+  {
+    /* PENCERE. Dört ay önceki bir haberi tek çağrıyla kaldırmak editoryal bir
+     * karardır ve ajanın elinde olmamalı. */
+    const db = haberDB(eski);
+    const { status, govde } = await cikti(await withdrawAs(kimlik, { slug: eski.slug, reason: "artık geçerli değil bence" }, db));
+    check("24 saatten eski haber kaldırılamıyor", status, 409);
+    check("  hiçbir şey yazılmıyor", db.olaylar.length, 0);
+  }
+  {
+    /* GEREKÇE ZORUNLU. Gerekçesiz kaldırma, altı ay sonra sebebi kaybolmuş
+     * bir boşluktur. */
+    const db = haberDB(taze);
+    const { status } = await cikti(await withdrawAs(kimlik, { slug: taze.slug, reason: "yanlış" }, db));
+    check("kısa gerekçe reddediliyor", status, 400);
+    check("  hiçbir şey yazılmıyor", db.olaylar.length, 0);
+  }
+  {
+    const db = haberDB(taze);
+    const { status } = await cikti(await withdrawAs(kimlik, { slug: taze.slug }, db));
+    check("gerekçesiz kaldırma reddediliyor", status, 400);
+  }
+  {
+    const db = haberDB({ ...taze, is_draft: 1 });
+    const { status } = await cikti(await withdrawAs(kimlik, { slug: taze.slug, reason: "zaten kaldırılmıştı sanırım" }, db));
+    check("zaten kaldırılmış haber 409", status, 409);
+  }
+  {
+    const db = haberDB(null);
+    const { status } = await cikti(await withdrawAs(kimlik, { slug: "yok-boyle", reason: "olmayan haberi kaldırmayı deniyorum" }, db));
+    check("olmayan haber 404", status, 404);
+  }
+  {
+    const db = haberDB(taze);
+    const { status } = await cikti(await withdrawAs({ ...kimlik, mayPublish: false }, { slug: taze.slug, reason: "yetkim yok ama deniyorum" }, db));
+    check("yayın yetkisi olmayan kaldıramıyor", status, 403);
+  }
+  {
+    /* GERİ ALMA: pencere YOK. Kaldırmak sınırlı, geri almak değil — geri
+     * almak daha güvenli bir işlem ve eski bir haberi yanlışlıkla kaldırmış
+     * olabiliriz. */
+    const db = haberDB({ ...eski, is_draft: 1 });
+    const { status, govde } = await cikti(await restoreAs(kimlik, { slug: eski.slug }, db));
+    check("eski haber geri alınabiliyor", `${status} ${govde.yayinda}`, "200 true");
+    check("  is_draft 0 yapılıyor", db.olaylar.some((o) => o.sql.includes("is_draft = 0")), true);
+  }
+  {
+    const db = haberDB(taze);
+    const { status } = await cikti(await restoreAs(kimlik, { slug: taze.slug }, db));
+    check("zaten yayındaki haber 409", status, 409);
+  }
+}
+
+console.log("\n── yetki katmanları ──");
+{
+  /* Yayıncı satırı OLMAYAN bir ajan yayımlanmış haberleri okuyabilmeli:
+   * ekosistemdeki başka bir ajan "bugünün haberlerini getir" diyebilsin. */
+  const db = sahteDB({ yayinciSatiri: null, satirlar: [{ slug: "bir-haber", title: "Bir haber" }] });
+  const r = await siteAction(
+    istek(await belge({ claims: { operation: "haber.yayinlariOku" } }), { operationId: "haber.yayinlariOku", input: {} }),
+    { DB: db, ...ORTAM },
+  );
+  const govde = await r.json();
+  check("yayıncı olmayan ajan haberleri okuyabiliyor", `${r.status} ${govde.status}`, "200 applied");
+  check("  okuma tekrar kaydı yazmıyor", db.yazilanlar.length, 0);
+}
+{
+  /* Ama yazma işlemleri duvarın arkasında kalmalı. */
+  for (const islem of ["haber.panoYaz", "haber.yayinla", "haber.yayindanKaldir", "haber.yayinaAlGeri", "haber.panoOku"]) {
+    const r = await siteAction(
+      istek(await belge({ claims: { operation: islem } }), { operationId: islem, input: {} }),
+      { DB: sahteDB({ yayinciSatiri: null }), ...ORTAM },
+    );
+    check(`  ${islem} yayıncı satırı istiyor`, r.status, 403);
+  }
 }
 
 console.log("\n── katalog ──");

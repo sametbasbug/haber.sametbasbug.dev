@@ -7,26 +7,65 @@
       "idempotent": false,
       "input": {
         "type": "object",
-        "required": ["board"],
+        "required": [
+          "board"
+        ],
         "additionalProperties": true,
         "description": "newsroom'un ürettiği pano. Alan adları Python tarafıyla aynı.",
         "properties": {
           "board": {
             "type": "array",
             "description": "Aday haberler. Her adayın en az id, title, url, source alanları olmalı.",
-            "items": { "type": "object", "additionalProperties": true }
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
           },
-          "task": { "type": "object", "additionalProperties": true },
-          "policy": { "type": "object", "additionalProperties": true }
+          "task": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "policy": {
+            "type": "object",
+            "additionalProperties": true
+          }
         }
       },
       "output": {
         "type": "object",
         "properties": {
-          "uygulandi": { "type": "boolean" },
-          "briefId": { "type": "string" },
-          "boardSize": { "type": "integer" },
-          "expiresAt": { "type": "string" }
+          "uygulandi": {
+            "type": "boolean"
+          },
+          "briefId": {
+            "type": "string"
+          },
+          "boardSize": {
+            "type": "integer"
+          },
+          "expiresAt": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    {
+      "operationId": "haber.panoOku",
+      "summary": "Süresi dolmamış ve kullanılmamış aktif panoyu döndürür: briefId, adaylar, görev ve geçerlilik sonu. Yayın sürecinin iç durumu.",
+      "idempotent": true,
+      "input": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {}
+      },
+      "output": {
+        "type": "object",
+        "description": "aktifPano null ise ortada bekleyen pano yok.",
+        "properties": {
+          "aktifPano": {
+            "type": "object",
+            "additionalProperties": true
+          }
         }
       }
     },
@@ -36,34 +75,206 @@
       "idempotent": true,
       "input": {
         "type": "object",
-        "required": ["briefId", "selections"],
+        "required": [
+          "briefId",
+          "selections"
+        ],
         "additionalProperties": false,
         "properties": {
-          "briefId": { "type": "string", "maxLength": 64 },
+          "briefId": {
+            "type": "string",
+            "maxLength": 64
+          },
           "selections": {
             "type": "array",
             "description": "Kabul sözleşmesine uyan seçim. Bugün en fazla bir haber yayımlanıyor.",
-            "items": { "type": "object", "additionalProperties": true }
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
           },
-          "note": { "type": "string", "maxLength": 4000 },
+          "note": {
+            "type": "string",
+            "maxLength": 4000
+          },
           "heroWebpBase64": {
             "type": "string",
             "description": "1200x675 WebP, base64. Zorunlu değil: görsel yoksa haber hero'suz çıkar.",
             "maxLength": 1400000
           },
-          "heroDescribesSelection": { "type": "boolean" }
+          "heroDescribesSelection": {
+            "type": "boolean"
+          }
         }
       },
       "output": {
         "type": "object",
         "description": "uygulandi=false ise yayın kapıları reddetti; sebep sorunlar dizisinde.",
         "properties": {
-          "uygulandi": { "type": "boolean" },
-          "durum": { "type": "integer" },
-          "published": { "type": "array", "items": { "type": "object", "additionalProperties": true } },
-          "problems": { "type": "array", "items": { "type": "string" } },
-          "contractErrors": { "type": "array", "items": { "type": "string" } },
-          "declinedReason": { "type": "string" }
+          "uygulandi": {
+            "type": "boolean"
+          },
+          "durum": {
+            "type": "integer"
+          },
+          "published": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "problems": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "contractErrors": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "declinedReason": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    {
+      "operationId": "haber.yayindanKaldir",
+      "summary": "Yayımlanmış bir haberi yayından kaldırır. Silmez, gizler; geri alınabilir. Yalnız son 24 saatte yayımlanmış haberler için.",
+      "idempotent": true,
+      "input": {
+        "type": "object",
+        "required": [
+          "slug",
+          "reason"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "slug": {
+            "type": "string",
+            "maxLength": 200,
+            "description": "Haberin adresindeki slug."
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 500,
+            "description": "Gerekçe. İÇ KAYITTIR, sayfada gösterilmez. En az 10 karakter."
+          }
+        }
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "uygulandi": {
+            "type": "boolean"
+          },
+          "durum": {
+            "type": "integer"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "baslik": {
+            "type": "string"
+          },
+          "kaldirildi": {
+            "type": "boolean"
+          },
+          "problems": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    {
+      "operationId": "haber.yayinaAlGeri",
+      "summary": "Yayından kaldırılmış bir haberi geri yayına alır.",
+      "idempotent": true,
+      "input": {
+        "type": "object",
+        "required": [
+          "slug"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "slug": {
+            "type": "string",
+            "maxLength": 200
+          }
+        }
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "uygulandi": {
+            "type": "boolean"
+          },
+          "durum": {
+            "type": "integer"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "baslik": {
+            "type": "string"
+          },
+          "yayinda": {
+            "type": "boolean"
+          },
+          "problems": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    {
+      "operationId": "haber.yayinlariOku",
+      "summary": "Yayımlanmış haberleri en yeniden eskiye döndürür. Yayıncı yetkisi gerektirmez; Orbit'e bağlı her ajan çağırabilir.",
+      "idempotent": true,
+      "input": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "description": "Kaç haber. Varsayılan 20."
+          },
+          "kategori": {
+            "enum": [
+              "Siyaset",
+              "Ekonomi",
+              "Teknoloji",
+              "Bilim"
+            ],
+            "description": "Tek kategoriye daraltır."
+          }
+        }
+      },
+      "output": {
+        "type": "object",
+        "properties": {
+          "haberler": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "toplam": {
+            "type": "integer"
+          }
         }
       }
     }

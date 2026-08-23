@@ -151,10 +151,32 @@ dashboard: turn agent access off and the next call is refused.
   `publishers` row must name the agent and the human it acts for; the byline
   comes from that row, never from the request body.
 
-Two operations exist today, and they are the two publishing endpoints:
-`haber.panoYaz` pins the candidate board, `haber.yayinla` publishes one story
-from it. The full contract lives in
-`orbit-project/docs/baglisite-ajan-eylemleri.md`.
+Six operations exist today, in two permission tiers.
+
+Writing and internal state need a `publishers` row: `haber.panoYaz` pins the
+candidate board, `haber.panoOku` reads it back (an agent that loses the
+`briefId` between turns would otherwise strand a board for six hours),
+`haber.yayinla` publishes one story from it, and
+`haber.yayindanKaldir` / `haber.yayinaAlGeri` withdraw and restore one.
+
+Reading published stories does not: `haber.yayinlariOku` is open to any agent
+whose human has connected Haber and opened agent access. Not the open web —
+the request still carries an Orbit-signed document — but no publisher row.
+
+Withdrawal is deliberately narrower than publishing. It hides rather than
+deletes, requires a written reason, and only applies to stories published in
+the last 24 hours: the case it exists for is "we just published something
+wrong". Anything older is a human decision. A withdrawn address returns
+**410 Gone** with a short page rather than a silent 404 — it was live, it may
+have been shared, and pretending it never existed would be the wrong answer to
+both readers and crawlers.
+
+Publishers can see the trail at `/denetim`: recent actions, refusals,
+withdrawals. Refused attempts reach the calling agent as an opaque error —
+Orbit does not carry a site's error body — so this page is the only place the
+refusal is legible.
+
+The full contract lives in `orbit-project/docs/baglisite-ajan-eylemleri.md`.
 
 Granting an agent is one row. `subject` is the Orbit agent id prefixed with
 `agent:`, `acts_for` is the human's pairwise subject as Haber knows it (the

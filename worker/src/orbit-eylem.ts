@@ -10,10 +10,47 @@
  * Ayrı bir yayın yolu açsaydık kabul sözleşmesi, tekrar kapıları ve render
  * kontrolleri iki yerde durur, biri er geç ötekinden geri kalırdı.
  */
-import { publishAs, writeBriefAs, type Env } from "./index.ts";
-import { authorizeAction, verifyOrbitActionToken } from "./identity.ts";
+import {
+  listPublished,
+  publishAs,
+  readBoardAs,
+  restoreAs,
+  withdrawAs,
+  writeBriefAs,
+  type Env,
+} from "./index.ts";
+import { authorizeAction, verifyOrbitActionToken, type Identity } from "./identity.ts";
 
-export const OPERATIONS = ["haber.panoYaz", "haber.yayinla"] as const;
+export const OPERATIONS = [
+  "haber.panoYaz",
+  "haber.panoOku",
+  "haber.yayinla",
+  "haber.yayindanKaldir",
+  "haber.yayinaAlGeri",
+  "haber.yayinlariOku",
+] as const;
+
+/* İKİ YETKİ KATMANI VAR VE BU YENİ BİR KURAL — yazıldığı yer burası.
+ *
+ *   yazma ve iç durum → `publishers` satırı gerekiyor
+ *   yayımlanmış haberi okuma → bağlı olmak yeterli, satır gerekmiyor
+ *
+ * Alttaki katmanın gerekçesi: Orbit ekosistemindeki başka bir ajan "bugünün
+ * haberlerini getir" diyebilmeli ve bunun için yayıncı listesine girmesi
+ * saçma olurdu. Ama "herkese açık" da değil — belge yine Orbit imzalı, yani
+ * karşı tarafta bir Orbit kimliği ve insanın açtığı bir ajan erişimi var.
+ * Yani "önüne gelen" değil, "Orbit'te kimliği olan".
+ *
+ * Bu listeye bir işlem eklemek onu izin duvarının DIŞINA çıkarmaktır; yazma
+ * yapan hiçbir işlem buraya girmemeli. */
+const YETKI_GEREKTIRMEYENLER = new Set<string>(["haber.yayinlariOku"]);
+
+/* Tekrar kaydı tutulmayan işlemler.
+ *
+ * Okuma işleminde tekrar diye bir sorun yok: ikinci kez çalışması zararsız ve
+ * taze cevap bayat cevaptan iyidir. Kayıt tutsaydık her okuma bir satır
+ * yazardı — okuma yolunu yazma yoluna çevirmek olurdu. */
+const KAYITSIZ = new Set<string>(["haber.yayinlariOku", "haber.panoOku"]);
 
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
@@ -156,17 +193,21 @@ export async function siteAction(request: Request, env: Env): Promise<Response> 
     return reddetVeYaz(404, `bilinmeyen işlem: ${operationId}`);
   }
 
-  const auth = await authorizeAction(verified, env);
-  if (!auth.ok) return reddetVeYaz(auth.status, auth.error);
+  const yetkiGerekiyor = !YETKI_GEREKTIRMEYENLER.has(operationId);
+  const auth = yetkiGerekiyor ? await authorizeAction(verified, env) : null;
+  if (auth && !auth.ok) return reddetVeYaz(auth.status, auth.error);
 
+  const kayitTut = !KAYITSIZ.has(operationId);
   const inputDigest = await digest(JSON.stringify({ operationId, input }));
 
   /* Tekrar mı? Aynı anahtar + aynı gövde ise ilk çalışmanın cevabı dönüyor.
    * Yayının kendi kapıları çoğu tekrarı zaten durdurur ama 409 ile — ajan
    * için "başarısız" demektir. Burada ilk cevabın aynısı dönüyor. */
-  const gecmis = await env.DB.prepare(
-    "SELECT input_digest, output FROM orbit_action_log WHERE subject = ? AND idempotency_key = ?",
-  ).bind(verified.subject, idempotencyKey).first<any>();
+  const gecmis = kayitTut
+    ? await env.DB.prepare(
+      "SELECT input_digest, output FROM orbit_action_log WHERE subject = ? AND idempotency_key = ?",
+    ).bind(verified.subject, idempotencyKey).first<any>()
+    : null;
 
   if (gecmis) {
     /* Aynı anahtar FARKLI gövdeyle geldi: bu bir tekrar değil, çakışma.
@@ -178,12 +219,12 @@ export async function siteAction(request: Request, env: Env): Promise<Response> 
     return json({ status: "replayed", output: JSON.parse(gecmis.output) });
   }
 
-  const response = operationId === "haber.panoYaz"
-    ? await writeBriefAs(auth.identity, input, env)
-    : await publishAs(auth.identity, input, env);
+  const response = await calistir(operationId, auth?.identity, input, env);
 
   const sonuc = await sonucaCevir(response, reddetVeYaz);
   if (sonuc instanceof Response) return sonuc;
+
+  if (!kayitTut) return json({ status: "applied", output: sonuc.output });
 
   /* Kayıt yazmadan önce iş bitmiş oluyor ve bu sıra bilerek: kaydı önce
    * yazsaydık, yayın çökerse ajan "yapıldı" cevabını sonsuza kadar tekrar
@@ -204,4 +245,24 @@ export async function siteAction(request: Request, env: Env): Promise<Response> 
   ).run();
 
   return json({ status: "applied", output: sonuc.output });
+}
+
+/** İşlemi yayının kendi yoluna bağlar. Yetki kontrolleri o fonksiyonların
+ *  içinde: kapıyı burada tekrarlamak, birinin diğerinden geri kalması
+ *  demekti. */
+async function calistir(
+  operationId: string,
+  identity: Identity | undefined,
+  input: Record<string, unknown>,
+  env: Env,
+): Promise<Response> {
+  switch (operationId) {
+    case "haber.panoYaz": return writeBriefAs(identity!, input, env);
+    case "haber.panoOku": return readBoardAs(identity!, env);
+    case "haber.yayinla": return publishAs(identity!, input, env);
+    case "haber.yayindanKaldir": return withdrawAs(identity!, input, env);
+    case "haber.yayinaAlGeri": return restoreAs(identity!, input, env);
+    case "haber.yayinlariOku": return listPublished(input, env);
+    default: return json({ error: `bilinmeyen işlem: ${operationId}` }, 404);
+  }
 }

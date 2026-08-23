@@ -5,6 +5,7 @@ import NewsCard from '../components/news/NewsCard.astro';
 import { findAuthorByName } from '../data/authors';
 import { formatNewsDate, getEquinoxHaberCategories, getNewsCategoryToken, getPublishedEquinoxHaber, normalizeNewsCategory } from '../data/equinoxHaber';
 import { getNewsArticleHref, getNewsCanonicalUrl, getNewsHomeHref } from '../data/newsSite';
+import { getWithdrawal, kaldirilanSayfasi } from '../data/withdrawals';
 
 
 export async function getStaticPaths() {
@@ -20,6 +21,32 @@ const allEntries = await getPublishedEquinoxHaber();
 const entry = allEntries.find((item) => item.id === routeSlug);
 
 if (!entry) {
+	/* Yayından kaldırılmış bir haber mi?
+	 *
+	 * Adres bir süre yayında kaldı; paylaşımlarda ve arama motorlarında
+	 * karşılığı olabilir. Sessizce 404 dönmek, hiç var olmamış gibi
+	 * davranmak olurdu — oysa vardı ve kaldırıldı. Fark okuyucu için de
+	 * arama motoru için de anlamlı: 410 "vardı, artık yok, indeksten
+	 * düşürebilirsin" demek.
+	 *
+	 * Sorgu YALNIZ 404 yolunda çalışıyor, her istekte değil. Var olan bir
+	 * haber buraya hiç düşmüyor.
+	 *
+	 * Gerekçe SAYFADA GÖSTERİLMİYOR: `article_withdrawals.reason` operatöre
+	 * yazılmış bir iç nottur ("kaynak yanlış, teyit bekliyoruz") ve
+	 * kendiliğinden yayımlanması sürpriz olurdu. */
+	const kaldirilan = await getWithdrawal(routeSlug!);
+	if (kaldirilan) {
+		return new Response(kaldirilanSayfasi(kaldirilan.tarih), {
+			status: 410,
+			headers: {
+				'content-type': 'text/html; charset=utf-8',
+				'x-robots-tag': 'noindex',
+				'cache-control': 'no-store',
+			},
+		});
+	}
+
 	/* Statik modda buraya düşülmez: `getStaticPaths` yalnız var olan
 	   haberlerin adresini üretir. Sunucu modunda bilinmeyen bir slug normal
 	   bir istektir ve 404 doğru cevaptır — hata fırlatmak 500 üretirdi. */

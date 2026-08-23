@@ -1,0 +1,191 @@
+---
+/* Denetim sayfası.
+ *
+ * Ajan eylemlerinin izi bugüne kadar yalnız veritabanındaydı ve ona bakmanın
+ * tek yolu Cloudflare panelinde SQL yazmaktı. Bir denetim izi, bakılamıyorsa
+ * denetim izi değildir.
+ *
+ * Kime açık: `publishers` tablosunda satırı olan Orbit kimlikleri. Ayrı bir
+ * yönetici listesi kurmadım — ikinci bir yetki listesi, birinciyle ayrışacağı
+ * gün demektir. Giren kişinin kendi satırı ya da ADINA çalışan bir ajanın
+ * satırı varsa buraya girebiliyor.
+ *
+ * Sayfa önbelleğe HİÇ girmiyor: ara katman oturum çerezi taşıyan her isteği
+ * zaten atlıyor, ama burada bunu açıkça da yazıyorum çünkü içeriği kişiye
+ * özel ve bir gün o kural değişirse burası sessizce sızmamalı.
+ */
+export const prerender = false;
+
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getDatabase } from '#runtime-env';
+import { oturumCereziVarMi, oturumOku } from '../server/session';
+
+const veritabani = getDatabase();
+const okuyucu = veritabani && oturumCereziVarMi(Astro.request)
+	? await oturumOku(veritabani, Astro.request, Date.now())
+	: null;
+
+Astro.response.headers.set('cache-control', 'private, no-store');
+Astro.response.headers.set('x-robots-tag', 'noindex');
+
+if (!veritabani || !okuyucu) {
+	return new Response(null, { status: 302, headers: { location: '/' } });
+}
+
+/* Yetki: bu kimliğin kendi satırı ya da onun adına çalışan bir ajanın satırı.
+ * `acts_for` sütunu tam olarak bu soruyu cevaplıyor. */
+const yetki = await veritabani
+	.prepare('SELECT count(*) AS n FROM publishers WHERE subject = ? OR acts_for = ?')
+	.bind(okuyucu.orbitSubject, okuyucu.orbitSubject)
+	.first<{ n: number }>();
+
+if (!yetki || yetki.n === 0) {
+	return new Response('Bu sayfa yayıncılara açık.', {
+		status: 403,
+		headers: { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'no-store' },
+	});
+}
+
+const [eylemler, reddedilenler, kaldirmalar, yayincilar] = await Promise.all([
+	veritabani.prepare(
+		`SELECT operation_id, actor_subject, subject, created_at
+		   FROM orbit_action_log ORDER BY created_at DESC LIMIT 40`,
+	).all<any>(),
+	veritabani.prepare(
+		`SELECT operation_id, document_operation, actor_subject, status, reason, created_at
+		   FROM orbit_action_denials ORDER BY created_at DESC LIMIT 40`,
+	).all<any>(),
+	veritabani.prepare(
+		`SELECT slug, action, reason, actor_subject, created_at
+		   FROM article_withdrawals ORDER BY created_at DESC LIMIT 20`,
+	).all<any>(),
+	veritabani.prepare(
+		`SELECT subject, author, acts_for, may_write_brief, may_publish, disabled_at,
+		        key_digest IS NOT NULL AS anahtarli
+		   FROM publishers ORDER BY created_at`,
+	).all<any>(),
+]);
+
+const bicim = new Intl.DateTimeFormat('tr-TR', {
+	day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
+	timeZone: 'Europe/Istanbul',
+});
+const zaman = (value: string) => bicim.format(new Date(value));
+
+/* Ajan kimlikleri okunmaz uzunlukta UUID. Tam değeri `title` içinde duruyor;
+ * ekranda kısaltılıyor, çünkü kimin yaptığını ayırt etmek için son parça
+ * yetiyor ve tam UUID tabloyu okunamaz hale getiriyordu. */
+const kisa = (value: string | null) => {
+	if (!value) return '—';
+	const eslesen = [...yayincilar.results ?? []].find((y: any) => y.subject === value);
+	if (eslesen) return eslesen.author;
+	return value.length > 20 ? `${value.slice(0, 10)}…${value.slice(-6)}` : value;
+};
+---
+
+<BaseLayout title="Denetim" description="Ajan eylemlerinin izi." noindex>
+	<main class="denetim">
+		<h1>Denetim</h1>
+		<p class="alt">Ajan eylemlerinin izi. Bu sayfa önbelleğe girmiyor ve arama motorlarına kapalı.</p>
+
+		<section>
+			<h2>Yayıncılar</h2>
+			<table>
+				<thead><tr><th>imza</th><th>tür</th><th>pano</th><th>yayın</th><th>durum</th></tr></thead>
+				<tbody>
+					{(yayincilar.results ?? []).map((y: any) => (
+						<tr>
+							<td>{y.author}</td>
+							<td title={y.subject}>{y.acts_for ? 'ajan' : y.anahtarli ? 'anahtar' : 'anahtarsız'}</td>
+							<td>{y.may_write_brief ? '✓' : '—'}</td>
+							<td>{y.may_publish ? '✓' : '—'}</td>
+							<td>{y.disabled_at ? 'kapalı' : y.acts_for || y.anahtarli ? 'etkin' : 'kullanılmıyor'}</td>
+						</tr>
+					))}
+				</tbody>
+			</table>
+		</section>
+
+		<section>
+			<h2>Reddedilenler</h2>
+			{(reddedilenler.results ?? []).length === 0
+				? <p class="bos">Reddedilen istek yok.</p>
+				: <table>
+					<thead><tr><th>zaman</th><th>aktör</th><th>işlem</th><th>durum</th><th>sebep</th></tr></thead>
+					<tbody>
+						{(reddedilenler.results ?? []).map((r: any) => (
+							<tr>
+								<td>{zaman(r.created_at)}</td>
+								<td title={r.actor_subject}>{kisa(r.actor_subject)}</td>
+								<td>{r.operation_id ?? '—'}{r.document_operation !== r.operation_id ? ` (belge: ${r.document_operation})` : ''}</td>
+								<td>{r.status}</td>
+								<td>{r.reason}</td>
+							</tr>
+						))}
+					</tbody>
+				</table>}
+		</section>
+
+		<section>
+			<h2>Yayından kaldırmalar</h2>
+			{(kaldirmalar.results ?? []).length === 0
+				? <p class="bos">Kaldırılmış haber yok.</p>
+				: <table>
+					<thead><tr><th>zaman</th><th>işlem</th><th>haber</th><th>aktör</th><th>gerekçe</th></tr></thead>
+					<tbody>
+						{(kaldirmalar.results ?? []).map((k: any) => (
+							<tr>
+								<td>{zaman(k.created_at)}</td>
+								<td>{k.action === 'withdraw' ? 'kaldırıldı' : 'geri alındı'}</td>
+								<td><a href={`/${k.slug}/`}>{k.slug}</a></td>
+								<td title={k.actor_subject}>{kisa(k.actor_subject)}</td>
+								<td>{k.reason}</td>
+							</tr>
+						))}
+					</tbody>
+				</table>}
+		</section>
+
+		<section>
+			<h2>Son eylemler</h2>
+			{(eylemler.results ?? []).length === 0
+				? <p class="bos">Kayıtlı eylem yok.</p>
+				: <table>
+					<thead><tr><th>zaman</th><th>aktör</th><th>işlem</th></tr></thead>
+					<tbody>
+						{(eylemler.results ?? []).map((e: any) => (
+							<tr>
+								<td>{zaman(e.created_at)}</td>
+								<td title={e.actor_subject}>{kisa(e.actor_subject)}</td>
+								<td>{e.operation_id}</td>
+							</tr>
+						))}
+					</tbody>
+				</table>}
+		</section>
+	</main>
+</BaseLayout>
+
+<style>
+	.denetim { max-width: 68rem; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
+	h1 { font-size: 1.75rem; margin: 0 0 .35rem; }
+	.alt { color: var(--secondary); margin: 0 0 2.5rem; font-size: .95rem; }
+	section { margin-bottom: 2.75rem; }
+	h2 { font-size: 1.05rem; margin: 0 0 .75rem; font-weight: 600; }
+	.bos { color: var(--secondary); font-size: .9rem; margin: 0; }
+
+	/* Tablo kendi içinde kayıyor: dar ekranda sayfanın tamamını yatay
+	   kaydırmak, okunacak metni de kaçırmak demek. */
+	/* `--muted` bir YÜZEY tonu, metin tonu değil (#1e293b) — ilk halinde
+	   ikincil metinleri ona bağlamıştım ve koyu zeminde okunmuyordu. İkincil
+	   metnin tonu `--secondary`. Ekrana bakmadan fark edilmeyecek bir hataydı. */
+	table { width: 100%; border-collapse: collapse; font-size: .875rem; display: block; overflow-x: auto; }
+	thead th {
+		text-align: left; font-weight: 600; padding: .4rem .6rem; white-space: nowrap;
+		color: var(--secondary); border-bottom: 1px solid var(--border);
+		font-size: .75rem; text-transform: uppercase; letter-spacing: .04em;
+	}
+	tbody td { padding: .5rem .6rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+	tbody tr:last-child td { border-bottom: 0; }
+	td:first-child { white-space: nowrap; color: var(--secondary); }
+</style>
