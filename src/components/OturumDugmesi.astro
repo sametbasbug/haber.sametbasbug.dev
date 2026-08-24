@@ -78,7 +78,7 @@ const donus = Astro.url.pathname + Astro.url.search;
 	 *
 	 * Değerler `--news-*` değişkenlerinden geliyor, yani tema değişince ikisi
 	 * birlikte değişiyor ve kopya bir palet oluşmuyor. */
-	.oturum { display: flex; align-items: center; gap: .5rem; margin: 0; }
+	.oturum { display: flex; align-items: center; gap: .5rem; margin: 0; flex-shrink: 0; }
 	.oturum-ad {
 		max-width: 14ch;
 		overflow: hidden;
@@ -104,6 +104,9 @@ const donus = Astro.url.pathname + Astro.url.search;
 		font-family: inherit;
 		font-size: 0.8rem;
 		font-weight: 700;
+		/* "Orbit ile giriş" iki kelime: sarmasına izin verilirse dar başlıkta
+		   iki satıra düşüp masthead'i markanın üstüne bindiriyor. */
+		white-space: nowrap;
 		color: var(--news-muted-strong);
 		background: color-mix(in srgb, var(--news-panel) 85%, transparent);
 		cursor: pointer;

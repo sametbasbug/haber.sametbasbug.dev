@@ -261,13 +261,35 @@ const blogHomeHref = isNewsSubdomainEnabled() ? getMainSiteUrl() : '/';
 			var(--news-bg);
 		color: var(--news-text);
 	}
+	/* Masthead bir KART: ortalanmış, kenarlıklı, yuvarlak köşeli yüzen çubuk.
+	   Bu görünüm uzun süre `BaseLayout`taki global `header { ... }` kuralından
+	   geliyordu — blog döneminden kalma, çıplak eleman seçicili bir kural. O
+	   kuralı "hayalet" sanıp sildim ve masthead kenardan kenara düz bir bara
+	   döndü: markup'ın aynı kalması stilin de aynı kaldığı anlamına gelmiyor.
+	   Ölçüler artık burada, adıyla yazılı. */
 	.news-masthead {
 		position: sticky;
 		top: 0;
 		z-index: 30;
+		display: flex;
+		flex-direction: column;
+		align-items: stretch;
+		gap: 0.75rem;
+		width: calc(100% - 2rem);
+		max-width: 900px;
+		margin: 1rem auto;
+		padding: 1rem 1.5rem;
 		background: rgba(5, 5, 5, 0.9);
 		backdrop-filter: blur(14px);
-		border-bottom: 1px solid color-mix(in srgb, var(--news-border) 88%, transparent);
+		border: 1px solid color-mix(in srgb, var(--news-border) 88%, transparent);
+		border-radius: 1rem;
+		box-shadow: var(--shadow);
+		transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+	}
+	@media (max-width: 700px) {
+		.news-masthead {
+			padding: 1rem;
+		}
 	}
 	.news-masthead-wrap,
 	.news-hero,
@@ -320,12 +342,19 @@ const blogHomeHref = isNewsSubdomainEnabled() ? getMainSiteUrl() : '/';
 	.news-brand-copy {
 		display: flex;
 		align-items: center;
+		min-width: 0;
 	}
 	.news-brand strong {
 		font-size: 1rem;
 		font-weight: 800;
 		letter-spacing: -0.03em;
 		line-height: 1;
+		/* Dar ekranda kısalacak olan MARKA ADI. Düğmeler bölünmez; bir düğme
+		   iki satıra düşünce başlık şişiyor ve üst üste biniyor. */
+		min-width: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
 	}
 	.news-nav-row {
 		display: grid;
@@ -395,6 +424,8 @@ const blogHomeHref = isNewsSubdomainEnabled() ? getMainSiteUrl() : '/';
 		align-items: center;
 		justify-content: center;
 		align-self: center;
+		white-space: nowrap;
+		flex-shrink: 0;
 		padding: 0.28rem 0.58rem;
 		border: 1px solid color-mix(in srgb, var(--news-border) 88%, transparent);
 		border-radius: 999px;
@@ -624,6 +655,14 @@ const blogHomeHref = isNewsSubdomainEnabled() ? getMainSiteUrl() : '/';
 		}
 	}
 	@media (max-width: 640px) {
+		/* Dar başlıkta dört öğe (marka, tema, giriş, blog) yan yana sığmıyor;
+		   sığdırmaya zorlanınca kısalan şey marka adı oluyordu ve "Equinox
+		   Haber" tek harfe düşüyordu. Blog bağlantısı burada gizleniyor çünkü
+		   alt bilgide "Ana blog" olarak zaten duruyor — marka ve giriş için
+		   ikinci bir adres yok. */
+		.news-actions.mobile-only .news-action-pill {
+			display: none;
+		}
 		.news-masthead-inner,
 		.news-hero,
 		.news-body {
