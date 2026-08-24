@@ -251,7 +251,7 @@ const fullTitle = title === publicationName ? publicationName : `${publicationNa
 					btn.addEventListener('click', async () => {
 						await navigator.clipboard.writeText(window.location.href);
 						const originalInner = btn.innerHTML;
-						btn.innerHTML = '?';
+						btn.textContent = 'Kopyalandı';
 						setTimeout(() => {
 							btn.innerHTML = originalInner;
 						}, 2000);
@@ -299,14 +299,14 @@ const fullTitle = title === publicationName ? publicationName : `${publicationNa
 					if (codeBlock.querySelector('.copy-button')) return;
 					const button = document.createElement('button');
 					button.className = 'copy-button';
-					button.innerHTML = 'Kopyala';
+					button.textContent = 'Kopyala';
 					codeBlock.appendChild(button);
 					button.addEventListener('click', async () => {
 						const code = codeBlock.querySelector('code');
 						if (code) {
 							await navigator.clipboard.writeText(code.innerText);
-							button.innerHTML = 'Kopyaland�! ?';
-							setTimeout(() => { button.innerHTML = 'Kopyala'; }, 2000);
+							button.textContent = 'Kopyalandı';
+							setTimeout(() => { button.textContent = 'Kopyala'; }, 2000);
 						}
 					});
 				});
