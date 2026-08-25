@@ -219,7 +219,12 @@ const fullTitle = title === publicationName ? publicationName : `${publicationNa
 			function initLightbox() {
 				const lightbox = document.getElementById('lightbox');
 				const lightboxImg = document.getElementById('lightbox-img');
-				const images = document.querySelectorAll('.prose img, .hero-image img');
+				/* `.prose` ve `.hero-image` blog döneminin sınıflarıydı; bu
+				   sitede hiçbir sayfada yoklar, yani büyütme HİÇBİR ŞEYE
+				   bağlanmıyordu. Haber gövdesinin gerçek sınıfı
+				   `.article-prose`. Bugün gövdelerde görsel yok; bir görsel
+				   girdiğinde artık çalışacak. */
+				const images = document.querySelectorAll('.article-prose img');
 
 				images.forEach(img => {
 					img.style.cursor = 'zoom-in';
@@ -313,45 +318,58 @@ const fullTitle = title === publicationName ? publicationName : `${publicationNa
 			}
 		</script>
 		<style is:global>
+			/* TEK RENK SİSTEMİ.
+			 *
+			 * Burada bir dönem blog döneminden kalma ikinci bir palet duruyordu
+			 * (indigo `--accent`, `--card-bg`, noktalı arka plan). Haber paleti
+			 * `NewsLayout` içinde ayrıca tanımlanıyor ve eskisini `!important`
+			 * ile bastırıyordu. Yani her yeni bileşen iki sistemin arasına
+			 * doğuyor, hangisinin kazandığını denemeden bilemiyorduk.
+			 *
+			 * Artık token'ların TEK tanımı burada. `NewsLayout` yalnız kendi
+			 * bileşenlerini boyar, hiçbir şeyi geçersiz kılmaz.
+			 *
+			 * Varsayılan KOYU: yukarıdaki FOUC betiği kayıt yoksa `dark`
+			 * damgalıyor, betik hiç çalışmazsa da `:root` koyu kalıyor —
+			 * iki yol da aynı yere çıkıyor. */
 			:root {
-				--bg: #f8fafc;
-				--card-bg: #ffffff;
-				--card-bg-rgb: 255, 255, 255;
-				--text: #0f172a;
-				--accent: #6366f1;
-				--accent-light: #e0e7ff;
-				--secondary: #64748b;
-				--muted: #f1f5f9;
-				--border: #e2e8f0;
-				--shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+				--news-bg: #050505;
+				--news-panel: #0e0e10;
+				--news-panel-strong: #17171a;
+				--news-text: #f5f5f3;
+				--news-muted: #9f9fa8;
+				--news-muted-strong: #d6d6db;
+				--news-accent: #f46a5a;
+				--news-accent-soft: #ff9a86;
+				--news-border: #252529;
+				--news-border-soft: rgba(255, 255, 255, 0.08);
+				--news-shadow: 0 18px 50px rgba(0, 0, 0, 0.22);
 			}
 
-			[data-theme="dark"] {
-				--bg: #020617;
-				--card-bg: #0f172a;
-				--card-bg-rgb: 15, 23, 42;
-				--text: #f1f5f9;
-				--accent: #818cf8;
-				--accent-light: #1e1b4b;
-				--secondary: #94a3b8;
-				--muted: #1e293b;
-				--border: #1e293b;
-				--shadow: 0 10px 15px -3px rgb(0 0 0 / 0.4);
+			html[data-theme="light"] {
+				--news-bg: #f4efe7;
+				--news-panel: #fbf7f0;
+				--news-panel-strong: #efe7da;
+				--news-text: #141210;
+				--news-muted: #6e665d;
+				--news-muted-strong: #312c27;
+				--news-accent: #bf4a3b;
+				--news-accent-soft: #9e3f33;
+				--news-border: #d7ccbc;
+				--news-border-soft: rgba(24, 18, 12, 0.08);
+				--news-shadow: 0 18px 44px rgba(44, 32, 18, 0.08);
 			}
 
-			@media (prefers-color-scheme: dark) {
-				:root:not([data-theme="light"]) {
-					--bg: #020617;
-					--card-bg: #0f172a;
-					--card-bg-rgb: 15, 23, 42;
-					--text: #f1f5f9;
-					--accent: #818cf8;
-					--accent-light: #1e1b4b;
-					--secondary: #94a3b8;
-					--muted: #1e293b;
-					--border: #1e293b;
-					--shadow: 0 10px 15px -3px rgb(0 0 0 / 0.4);
-				}
+			/* Takma adlar: `denetim.astro` ve masthead gölgesi bu adları
+			 * kullanıyor. Değer değil, yönlendirme taşıyorlar — tema
+			 * değiştiğinde kendiliğinden takip ediyorlar. */
+			:root {
+				--bg: var(--news-bg);
+				--text: var(--news-text);
+				--accent: var(--news-accent);
+				--secondary: var(--news-muted);
+				--border: var(--news-border);
+				--shadow: var(--news-shadow);
 			}
 
 			* { box-sizing: border-box; margin: 0; padding: 0; }
@@ -359,37 +377,37 @@ const fullTitle = title === publicationName ? publicationName : `${publicationNa
 				overflow-y: scroll;
 				scroll-behavior: smooth;
 				scrollbar-width: thin;
-				scrollbar-color: rgba(99, 102, 241, 0.3) transparent;
+				scrollbar-color: color-mix(in srgb, var(--news-accent) 32%, transparent) transparent;
 			}
 
 			/* Chromium / Safari / Edge */
 			::-webkit-scrollbar { width: 8px; height: 8px; }
 			::-webkit-scrollbar-track { background: transparent; }
 			::-webkit-scrollbar-thumb {
-				background: rgba(99, 102, 241, 0.3);
+				background: color-mix(in srgb, var(--news-accent) 32%, transparent);
 				border-radius: 10px;
 			}
 			::-webkit-scrollbar-thumb:hover {
-				background: rgba(99, 102, 241, 0.8);
+				background: color-mix(in srgb, var(--news-accent) 80%, transparent);
 			}
 			::-webkit-scrollbar-corner { background: transparent; }
 
+			/* Noktalı arka plan KALDIRILDI: blog dönemi dekoruydu, haber
+			 * yüzeyinde `NewsLayout` zaten `background-image: none` ile
+			 * siliyordu. Yani ekranda hiç görünmüyor, yalnız silinmesi
+			 * gerekiyordu. */
 			body {
 				font-family: 'Inter', sans-serif;
-				background-color: var(--bg);
-				background-image: radial-gradient(circle at 2px 2px, var(--border) 1px, transparent 0);
-				background-size: 40px 40px;
-				color: var(--text);
+				background-color: var(--news-bg);
+				color: var(--news-text);
 				line-height: 1.7;
 				min-height: 100vh;
-				display: flex;
-				flex-direction: column;
 				transition: background-color 0.3s ease;
 			}
 
 			#progress-bar {
 				position: fixed; top: 0; left: 0; width: 0%; height: 3px;
-				background: linear-gradient(to right, var(--accent), #818cf8);
+				background: linear-gradient(to right, var(--news-accent), var(--news-accent-soft));
 				z-index: 9999; transition: width 0.3s ease;
 			}
 
@@ -398,7 +416,7 @@ const fullTitle = title === publicationName ? publicationName : `${publicationNa
 			.back-to-top {
 				position: fixed; bottom: 2rem; right: 2rem;
 				width: 3.5rem; height: 3.5rem;
-				background: var(--accent); color: white;
+				background: var(--news-accent); color: #fff;
 				border: none; border-radius: 50%;
 				display: flex; align-items: center; justify-content: center;
 				cursor: pointer; z-index: 99;
@@ -408,7 +426,7 @@ const fullTitle = title === publicationName ? publicationName : `${publicationNa
 				box-shadow: var(--shadow);
 			}
 			.back-to-top.visible { opacity: 1; visibility: visible; transform: translateY(0); }
-			.back-to-top:hover { background: #818cf8; transform: translateY(-5px); }
+			.back-to-top:hover { background: var(--news-accent-soft); transform: translateY(-5px); }
 
 			/* Lightbox Styles */
 			.lightbox {
@@ -423,19 +441,22 @@ const fullTitle = title === publicationName ? publicationName : `${publicationNa
 			.lightbox img { max-width: 90%; max-height: 90%; border-radius: 0.5rem; transform: scale(0.9); transition: transform 0.3s ease; }
 			.lightbox.active img { transform: scale(1); }
 
-			@keyframes fadeInUp {
-				from { opacity: 0; transform: translateY(15px); }
-				to { opacity: 1; transform: translateY(0); }
-			}
-			main { animation: fadeInUp 0.5s ease-out forwards; flex: 1; padding: 3rem 1rem; max-width: 850px; margin: 0 auto; width: 100%; }
+			/* `main` ARTIK BİÇİMSİZ.
+			 *
+			 * Burada 850px'lik bir sarmalayıcı, iç boşluk ve bir giriş
+			 * animasyonu vardı; `NewsLayout` üçünü de `!important` ile geri
+			 * alıyordu. Yani ölçüyü gerçekte hep sayfa kabuğu belirliyordu,
+			 * bu satır yalnız onu bir kez daha ezdirmek için duruyordu.
+			 * Genişliği artık her kabuk kendi adıyla söylüyor. */
 
-			h1, h2, h3 { line-height: 1.3; margin-bottom: 1.5rem; color: var(--text); font-weight: 800; }
-			.hero-title { font-size: 3.5rem; background: linear-gradient(to right, var(--accent), #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; display: inline-block; }
+			h1, h2, h3 { line-height: 1.3; margin-bottom: 1.5rem; color: var(--news-text); font-weight: 800; }
 			.emoji { -webkit-text-fill-color: initial; }
-			a { color: var(--accent); text-decoration: none; }
+			a { color: var(--news-accent); text-decoration: none; }
 
-			pre { position: relative; padding: 1.5rem !important; border: 1px solid var(--border) !important; background: #0f172a !important; box-shadow: inset 0 2px 4px 0 rgb(0 0 0 / 0.1); border-radius: 1rem; }
-			.copy-button { position: absolute; top: 0.75rem; right: 0.75rem; padding: 0.4rem 0.8rem; background: var(--accent); color: white; border: none; border-radius: 0.5rem; font-size: 0.75rem; font-weight: 600; cursor: pointer; opacity: 0; transition: all 0.2s ease; }
+			/* Kod bloğu her iki temada da KOYU kalır: sözdizimi renkleri koyu
+			 * zemine göre üretiliyor, aydınlık zemine taşınınca okunmuyor. */
+			pre { position: relative; padding: 1.5rem !important; border: 1px solid var(--news-border) !important; background: #17171a !important; color: #f5f5f3; box-shadow: inset 0 2px 4px 0 rgb(0 0 0 / 0.1); border-radius: 1rem; }
+			.copy-button { position: absolute; top: 0.75rem; right: 0.75rem; padding: 0.4rem 0.8rem; background: var(--news-accent); color: #fff; border: none; border-radius: 0.5rem; font-size: 0.75rem; font-weight: 600; cursor: pointer; opacity: 0; transition: all 0.2s ease; }
 			pre:hover .copy-button { opacity: 1; }
 		</style>
 	</body>

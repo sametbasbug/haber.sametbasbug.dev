@@ -215,45 +215,22 @@ const blogHomeHref = isNewsSubdomainEnabled() ? getMainSiteUrl() : '/';
 </script>
 
 <style>
-	:global(body) {
-		display: block !important;
-		background-image: none;
-		background: #050505;
-	}
-	:global([data-theme='light'] body) {
-		background: #f6f4ef;
-	}
-	/* `#main-header` gizleme kuralı KALDIRILDI: gizlenecek bir şey kalmadı.
-	   Blog döneminden kalma header `BaseLayout`tan silindi; burada durması
-	   "hâlâ bir header var ve saklıyoruz" izlenimi verirdi. */
-	:global(main) {
-		width: 100% !important;
-		max-width: none !important;
-		padding: 0 !important;
-		margin: 0 !important;
-		animation: none;
-	}
-	:global(:root),
-	:global([data-theme='dark']),
-	:global([data-theme='light']) {
-		--news-bg: #050505;
-		--news-panel: #0e0e10;
-		--news-panel-strong: #17171a;
-		--news-text: #f5f5f3;
-		--news-muted: #9f9fa8;
-		--news-muted-strong: #d6d6db;
-		--news-accent: #f46a5a;
-		--news-accent-soft: #ff9a86;
-		--news-border: #252529;
-		--news-border-soft: rgba(255,255,255,0.08);
-		--news-shadow: 0 18px 50px rgba(0,0,0,0.22);
-	}
-	:global(html),
-	:global(body.app-shell-layout) {
-		background-color: var(--news-bg) !important;
-		background-image: none !important;
-	}
+	/* Bu blokta bir dönem `body`, `main` ve `html` için `!important` taşıyan
+	   geçersiz kılmalar ve `--news-*` token'larının İKİNCİ bir kopyası vardı.
+	   Hepsi `BaseLayout`taki blog dönemi paletini bastırmak içindi. O palet
+	   silindi; token'ların tek tanımı artık `BaseLayout`ta. Burada kalan
+	   şey yalnız bu kabuğun kendi bileşenleri.
+
+	   `body.app-shell-layout` seçicisi de gitti: o sınıf hiçbir yerde
+	   `body`ye eklenmiyordu, yani kural hiç eşleşmiyordu.
+
+	   Yapışkan alt bilgi ARTIK BURADA: kabuk dikey bir flex sütunu, gövde
+	   boşluğu yutuyor. Eskiden bu iş `body`nin flex'ine bırakılmıştı ama
+	   yukarıdaki `display: block !important` onu iptal ediyordu — sonuç,
+	   uzun ekranda alt bilgi sayfanın ortasında asılı kalıyordu. */
 	.news-app-shell {
+		display: flex;
+		flex-direction: column;
 		min-height: 100vh;
 		background:
 			radial-gradient(circle at top center, rgba(255, 255, 255, 0.05), transparent 0 34%),
@@ -279,11 +256,13 @@ const blogHomeHref = isNewsSubdomainEnabled() ? getMainSiteUrl() : '/';
 		max-width: 900px;
 		margin: 1rem auto;
 		padding: 1rem 1.5rem;
-		background: rgba(5, 5, 5, 0.9);
+		/* Koyu temada `rgba(5,5,5,0.9)` ile birebir aynı değer — fark yok,
+		   ama artık zemine bağlı, aydınlık temada elle tekrarlanmıyor. */
+		background: color-mix(in srgb, var(--news-bg) 90%, transparent);
 		backdrop-filter: blur(14px);
 		border: 1px solid color-mix(in srgb, var(--news-border) 88%, transparent);
 		border-radius: 1rem;
-		box-shadow: var(--shadow);
+		box-shadow: var(--news-shadow);
 		transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 	}
 	@media (max-width: 700px) {
@@ -444,24 +423,12 @@ const blogHomeHref = isNewsSubdomainEnabled() ? getMainSiteUrl() : '/';
 		color: var(--news-text);
 		border-color: var(--news-accent);
 	}
-	:global(html[data-theme='light']) {
-		--news-bg: #f4efe7;
-		--news-panel: #fbf7f0;
-		--news-panel-strong: #efe7da;
-		--news-text: #141210;
-		--news-muted: #6e665d;
-		--news-muted-strong: #312c27;
-		--news-accent: #bf4a3b;
-		--news-accent-soft: #9e3f33;
-		--news-border: #d7ccbc;
-		--news-border-soft: rgba(24,18,12,0.08);
-		--news-shadow: 0 18px 44px rgba(44, 32, 18, 0.08);
-	}
+	/* Aydınlık tema TOKEN'LARI buradan taşındı — tek tanım `BaseLayout`ta.
+	   Aşağıda kalanlar token'la ifade edilemeyen bileşen ayrıntıları. */
 	:global(html[data-theme='light']) .news-app-shell {
 		background: var(--news-bg);
 	}
 	:global(html[data-theme='light']) .news-masthead {
-		background: var(--news-bg);
 		border-bottom-color: rgba(145, 126, 100, 0.18);
 	}
 	:global(html[data-theme='light']) .news-nav a:hover {
@@ -608,6 +575,9 @@ const blogHomeHref = isNewsSubdomainEnabled() ? getMainSiteUrl() : '/';
 		line-height: 1.62;
 	}
 	.news-body {
+		/* Kabuğun boş dikey alanını yutan parça. Alt bilgi böylece kısa
+		   sayfalarda da ekranın altına oturuyor. */
+		flex: 1;
 		padding: 0 1.25rem 2.4rem;
 	}
 	@media (max-width: 1040px) {
