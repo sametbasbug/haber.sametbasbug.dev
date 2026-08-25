@@ -213,16 +213,30 @@ function selectSideEntries(entries: EquinoxHaberEntry[], options: { diversifyCat
 function buildPanel(entries: EquinoxHaberEntry[], options: { category?: string; diversifyCategories?: boolean } = {}) {
 	const firstPageEntries = entries.slice(0, EQUINOX_HABER_PAGE_SIZE);
 	const leadEntry = firstPageEntries[0];
-	/* Yan sütun manşetin dışından seçiliyor; akış da ikisinin dışından.
-	   Aynı haber sayfada iki kez görünmüyor. */
+
+	/* SIRA ÖNEMLİ: önce akış, sonra yan sütun.
+	 *
+	 * Bir süre tersiydi ve "Son haberler" listesinde DELİK açıyordu: yan
+	 * sütun skora göre seçim yaptığı ve akıştan ÖNCE çalıştığı için en taze
+	 * haberleri kendine alıyor, akış da onları atlayarak devam ediyordu.
+	 * Canlıda liste 23 Ağustos'tan doğrudan 9 Temmuz'a atlıyordu; aradaki
+	 * 20 Ağustos tarihli iki haber sayfada vardı ama "Son haberler"de yoktu.
+	 * Samet fark etti: Selene'nin haberleri akışta hiç görünmüyordu.
+	 *
+	 * "Son haberler" kronolojik bir listedir; içinde delik olamaz. O yüzden
+	 * akış payını önce alıyor: manşetten sonraki en taze N haber, kesintisiz.
+	 *
+	 * Yan sütun geri kalandan seçiyor. Anlamı da bu zaten — ön listede
+	 * görmeyeceğin, skoru yüksek haberleri yüzeye çıkarmak. Aynı haber iki
+	 * yerde görünmüyor. */
+	const streamEntries = firstPageEntries
+		.filter((entry) => entry.id !== leadEntry?.id)
+		.slice(0, STREAM_SLOT_COUNT);
+	const usedIds = new Set([leadEntry?.id, ...streamEntries.map((entry) => entry.id)]);
 	const sideEntries = selectSideEntries(
-		entries.filter((entry) => entry.id !== leadEntry?.id),
+		entries.filter((entry) => !usedIds.has(entry.id)),
 		{ diversifyCategories: Boolean(options.diversifyCategories) },
 	);
-	const usedIds = new Set([leadEntry?.id, ...sideEntries.map((entry) => entry.id)]);
-	const streamEntries = firstPageEntries
-		.filter((entry) => !usedIds.has(entry.id))
-		.slice(0, STREAM_SLOT_COUNT);
 	return {
 		leadEntry,
 		sideEntries,
