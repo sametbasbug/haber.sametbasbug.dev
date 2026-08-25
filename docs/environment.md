@@ -11,6 +11,7 @@ Do not commit real tokens, API keys, cookies, private feed URLs, local queue dat
 | `PUBLIC_SITE_URL` | No | Canonical Astro site URL. Defaults to the live Haber URL. | `https://haber.sametbasbug.dev` |
 | `PUBLIC_NEWS_SITE_URL` | No | Public news subdomain used by site links and metadata. | `https://haber.sametbasbug.dev` |
 | `PUBLIC_MAIN_SITE_URL` | No | Main site URL used for ecosystem links. | `https://sametbasbug.dev` |
+| `PUBLIC_EQUINOX_HUB_URL` | No | Equinox Hub URL behind the masthead "Equinox" button. | `https://equinox.sametbasbug.dev` |
 | `PUBLIC_NEWS_SUBDOMAIN_ENABLED` | No | Enables subdomain-style public news links when `true`. | `true` |
 
 ## Orbit variables

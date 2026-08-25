@@ -2,7 +2,7 @@
 import BaseLayout from './BaseLayout.astro';
 import OturumDugmesi from '../components/OturumDugmesi.astro';
 import { getNewsCategoryHref } from '../data/equinoxHaber';
-import { getMainSiteUrl, getNewsArchiveHref, getNewsHomePath, getNewsHomeHref, getSourceCodeHref, isNewsSubdomainEnabled } from '../data/newsSite';
+import { getEquinoxHubUrl, getMainSiteUrl, getNewsArchiveHref, getNewsHomePath, getNewsHomeHref, getSourceCodeHref, isNewsSubdomainEnabled } from '../data/newsSite';
 
 interface Props {
 	title: string;
@@ -50,6 +50,10 @@ const isLiveSurface = kicker === 'Canlı akış';
 const sourceCodeHref = getSourceCodeHref();
 const newsHomePath = getNewsHomePath();
 const blogHomeHref = isNewsSubdomainEnabled() ? getMainSiteUrl() : '/';
+/* Başlıktaki çıkış düğmesi Equinox Hub'a gidiyor, ana bloga değil: haber
+   sitesi Equinox'un bir parçası. Alt bilgideki "Ana blog" bloga gitmeye
+   devam ediyor, yani iki adres de erişilebilir. */
+const equinoxHubHref = getEquinoxHubUrl();
 ---
 
 <BaseLayout title={title} description={description} noindex={noindex} canonicalPath={canonicalPath} ogImage={ogImage} ogImageAlt={ogImageAlt}>
@@ -70,7 +74,7 @@ const blogHomeHref = isNewsSubdomainEnabled() ? getMainSiteUrl() : '/';
 								<span data-news-theme-icon>🌙</span>
 							</button>
 							<OturumDugmesi />
-							<a href={blogHomeHref} class="news-action-pill">Blog'a dön</a>
+							<a href={equinoxHubHref} class="news-action-pill">Equinox</a>
 						</div>
 					</div>
 
@@ -98,7 +102,7 @@ const blogHomeHref = isNewsSubdomainEnabled() ? getMainSiteUrl() : '/';
 						<span data-news-theme-icon>🌙</span>
 					</button>
 					<OturumDugmesi />
-					<a href={blogHomeHref} class="news-action-pill">Blog'a dön</a>
+					<a href={equinoxHubHref} class="news-action-pill">Equinox</a>
 				</div>
 			</div>
 		</header>
@@ -625,13 +629,29 @@ const blogHomeHref = isNewsSubdomainEnabled() ? getMainSiteUrl() : '/';
 		}
 	}
 	@media (max-width: 640px) {
-		/* Dar başlıkta dört öğe (marka, tema, giriş, blog) yan yana sığmıyor;
-		   sığdırmaya zorlanınca kısalan şey marka adı oluyordu ve "Equinox
-		   Haber" tek harfe düşüyordu. Blog bağlantısı burada gizleniyor çünkü
-		   alt bilgide "Ana blog" olarak zaten duruyor — marka ve giriş için
-		   ikinci bir adres yok. */
-		.news-actions.mobile-only .news-action-pill {
-			display: none;
+		/* DAR BAŞLIKTA SATIR SARIYOR, DÜĞME GİZLENMİYOR.
+		 *
+		 * Burada `.news-actions.mobile-only .news-action-pill { display: none }`
+		 * vardı: dört öğe (marka, tema, giriş, Equinox) yan yana sığmıyordu ve
+		 * sığdırmaya zorlanınca kısalan şey marka adı oluyordu. Çözüm olarak
+		 * düğme saklanmıştı — yani telefondan giren okuyucunun Equinox'a
+		 * çıkacak bir yolu hiç yoktu.
+		 *
+		 * Genişliği hesaplayıp sığdırmaya çalışmak da yanlış olurdu: giriş
+		 * yapmış kullanıcıda o blok "Orbit ile giriş"ten DAHA geniş oluyor
+		 * (görünen ad + Çıkış). Sabit bir hesap o durumda tutmaz.
+		 *
+		 * Onun yerine satır sarıyor: sığdığı sürece tek satır kalıyor,
+		 * sığmadığında düğmeler markanın altına iniyor. Marka artık
+		 * kısalmıyor (`min-width: max-content`), yani sarmayı tetikleyen
+		 * taraf o değil. */
+		.news-top-row {
+			flex-wrap: wrap;
+			row-gap: 0.5rem;
+		}
+		.news-actions.mobile-only {
+			flex-wrap: wrap;
+			justify-content: flex-start;
 		}
 		.news-masthead-inner,
 		.news-hero,
@@ -646,10 +666,12 @@ const blogHomeHref = isNewsSubdomainEnabled() ? getMainSiteUrl() : '/';
 			padding-right: 0;
 			margin-right: 0;
 			border-right: 0;
-			min-width: 0;
+			/* Marka KISALMIYOR: daralınca sarması gereken taraf düğmeler. */
+			min-width: max-content;
+			flex-shrink: 0;
 		}
 		.news-brand-copy {
-			min-width: 0;
+			min-width: max-content;
 		}
 		.news-brand strong {
 			font-size: 0.96rem;

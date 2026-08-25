@@ -69,5 +69,6 @@ jobs:
           PUBLIC_SITE_URL: https://haber.sametbasbug.dev
           PUBLIC_NEWS_SITE_URL: https://haber.sametbasbug.dev
           PUBLIC_MAIN_SITE_URL: https://sametbasbug.dev
+          PUBLIC_EQUINOX_HUB_URL: https://equinox.sametbasbug.dev
           PUBLIC_NEWS_SUBDOMAIN_ENABLED: 'true'
         run: npm run build

@@ -1,4 +1,5 @@
 const MAIN_SITE_URL = (import.meta.env.PUBLIC_MAIN_SITE_URL || 'https://sametbasbug.dev').replace(/\/+$/, '');
+const EQUINOX_HUB_URL = (import.meta.env.PUBLIC_EQUINOX_HUB_URL || 'https://equinox.sametbasbug.dev').replace(/\/+$/, '');
 const NEWS_SITE_URL = (import.meta.env.PUBLIC_NEWS_SITE_URL || 'https://haber.sametbasbug.dev').replace(/\/+$/, '');
 const NEWS_SUBDOMAIN_ENABLED = String(import.meta.env.PUBLIC_NEWS_SUBDOMAIN_ENABLED || 'true') === 'true';
 
@@ -8,6 +9,18 @@ export function isNewsSubdomainEnabled() {
 
 export function getMainSiteUrl() {
   return MAIN_SITE_URL;
+}
+
+/**
+ * Equinox Hub. Başlıktaki çıkış düğmesinin gittiği yer.
+ *
+ * Ana blogdan (`getMainSiteUrl`) AYRI tutuluyor: haber sitesi Equinox
+ * ekosisteminin bir parçası, kişisel blogun bir bölümü değil. Alt bilgideki
+ * "Ana blog" bağlantısı bloga gitmeye devam ediyor; iki adres de erişilebilir
+ * kalıyor.
+ */
+export function getEquinoxHubUrl() {
+  return EQUINOX_HUB_URL;
 }
 
 export function getNewsSiteUrl() {
