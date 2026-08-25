@@ -39,7 +39,16 @@ const categoryToken = getNewsCategoryToken(entry.data.category);
 	)}
 </article>
 
-<style>
+{/* Stiller KAPSAMSIZ (`is:global`).
+	Ana sayfada kategoriye tıklandığında panel tarayıcıda yeniden çiziliyor
+	ve orada üretilen markup Astro'nun `data-astro-cid-*` damgasını taşımıyor
+	— kapsamlı kalsaydı o kartlar stilsiz görünürdü. Alternatif, kart
+	tasarımını ikinci bir sınıf adıyla kopyalamaktı; aynı görünümü iki yerde
+	tutmak tam da bu depoda bir kez bedelini ödediğimiz şey.
+
+	Sınıf adları bu karta özgü (`news-card*`, `news-category`, `news-author*`);
+	genel isim kullanılmıyor, o yüzden sızma riski yok. */}
+<style is:global>
 	.news-card {
 		display: grid;
 		grid-template-columns: minmax(0, 1fr) 220px;
@@ -61,11 +70,11 @@ const categoryToken = getNewsCategoryToken(entry.data.category);
 		border-color: color-mix(in srgb, var(--news-accent) 24%, var(--news-border));
 		background: linear-gradient(180deg, rgba(255,255,255,0.032), rgba(255,255,255,0.015));
 	}
-	:global(html[data-theme='light']) .news-card {
+	html[data-theme='light'] .news-card {
 		background: linear-gradient(180deg, rgba(255,255,255,0.76), rgba(255,255,255,0.45));
 		box-shadow: 0 8px 18px rgba(37, 28, 18, 0.04), inset 0 1px 0 rgba(255,255,255,0.55);
 	}
-	:global(html[data-theme='light']) .news-card:hover {
+	html[data-theme='light'] .news-card:hover {
 		background: linear-gradient(180deg, rgba(255,255,255,0.88), rgba(255,255,255,0.58));
 		box-shadow: 0 10px 24px rgba(37, 28, 18, 0.06), inset 0 1px 0 rgba(255,255,255,0.65);
 	}
