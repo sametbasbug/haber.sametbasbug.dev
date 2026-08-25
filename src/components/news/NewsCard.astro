@@ -135,13 +135,16 @@ const categoryToken = getNewsCategoryToken(entry.data.category);
 		background: rgba(52, 211, 153, 0.12);
 		border-color: rgba(52, 211, 153, 0.2);
 	}
+	/* Serif manşet; tek ağırlık olduğu için 700 (bkz. `BaseLayout`taki
+	   `--news-serif` notu). Satır aralığı serifte biraz açıldı. */
 	.news-card-title {
+		font-family: var(--news-serif);
 		color: var(--news-text);
 		text-decoration: none;
 		font-size: clamp(1.08rem, 1.6vw, 1.45rem);
-		line-height: 1.12;
-		font-weight: 820;
-		letter-spacing: -0.03em;
+		line-height: 1.2;
+		font-weight: 700;
+		letter-spacing: -0.015em;
 		text-wrap: balance;
 	}
 	.news-card.compact .news-card-title {

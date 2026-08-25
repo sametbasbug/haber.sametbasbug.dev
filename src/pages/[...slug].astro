@@ -306,12 +306,16 @@ const newsStructuredData = [newsArticleSchema, breadcrumbSchema];
 	   manşet sessizce üç noktayla kesiliyordu — okuyucu haberin başlığını
 	   eksik görüyordu ve kesildiğini anlamasının yolu yoktu. Bir kutuyu
 	   korumak için manşet kırpılmaz. Mobilde zaten kırpılmıyordu. */
+	/* Serif ve `font-weight: 700` birlikte gider: elimizde tek ağırlık var,
+	   900 istenirse tarayıcı harfleri yapay olarak şişirir. Harf aralığı da
+	   gevşedi — serif, sans kadar sıkı dizilmeyi kaldırmıyor. */
 	.article-main h1 {
+		font-family: var(--news-serif);
 		font-size: clamp(2.15rem, 4vw, 3.35rem);
 		line-height: 1.08;
 		margin: 0 auto 0.8rem;
-		font-weight: 900;
-		letter-spacing: -0.05em;
+		font-weight: 700;
+		letter-spacing: -0.02em;
 		max-width: 24ch;
 		text-align: center;
 		text-wrap: balance;

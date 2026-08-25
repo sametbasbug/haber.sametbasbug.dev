@@ -812,8 +812,12 @@ const newsHomeConfigJson = JSON.stringify({
 	html[data-theme='light'] .featured-badge.side[data-category='teknoloji'] {
 		color: #0f5136;
 	}
+	/* Serif manşet; tek ağırlık olduğu için 700 (bkz. `BaseLayout`taki
+	   `--news-serif` notu). */
 	.featured-side-content h2,
 	.featured-lead-content h2 {
+		font-family: var(--news-serif);
+		font-weight: 700;
 		margin: 0.45rem 0 0;
 		color: #fff;
 		text-wrap: balance;
@@ -823,9 +827,9 @@ const newsHomeConfigJson = JSON.stringify({
 		color: var(--news-text);
 	}
 	.featured-side-content h2 {
-		font-size: 1.02rem;
-		line-height: 1.12;
-		letter-spacing: -0.02em;
+		font-size: 1.06rem;
+		line-height: 1.22;
+		letter-spacing: -0.01em;
 	}
 	.featured-side-content.text-only p {
 		margin: 0;
@@ -844,9 +848,9 @@ const newsHomeConfigJson = JSON.stringify({
 		overflow: hidden;
 	}
 	.featured-lead-content h2 {
-		font-size: clamp(1.48rem, 2.45vw, 2rem);
-		line-height: 1.06;
-		letter-spacing: -0.05em;
+		font-size: clamp(1.55rem, 2.6vw, 2.15rem);
+		line-height: 1.12;
+		letter-spacing: -0.02em;
 		max-width: 22ch;
 		text-wrap: balance;
 	}
