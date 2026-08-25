@@ -32,17 +32,6 @@ interface LeadPanelItem {
 	author: string;
 }
 
-interface SidePanelItem {
-	id: string;
-	href: string;
-	title: string;
-	description: string;
-	category: string;
-	categoryToken: string;
-	pubDateIso: string;
-	pubDateLabel: string;
-}
-
 /** Akış satırı `NewsCard` ile aynı alanları taşır; ikisi aynı kartı
  * çiziyor, biri sunucuda biri tarayıcıda. */
 interface StreamPanelItem {
@@ -62,188 +51,38 @@ interface StreamPanelItem {
 
 interface HomePanel {
 	leadEntry: LeadPanelItem | null;
-	sideEntries: SidePanelItem[];
 	streamEntries: StreamPanelItem[];
-	sideEyebrow: string;
-	sideTitle: string;
 }
 
-/* MANŞET ARTIK TEK.
+/* ANA SAYFA TEK SIRALAMAYLA ÇALIŞIR: bir manşet, altında arşivdekiyle aynı
+ * satır düzeninde 12 başlık. Hepsi tarihe göre, kesintisiz.
  *
- * Burada 10 haber vardı ama dokuzu gizli slayttı; okuyucu numaralı bir
- * sayaçla tek tek çevirmedikçe yalnız birini görüyordu. Yan sütundaki üçle
- * birlikte ana sayfada tıklamadan görülen haber sayısı DÖRT'tü — 587
- * haberlik bir arşivin vitrini için az. Asıl liste `/sayfa/1`'de duruyordu
- * ve oraya giden bağlantı yalnız alt bilgideydi.
+ * Manşetin yanında "Akıştan seçilenler" diye skora göre seçilmiş üç haberlik
+ * bir sütun vardı; KALDIRILDI. Havuzu ön sayfanın bittiği yerden başlıyordu,
+ * yani 13. haberden itibaren — site düzenli yayın yapmadığı için bu pratikte
+ * yedi hafta geriye düşüyordu. Canlıda 23 Ağustos tarihli bir manşetin
+ * yanında 8 Temmuz ve 14 Haziran tarihli haberler "öne çıkanlar" etiketiyle
+ * duruyordu. Seçim kuralı işi büyütüyordu: skor sinyali yüksek haberi öne
+ * alır, o da en hızlı bayatlayan haberdir ("ateşkes sona erdi" gibi).
  *
- * Yerine: bir manşet, yanında üç seçilmiş haber, altında arşivdekiyle aynı
- * satır düzeninde 12 başlık. Görülen haber sayısı 4 → 16. */
-const SIDE_SLOT_COUNT = 3;
+ * Sütun bayat değildi, bayat olmak ZORUNDAYDI — tanımı gereği taze olamazdı.
+ * Tazelik şartı eklemek de kurtarmazdı; havuz zaten haftalar geriden
+ * başladığı için sütun neredeyse her zaman boş kalırdı.
+ *
+ * Onunla birlikte 132 satırlık skorlama düzeneği de gitti (`scoreSignalEntry`,
+ * `hasGlobalSignal`, terim listesi, önbellek). Başka çağıranı yoktu. */
 const STREAM_SLOT_COUNT = 12;
-const RECENT_SIGNAL_HOURS = 48;
-const STALE_SIGNAL_HOURS = 24 * 7;
-const GLOBAL_SIGNAL_TERMS = [
-	'ab',
-	'abd',
-	'avrupa',
-	'avrupa birliği',
-	'birleşmiş milletler',
-	'çin',
-	'rusya',
-	'ukrayna',
-	'israil',
-	'iran',
-	'nato',
-	'fed',
-	'ecb',
-	'avrupa merkez bankası',
-	'openai',
-	'google',
-	'microsoft',
-	'apple',
-	'nvidia',
-	'nasa',
-	'who',
-	'dünya sağlık örgütü',
-];
 
-function hoursSince(date: Date) {
-	return Math.max(0, (Date.now() - date.valueOf()) / 36e5);
-}
-
-function escapeRegExp(value: string) {
-	return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
-/* Kalıplar MODÜL SEVİYESİNDE bir kez derleniyor.
- *
- * Eskiden her `hasGlobalSignal` çağrısında 23 terim için yeniden `RegExp`
- * kuruluyordu. `\p{L}` içeren kalıpların derlenmesi pahalı ve bu fonksiyon
- * istek başına binlerce kez çağrılıyordu. */
-const GLOBAL_SIGNAL_PATTERNS = GLOBAL_SIGNAL_TERMS.map(
-	(term) => new RegExp(`(^|[^\\p{L}\\p{N}])${escapeRegExp(term)}([^\\p{L}\\p{N}]|$)`, 'u'),
-);
-
-function hasGlobalSignal(entry: EquinoxHaberEntry) {
-	const haystack = [entry.data.title, entry.data.description, ...(entry.data.tags ?? [])]
-		.join(' ')
-		.toLocaleLowerCase('tr-TR');
-	return GLOBAL_SIGNAL_PATTERNS.some((pattern) => pattern.test(haystack));
-}
-
-/* Skorlar istek başına bir kez hesaplanıyor.
- *
- * Sayfa beş panel kuruyor ('Tümü' ve dört kategori) ve her panel kendi
- * listesini sıralıyordu; aynı haber böylece iki kez skorlanıyordu. Skor
- * girdiye göre sabit olduğu için tekrar gereksiz.
- *
- * Önbellek İSTEK BAŞINA: skor `hoursSince` üzerinden zamana bağlı, modül
- * seviyesinde tutulsa isolate yaşadıkça bayatlar ve haberler eskidikçe
- * yanlış sıralanırdı. Astro frontmatter'ı her istekte baştan çalıştığı için
- * bu Map de her istekte taze kuruluyor. */
-const signalScoreCache = new Map<string, number>();
-
-function scoreSignalEntry(entry: EquinoxHaberEntry) {
-	const cached = signalScoreCache.get(entry.id);
-	if (cached !== undefined) return cached;
-	const computed = computeSignalScore(entry);
-	signalScoreCache.set(entry.id, computed);
-	return computed;
-}
-
-function computeSignalScore(entry: EquinoxHaberEntry) {
-	const ageHours = hoursSince(entry.data.pubDate);
-	const sourceCount = entry.data.sources?.length ?? 0;
-	let score = 0;
-
-	if (entry.data.editorPick) score += ageHours <= STALE_SIGNAL_HOURS ? 40 : 4;
-	if (entry.data.breaking) score += 28;
-	if (sourceCount > 1) score += Math.min(18, 8 + sourceCount * 4);
-	else if (sourceCount === 1) score += 4;
-	if (hasGlobalSignal(entry)) score += 14;
-
-	if (ageHours <= 6) score += 26;
-	else if (ageHours <= 24) score += 18;
-	else if (ageHours <= RECENT_SIGNAL_HOURS) score += 12;
-	else if (ageHours <= STALE_SIGNAL_HOURS) score += 5;
-	else score -= Math.min(45, Math.floor((ageHours - STALE_SIGNAL_HOURS) / 24) * 2);
-
-	return score;
-}
-
-function selectSideEntries(entries: EquinoxHaberEntry[], options: { diversifyCategories: boolean }) {
-	/* Skor SIRALAMADAN ÖNCE bir kez hesaplanıyor.
-	 *
-	 * Eskiden `scoreSignalEntry` karşılaştırma fonksiyonunun içindeydi; 587
-	 * haberlik bir dizide sıralama ~11.400 kez karşılaştırma yapıyor ve her
-	 * karşılaştırma iki skor hesaplıyordu. Skor girdiye göre sabit olduğu için
-	 * bu iş tekrar tekrar yapılıyordu. Sıra değişmiyor: aynı skorlar, aynı
-	 * eşitlik bozma kuralı, sıralama da kararlı. */
-	const rankedEntries = entries
-		.map((entry) => ({ entry, score: scoreSignalEntry(entry) }))
-		.sort((a, b) => {
-			const scoreDelta = b.score - a.score;
-			if (scoreDelta !== 0) return scoreDelta;
-			return b.entry.data.pubDate.valueOf() - a.entry.data.pubDate.valueOf();
-		})
-		.map((ranked) => ranked.entry);
-
-	if (!options.diversifyCategories) return rankedEntries.slice(0, SIDE_SLOT_COUNT);
-
-	const selected: EquinoxHaberEntry[] = [];
-	const selectedCategories = new Set<string>();
-
-	for (const entry of rankedEntries) {
-		const category = entry.data.category ?? 'default';
-		if (selectedCategories.has(category)) continue;
-		selected.push(entry);
-		selectedCategories.add(category);
-		if (selected.length === SIDE_SLOT_COUNT) return selected;
-	}
-
-	for (const entry of rankedEntries) {
-		if (selected.some((selectedEntry) => selectedEntry.id === entry.id)) continue;
-		selected.push(entry);
-		if (selected.length === SIDE_SLOT_COUNT) return selected;
-	}
-
-	return selected;
-}
-
-function buildPanel(entries: EquinoxHaberEntry[], options: { category?: string; diversifyCategories?: boolean } = {}) {
+function buildPanel(entries: EquinoxHaberEntry[]) {
 	const firstPageEntries = entries.slice(0, EQUINOX_HABER_PAGE_SIZE);
 	const leadEntry = firstPageEntries[0];
 
-	/* SIRA ÖNEMLİ: önce akış, sonra yan sütun.
-	 *
-	 * Bir süre tersiydi ve "Son haberler" listesinde DELİK açıyordu: yan
-	 * sütun skora göre seçim yaptığı ve akıştan ÖNCE çalıştığı için en taze
-	 * haberleri kendine alıyor, akış da onları atlayarak devam ediyordu.
-	 * Canlıda liste 23 Ağustos'tan doğrudan 9 Temmuz'a atlıyordu; aradaki
-	 * 20 Ağustos tarihli iki haber sayfada vardı ama "Son haberler"de yoktu.
-	 * Samet fark etti: Selene'nin haberleri akışta hiç görünmüyordu.
-	 *
-	 * "Son haberler" kronolojik bir listedir; içinde delik olamaz. O yüzden
-	 * akış payını önce alıyor: manşetten sonraki en taze N haber, kesintisiz.
-	 *
-	 * Yan sütun geri kalandan seçiyor. Anlamı da bu zaten — ön listede
-	 * görmeyeceğin, skoru yüksek haberleri yüzeye çıkarmak. Aynı haber iki
-	 * yerde görünmüyor. */
+	/* "Son haberler" kronolojik bir listedir; içinde delik olamaz. Manşetten
+	   sonraki en taze N haber, kesintisiz. */
 	const streamEntries = firstPageEntries
 		.filter((entry) => entry.id !== leadEntry?.id)
 		.slice(0, STREAM_SLOT_COUNT);
-	const usedIds = new Set([leadEntry?.id, ...streamEntries.map((entry) => entry.id)]);
-	const sideEntries = selectSideEntries(
-		entries.filter((entry) => !usedIds.has(entry.id)),
-		{ diversifyCategories: Boolean(options.diversifyCategories) },
-	);
-	return {
-		leadEntry,
-		sideEntries,
-		streamEntries,
-		sideEyebrow: 'Öne çıkanlar',
-		sideTitle: options.category && options.category !== 'Tümü' ? `${options.category} akışından` : 'Akıştan seçilenler',
-	};
+	return { leadEntry, streamEntries };
 }
 
 /* Aynı eşleme bir dönem iki kez yazılıydı: bir kez 'Tümü' için, bir kez
@@ -265,19 +104,6 @@ function toLeadItem(entry: EquinoxHaberEntry): LeadPanelItem {
 	};
 }
 
-function toSideItem(entry: EquinoxHaberEntry): SidePanelItem {
-	return {
-		id: entry.id,
-		href: getNewsArticleHref(entry.id),
-		title: entry.data.title,
-		description: entry.data.description,
-		category: entry.data.category ?? '',
-		categoryToken: getNewsCategoryToken(entry.data.category),
-		pubDateIso: entry.data.pubDate.toISOString(),
-		pubDateLabel: formatNewsDate(entry.data.pubDate),
-	};
-}
-
 function toStreamItem(entry: EquinoxHaberEntry): StreamPanelItem {
 	return {
 		...toLeadItem(entry),
@@ -287,21 +113,18 @@ function toStreamItem(entry: EquinoxHaberEntry): StreamPanelItem {
 
 function toPanel(panel: ReturnType<typeof buildPanel>): HomePanel {
 	return {
-		sideEyebrow: panel.sideEyebrow,
-		sideTitle: panel.sideTitle,
 		leadEntry: panel.leadEntry ? toLeadItem(panel.leadEntry) : null,
-		sideEntries: panel.sideEntries.map(toSideItem),
 		streamEntries: panel.streamEntries.map(toStreamItem),
 	};
 }
 
-const allPanel = buildPanel(allEntries, { category: 'Tümü', diversifyCategories: true });
+const allPanel = buildPanel(allEntries);
 
 const panels: Record<string, HomePanel> = { 'Tümü': toPanel(allPanel) };
 
 for (const category of categories) {
 	const categoryEntries = allEntries.filter((entry) => entry.data.category === category);
-	panels[category] = toPanel(buildPanel(categoryEntries, { category, diversifyCategories: false }));
+	panels[category] = toPanel(buildPanel(categoryEntries));
 }
 
 const categorySlugMap = Object.fromEntries(categories.map((category) => [slugifyNewsCategory(category), category]));
@@ -311,7 +134,6 @@ const newsHomeConfigJson = JSON.stringify({
 	categorySlugMap,
 	newsHomePath,
 	archiveHref: getNewsArchiveHref(),
-	SIDE_SLOT_COUNT,
 }).replace(/</g, '\\u003c');
 ---
 
@@ -343,30 +165,6 @@ const newsHomeConfigJson = JSON.stringify({
 						</div>
 					</div>
 				</a>
-
-				{allPanel.sideEntries.length > 0 && (
-					<section class="featured-side-stack" aria-label={allPanel.sideTitle}>
-						<div class="featured-side-header">
-							<p>{allPanel.sideEyebrow}</p>
-							<h2>{allPanel.sideTitle}</h2>
-						</div>
-						<div class="featured-side-list" role="list">
-							{allPanel.sideEntries.map((entry) => (
-								<a href={getNewsArticleHref(entry.id)} class="featured-side-card" role="listitem">
-									<div class="featured-side-content text-only">
-										{entry.data.category && <span class="featured-badge side" data-category={getNewsCategoryToken(entry.data.category)}>{entry.data.category}</span>}
-										<h2>{entry.data.title}</h2>
-										<p>{entry.data.description}</p>
-										<time datetime={entry.data.pubDate.toISOString()}>{formatNewsDate(entry.data.pubDate)}</time>
-									</div>
-								</a>
-							))}
-							{Array.from({ length: Math.max(0, SIDE_SLOT_COUNT - allPanel.sideEntries.length) }).map(() => (
-								<div class="featured-side-card featured-side-card-placeholder" aria-hidden="true"></div>
-							))}
-						</div>
-					</section>
-				)}
 			</section>
 
 			{allPanel.streamEntries.length > 0 && (
@@ -407,24 +205,11 @@ const newsHomeConfigJson = JSON.stringify({
 		author: string;
 	};
 
-	type ClientSidePanelItem = {
-		href: string;
-		title: string;
-		description: string;
-		category: string;
-		categoryToken: string;
-		pubDateIso: string;
-		pubDateLabel: string;
-	};
-
 	type ClientStreamPanelItem = ClientLeadPanelItem & { authorRole: string };
 
 	type ClientHomePanel = {
 		leadEntry: ClientLeadPanelItem | null;
-		sideEntries: ClientSidePanelItem[];
 		streamEntries: ClientStreamPanelItem[];
-		sideEyebrow: string;
-		sideTitle: string;
 	};
 
 	type NewsHomeConfig = {
@@ -432,14 +217,13 @@ const newsHomeConfigJson = JSON.stringify({
 		categorySlugMap: Record<string, string>;
 		newsHomePath: string;
 		archiveHref: string;
-		SIDE_SLOT_COUNT: number;
 	};
 
 	const newsHomeConfigElement = document.getElementById('news-home-config');
 	const newsHomeConfig = (newsHomeConfigElement?.textContent
 		? JSON.parse(newsHomeConfigElement.textContent)
-		: { panels: {}, categorySlugMap: {}, newsHomePath: '/', archiveHref: '/sayfa/1/', SIDE_SLOT_COUNT: 3 }) as NewsHomeConfig;
-	const { panels, categorySlugMap, newsHomePath, archiveHref, SIDE_SLOT_COUNT } = newsHomeConfig;
+		: { panels: {}, categorySlugMap: {}, newsHomePath: '/', archiveHref: '/sayfa/1/' }) as NewsHomeConfig;
+	const { panels, categorySlugMap, newsHomePath, archiveHref } = newsHomeConfig;
 
 	function escapeHtml(value = '') {
 		return String(value)
@@ -450,11 +234,10 @@ const newsHomeConfigJson = JSON.stringify({
 			.replace(/'/g, '&#39;');
 	}
 
-	/* Aşağıdaki üç fonksiyon, sayfanın sunucuda basılan markup'ının
-	   TARAYICI KOPYASI: kategoriye tıklandığında panel burada yeniden
-	   çiziliyor. Sunucudaki karşılıkları sırasıyla `.featured-lead-card`
-	   bloğu, `.featured-side-stack` bloğu ve `NewsCard.astro`. Biri
-	   değişirse diğeri de değişmeli. */
+	/* Aşağıdaki fonksiyonlar, sayfanın sunucuda basılan markup'ının TARAYICI
+	   KOPYASI: kategoriye tıklandığında panel burada yeniden çiziliyor.
+	   Sunucudaki karşılıkları `.featured-lead-card` bloğu ve
+	   `NewsCard.astro`. Biri değişirse diğeri de değişmeli. */
 	function renderLead(item: ClientLeadPanelItem) {
 		return `
 			<a href="${escapeHtml(item.href)}" class="featured-lead-card">
@@ -514,37 +297,6 @@ const newsHomeConfigJson = JSON.stringify({
 		`;
 	}
 
-	function renderSideEntries(panel: ClientHomePanel) {
-		const { sideEntries: items } = panel;
-		if (items.length === 0) return '';
-		const placeholders = Math.max(0, SIDE_SLOT_COUNT - items.length);
-		return `
-			<section class="featured-side-stack" aria-label="${escapeHtml(panel.sideTitle)}">
-				<div class="featured-side-header">
-					<p>${escapeHtml(panel.sideEyebrow)}</p>
-					<h2>${escapeHtml(panel.sideTitle)}</h2>
-				</div>
-				<div class="featured-side-list" role="list">
-					${items
-						.map(
-							(item) => `
-								<a href="${escapeHtml(item.href)}" class="featured-side-card" role="listitem">
-									<div class="featured-side-content text-only">
-										${item.category ? `<span class="featured-badge side" data-category="${escapeHtml(item.categoryToken)}">${escapeHtml(item.category)}</span>` : ''}
-										<h2>${escapeHtml(item.title)}</h2>
-										<p>${escapeHtml(item.description)}</p>
-										<time datetime="${escapeHtml(item.pubDateIso)}">${escapeHtml(item.pubDateLabel)}</time>
-									</div>
-								</a>
-							`,
-						)
-						.join('')}
-					${Array.from({ length: placeholders }).map(() => `<div class="featured-side-card featured-side-card-placeholder" aria-hidden="true"></div>`).join('')}
-				</div>
-			</section>
-		`;
-	}
-
 	function renderPanel(name: string) {
 		const root = document.querySelector('[data-news-home-root]');
 		if (!(root instanceof HTMLElement)) return;
@@ -562,7 +314,6 @@ const newsHomeConfigJson = JSON.stringify({
 		root.innerHTML = `
 			<section class="featured-news-grid">
 				${renderLead(panel.leadEntry)}
-				${renderSideEntries(panel)}
 			</section>
 			${renderStream(panel)}
 		`;
@@ -634,47 +385,9 @@ const newsHomeConfigJson = JSON.stringify({
 <style is:global>
 	.featured-news-grid {
 		display: grid;
-		grid-template-columns: minmax(0, 2fr) 280px;
 		gap: 0.85rem;
 		padding-top: 0.24rem;
 	}
-	.featured-side-stack {
-		position: relative;
-		display: grid;
-		gap: 0.8rem;
-		align-content: start;
-	}
-	.featured-side-header {
-		position: absolute;
-		top: -3.2rem;
-		left: 0;
-		right: 0;
-		display: grid;
-		gap: 0.18rem;
-		padding: 0 0.1rem;
-	}
-	.featured-side-header p {
-		margin: 0;
-		font-size: 0.68rem;
-		font-weight: 800;
-		letter-spacing: 0.12em;
-		text-transform: uppercase;
-		color: var(--news-accent-soft);
-	}
-	.featured-side-header h2 {
-		margin: 0;
-		font-size: 1rem;
-		line-height: 1.2;
-		color: var(--news-text);
-	}
-	.featured-side-list {
-		display: grid;
-		grid-template-rows: repeat(3, minmax(0, 1fr));
-		auto-rows: minmax(0, 1fr);
-		gap: 0.8rem;
-		height: 100%;
-	}
-	.featured-side-card,
 	.featured-lead-card {
 		position: relative;
 		display: block;
@@ -686,42 +399,32 @@ const newsHomeConfigJson = JSON.stringify({
 		box-shadow: var(--news-shadow);
 		transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
 	}
+	/* Manşetin boyu EKRANA bağlı, sabit değil.
+	 *
+	 * Sabit 400px'ken manşet yan sütunun boyuna geriliyordu: 1440×900'de
+	 * 749px'e çıkıyor ve kartın alt kenarı ekranın 7px altında bitiyordu.
+	 * Okuyucu ilk bakışta sayfanın tamamını görmüş oluyordu — altta 12
+	 * haber daha olduğuna dair tek bir işaret yoktu. Samet "sanki altta
+	 * haber yokmuş gibi anlaşılıyor" dedi; ölçünce haklı çıktı.
+	 *
+	 * `48vh` bunu ekran boyundan bağımsız çözüyor: manşet ekranın yarısını
+	 * alıyor, "Son haberler" başlığı ve ilk kart HER ZAMAN katlamanın
+	 * üstünde kalıyor. Alt sınır kısa ekranlar, üst sınır çok uzun
+	 * ekranlar için — 27 inçlik bir monitörde manşet 800px olmasın. */
 	.featured-lead-card {
-		min-height: 400px;
+		min-height: clamp(320px, 48vh, 520px);
 	}
-	.featured-side-card {
-		overflow: visible;
-		min-height: 0;
-		height: 100%;
-		background: color-mix(in srgb, var(--news-panel) 96%, transparent);
-		box-shadow: none;
-	}
-	.featured-side-card-placeholder {
-		pointer-events: none;
-		opacity: 0;
-	}
-	.featured-side-card:hover,
 	.featured-lead-card:hover {
 		transform: translateY(-2px);
 		border-color: color-mix(in srgb, var(--news-accent) 35%, var(--news-border));
 		box-shadow: 0 22px 60px rgba(0,0,0,0.26);
 	}
-	.featured-side-card:hover {
-		box-shadow: 0 12px 26px rgba(0,0,0,0.12);
-	}
-	html[data-theme='light'] .featured-side-card,
 	html[data-theme='light'] .featured-lead-card {
 		box-shadow: 0 14px 32px rgba(37, 28, 18, 0.08);
 	}
-	html[data-theme='light'] .featured-side-card {
-		background: rgba(255,255,255,0.82);
-		box-shadow: 0 8px 18px rgba(37, 28, 18, 0.05);
-	}
-	html[data-theme='light'] .featured-side-card:hover,
 	html[data-theme='light'] .featured-lead-card:hover {
 		box-shadow: 0 18px 40px rgba(37, 28, 18, 0.12);
 	}
-	.featured-side-card img,
 	.featured-lead-card img {
 		width: 100%;
 		height: 100%;
@@ -745,7 +448,6 @@ const newsHomeConfigJson = JSON.stringify({
 	.featured-overlay.lead {
 		background: linear-gradient(180deg, rgba(0,0,0,0.02) 0%, rgba(0,0,0,0.2) 28%, rgba(0,0,0,0.88) 100%);
 	}
-	.featured-side-content,
 	.featured-lead-content {
 		position: absolute;
 		left: 0;
@@ -753,15 +455,6 @@ const newsHomeConfigJson = JSON.stringify({
 		bottom: 0;
 		z-index: 2;
 		padding: 0.9rem;
-	}
-	.featured-side-content.text-only {
-		position: relative;
-		inset: auto;
-		display: grid;
-		align-content: start;
-		gap: 0.45rem;
-		height: 100%;
-		padding: 1rem 1rem 0.95rem;
 	}
 	/* Alttaki 3.4rem, numaralı slayt sayacına ayrılmış yerdi. Sayaç gitti. */
 	.featured-lead-content {
@@ -804,62 +497,18 @@ const newsHomeConfigJson = JSON.stringify({
 		border-color: rgba(52, 211, 153, 0.28);
 		color: #ecfff8;
 	}
-	/* Aydınlık temadaki koyu rozet renkleri YALNIZ yan sütuna (`.side`) ait.
-	 *
-	 * Bu kurallar uzun süre `:global(...)` sarmalayıcısı yüzünden hiç
-	 * üretilmiyordu — `is:global` bir blokta `:global()` geçerli bir seçici
-	 * değil ve minifier kuralı sessizce atıyordu. Sarmalayıcıyı kaldırınca
-	 * kurallar canlandı ve manşetteki rozeti okunmaz yaptılar: manşet rozeti
-	 * FOTOĞRAFIN üstünde duruyor, yani zemini temadan bağımsız olarak koyu.
-	 * Koyu lacivert bir "BİLİM" yazısı orada kayboluyordu.
-	 *
-	 * Yan sütun rozetleri krem kart üstünde; koyu ton oraya doğru. */
-	html[data-theme='light'] .featured-badge.side[data-category='siyaset'] {
-		color: #7a241c;
-	}
-	html[data-theme='light'] .featured-badge.side[data-category='ekonomi'] {
-		color: #6d4a00;
-	}
-	html[data-theme='light'] .featured-badge.side[data-category='bilim'] {
-		color: #163b73;
-	}
-	html[data-theme='light'] .featured-badge.side[data-category='teknoloji'] {
-		color: #0f5136;
-	}
+	/* Manşet rozeti zeminini temadan DEĞİL fotoğraftan alır: her iki temada
+	 * da koyu bir görselin üstünde durur, o yüzden rengi tema değişince
+	 * değişmiyor. Bir dönem aydınlık tema için koyu bir varyantı vardı ve
+	 * fotoğrafın üstünde okunmuyordu. */
 	/* Serif manşet; tek ağırlık olduğu için 700 (bkz. `BaseLayout`taki
 	   `--news-serif` notu). */
-	.featured-side-content h2,
 	.featured-lead-content h2 {
 		font-family: var(--news-serif);
 		font-weight: 700;
 		margin: 0.45rem 0 0;
 		color: #fff;
 		text-wrap: balance;
-	}
-	.featured-side-content.text-only h2 {
-		margin-top: 0.15rem;
-		color: var(--news-text);
-	}
-	.featured-side-content h2 {
-		font-size: 1.06rem;
-		line-height: 1.22;
-		letter-spacing: -0.01em;
-	}
-	.featured-side-content.text-only p {
-		margin: 0;
-		color: var(--news-muted-strong);
-		font-size: 0.94rem;
-		line-height: 1.52;
-		display: -webkit-box;
-		-webkit-box-orient: vertical;
-		-webkit-line-clamp: 3;
-		overflow: hidden;
-	}
-	.featured-side-content.text-only h2 {
-		display: -webkit-box;
-		-webkit-box-orient: vertical;
-		-webkit-line-clamp: 3;
-		overflow: hidden;
 	}
 	.featured-lead-content h2 {
 		font-size: clamp(1.55rem, 2.6vw, 2.15rem);
@@ -886,7 +535,6 @@ const newsHomeConfigJson = JSON.stringify({
 		-webkit-line-clamp: 3;
 		overflow: hidden;
 	}
-	.featured-side-content time,
 	.featured-meta-row {
 		display: flex;
 		gap: 0.5rem;
@@ -894,36 +542,6 @@ const newsHomeConfigJson = JSON.stringify({
 		margin-top: 0.48rem;
 		color: rgba(255,255,255,0.7);
 		font-size: 0.74rem;
-	}
-	.featured-side-content.text-only time {
-		margin-top: auto;
-		padding-top: 0.35rem;
-		color: var(--news-muted);
-		font-size: 0.78rem;
-	}
-	.featured-badge.side {
-		width: fit-content;
-		backdrop-filter: none;
-	}
-	.featured-badge.side[data-category='siyaset'] {
-		color: #f97360;
-		background: rgba(249, 115, 96, 0.12);
-		border-color: rgba(249, 115, 96, 0.2);
-	}
-	.featured-badge.side[data-category='ekonomi'] {
-		color: #f2b94b;
-		background: rgba(242, 185, 75, 0.12);
-		border-color: rgba(242, 185, 75, 0.22);
-	}
-	.featured-badge.side[data-category='bilim'] {
-		color: #60a5fa;
-		background: rgba(96, 165, 250, 0.12);
-		border-color: rgba(96, 165, 250, 0.2);
-	}
-	.featured-badge.side[data-category='teknoloji'] {
-		color: #34d399;
-		background: rgba(52, 211, 153, 0.12);
-		border-color: rgba(52, 211, 153, 0.2);
 	}
 	/* AKIŞ: manşetin altındaki başlık listesi. Arşivdeki satır düzeninin
 	   aynısı — `NewsCard` — çünkü orada zaten çalışıyor: kategori, tarih,
@@ -986,31 +604,12 @@ const newsHomeConfigJson = JSON.stringify({
 		color: var(--news-muted-strong);
 		max-width: 56ch;
 	}
-	@media (max-width: 1080px) {
-		.featured-news-grid {
-			grid-template-columns: 1fr;
-		}
-		.featured-side-stack {
-			margin-top: 0.75rem;
-		}
-		.featured-side-header {
-			position: static;
-			padding: 0;
-		}
-	}
 	@media (max-width: 700px) {
 		.featured-lead-card {
 			min-height: 300px;
 		}
-		.featured-news-grid {
-			grid-template-columns: 1fr;
-		}
-		.featured-lead-content,
-		.featured-side-content {
+		.featured-lead-content {
 			padding: 0.85rem;
-		}
-		.featured-side-content.text-only {
-			padding: 0.9rem;
 		}
 		.featured-lead-content h2 {
 			font-size: 1.3rem;
