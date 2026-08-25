@@ -2,6 +2,7 @@
 import { findAuthorByName } from '../../data/authors';
 import { formatNewsDate, getNewsCategoryToken, type EquinoxHaberEntry } from '../../data/equinoxHaber';
 import { getNewsArticleHref } from '../../data/newsSite';
+import { gorselKaynagi, KART_SIZES } from '../../data/gorsel';
 
 interface Props {
 	entry: EquinoxHaberEntry;
@@ -12,6 +13,7 @@ const { entry, compact = false } = Astro.props;
 const authorProfile = findAuthorByName(entry.data.author);
 const href = getNewsArticleHref(entry.id);
 const categoryToken = getNewsCategoryToken(entry.data.category);
+const gorsel = entry.data.heroImage ? gorselKaynagi(entry.data.heroImage, KART_SIZES) : null;
 ---
 
 <article class={`news-card ${compact ? 'compact' : ''}`.trim()} data-news-card data-category={categoryToken}>
@@ -32,9 +34,19 @@ const categoryToken = getNewsCategoryToken(entry.data.category);
 		</div>
 	</div>
 
-	{entry.data.heroImage && (
+	{gorsel && (
 		<a class="news-card-image-link" href={href} aria-hidden="true" tabindex="-1">
-			<img class="news-card-image" src={entry.data.heroImage} alt="" loading="lazy" decoding="async" />
+			<img
+				class="news-card-image"
+				src={gorsel.src}
+				srcset={gorsel.srcset}
+				sizes={gorsel.sizes}
+				width="1200"
+				height="675"
+				alt=""
+				loading="lazy"
+				decoding="async"
+			/>
 		</a>
 	)}
 </article>

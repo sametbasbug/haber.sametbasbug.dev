@@ -12,6 +12,7 @@ import {
 import { getNewsArticleHref, getNewsArchiveHref, getNewsHomePath } from '../data/newsSite';
 import { findAuthorByName } from '../data/authors';
 import NewsCard from '../components/news/NewsCard.astro';
+import { gorselKaynagi, KART_SIZES, MANSET_SIZES } from '../data/gorsel';
 
 const allEntries = await getPublishedEquinoxHaber();
 const categories = getEquinoxHaberCategories();
@@ -119,6 +120,9 @@ function toPanel(panel: ReturnType<typeof buildPanel>): HomePanel {
 }
 
 const allPanel = buildPanel(allEntries);
+const mansetGorseli = allPanel.leadEntry?.data.heroImage
+	? gorselKaynagi(allPanel.leadEntry.data.heroImage, MANSET_SIZES)
+	: null;
 
 const panels: Record<string, HomePanel> = { 'Tümü': toPanel(allPanel) };
 
@@ -150,7 +154,18 @@ const newsHomeConfigJson = JSON.stringify({
 			<>
 			<section class="featured-news-grid">
 				<a href={getNewsArticleHref(allPanel.leadEntry.id)} class="featured-lead-card">
-					{allPanel.leadEntry.data.heroImage && <img src={allPanel.leadEntry.data.heroImage} alt="" loading="eager" decoding="async" />}
+					{mansetGorseli && (
+						<img
+							src={mansetGorseli.src}
+							srcset={mansetGorseli.srcset}
+							sizes={mansetGorseli.sizes}
+							width="1200"
+							height="675"
+							alt=""
+							loading="eager"
+							decoding="async"
+						/>
+					)}
 					<div class="featured-overlay lead"></div>
 					<div class="featured-lead-content">
 						<div class="featured-lead-topline">
@@ -192,6 +207,8 @@ const newsHomeConfigJson = JSON.stringify({
 <script is:inline type="application/json" id="news-home-config" set:html={newsHomeConfigJson}></script>
 
 <script>
+	import { gorselKaynagi, KART_SIZES, MANSET_SIZES } from '../data/gorsel';
+
 	type ClientLeadPanelItem = {
 		href: string;
 		title: string;
@@ -225,6 +242,20 @@ const newsHomeConfigJson = JSON.stringify({
 		: { panels: {}, categorySlugMap: {}, newsHomePath: '/', archiveHref: '/sayfa/1/' }) as NewsHomeConfig;
 	const { panels, categorySlugMap, newsHomePath, archiveHref } = newsHomeConfig;
 
+	function gorselEtiketi(heroImage: string, sizes: string, yukleme: 'eager' | 'lazy', sinif = '') {
+		if (!heroImage) return '';
+		const g = gorselKaynagi(heroImage, sizes);
+		return [
+			'<img',
+			sinif ? ` class="${sinif}"` : '',
+			` src="${escapeHtml(g.src)}"`,
+			g.srcset ? ` srcset="${escapeHtml(g.srcset)}"` : '',
+			g.sizes ? ` sizes="${escapeHtml(g.sizes)}"` : '',
+			' width="1200" height="675" alt=""',
+			` loading="${yukleme}" decoding="async">`,
+		].join('');
+	}
+
 	function escapeHtml(value = '') {
 		return String(value)
 			.replace(/&/g, '&amp;')
@@ -241,7 +272,7 @@ const newsHomeConfigJson = JSON.stringify({
 	function renderLead(item: ClientLeadPanelItem) {
 		return `
 			<a href="${escapeHtml(item.href)}" class="featured-lead-card">
-				${item.heroImage ? `<img src="${escapeHtml(item.heroImage)}" alt="" loading="eager" decoding="async">` : ''}
+				${gorselEtiketi(item.heroImage, MANSET_SIZES, 'eager')}
 				<div class="featured-overlay lead"></div>
 				<div class="featured-lead-content">
 					<div class="featured-lead-topline">
@@ -276,7 +307,7 @@ const newsHomeConfigJson = JSON.stringify({
 						<a class="news-read-link" href="${escapeHtml(item.href)}">Devamını oku</a>
 					</div>
 				</div>
-				${item.heroImage ? `<a class="news-card-image-link" href="${escapeHtml(item.href)}" aria-hidden="true" tabindex="-1"><img class="news-card-image" src="${escapeHtml(item.heroImage)}" alt="" loading="lazy" decoding="async"></a>` : ''}
+				${item.heroImage ? `<a class="news-card-image-link" href="${escapeHtml(item.href)}" aria-hidden="true" tabindex="-1">${gorselEtiketi(item.heroImage, KART_SIZES, 'lazy', 'news-card-image')}</a>` : ''}
 			</article>
 		`;
 	}

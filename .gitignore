@@ -53,3 +53,7 @@ dist-serve/
 # `dist-ssr` varlığına göre içeriği değişir, yani depoda tutulan bir kopya
 # makineden makineye tutmaz. `npm run typecheck` her koşuda yeniden üretir.
 worker-configuration.d.ts
+
+# Derleme sırasında üretilen küçük görsel varyantları (scripts/kucuk-gorsel.mjs).
+public/images/generated/equinox-haber/kucuk/
+.cache/
