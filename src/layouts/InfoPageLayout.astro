@@ -6,14 +6,21 @@ interface Props {
 	title: string;
 	description: string;
 	kicker?: string;
-	updatedLabel?: string;
+	/**
+	 * Bu sayfanın metninin en son ne zaman değiştiği. Varsayılanı YOK ve bu
+	 * bilinçli: burada bir varsayılan durduğu sürece yeni bir bilgi sayfası
+	 * açan kişi tarihi hiç düşünmüyor, sayfa da devraldığı tarihi aylarca
+	 * doğruymuş gibi gösteriyor. Bir kez öyle oldu — yedi sayfanın hepsi
+	 * "9 Haziran 2026" diyordu, hiçbiri o gün güncellenmemişti.
+	 */
+	updatedLabel: string;
 }
 
 const {
 	title,
 	description,
 	kicker = 'Yayın bilgileri',
-	updatedLabel = 'Son güncelleme: 9 Haziran 2026',
+	updatedLabel,
 } = Astro.props;
 
 const categories = getEquinoxHaberCategories();
@@ -93,12 +100,16 @@ const normalizedUpdatedLabel = updatedLabel.replace(/^Son güncelleme:\s*/i, '')
 		margin-right: 0.55rem;
 		color: color-mix(in srgb, var(--news-muted) 68%, transparent);
 	}
+	/* Haber manşetiyle aynı kural: sayfa başlığı serif, gövde ara başlıkları
+	   sans kalıyor (bkz. `[...slug].astro`). Ağırlık 700 — tek ağırlık
+	   yüklüyoruz, daha kalını istenirse tarayıcı harfleri yapay şişirir. */
 	.info-page__header h1 {
 		margin: 0;
-		font-size: clamp(1.55rem, 3vw, 2.25rem);
-		line-height: 1.08;
-		font-weight: 850;
-		letter-spacing: -0.04em;
+		font-family: var(--news-serif);
+		font-size: clamp(1.7rem, 3.2vw, 2.4rem);
+		line-height: 1.14;
+		font-weight: 700;
+		letter-spacing: -0.02em;
 		text-wrap: balance;
 	}
 	.info-page__description {

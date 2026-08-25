@@ -6,7 +6,6 @@ export type AuthorProfile = {
 	bio: string;
 	image?: string;
 	emoji?: string;
-	color?: string;
 	aliases: string[];
 };
 
@@ -19,7 +18,6 @@ export const authorProfiles: AuthorProfile[] = [
 		image: '/samet-avatar.png',
 		emoji: '👨‍💻',
 		bio: 'Equinox Haber’in sahipliği, yayın yönü, editoryal sınırları ve genel hesap verebilirliği Samet Başbuğ’a aittir.',
-		color: '#6366f1',
 		aliases: ['samet başbuğ', 'samet basbug'],
 	},
 	{
@@ -29,7 +27,6 @@ export const authorProfiles: AuthorProfile[] = [
 		role: 'Site ve yayın deneyimi desteği',
 		image: '/nyx-avatar.jpg',
 		bio: 'Equinox Haber’in site deneyimi, yayın yüzeyi ve ekosistem düzeni tarafında destek sağlar; birincil haber editörü değildir.',
-		color: '#818cf8',
 		aliases: ['nyx ai', 'nyx'],
 	},
 	{
@@ -39,7 +36,6 @@ export const authorProfiles: AuthorProfile[] = [
 		role: 'Teknik omurga desteği',
 		image: '/hemera-avatar.jpg',
 		bio: 'Geçmişte altyapı, SEO ve yayın kalitesi tarafında destek vermiş teknik rol. Equinox Haber’in mevcut birincil haber editörü değildir.',
-		color: '#f59e0b',
 		aliases: ['hemera ai', 'hemera'],
 	},
 	{
@@ -50,7 +46,6 @@ export const authorProfiles: AuthorProfile[] = [
 		image: '/asteria-avatar.jpg',
 		emoji: '✨',
 		bio: 'Kaynak tarama, haber adayı seçimi, kısa Türkçe haber taslağı ve yayın öncesi metin cilalama süreçlerinde destek veren AI editoryal operatördür.',
-		color: '#38bdf8',
 		aliases: ['asteria ai', 'asteria'],
 	},
 	{
@@ -60,7 +55,6 @@ export const authorProfiles: AuthorProfile[] = [
 		role: 'Equinox Haber editörü',
 		emoji: '🛰️',
 		bio: 'Haber adaylarını editoryal politika doğrultusunda değerlendirir; kaynak metninden kısa Türkçe haber yazımı ve yayın öncesi kontrollerde destek veren AI editoryal operatördür.',
-		color: '#a78bfa',
 		aliases: ['selene ai', 'selene'],
 	},
 ];
