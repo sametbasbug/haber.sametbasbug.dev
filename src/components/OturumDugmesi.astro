@@ -59,13 +59,16 @@ const donus = Astro.url.pathname + Astro.url.search;
 		<a class="oturum-ad" href="/profil/" title={okuyucu.displayName ?? 'Orbit hesabı'}>
 			{okuyucu.displayName ?? 'Hesabım'}
 		</a>
-		<button type="submit" class="oturum-dugme">Çıkış</button>
+		<button type="submit" class="oturum-dugme cikis">Çıkış</button>
 	</form>
 )}
 {!okuyucu && girisAcik && (
 	<form class="oturum" method="POST" action="/giris/orbit" data-astro-reload>
 		<input type="hidden" name="donus" value={donus} />
-		<button type="submit" class="oturum-dugme">Orbit ile giriş</button>
+		<button type="submit" class="oturum-dugme">
+			<span class="etiket-tam">Orbit ile giriş</span>
+			<span class="etiket-kisa">Giriş</span>
+		</button>
 	</form>
 )}
 
@@ -114,5 +117,27 @@ const donus = Astro.url.pathname + Astro.url.search;
 	.oturum-dugme:hover {
 		color: var(--news-text);
 		border-color: var(--news-accent);
+	}
+
+	.etiket-kisa { display: none; }
+
+	/* DAR EKRANDA BAŞLIK TEK SATIR.
+	 *
+	 * 390px'de başlığın iç genişliği 324px; marka (118) + tema (37) + bu blok
+	 * + Equinox (71) + boşluklar tek satıra sığmak zorunda. "Orbit ile giriş"
+	 * 100px yer kaplıyor ve toplamı 345'e çıkarıyordu — 21px fazla. Etiket
+	 * "Giriş"e inince 50px oluyor, toplam 295. Ölçüldü.
+	 *
+	 * Giriş yapmış hal daha da genişti (ad + Çıkış = 147px). Dar ekranda
+	 * artık yalnız AD çıkıyor ve profile gidiyor; çıkış oradaki "Çıkış yap"
+	 * düğmesinde duruyor. Ad 9 karakterle sınırlı, yani uzun bir ad başlığı
+	 * şişiremiyor. */
+	@media (max-width: 640px) {
+		.etiket-tam { display: none; }
+		.etiket-kisa { display: inline; }
+		.oturum-dugme.cikis { display: none; }
+		/* 7 karakter: 360px'lik telefonlarda giriş yapmış halin de tek satırda
+		   kalmasını sağlayan sınır. 9ch'te ikinci satıra düşüyordu. */
+		.oturum-ad { max-width: 7ch; }
 	}
 </style>
