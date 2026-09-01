@@ -2,13 +2,31 @@
  *
  * `astro:content` BİLEREK içeri alınmıyor; gerekçesi `newsSource.ts` içinde.
  */
-import { getArticleFromD1, getPublishedFromD1 } from './equinoxHaberD1';
+import {
+	getArticleFromD1,
+	getArticlePageFromD1,
+	getPublishedCountFromD1,
+	getPublishedFromD1,
+	type PublishedD1Options,
+} from './equinoxHaberD1';
 import { getDatabase } from '#runtime-env';
 
-export async function getPublished(): Promise<any[]> {
+export async function getPublished(options: PublishedD1Options = {}): Promise<any[]> {
 	const db = getDatabase();
 	if (!db) throw new Error('D1 binding yok: sunucu modunda haber kaynağı okunamıyor.');
-	return getPublishedFromD1(db);
+	return getPublishedFromD1(db, options);
+}
+
+export async function getPublishedCount(): Promise<number> {
+	const db = getDatabase();
+	if (!db) throw new Error('D1 binding yok.');
+	return getPublishedCountFromD1(db);
+}
+
+export async function getArticlePage(slug: string) {
+	const db = getDatabase();
+	if (!db) throw new Error('D1 binding yok.');
+	return getArticlePageFromD1(db, slug);
 }
 
 /** Sunucu modunda gövde markdown'dan render EDİLMEZ: `body_html` yazma anında
@@ -22,7 +40,7 @@ export async function renderEntry(): Promise<null> {
 export async function getPublishedWithBody(limit: number): Promise<any[]> {
 	const db = getDatabase();
 	if (!db) throw new Error('D1 binding yok.');
-	return getPublishedFromD1(db, { withBody: true, limit });
+	return getPublishedFromD1(db, { withBody: true, limit, includeTags: true, includeSources: false });
 }
 
 /** Gösterilen haberin gövdesi. Liste sorgusunda gövde yok; yalnız bu tek
