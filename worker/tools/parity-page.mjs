@@ -34,6 +34,10 @@ const slugs = readdirSync(`${ROOT}src/content/equinoxHaber`)
  * - `globalThis.process??={}` öneki: Cloudflare adaptörünün satır içi
  *   betiklere eklediği polyfill. Derleme aracının eklentisi; sayfanın
  *   içeriğiyle, düzeniyle veya davranışıyla ilgisi yok.
+ * - `-webkit-backdrop-filter`: Cloudflare SSR CSS derlemesi standart
+ *   `backdrop-filter` kuralının yanına aynı değerde vendor prefix ekliyor;
+ *   statik derleme eklemiyor. Aynı stilin uyumluluk kopyası olduğu için
+ *   karşılaştırmadan çıkarılıyor.
  *
  * `&` kaçışı için normalizasyon YOK ve olmamalı: site de Worker da artık
  * `unified` kullanıyor, yani o fark kaynağında ortadan kalktı. Buraya bir
@@ -42,7 +46,8 @@ const slugs = readdirSync(`${ROOT}src/content/equinoxHaber`)
 const normalize = (html) => html
   .replaceAll(/data-astro-cid-[a-z0-9]+/gu, "data-astro-cid-X")
   .replaceAll(/\/_astro\/([A-Za-z0-9_.-]+?)\.[A-Za-z0-9_-]{8}\.(css|js)/gu, "/_astro/$1.X.$2")
-  .replaceAll("globalThis.process??={},globalThis.process.env??={};", "");
+  .replaceAll("globalThis.process??={},globalThis.process.env??={};", "")
+  .replaceAll(/-webkit-backdrop-filter:[^;{}]+;?/gu, "");
 
 let checked = 0, skipped = 0;
 const failures = [];

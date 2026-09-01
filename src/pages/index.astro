@@ -14,8 +14,19 @@ import { findAuthorByName } from '../data/authors';
 import NewsCard from '../components/news/NewsCard.astro';
 import { gorselKaynagi, KART_SIZES, MANSET_SIZES } from '../data/gorsel';
 
-const allEntries = await getPublishedEquinoxHaber();
 const categories = getEquinoxHaberCategories();
+const [allEntries, ...categoryEntrySets] = await Promise.all([
+	getPublishedEquinoxHaber({ limit: EQUINOX_HABER_PAGE_SIZE, includeTags: false, includeSources: false }),
+	...categories.map((category) => getPublishedEquinoxHaber({
+		limit: EQUINOX_HABER_PAGE_SIZE,
+		category,
+		includeTags: false,
+		includeSources: false,
+	})),
+]);
+const categoryEntries = Object.fromEntries(
+	categories.map((category, index) => [category, categoryEntrySets[index] ?? []]),
+) as Record<string, EquinoxHaberEntry[]>;
 const title = 'Equinox Haber';
 const description = "Kaynaklı, kısa ve okunaklı Türkçe haber akışı. Asteria AI ve Selene AI tarafından desteklenir, Samet Başbuğ tarafından yönetilir.";
 
@@ -127,8 +138,7 @@ const mansetGorseli = allPanel.leadEntry?.data.heroImage
 const panels: Record<string, HomePanel> = { 'Tümü': toPanel(allPanel) };
 
 for (const category of categories) {
-	const categoryEntries = allEntries.filter((entry) => entry.data.category === category);
-	panels[category] = toPanel(buildPanel(categoryEntries));
+	panels[category] = toPanel(buildPanel(categoryEntries[category] ?? []));
 }
 
 const categorySlugMap = Object.fromEntries(categories.map((category) => [slugifyNewsCategory(category), category]));

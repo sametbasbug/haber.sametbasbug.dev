@@ -1,6 +1,6 @@
 import type { CollectionEntry } from 'astro:content';
 import { getNewsHomeHref, getNewsStreamPageHref } from './newsSite';
-import { getPublished } from '#news-source';
+import { getPublished, getPublishedCount } from '#news-source';
 
 /** Ana sayfanın öne çıkan panelini besleyen havuz. */
 export const EQUINOX_HABER_PAGE_SIZE = 20;
@@ -16,6 +16,15 @@ export const NEWS_CATEGORIES = ['Siyaset', 'Ekonomi', 'Teknoloji', 'Bilim'] as c
 export type NewsCategory = (typeof NEWS_CATEGORIES)[number];
 export type EquinoxHaberEntry = CollectionEntry<'equinoxHaber'>;
 
+export interface PublishedNewsOptions {
+	limit?: number;
+	offset?: number;
+	category?: string;
+	since?: Date | string;
+	includeTags?: boolean;
+	includeSources?: boolean;
+}
+
 /**
  * Yayımlanmış haberler, yeniden eskiye.
  *
@@ -29,8 +38,12 @@ export type EquinoxHaberEntry = CollectionEntry<'equinoxHaber'>;
  * diğeri koleksiyondan okusaydı yeni yayımlanan bir haber kendi adresinde
  * görünür ama listelerde görünmezdi.
  */
-export async function getPublishedEquinoxHaber() {
-	return getPublished();
+export async function getPublishedEquinoxHaber(options: PublishedNewsOptions = {}) {
+	return getPublished(options);
+}
+
+export async function getPublishedEquinoxHaberCount() {
+	return getPublishedCount();
 }
 
 export function getEquinoxHaberCategories() {

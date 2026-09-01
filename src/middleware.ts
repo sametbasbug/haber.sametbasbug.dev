@@ -4,11 +4,12 @@ import { oturumCereziVarMi } from './server/session';
 
 /* Kenar önbelleği.
  *
- * Neden gerekli, ölçümle: bir sayfa isteği D1'den **4225 satır** okuyor —
- * 587 haber üstbilgisi, 3041 etiket, 597 kaynak. Liste, ilgili haberler ve
- * önceki/sonraki hesabı bütün koleksiyonu istiyor. Ücretsiz planın günlük
- * sınırı 5 milyon satır okuma, yani önbelleksiz tavan ~1.180 sayfa
- * görüntüleme/gün. Bir haber sitesi için bu az.
+ * İlk D1 sürümü her sayfa isteğinde bütün haber üstbilgilerini, etiketleri ve
+ * kaynakları okuyordu; tek istek binlerce satıra çıkıyordu. Haber/listeler artık
+ * hedefli ve sayfalı sorgular kullanıyor: tekil haberde yalnız mevcut kayıt,
+ * ilişkileri, komşuları ve ilgili adaylar; arşivde yalnız istenen sayfa okunuyor.
+ * Kenar önbelleği bu düşük temel maliyeti de tekrar trafikte sıfıra yaklaştırmak
+ * ve D1 geçici olarak cevap veremezse son iyi sayfayı sunabilmek için korunuyor.
  *
  * Süre 60 saniye. Bu bir tercih ve gerekçesi şu: sistemin varlık sebebi
  * yayının ve DÜZELTMENİN hızlı yansıması. Bir dakikalık bayatlık, statik
@@ -25,8 +26,8 @@ import { oturumCereziVarMi } from './server/session';
  * isteğin düştüğü veri merkezini temizlediği için gerçek bir geçersizleştirme
  * aracı değil; sürüm anahtarı her yerde çalışıyor.
  *
- * Maliyet istek başına bir satır okuma. Önbellek isabetinde sayfa maliyeti
- * 4225 satırdan 1 satıra iniyor.
+ * Önbellek anahtarını üretmek için istek başına yalnız `site_state` sürüm satırı
+ * okunuyor. Önbellek isabetinde sayfanın diğer D1 sorguları hiç çalışmıyor.
  *
  * Statik derlemede `caches` yok; ara katman hiçbir şey yapmadan geçiyor.
  */

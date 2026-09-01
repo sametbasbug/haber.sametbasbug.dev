@@ -8,9 +8,12 @@ const MAX_ITEMS = 1000;
 export async function GET(context: { site?: URL }) {
   const site = context.site?.toString() ?? 'https://haber.sametbasbug.dev';
   const now = Date.now();
-  const entries = (await getPublishedEquinoxHaber())
-    .filter((entry) => now - entry.data.pubDate.getTime() <= NEWS_WINDOW_MS)
-    .slice(0, MAX_ITEMS);
+  const entries = await getPublishedEquinoxHaber({
+    since: new Date(now - NEWS_WINDOW_MS),
+    limit: MAX_ITEMS,
+    includeTags: false,
+    includeSources: false,
+  });
 
   const body = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">\n${entries
     .map((entry) => {

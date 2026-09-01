@@ -30,7 +30,7 @@ const STATIC_PATHS = [
 
 export const GET: APIRoute = async ({ site }) => {
 	const base = (site ?? new URL('https://haber.sametbasbug.dev')).toString().replace(/\/$/, '');
-	const entries = await getPublished();
+	const entries = await getPublished({ includeTags: false, includeSources: false });
 
 	const pageCount = Math.max(1, Math.ceil(entries.length / EQUINOX_HABER_ARCHIVE_PAGE_SIZE));
 	const paths = [

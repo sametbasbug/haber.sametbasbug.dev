@@ -1,9 +1,9 @@
 ---
-import { getArticleBody, renderEntry } from '#news-source';
+import { getArticlePage, renderEntry } from '#news-source';
 import NewsLayout from '../layouts/NewsLayout.astro';
 import NewsCard from '../components/news/NewsCard.astro';
 import { findAuthorByName } from '../data/authors';
-import { formatNewsDate, getEquinoxHaberCategories, getNewsCategoryToken, getPublishedEquinoxHaber, normalizeNewsCategory } from '../data/equinoxHaber';
+import { formatNewsDate, getEquinoxHaberCategories, getNewsCategoryToken, getPublishedEquinoxHaber } from '../data/equinoxHaber';
 import { getNewsArticleHref, getNewsCanonicalUrl, getNewsHomeHref } from '../data/newsSite';
 import { getWithdrawal, kaldirilanSayfasi } from '../data/withdrawals';
 
@@ -15,10 +15,11 @@ export async function getStaticPaths() {
 
 const routeSlug = Astro.params.slug;
 
-/* Kaynak seçimi `getPublishedEquinoxHaber` içinde; burası hangi kaynaktan
-   okuduğunu bilmiyor. */
-const allEntries = await getPublishedEquinoxHaber();
-const entry = allEntries.find((item) => item.id === routeSlug);
+/* Sunucu modunda tekil haber yolu bütün arşivi okumaz. D1 kaynağı mevcut
+   haber + komşular + ilgili üçlü için hedefli sorgular kullanır; statik kaynak
+   aynı şekli içerik koleksiyonundan kurar. */
+const articlePage = routeSlug ? await getArticlePage(routeSlug) : null;
+const entry = articlePage?.entry;
 
 if (!entry) {
 	/* Yayından kaldırılmış bir haber mi?
@@ -58,33 +59,19 @@ if (!entry) {
    ölçüldü (587/587) — bkz. `worker/tools/parity-render.mjs`. */
 /* Gövde listeyle birlikte gelmiyor (bkz. `equinoxHaberD1.ts`): liste yalnız
    üstbilgi taşıyor, gövde yalnız gösterilen haber için okunuyor. */
-const article = await getArticleBody(routeSlug!);
-const bodyHtml = article?.bodyHtml ?? null;
+const pageData = articlePage!;
+const bodyHtml = pageData.bodyHtml;
 const Content = bodyHtml === null ? await renderEntry(entry) : null;
-const currentIndex = allEntries.findIndex((item) => item.id === entry.id);
-const nextEntry = allEntries[currentIndex - 1];
-const prevEntry = allEntries[currentIndex + 1];
-const currentTags = new Set(entry.data.tags ?? []);
-const relatedEntries = allEntries
-	.filter((item) => item.id !== entry.id)
-	.map((item, index) => {
-		const sharedTags = (item.data.tags ?? []).filter((tag) => currentTags.has(tag)).length;
-		const sameCategory = normalizeNewsCategory(item.data.category) === normalizeNewsCategory(entry.data.category);
-		return {
-			entry: item,
-			score: (sameCategory ? 6 : 0) + sharedTags * 3 - index * 0.001,
-		};
-	})
-	.sort((a, b) => b.score - a.score)
-	.slice(0, 3)
-	.map((item) => item.entry);
+const nextEntry = pageData.nextEntry;
+const prevEntry = pageData.prevEntry;
+const relatedEntries = pageData.relatedEntries;
 const authorProfile = findAuthorByName(entry.data.author);
 const categories = getEquinoxHaberCategories();
 const categoryToken = getNewsCategoryToken(entry.data.category);
 /* Gövde liste sorgusuyla gelmiyor; bu kontrol ayrıca çekilen gövdeye bakmalı.
    Boş metne bakarsa "Kaynaklar bölümü yok" sonucuna varır ve şablon yedek
    Kaynaklar bölümünü basar — yani her haberde çift Kaynaklar. */
-const hasInlineSourcesSection = /^##\s+Kaynaklar\b/m.test(article?.body ?? entry.body ?? '');
+const hasInlineSourcesSection = /^##\s+Kaynaklar\b/m.test(pageData.body ?? entry.body ?? '');
 
 const title = entry.data.title;
 const description = entry.data.description;
