@@ -3,7 +3,7 @@ import { getArticlePage, renderEntry } from '#news-source';
 import NewsLayout from '../layouts/NewsLayout.astro';
 import NewsCard from '../components/news/NewsCard.astro';
 import { findAuthorByName } from '../data/authors';
-import { formatNewsDate, getEquinoxHaberCategories, getNewsCategoryToken, getPublishedEquinoxHaber } from '../data/equinoxHaber';
+import { formatNewsDate, getEquinoxHaberCategories, getNewsCategoryToken, getPublishedEquinoxHaber, normalizeNewsCategory } from '../data/equinoxHaber';
 import { getNewsArticleHref, getNewsCanonicalUrl, getNewsHomeHref } from '../data/newsSite';
 import { getWithdrawal, kaldirilanSayfasi } from '../data/withdrawals';
 
