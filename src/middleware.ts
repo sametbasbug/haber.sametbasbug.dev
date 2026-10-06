@@ -120,9 +120,11 @@ export const onRequest: MiddlewareHandler = async (context, next) => {
 
 	const response = await next();
 
-	/* Yalnız 200 önbelleklenir. 404 ve 500'ü tutmak, bir hatayı bir dakika
-	   boyunca herkese servis etmek demek. */
-	if (response.status !== 200) return response;
+	/* 404 de sürümlü anahtarla güvenle önbelleklenebilir: daha sonra aynı slug
+	 * yayımlanırsa content_version değişir ve eski 404 anahtarı erişilemez olur.
+	 * Scanner'ların aynı olmayan yolu tekrar tekrar D1'e sordurmasını önler.
+	 * Sunucu hataları ise asla önbelleğe girmez. */
+	if (response.status !== 200 && response.status !== 404) return response;
 
 	const cacheable = new Response(response.body, response);
 	cacheable.headers.set(
