@@ -107,6 +107,15 @@ const ARTICLE_META_COLUMNS = `slug, title, description, category, author,
        '' AS body_md, '' AS body_html,
        hero_image, hero_alt, pub_date, updated_date, is_draft, breaking, editor_pick`;
 
+/* Bunlar yayın hattı/metaveri etiketleri; haberler arası anlamlı konu bağı
+ * değildir. İlgili haber skoruna katılırlarsa yüzlerce kaydı yapay biçimde
+ * birbirine bağlayıp hem öneri kalitesini hem D1 rows_read maliyetini bozar. */
+const RELATED_IGNORED_TAGS = new Set(['pipeline', 'haber']);
+
+function isRelatedTag(tag: string) {
+  return !RELATED_IGNORED_TAGS.has(tag.trim().toLowerCase());
+}
+
 function positiveInteger(value?: number) {
   if (value === undefined) return undefined;
   if (!Number.isFinite(value)) return undefined;
@@ -227,13 +236,15 @@ export interface D1ArticlePageData {
   relatedEntries: D1NewsEntry[];
 }
 
-/** Haber detay sayfası için bütün arşivi çekmeden gereken küçük çalışma seti.
+/** Haber detay sayfası için gereken küçük çalışma seti.
  *
- * Eski yol her tekil haber isteğinde ~4-7 bin D1 satırı okuyordu çünkü ilgili
- * haberleri JS'te hesaplamak için tüm haberler + tüm etiketler + tüm kaynaklar
- * belleğe alınıyordu. Burada yalnız mevcut haber, komşuları ve üç ilgili aday
- * okunur. Botların eski haber arşivini taraması bu yüzden günlük kotayı artık
- * doğrusal biçimde eritmez. */
+ * D1 kotası döndürülen değil TARANAN satırı sayar. Bu yüzden `LIMIT 3` tek
+ * başına ucuzluk garantisi değildir: korelasyonlu etiket sorgusu birkaç sonuç
+ * için binlerce satır tarayabiliyordu. Buradaki yol, mevcut indeksleri açıkça
+ * kullanır: komşular iki basit tarih/slug sorgusuyla; ilgili haber adaylarıysa
+ * etiket indeksinden küçük bir slug kümesi çıkarılıp uygulamada puanlanarak
+ * bulunur. Böylece crawler trafiği arşiv büyüdükçe doğrusal D1 taramasına
+ * dönüşmez. */
 export async function getArticlePageFromD1(
   db: D1Database,
   slug: string,
@@ -246,7 +257,11 @@ export async function getArticlePageFromD1(
   ).bind(slug).first<ArticleRow>();
   if (!current) return null;
 
-  const [tagsResult, sourcesResult, newer, older] = await Promise.all([
+  /* `(pub_date > ? OR (pub_date = ? ...))` biçimi SQLite planner'ında arşivin
+   * büyük bölümünü tarayabiliyor. Aynı tarih ve başka tarih durumlarını ayırıp
+   * en yakın iki adayı uygulamada seçmek indeksin doğrudan kullanılmasını
+   * sağlıyor. */
+  const [tagsResult, sourcesResult, newerSameDate, newerDate, olderSameDate, olderDate] = await Promise.all([
     db.prepare('SELECT slug, tag FROM article_tags WHERE slug = ? ORDER BY position')
       .bind(slug).all<{ slug: string; tag: string }>(),
     db.prepare('SELECT slug, name, url FROM article_sources WHERE slug = ? ORDER BY position')
@@ -254,50 +269,99 @@ export async function getArticlePageFromD1(
     db.prepare(
       `SELECT ${ARTICLE_META_COLUMNS}
          FROM articles
-        WHERE is_draft = 0
-          AND (pub_date > ? OR (pub_date = ? AND slug < ?))
-        ORDER BY pub_date ASC, slug DESC
+        WHERE is_draft = 0 AND pub_date = ? AND slug < ?
+        ORDER BY slug DESC
         LIMIT 1`,
-    ).bind(current.pub_date, current.pub_date, current.slug).first<ArticleRow>(),
+    ).bind(current.pub_date, current.slug).first<ArticleRow>(),
     db.prepare(
       `SELECT ${ARTICLE_META_COLUMNS}
          FROM articles
-        WHERE is_draft = 0
-          AND (pub_date < ? OR (pub_date = ? AND slug > ?))
+        WHERE is_draft = 0 AND pub_date > ?
+        ORDER BY pub_date ASC, slug DESC
+        LIMIT 1`,
+    ).bind(current.pub_date).first<ArticleRow>(),
+    db.prepare(
+      `SELECT ${ARTICLE_META_COLUMNS}
+         FROM articles
+        WHERE is_draft = 0 AND pub_date = ? AND slug > ?
+        ORDER BY slug ASC
+        LIMIT 1`,
+    ).bind(current.pub_date, current.slug).first<ArticleRow>(),
+    db.prepare(
+      `SELECT ${ARTICLE_META_COLUMNS}
+         FROM articles
+        WHERE is_draft = 0 AND pub_date < ?
         ORDER BY pub_date DESC, slug ASC
         LIMIT 1`,
-    ).bind(current.pub_date, current.pub_date, current.slug).first<ArticleRow>(),
+    ).bind(current.pub_date).first<ArticleRow>(),
   ]);
 
+  const newer = newerSameDate ?? newerDate;
+  const older = olderSameDate ?? olderDate;
   const currentTags = (tagsResult.results ?? []).map((row) => row.tag);
-  let relatedWhere = 'a.category = ?';
-  let scoreExpression = '6';
-  let relatedBindings: unknown[] = [slug, current.category];
+  const relatedTags = currentTags.filter(isRelatedTag);
 
-  if (currentTags.length > 0) {
-    const placeholders = currentTags.map(() => '?').join(', ');
-    relatedWhere = `(a.category = ? OR a.slug IN (
-      SELECT slug FROM article_tags WHERE tag IN (${placeholders})
-    ))`;
-    scoreExpression = `(CASE WHEN a.category = ? THEN 6 ELSE 0 END) + 3 * (
-      SELECT COUNT(*) FROM article_tags matched
-       WHERE matched.slug = a.slug AND matched.tag IN (${placeholders})
-    )`;
-    /* SELECT içindeki yer tutucular WHERE'dekilerden önce bağlanır. */
-    relatedBindings = [current.category, ...currentTags, slug, current.category, ...currentTags];
+  /* Kategori bonusu olan ama ortak etiketi olmayan adaylardan yalnız en yeni
+   * üçü gerekebilir: hepsinin skoru 6 ve eşitlikte tarih kazanır. Ortak etiketli
+   * tüm adaylar ayrıca aşağıdaki indeksli etiket sorgusundan gelir. */
+  const categoryPromise = db.prepare(
+    `SELECT ${ARTICLE_META_COLUMNS}
+       FROM articles
+      WHERE is_draft = 0 AND category = ? AND slug <> ?
+      ORDER BY pub_date DESC, slug ASC
+      LIMIT 3`,
+  ).bind(current.category, slug).all<ArticleRow>();
+
+  const tagMatchesPromise = relatedTags.length > 0
+    ? (() => {
+        const placeholders = relatedTags.map(() => '?').join(', ');
+        return db.prepare(
+          `SELECT slug, COUNT(*) AS shared_tags
+             FROM article_tags
+            WHERE tag IN (${placeholders}) AND slug <> ?
+            GROUP BY slug`,
+        ).bind(...relatedTags, slug).all<{ slug: string; shared_tags: number }>();
+      })()
+    : Promise.resolve({ results: [] } as Pick<D1Result<{ slug: string; shared_tags: number }>, 'results'>);
+
+  const [categoryResult, tagMatchesResult] = await Promise.all([categoryPromise, tagMatchesPromise]);
+  const sharedBySlug = new Map(
+    (tagMatchesResult.results ?? []).map((row) => [row.slug, Number(row.shared_tags)] as const),
+  );
+  const tagSlugs = [...sharedBySlug.keys()];
+  const taggedRows = tagSlugs.length > 0
+    ? await readRelations<ArticleRow>(
+        db,
+        tagSlugs,
+        /* `is_draft = 0 AND slug IN (...)` planner'ı tarih indeksine çekip
+         * bütün yayımlanmış tabloyu taratabiliyor. PK lookup yap, taslağı
+         * aşağıda bellekte ele. */
+        (placeholders) => `SELECT ${ARTICLE_META_COLUMNS}
+                             FROM articles
+                            WHERE slug IN (${placeholders})`,
+      )
+    : [];
+
+  const candidates = new Map<string, ArticleRow>();
+  for (const row of categoryResult.results ?? []) candidates.set(row.slug, row);
+  for (const row of taggedRows) {
+    if (row.is_draft === 0) candidates.set(row.slug, row);
   }
 
-  const related = await db.prepare(
-    `SELECT ${ARTICLE_META_COLUMNS}, ${scoreExpression} AS relation_score
-       FROM articles a
-      WHERE a.is_draft = 0
-        AND a.slug <> ?
-        AND ${relatedWhere}
-      ORDER BY relation_score DESC, a.pub_date DESC, a.slug ASC
-      LIMIT 3`,
-  ).bind(...relatedBindings).all<ArticleRow>();
+  let relatedRows = [...candidates.values()]
+    .map((row) => ({
+      row,
+      score: (row.category === current.category ? 6 : 0) + 3 * (sharedBySlug.get(row.slug) ?? 0),
+    }))
+    .sort((a, b) => {
+      const scoreOrder = b.score - a.score;
+      if (scoreOrder) return scoreOrder;
+      const dateOrder = b.row.pub_date.localeCompare(a.row.pub_date);
+      return dateOrder || a.row.slug.localeCompare(b.row.slug);
+    })
+    .slice(0, 3)
+    .map(({ row }) => row);
 
-  let relatedRows = related.results ?? [];
   if (relatedRows.length < 3) {
     const excluded = [slug, ...relatedRows.map((row) => row.slug)];
     const placeholders = excluded.map(() => '?').join(', ');

@@ -14,14 +14,18 @@ export async function getStaticPaths() {
 }
 
 const routeSlug = Astro.params.slug;
+const articleSlug = routeSlug && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(routeSlug) ? routeSlug : null;
 
 /* Sunucu modunda tekil haber yolu bütün arşivi okumaz. D1 kaynağı mevcut
    haber + komşular + ilgili üçlü için hedefli sorgular kullanır; statik kaynak
    aynı şekli içerik koleksiyonundan kurar. */
-const articlePage = routeSlug ? await getArticlePage(routeSlug) : null;
+const articlePage = articleSlug ? await getArticlePage(articleSlug) : null;
 const entry = articlePage?.entry;
 
 if (!entry) {
+	/* Dosya/klasör ve exploit-probe yollarını haber slug'ı sanıp D1'e sorma. */
+	if (!articleSlug) return new Response(null, { status: 404 });
+
 	/* Yayından kaldırılmış bir haber mi?
 	 *
 	 * Adres bir süre yayında kaldı; paylaşımlarda ve arama motorlarında
@@ -36,7 +40,7 @@ if (!entry) {
 	 * Gerekçe SAYFADA GÖSTERİLMİYOR: `article_withdrawals.reason` operatöre
 	 * yazılmış bir iç nottur ("kaynak yanlış, teyit bekliyoruz") ve
 	 * kendiliğinden yayımlanması sürpriz olurdu. */
-	const kaldirilan = await getWithdrawal(routeSlug!);
+	const kaldirilan = await getWithdrawal(articleSlug);
 	if (kaldirilan) {
 		return new Response(kaldirilanSayfasi(kaldirilan.tarih), {
 			status: 410,

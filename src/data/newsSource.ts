@@ -13,6 +13,9 @@ import { getCollection, render, type CollectionEntry } from 'astro:content';
 
 export type NewsEntry = CollectionEntry<'equinoxHaber'>;
 
+const RELATED_IGNORED_TAGS = new Set(['pipeline', 'haber']);
+const isRelatedTag = (tag: string) => !RELATED_IGNORED_TAGS.has(tag.trim().toLowerCase());
+
 export interface PublishedOptions {
 	limit?: number;
 	offset?: number;
@@ -55,7 +58,7 @@ export async function getArticlePage(slug: string) {
 	if (currentIndex < 0) return null;
 
 	const entry = entries[currentIndex]!;
-	const currentTags = new Set(entry.data.tags ?? []);
+	const currentTags = new Set((entry.data.tags ?? []).filter((tag: string) => isRelatedTag(tag)));
 	const relatedEntries = entries
 		.filter((item) => item.id !== entry.id)
 		.map((item, index) => {
