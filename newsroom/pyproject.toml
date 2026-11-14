@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=84.0.0"]
+requires = ["setuptools>=84.2.1"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -21,7 +21,7 @@ dependencies = [
 newsroom = "newsroom.cli:main"
 
 [project.optional-dependencies]
-test = ["pytest>=9.1.1"]
+test = ["pytest>=9.2.0"]
 
 [tool.setuptools.packages.find]
 include = ["newsroom*"]
