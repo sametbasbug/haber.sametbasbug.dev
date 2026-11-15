@@ -323,3 +323,10 @@ Equinox Haber sıfırdan tasarlanmış, **Türkçe teknoloji haberciliğine odak
 - Yayın guard'ı kapatılınca /iletisim/ haberi testte 201 döndü (beklenen 422 yerine RED); reserved listesinden iletisim çıkınca Astro route testi RED. Her iki değişiklik geri alındığında gerçek D1+JWS yayın testi GREEN. Eski 580 URL ve içerik değişmedi.
 
 - Gerçek yerel SSR HTTP provasında önce boş izole D1 şeması nedeniyle 500 çıktı. Ardından aynı test veritabanına Wrangler ile 0001-0016 migration'ları uygulanınca /iletisim/, /hakkimizda/, /yazarlar/ üçü de 200 döndü. /iletisim/ HTML başlığı sabit iletişim sayfasını doğruladı; bu da çakışmanın gerçek rota düzeyinde yaşandığını gösteriyor. Yerel sunucu ve geçici D1 temizlendi, prod etkilenmedi.
+
+## 16 Kasım 2026 on dokuzuncu checkpoint: staging mimari engeli
+
+- İki yerel repo ve mevcut staging/deploy yapılandırmaları salt-okunur incelendi. Orbit'in var olan staging Worker'ı ayrı workers.dev issuer'ına ve ayrı D1'e sahip. Ancak yeni Haber okuma köprüsündeki HABER_SITE_CLIENT_ID / ORIGIN / ACTION_URL sabitleri yalnız PRODUCTION Haber adresine işaret ediyor. Haber'in wrangler.ssr.jsonc dosyası da production custom domain ve production D1 içeriyor.
+- Dolayısıyla Orbit'in mevcut staging:verify ve staging:slice4:e2e kontrolleri, yeni Haber 2.0 için iki gerçek staging Worker arasında imzalı ajan okuma kabulü yapmış sayılmaz. Staging isteğini production Haber'e yönlendirmek doğru veya yetkili bir test yöntemi değildir.
+- Gerçek staging için ayrı Haber staging Worker ve staging D1; staging issuer/audience ve ayrı site client kaydı; yalnız staging'de çalışan sabit, fail-closed first-party hedef seçimi; staging ajan kimliğiyle iki-Worker gerçek HTTP; anonim/askıdaki ajan ve yetkisiz yazmanın reddi; 580 eski URL kabulü gerekir. Production hedef sabitleri asla istekten veya dinamik grant'ten seçilemez.
+- Bu aşama onay ve staging kaynakları/kimlik bilgileri gerektiriyor. Hiçbir staging/production deploy, credential veya D1 yazımı yapılmadı; bu aşamanın tamamlandığı iddia edilmedi.

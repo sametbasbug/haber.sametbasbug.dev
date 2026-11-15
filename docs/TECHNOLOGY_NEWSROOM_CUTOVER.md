@@ -658,3 +658,57 @@ page, not a dynamic article route. This confirms the route-shadowing risk
 that was caught by the publication test before fixing the reservation.
 The temporary D1 state and Worker process were deleted/stopped afterwards.
 This was NOT a Cloudflare production deployment or production DB mutation.
+
+## Checkpoint 19: why existing Orbit staging is NOT the two-Worker Haber acceptance
+
+Read-only release review confirmed that the existing Orbit staging rehearsal
+does not exercise a real two-Worker Haber integration:
+
+- Orbit's existing wrangler.staging.jsonc has a separate staging issuer at
+  https://orbit-v6-staging.samett33710.workers.dev and its own staging D1.
+- Its Haber read bridge currently intentionally hard-pins the FIRST-PARTY
+  production site URL and actions URL in
+  src/server/identity/haber-agent-read.ts. The site/client registration is
+  matched byte-for-byte before Orbit signs a read delegation.
+- Haber's only committed production SSR deployment config,
+  wrangler.ssr.jsonc, binds the LIVE Haber D1 and Haber custom domain.
+- Consequently, a normal Orbit staging build or its existing staging:verify
+  job cannot establish that an Orbit staging credential can read from a
+  separate Haber staging Worker. NEVER use the production Haber endpoint as
+  a substitute staging write/read target.
+
+A future *explicitly authorized* two-Worker staging acceptance needs the
+following design and setup before using real staging agent credentials:
+
+1. Provision a separately named Haber staging Worker, standalone staging D1
+   and staging-only site-action catalog. The Worker must NOT claim the
+   production custom domain or bind the live Haber D1/R2 resources. Build
+   using the same SSR pipeline and apply 0012-0016 against staging data.
+2. Configure the Haber staging worker to trust ONLY the staging Orbit issuer
+   and staging audience. The production Haber Worker must keep its current
+   production-only issuer and audience.
+3. Register a distinct first-party site client in the Orbit staging D1,
+   with an exact canonical HTTPS origin and exact staging action/catalog
+   endpoints. Never copy a production pairwise sponsor or bearer credential.
+4. Add a reviewed *staging-only, fail-closed* target selection to Orbit's
+   Haber-read bridge. In production it MUST remain hard-pinned to the
+   current production Haber origin and client ID; no untrusted request,
+   dynamic URL, arbitrary registered connected site or agent parameter
+   can select a destination. The staging target must be explicit and
+   verified, not a fallback to production.
+5. Test on isolated staging accounts: an active guest agent WITHOUT a
+   connected-site grant reads list and detail over both deployed Workers;
+   anonymous/suspended agent rejected; all unlisted write operations
+   denied; the four author and one human administrator authorization
+   boundaries work with separately configured STAGING records. Do not
+   publish synthetic production content.
+6. Confirm separate migration history, rollback/recovery on STAGING only,
+   580 canonical archival permalinks and full live HTTP/SEO behavior.
+   Clean up any temporary staging assets only with explicit permission.
+
+Until these prerequisites are implemented and approved, the local
+cross-repository signed ES256 tests and isolated Wrangler HTTP tests are
+valuable but are NOT a substitute for real staging. Do not mark the real
+two-Worker staging acceptance checklist complete. This documentation
+does not grant permission to create resources, access staging credentials
+or deploy either site.
