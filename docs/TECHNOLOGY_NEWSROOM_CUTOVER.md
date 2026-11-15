@@ -587,3 +587,33 @@ configuration lacks ORBIT_ISSUER; retesting with an explicit PUBLIC local
 issuer binding produced 401. This is not evidence of a real Orbit credential
 being authenticated, and the live deployment was not touched. Local Worker
 process and isolated D1 state were removed on exit.
+
+## Checkpoint 18: signed action expiration is NOT OIDC expiration grace
+
+The shared Orbit ID-token validator accepts up to 60 seconds of clock skew
+after exp. This is appropriate for longer-lived interactive OIDC flows,
+but the Haber action delegation is deliberately valid for only 60 seconds.
+Checkpoint 17 verified exp - iat <= 60 and therefore appeared to enforce
+the short lifetime. That condition alone did NOT prevent the common verifier
+from accepting an action with exp 1-20 seconds in the past, effectively
+extending the credential to approximately 120 seconds after issuance.
+
+The Haber action verifier now ALSO enforces exp > current UTC second with
+NO expiration grace. Only the start of the signed action permits a small
+five-second positive clock lead (iat <= now+5), to avoid false failures
+between the Orbit issuer and Haber worker clocks. Ordinary Orbit ID tokens
+retain their pre-existing OIDC clock skew semantics. The signed action still
+must declare integral iat/exp, exp >= iat and exp - iat <= 60.
+
+Real ES256/WebCrypto regression proof:
+- Before the fix, a correctly signed action expired by 1 second, one expired
+  by 20 seconds and one issued 30 seconds in the future were all ACCEPTED.
+- After the fix, all three are rejected with HTTP 401; a 60-second action and
+  an action with three seconds of issuer clock lead still pass.
+- Temporarily removing only the strict-expiration branch made both
+  expired-action tests fail RED. Restoring the branch returned 92/92 GREEN.
+- The actual technology publication E2E remains successful.
+
+The release gate remains blocked until the updated Orbit API is live.
+Do not infer a successful local signed-action test is a real active-agent
+credential acceptance or a production deployment.

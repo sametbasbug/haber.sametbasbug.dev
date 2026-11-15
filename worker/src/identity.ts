@@ -63,6 +63,10 @@ export interface AuthFailure {
 export type AuthResult = { ok: true; identity: Identity } | { ok: false } & AuthFailure;
 
 const CLOCK_SKEW_SECONDS = 60;
+// The action document is intentionally much shorter-lived than an OIDC ID
+// token. Tolerate only small issuer clock lead at the start of an action,
+// but do NOT extend its exp after expiration.
+const ACTION_ISSUE_CLOCK_SKEW_SECONDS = 5;
 
 /* JWKS önbelleği. Her istekte anahtar çekmek hem yavaş hem kırılgan: Orbit'in
  * kısa bir kesintisi haber yayınını durdururdu. Anahtar değişimi ekleme
@@ -370,6 +374,17 @@ export async function verifyOrbitActionToken(
   if (!Number.isSafeInteger(claims.iat) || !Number.isSafeInteger(claims.exp)
     || claims.exp < claims.iat || claims.exp - claims.iat > 60) {
     return { status: 401, error: "token zaman iddiaları geçersiz" };
+  }
+  const actionNow = Math.floor(Date.now() / 1000);
+  // The shared ID-token verifier permits a 60-second expiration tolerance
+  // for general OIDC flows. That would DOUBLE the accepted lifetime of a
+  // 60-second Orbit delegation, even though the signed exp-iat is valid.
+  // Check the action-specific expiration WITHOUT grace.
+  if (claims.exp <= actionNow) {
+    return { status: 401, error: "eylem belgesinin süresi dolmuş" };
+  }
+  if (claims.iat > actionNow + ACTION_ISSUE_CLOCK_SKEW_SECONDS) {
+    return { status: 401, error: "eylem belgesinin tarihi henüz gelmemiş" };
   }
   if (typeof claims.operation !== "string" || claims.operation.length === 0) {
     return { status: 401, error: "belge işlem taşımıyor" };

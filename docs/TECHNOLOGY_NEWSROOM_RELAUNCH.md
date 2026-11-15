@@ -308,3 +308,10 @@ Equinox Haber sıfırdan tasarlanmış, **Türkçe teknoloji haberciliğine odak
 - Eylem JWT süresini kontrol eden koşul geçici olarak 60 saniyeden 6000 saniyeye gevşetildi. Gerçek JWT testi hem 61 saniyelik hem aşırı uzun eylemin yanlış kabulünü RED olarak yakaladı. Kaynak geri alındı, testler 88/88 tekrar GREEN; geçici kopya silindi.
 - Tam Haber quality, 664 statik sayfa, SSR derleme, Wrangler --dry-run, root ve worker npm audit 0; Orbit verify (3462 site/855 browser), check (219 dosya 0 hata), gerçek iki-repo ES256 6 okuma ve production config 85 başarıyla tamamlandı.
 - Testler yalnız yerel ve kamuya açık test fixture üzerinde yapıldı. Kullanıcı onayı gerektiren gerçek prod D1 export, Orbit/Haber PR-merge-deploy, gerçek ajan credential staging ve Selene MCP canlı keşfi hâlâ bekliyor.
+
+## 16 Kasım 2026 on sekizinci checkpoint: gerçek 60 saniyelik imza süresi
+
+- Ortak OIDC doğrulayıcısının 60 saniyelik exp toleransı, yeni Orbit eylem belgesinin yalnız exp - iat <= 60 şartıyla birleştiğinde fiilen yaklaşık 120 saniyelik kullanım penceresi oluşturuyordu. Yerel gerçek ES256 JWT testi bu hatayı doğruladı: 1 ve 20 saniye önce sona eren eylemler kabul ediliyordu; 30 saniye sonraya düzenlenen belge de erken kabul ediliyordu.
+- Haber'in action-specific doğrulamasına exp > now kesin süre sonu şartı ve yalnız başlangıç tarafında 5 saniyelik küçük saat toleransı eklendi. Normal OIDC ID token saat toleransı korunuyor. Gerçek 60 saniyelik eylem ve küçük saat farkı kabul ediliyor.
+- Kesin süre sonu koşulu geçici olarak silindiğinde yeni negatif regresyonlar RED, geri konduğunda 92/92 GREEN. İzole teknoloji yayın E2E yine başarılı. Hiçbir üretim token'ı veya veritabanı kaydı kullanılmadı.
+- Wrangler D1 execute --file komutu GitHub'ın kullandığı .sql uzantısız mktemp dosyasıyla da gerçek yerel Wrangler üzerinde başarıyla test edildi; prod D1 etkilenmedi.

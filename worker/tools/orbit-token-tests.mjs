@@ -226,6 +226,30 @@ console.log("\n── JSON claims yapısı ve kısa ömürlü eylem belgesi ─�
     check(label,("error" in r)?(r.status+" "+r.error):"ACCEPTED",
       "401 token zaman iddiaları geçersiz");
   }
+  for(const [label,claims] of [
+    ["site action 1 second expired despite 60-second shared clock tolerance",
+      {...actionClaims,iat:now-61,exp:now-1}],
+    ["site action 20 seconds expired despite shared tolerance",
+      {...actionClaims,iat:now-80,exp:now-20}],
+  ]){
+    const r=await verifyOrbitActionToken(await mintRaw(normalHeader,claims),ISSUER,AUDIENCE);
+    check(label,("error" in r)?(r.status+" "+r.error):"ACCEPTED",
+      "401 eylem belgesinin süresi dolmuş");
+  }
+  {
+    const issuedFarFuture=await verifyOrbitActionToken(
+      await mintRaw(normalHeader,{...actionClaims,iat:now+30,exp:now+90}),
+      ISSUER,AUDIENCE);
+    check("site action cannot start 30 seconds in the future",
+      ("error" in issuedFarFuture)?(issuedFarFuture.status+" "+issuedFarFuture.error):"ACCEPTED",
+      "401 eylem belgesinin tarihi henüz gelmemiş");
+  }
+  const smallIssuerLead=await verifyOrbitActionToken(
+    await mintRaw(normalHeader,{...actionClaims,iat:now+3,exp:now+63}),
+    ISSUER,AUDIENCE);
+  check("3-second issuer clock lead accepted for signed action",
+    "error" in smallIssuerLead?"ERROR":smallIssuerLead.operation,
+    "haber.haberOku");
   const good=await verifyOrbitActionToken(await mintRaw(normalHeader,actionClaims),ISSUER,AUDIENCE);
   check("gerçek biçimde 60sn Orbit eylemi hâlâ geçer","error" in good?"ERROR":good.operation,
     "haber.haberOku");
