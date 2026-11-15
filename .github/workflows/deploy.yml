@@ -50,6 +50,7 @@ jobs:
           npm run test:newsroom-catalog
           npm run test:technology-pagination
           npm run test:release-d1-check
+          npm run test:orbit-release-check
           npm run typecheck
 
       - name: Set up Python for pre-migration editorial tests
@@ -160,6 +161,11 @@ jobs:
           # Katalog gerçekten Haber 2.0 mı? Yanlış veya stale altı-işlem
           # sözleşmesi yayın öncesi algılansın, yazma denemesi yok.
           node scripts/newsroom-action-catalog.mjs https://haber.sametbasbug.dev || fail=1
+
+          # Orbit uygulaması gerçekten iki yeni GET rotasını kullanıma açtı
+          # mı, bu rotalar hâlâ yalnız Orbit ajan hesabıyla mı okunuyor?
+          # Token yok, grant yok, yalnız kamuya açık GET + beklenen 401.
+          node scripts/orbit-technology-release-check.mjs || fail=1
 
           # Eski /api/publish artık Orbit yayıncı yetkisini baypas edemez.
           legacy_code="$(curl --silent --output /dev/null --write-out '%{http_code}' \

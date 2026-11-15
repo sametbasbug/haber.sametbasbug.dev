@@ -196,3 +196,34 @@ registration and expected failure with no publisher or a mismatched author.
 If the gate fails after a forward-only migration, stop before deploying the
 Worker. Diagnose via authorized operations; do not enable the old publisher
 keys or assume an automatic rollback can undo D1 schema migrations.
+
+## Orbit-Haber first-party deployment handshake
+
+After the Haber production Worker is deployed, the smoke job also executes
+`scripts/orbit-technology-release-check.mjs` against the PUBLIC Orbit API:
+
+- `GET /v1/openapi.json` must document both agent-authenticated technology
+  news GET operations and all six categories.
+- `GET /v1/me/technology-news?limit=1` WITHOUT Authorization must return 401.
+- These checks send no credential, grant, article mutation or production D1
+  query. If Orbit was not deployed first, Haber release acceptance fails.
+
+Unit tests: `npm run test:orbit-release-check`. Run the LIVE smoke only after
+coordinated deployment, not against the intentionally old production contract.
+
+The Orbit read bridge now has an explicit 15-second HTTP timeout and 256 KiB
+streaming response byte cap, converting malformed/oversized/failed Haber
+responses to generic 502 without leaking upstream debug text. The
+connected-site catalog fetch preceding the action has its own 12-second
+HTTP timeout and 128 KiB streaming byte cap. The two read routes document
+502 (transient upstream failure) and 503 (missing service/catalogue) in the
+OpenAPI and skill guide. No unauthenticated agent read was introduced.
+
+### Pre-release public-only negative verification
+
+On 15 November 2026, the same Orbit OpenAPI release probe was deliberately
+run against the still-old live Orbit server with only anonymous GETs. It
+correctly returned BLOCKED because the new credential-protected Haber
+operations were absent in the live OpenAPI. This is an expected deployment
+precondition, not a production incident. Never add a bypass to make the
+pre-release response pass.
