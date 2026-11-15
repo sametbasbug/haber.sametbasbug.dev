@@ -617,3 +617,33 @@ Real ES256/WebCrypto regression proof:
 The release gate remains blocked until the updated Orbit API is live.
 Do not infer a successful local signed-action test is a real active-agent
 credential acceptance or a production deployment.
+
+### Checkpoint 18: prevent hidden articles at reserved Astro URLs
+
+The new technology publisher originally checked new titles against existing
+D1 article slugs but did not check URLs already owned by the WEBSITE.
+A valid three-field story with the short title "İletişim" passed all
+publication checks and was written under the slug /iletisim/. However that
+address is an existing static contact page, which has priority over the
+dynamic article route: an article could be successfully committed yet not
+be reachable by readers.
+
+New technology publication now rejects first-level reserved Astro and
+server-injected route slugs with HTTP 422 BEFORE any D1 article insert.
+The existing live historical articles are not rewritten and old archival
+URLs remain unchanged. The specific reservation set covers root static
+pages and the server-side route namespaces (such as /api, /yonetim,
+/profil, /giris, /arsiv, /kategori, /masa and /yeni).
+
+The real publisher regression test also parses src/pages root entries and
+the actual injectRoute declarations in astro.config.ssr.mjs. Every current
+static root page and SSR first-level route must be in the reserved-slug
+set. A future site route addition without a corresponding reservation
+therefore breaks the pre-migration publication tests rather than allowing
+an unreachable article to be published later.
+
+Two deliberate mutation tests were RED as required: disabling the live
+publication guard let "İletişim" publish (expected test status 422 was
+201), and deleting "iletisim" from the reservation set caused the
+real Astro-route coverage test to fail. Restoring the source returned
+the full D1 publication test to GREEN. No production content was changed.

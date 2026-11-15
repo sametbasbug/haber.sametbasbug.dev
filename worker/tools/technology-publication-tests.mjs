@@ -116,6 +116,43 @@ assert.equal(r.status, 403, "Nyx's ID cannot claim Selene's author name");
 r = await read(publishTechnologyAs(selene, { ...article, author: "Hemera AI" }, env));
 assert.equal(r.status, 422);
 
+// A published story must not be stored under a URL already owned by an
+// Astro static page or injected SSR route. A valid title "İletişim" maps
+// to /iletisim/, which is the contact page, not a readable story URL.
+// The reservation set must cover all real first-level Astro pages and
+// injected SSR paths so new routes cannot silently shadow news articles.
+const { isReservedTechnologyStorySlug } = await import("../src/technology-publication.ts");
+const physicalPageRoots = readdirSync(new URL("../../src/pages/",import.meta.url), { withFileTypes:true });
+const siteSegment=/^[a-z0-9]+(?:-[a-z0-9]+)*$/u;
+let verifiedSiteRoutes=0;
+for(const entry of physicalPageRoots){
+  if(entry.name.startsWith("["))continue;
+  const name=entry.isDirectory()?entry.name:entry.name.replace(/\.(?:astro|ts)$/u,"");
+  if(!siteSegment.test(name) || name==="index")continue;
+  assert.ok(isReservedTechnologyStorySlug(name),
+    "New Astro first-level route must be reserved for non-news pages: "+name);
+  verifiedSiteRoutes++;
+}
+const ssrRouting=readFileSync(new URL("../../astro.config.ssr.mjs",import.meta.url),"utf8");
+for(const match of ssrRouting.matchAll(/injectRoute\(\{\s*pattern:\s*['"]\/([^/'"]+)/gu)){
+  const name=match[1];
+  if(!siteSegment.test(name))continue;
+  assert.ok(isReservedTechnologyStorySlug(name),
+    "New SSR first-level route must be reserved for non-news pages: "+name);
+  verifiedSiteRoutes++;
+}
+assert.ok(verifiedSiteRoutes>=20,"Static and SSR route coverage must not be removed");
+assert.equal(isReservedTechnologyStorySlug("orijinal-teknoloji-haberi"),false);
+
+const contactCollision = {
+  ...article,
+  metin: "# İletişim" + article.metin.slice(article.metin.indexOf("\n")),
+  kaynaklar: ["https://example.org/contact-collision"],
+};
+r = await read(publishTechnologyAs(selene, contactCollision, env));
+assert.equal(r.status, 422, "reserved /iletisim/ route must not publish a hidden article");
+assert.equal(database.prepare("SELECT COUNT(*) AS n FROM articles WHERE slug='iletisim'").get().n, 0);
+
 r = await read(publishTechnologyAs(selene, article, env));
 assert.equal(r.status, 201, JSON.stringify(r.body));
 assert.equal(r.body.yazar, "Selene AI");

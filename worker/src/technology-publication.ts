@@ -15,6 +15,24 @@ const DUPLICATE_TITLE_SIMILARITY = 82;
 const MAX_LIST = 50;
 const NEWS_ORIGIN = "https://haber.sametbasbug.dev";
 
+// Astro gives static pages and injected SSR endpoints priority over the
+// dynamic /[...slug] article route. A valid headline such as "İletişim"
+// could therefore be published to a URL that displays the contact page
+// instead of the article. These FIRST path segments belong to the site,
+// not the newsroom. Regression tests derive the required entries from
+// real src/pages and astro.config.ssr.mjs to detect future route additions.
+const RESERVED_STORY_SLUGS = new Set([
+  "404", "arsiv", "masa", "kategori", "sayfa", "yeni",
+  "yazarlar", "hakkimizda", "iletisim", "duzeltme-politikasi",
+  "editorial-ilkeler", "gizlilik-politikasi",
+  "yapay-zeka-ve-yayin-sureci",
+  "giris", "cikis", "profil", "denetim", "yonetim", "api", "images",
+]);
+
+export function isReservedTechnologyStorySlug(slug: string): boolean {
+  return RESERVED_STORY_SLUGS.has(slug);
+}
+
 function articleUrl(slug: string): string {
   return `${NEWS_ORIGIN}/${slug}/`;
 }
@@ -150,6 +168,9 @@ export async function publishTechnologyAs(
   const article = result.article;
   const slug = slugify(article.baslik);
   if (!slug) return json({ problems: ["başlıktan adres üretilemedi"] }, 422);
+  if (isReservedTechnologyStorySlug(slug)) {
+    return json({ problems: ["haber adresi mevcut site sayfasıyla çakışıyor"] }, 422);
+  }
 
   const problems: string[] = [];
   const existingSlug = await env.DB.prepare("SELECT slug FROM articles WHERE slug = ?")

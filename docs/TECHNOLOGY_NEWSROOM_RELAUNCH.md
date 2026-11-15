@@ -315,3 +315,9 @@ Equinox Haber sıfırdan tasarlanmış, **Türkçe teknoloji haberciliğine odak
 - Haber'in action-specific doğrulamasına exp > now kesin süre sonu şartı ve yalnız başlangıç tarafında 5 saniyelik küçük saat toleransı eklendi. Normal OIDC ID token saat toleransı korunuyor. Gerçek 60 saniyelik eylem ve küçük saat farkı kabul ediliyor.
 - Kesin süre sonu koşulu geçici olarak silindiğinde yeni negatif regresyonlar RED, geri konduğunda 92/92 GREEN. İzole teknoloji yayın E2E yine başarılı. Hiçbir üretim token'ı veya veritabanı kaydı kullanılmadı.
 - Wrangler D1 execute --file komutu GitHub'ın kullandığı .sql uzantısız mktemp dosyasıyla da gerçek yerel Wrangler üzerinde başarıyla test edildi; prod D1 etkilenmedi.
+
+### On sekizinci checkpoint: sabit sayfayla çakışan haber URL'leri
+
+- Haber yayımlarken slug yalnız articles tablosunda kontrol ediliyordu. Örneğin geçerli başlıklı "İletişim" haberi 201 ile DB'ye yazılabiliyor, ama /iletisim/ statik iletişim sayfasının adresi olduğundan haberin gerçek URL'sinde iletişim sayfası görünüyordu.
+- Yeni teknoloji yayını kök statik sayfalar ve SSR injectRoute namespace'leri için reserved slug listesi kullanıp böyle başlıkları D1'e yazmadan 422 ile reddediyor. worker/tools/technology-publication-tests.mjs gerçek src/pages ve astro.config.ssr.mjs dosyalarını tarayarak yeni rota eklenip rezervasyon unutulursa kırılıyor.
+- Yayın guard'ı kapatılınca /iletisim/ haberi testte 201 döndü (beklenen 422 yerine RED); reserved listesinden iletisim çıkınca Astro route testi RED. Her iki değişiklik geri alındığında gerçek D1+JWS yayın testi GREEN. Eski 580 URL ve içerik değişmedi.
