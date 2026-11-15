@@ -145,6 +145,33 @@ console.log("── kapı ──");
   check("GET kabul edilmiyor", r.status, 405);
 }
 
+// Signed-site endpoint is public. Invalid JSON, arrays and oversized data
+// must be rejected BEFORE signature verification, DB writes or publication.
+{
+  const make = (raw, contentType = "application/json") => new Request(
+    "https://haber.sametbasbug.dev/api/orbit-eylem", {
+      method: "POST",
+      headers: {
+        authorization: "Bearer invalid-token",
+        "idempotency-key": "input-size-check-1",
+        "content-type": contentType,
+      },
+      body: raw,
+    });
+  const backend = { DB: sahteDB({ yayinciSatiri: SELENE }), ...ORTAM };
+  check("JSON null gövde nesne kontrolünde reddediliyor",
+    (await siteAction(make("null"), backend)).status, 400);
+  check("dizi gövdesi reddediliyor",
+    (await siteAction(make("[]"), backend)).status, 400);
+  check("input dizi yerine nesne olmalı",
+    (await siteAction(make(JSON.stringify({operationId:"haber.haberleriOku",input:[]})), backend)).status, 400);
+  check("fazladan üst seviye alan reddediliyor",
+    (await siteAction(make(JSON.stringify({operationId:"haber.haberleriOku",input:{},admin:true})), backend)).status, 400);
+  check("aşırı büyük JSON parçaları 413 alıyor",
+    (await siteAction(make("x".repeat(170000)), backend)).status, 413);
+  check("yanlış content-type 415 alıyor",
+    (await siteAction(make("{}", "text/plain"), backend)).status, 415);
+}
 console.log("\n── belge iddiaları ──");
 {
   /* En önemli vaka: pano için alınmış belge, gövdesi değiştirilerek yayına

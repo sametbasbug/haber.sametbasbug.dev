@@ -168,3 +168,8 @@ Equinox Haber sıfırdan tasarlanmış, **Türkçe teknoloji haberciliğine odak
 - Haber üretim GitHub Actions akışına deploy sonrası salt-okunur /orbit-actions.json kontrolü eklendi. İşlem listesi yalnız altı kanonik haber eylemi olmalı; katalog biçimi sürüm 1 kalmalı; yayımla yalnız metin, kategori, kaynaklar ve doğru altı teknoloji kategorisini içermeli. Eski pano ya da fazla alan sözleşmesiyle deploy yeşil görünmemeli. Cachebust ve no-cache header var, yönlendirme ve dış origin reddediliyor; gerçek yayın eylemi çalıştırılmıyor.
 - scripts/newsroom-action-catalog.mjs ve 11 negatif/pozitif regresyon; izole Wrangler Worker'ın gerçek JSON kataloğu ile HTTP 200 doğrulandı.
 - Orbit npm run verify, npm run check, gerçek çapraz-repo signer testi; Haber quality + SSR build + Wrangler dry-run, root ve worker npm audit başarıyla yeniden tamamlandı.
+
+### Sekizinci checkpoint son güvenlik denetimi
+
+- Herkese açık /api/orbit-eylem isteğinin imza doğrulamasından önce JSON ayrıştırırken sahte Bearer ile çok büyük gövdeleri veya null/dizi içeriği kabul edebilme açığı düzeltildi. JSON content-type zorunlu; gövde streaming read ile 160 KiB'de kesiliyor, eksik/hatalı nesne ve ek üst-seviye alanlar 400/413/415 ile reddediliyor. Böylece imza doğrulamasından önce gereksiz bellek/CPU tüketimi sınırlandırıldı.
+- Altı yeni güvenlik regresyonuyla npm run test:orbit 79/79 başarılı, TypeScript typecheck yeşil. Değişikliklerin production deploy olmadan geçerli olduğunu unutma.

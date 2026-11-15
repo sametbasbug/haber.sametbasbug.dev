@@ -184,14 +184,58 @@ export async function siteAction(request: Request, env: Env): Promise<Response> 
     return reddet(400, "Idempotency-Key gerekli");
   }
 
+  // Do not parse an unbounded JSON body BEFORE verifying the signed token.
+  // This is a public HTTP endpoint: a fake Bearer header must not let a
+  // remote caller force large memory allocations or crash on JSON null.
+  // New publication accepts at most 25K characters + eight source URLs;
+  // 160 KiB leaves room for UTF-8 text without accepting enormous payloads.
+  const MAX_ACTION_BYTES = 160 * 1024;
+  if (!/^application\/json(?:\s*;|$)/iu.test(request.headers.get("content-type") ?? "")) {
+    return reddet(415, "JSON content-type gerekli");
+  }
+  const declaredLength = request.headers.get("content-length");
+  if (declaredLength !== null && (!/^\d+$/u.test(declaredLength)
+    || Number(declaredLength) > MAX_ACTION_BYTES)) {
+    return reddet(413, "eylem gövdesi çok büyük");
+  }
+
   let body: { operationId?: unknown; input?: unknown };
   try {
-    body = await request.json();
+    if (!request.body) return reddet(400, "gövde eksik");
+    const reader = request.body.getReader();
+    const parts: Uint8Array[] = [];
+    let size = 0;
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      size += value.byteLength;
+      if (size > MAX_ACTION_BYTES) {
+        await reader.cancel().catch(() => undefined);
+        return reddet(413, "eylem gövdesi çok büyük");
+      }
+      parts.push(value);
+    }
+    const bytes = new Uint8Array(size);
+    let offset = 0;
+    for (const part of parts) {
+      bytes.set(part, offset);
+      offset += part.byteLength;
+    }
+    const parsed: unknown = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      return reddet(400, "gövde nesne olmalı");
+    }
+    const fields = parsed as Record<string, unknown>;
+    if (Object.keys(fields).some((field) => field !== "operationId" && field !== "input")
+      || !fields.input || typeof fields.input !== "object" || Array.isArray(fields.input)) {
+      return reddet(400, "eylem yalnız operationId ve input nesnesi taşımalı");
+    }
+    body = fields;
   } catch {
     return reddet(400, "gövde JSON değil");
   }
   const operationId = typeof body.operationId === "string" ? body.operationId : "";
-  const input = (body.input ?? {}) as Record<string, unknown>;
+  const input = body.input as Record<string, unknown>;
 
   const verified = await verifyOrbitActionToken(
     authorization.slice(7).trim(),
