@@ -45,7 +45,7 @@ export async function getPublishedEquinoxHaber(options: PublishedNewsOptions = {
 }
 
 export async function getPublishedEquinoxHaberCount(
-  options: Pick<PublishedNewsOptions, "publicationEra"> = {},
+  options: Pick<PublishedNewsOptions, "publicationEra" | "techCategory"> = {},
 ) {
   return getPublishedCount(options);
 }

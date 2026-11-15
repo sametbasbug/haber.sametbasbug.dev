@@ -1,15 +1,13 @@
 ---
 /**
- * Haber 2.0 görselsiz arayüzün çalışma önizlemesi.
- * Yayına alınana kadar /yeni/ adresinde noindex: mevcut / URL'si değişmez.
+ * Haber 2.0 görselsiz güncel teknoloji akışı.
+ * /yeni/ eski önizleme URL'si noindex kalır; gerçek site kökü / kullanılır.
  * SSR'de yalnız technology dönemini D1'den; statik derlemede boş liste okur.
  */
 import { getPublishedEquinoxHaber, formatNewsDate } from '../../data/equinoxHaber';
 import { TECHNOLOGY_AGENTS, technologyAgentProfileUrl } from '../../data/technologyAgents';
 
-const requestedPage = Number(Astro.url.searchParams.get('sayfa') ?? 1);
-const currentPage = Number.isSafeInteger(requestedPage) && requestedPage >= 1 && requestedPage <= 200
-  ? requestedPage : 1;
+const { basePath = '/yeni', currentPage = 1 } = Astro.props;
 const rawArticles = await getPublishedEquinoxHaber({
   publicationEra: 'technology',
   limit: 51,
@@ -19,7 +17,6 @@ const rawArticles = await getPublishedEquinoxHaber({
 });
 const hasNext = rawArticles.length > 50;
 const articles = rawArticles.slice(0, 50);
-const { basePath = '/yeni' } = Astro.props;
 const lead = articles[0];
 const rest = articles.slice(1);
 const categoryNames: Record<string, string> = {
@@ -61,7 +58,7 @@ const publishers = TECHNOLOGY_AGENTS;
           <article class="tb-lead-article" data-tech-article data-topic={topicOf(lead)}>
             <div class="tb-article-top">
               <span class="tb-category">{categoryNames[topicOf(lead)] ?? 'Teknoloji'}</span>
-              <span class="tb-featured">ÖNE ÇIKAN</span>
+              <span class="tb-featured">EN YENİ</span>
             </div>
             <h3><a href={`/${lead.id}/`}>{lead.data.title}</a></h3>
             <p>{lead.data.description}</p>

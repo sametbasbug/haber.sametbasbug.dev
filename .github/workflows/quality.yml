@@ -51,6 +51,19 @@ jobs:
       - name: Orbit identity tests
         run: npm run test:orbit
 
+      # Haber 2.0 regressions used to run only on a local machine. They
+      # exercise actual SQLite migrations, four publisher IDs, idempotent
+      # edits/withdrawals, no-image rendering, API contracts, and empty RSS
+      # launch behavior. Keep them in PR checks, not only a manual checklist.
+      - name: Technology newsroom contract and D1 tests
+        run: npm run test:technology
+
+      - name: First-deploy and Orbit catalogue contract tests
+        run: |
+          npm run test:smoke-url
+          npm run test:newsroom-catalog
+          npm run test:technology-pagination
+
       # Tür kontrolü 2026-08-21'e kadar HİÇ koşmuyordu: tsconfig'deki
       # deprecated `baseUrl` TS 6'da hata verip tsc'yi daha başlamadan
       # düşürüyordu. Kaldırıldığında 14 gerçek hata çıktı; onikisi Worker
@@ -72,3 +85,17 @@ jobs:
           PUBLIC_EQUINOX_HUB_URL: https://equinox.sametbasbug.dev
           PUBLIC_NEWS_SUBDOMAIN_ENABLED: 'true'
         run: npm run build
+
+      # Local Astro builds can pass while the actual Cloudflare SSR Worker
+      # fails to bundle. The site's production code path is SSR, so catch
+      # those differences on a PR, before main triggers live D1 migrations.
+      - name: Build production SSR Worker and validate Wrangler package
+        env:
+          PUBLIC_SITE_URL: https://haber.sametbasbug.dev
+          PUBLIC_NEWS_SITE_URL: https://haber.sametbasbug.dev
+          PUBLIC_MAIN_SITE_URL: https://sametbasbug.dev
+          PUBLIC_EQUINOX_HUB_URL: https://equinox.sametbasbug.dev
+          PUBLIC_NEWS_SUBDOMAIN_ENABLED: 'true'
+        run: |
+          npm run build:ssr
+          npx wrangler deploy --dry-run --config wrangler.ssr.jsonc

@@ -235,16 +235,21 @@ export async function getPublishedFromD1(
 
 export async function getPublishedCountFromD1(
   db: D1Database,
-  options: Pick<PublishedD1Options, "publicationEra"> = {},
+  options: Pick<PublishedD1Options, "publicationEra" | "techCategory"> = {},
 ): Promise<number> {
-  const era = options.publicationEra;
-  const row = era
-    ? await db.prepare(
-      'SELECT COUNT(*) AS total FROM articles WHERE is_draft = 0 AND publication_era = ?',
-    ).bind(era).first<{ total: number }>()
-    : await db.prepare(
-      'SELECT COUNT(*) AS total FROM articles WHERE is_draft = 0',
-    ).first<{ total: number }>();
+  const where = ['is_draft = 0'];
+  const values: string[] = [];
+  if (options.publicationEra) {
+    where.push('publication_era = ?');
+    values.push(options.publicationEra);
+  }
+  if (options.techCategory) {
+    where.push('tech_category = ?');
+    values.push(options.techCategory);
+  }
+  const row = await db.prepare(
+    `SELECT COUNT(*) AS total FROM articles WHERE ${where.join(' AND ')}`,
+  ).bind(...values).first<{ total: number }>();
   return Number(row?.total ?? 0);
 }
 

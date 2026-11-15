@@ -1,7 +1,8 @@
 ---
 /** Görselsiz teknoloji kategori akışları: sayfalama D1 tarafında gerçekleşir. */
 import TechnologyLayout from '../../../layouts/TechnologyLayout.astro';
-import { getPublishedEquinoxHaber, formatNewsDate } from '../../../data/equinoxHaber';
+import { getPublishedEquinoxHaber, getPublishedEquinoxHaberCount, formatNewsDate } from '../../../data/equinoxHaber';
+import { lastTechnologyPage, technologyPage } from '../../../data/technologyPagination';
 import { TECHNOLOGY_CATEGORIES } from '../../../../worker/src/technology-contract';
 
 const names: Record<string, string> = {
@@ -18,9 +19,12 @@ export function getStaticPaths() {
 
 const category = Astro.params.slug ?? '';
 if (!(TECHNOLOGY_CATEGORIES as readonly string[]).includes(category)) return new Response(null, { status: 404 });
-const requestedPage = Number(Astro.url.searchParams.get('sayfa') ?? 1);
-const page = Number.isSafeInteger(requestedPage) && requestedPage > 0 && requestedPage <= 200
-  ? requestedPage : 1;
+const count = await getPublishedEquinoxHaberCount({
+  publicationEra: 'technology',
+  techCategory: category,
+});
+const page = technologyPage(Astro.url.searchParams.get('sayfa'), lastTechnologyPage(count, 20));
+if (page === null) return new Response(null, { status: 404 });
 const items = await getPublishedEquinoxHaber({
   publicationEra: 'technology',
   techCategory: category,

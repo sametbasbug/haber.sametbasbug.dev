@@ -38,6 +38,29 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Quality and deploy workflows run independently on main. A green
+      # build does NOT guarantee the new newsroom authorization and D1
+      # mutations are safe; enforce their tests in this workflow BEFORE
+      # the irreversible, forward-only production D1 migrations.
+      - name: Verify Orbit identity and Haber 2.0 contracts before migration
+        run: |
+          npm run test:orbit
+          npm run test:technology
+          npm run test:smoke-url
+          npm run test:newsroom-catalog
+          npm run test:technology-pagination
+          npm run typecheck
+
+      - name: Set up Python for pre-migration editorial tests
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+
+      - name: Verify the editorial pipeline before migration
+        run: |
+          python -m pip install --disable-pip-version-check -e 'newsroom[test]'
+          python -m pytest newsroom/tests
+
       # Statik derleme dağıtılmıyor ama koşuluyor: iki config aynı `src/`
       # ağacını paylaşıyor ve yalnız birinde patlayan değişiklikler oluyor.
       - name: Build the static site as a cross-check

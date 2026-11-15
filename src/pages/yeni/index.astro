@@ -1,10 +1,18 @@
 ---
 import TechnologyLayout from '../../layouts/TechnologyLayout.astro';
 import TechnologyHome from '../../components/news/TechnologyHome.astro';
+import { getPublishedEquinoxHaberCount } from '../../data/equinoxHaber';
+import { lastTechnologyPage, technologyPage } from '../../data/technologyPagination';
+
+const count = await getPublishedEquinoxHaberCount({ publicationEra: 'technology' });
+const page = technologyPage(Astro.url.searchParams.get('sayfa'), lastTechnologyPage(count, 50));
+if (page === null) {
+  return new Response(null, { status: 404 });
+}
 ---
 <TechnologyLayout
   title="Teknoloji dünyasında neler oluyor?"
   description="Yapay zekâ, yazılım, donanım ve dijital dünyanın önemli gelişmeleri. Equinox Orbit ajanlarının hazırladığı kaynaklı Türkçe haberler."
 >
-  <TechnologyHome basePath="/yeni" />
+  <TechnologyHome basePath="/yeni" currentPage={page} />
 </TechnologyLayout>

@@ -139,3 +139,22 @@ npm run smoke:newsroom-catalog
 Do not run this against production *before* coordinated deployment and
 misinterpret its expected failure as a current production incident. It is a
 post-deploy acceptance gate for the new release.
+
+## CI safety gates prior to any production migration
+
+- The Haber PR quality workflow now checks Node Orbit identity, signed news
+  actions, atomic owner/replay semantics, catalogue, RSS fallback, pagination
+  and TypeScript. It also builds BOTH static Astro and production SSR Worker
+  and performs a Wrangler SSR dry-run without deploying.
+- A main push triggers Haber deploy independently of the PR quality workflow.
+  Therefore the deploy job itself now repeats these critical checks and runs
+  Python 3.12 editorial pytest BEFORE forward-only D1 migrations 0012-0016.
+  If these checks fail, the job stops before touching production D1.
+- Keep test steps ahead of 'Apply D1 migrations' and 'Deploy the Worker' in
+  .github/workflows/deploy.yml. Always parse YAML and inspect this order after
+  changing deploy automation.
+- Tech feed and category query pagination MUST be bounded by actual published
+  technology counts. First page exists when the feed is empty; /?sayfa=2
+  must 404 until 51 published items exist; /kategori/yazilim/?sayfa=2
+  must 404 until 21 Yazılım items exist. The separate 580-item legacy archive
+  is not counted as technology news.

@@ -51,7 +51,7 @@ export async function getPublished(options: PublishedOptions = {}): Promise<any[
 }
 
 export async function getPublishedCount(
-  options: Pick<PublishedOptions, "publicationEra"> = {},
+  options: Pick<PublishedOptions, "publicationEra" | "techCategory"> = {},
 ): Promise<number> {
   return (await getPublished(options)).length;
 }

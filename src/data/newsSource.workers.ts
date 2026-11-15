@@ -18,7 +18,7 @@ export async function getPublished(options: PublishedD1Options = {}): Promise<an
 }
 
 export async function getPublishedCount(
-  options: Pick<PublishedD1Options, "publicationEra"> = {},
+  options: Pick<PublishedD1Options, "publicationEra" | "techCategory"> = {},
 ): Promise<number> {
 	const db = getDatabase();
 	if (!db) throw new Error('D1 binding yok.');
