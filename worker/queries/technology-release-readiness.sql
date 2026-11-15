@@ -43,4 +43,8 @@ SELECT
     WHERE type='table' AND name='technology_agent_requests') AS agent_receipts_table,
   (SELECT COUNT(*) FROM sqlite_master
     WHERE type='table' AND name='newsroom_admin_requests') AS admin_receipts_table,
-  (SELECT COUNT(*) FROM articles WHERE publication_era='legacy') AS historical_rows;
+  -- An existing slug that has become a draft is no longer a working
+  -- public permalink. Retain all 580 PUBLISHED legacy articles, not just
+  -- 580 rows that may have been silently withdrawn.
+  (SELECT COUNT(*) FROM articles
+    WHERE publication_era='legacy' AND is_draft=0) AS historical_rows;

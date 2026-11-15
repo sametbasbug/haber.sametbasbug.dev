@@ -52,36 +52,40 @@ Equinox Haber sıfırdan tasarlanmış, **Türkçe teknoloji haberciliğine odak
 
 - [x] Plan ayrı dalda saklandı; `AGENTS.md` okundu.
 - [x] Mevcut D1 ve Orbit eylem yapısı incelendi; yeni işlemler legacy işlemlerden ayrıldı.
-- [ ] Görsel bağımlılıkları, legacy ve yeni yolları kategorize et. Canlıya etkisi olmayan çalışma.
+- [x] Görselsiz yeni dönemle görsel içeren eski arşiv akışlarını ayır; canlıya etkisi olmayan yerel tasarım/sayfa değişiklikleri tamamlandı.
 
 ### Faz 1: yetki, yayın sözleşmesi, veri göçü
 
-- [x] D1 migration 0012: `publication_era`, `tech_category`, `orbit_actor_subject`, revision tablosu. 12/12 migration izole D1 üzerinde geçti; legacy CHECK korundu.
-- [x] Üç alanlı yeni haber doğrulayıcısı yazıldı; 13 kontrat testi ve bellek içi SQLite ile 31 yayın/sahiplik kontrolü geçti.
-- [ ] Tek-adım görselsiz yayın + kaynak/başlık tekrar kontrolü + Orbit imzalı JWT uçtan uca SQLite testleri geçti; farklı Workers isolate arasında gerçek eşzamanlı staging testi bekliyor.
-- [ ] Sahiplik, düzenleme/kaldırma/geri alma ve revizyon CAS koruması (aynı sürümü eşzamanlı düzenleme reddi) test edildi. Yönetici override ve tam Orbit staging entegrasyonu bekliyor.
-- [ ] Haber 2.0 Orbit action kataloğu ve Worker köprüsü geliştirildi; 4 yazarın kayıtlı kalıcı Orbit ajan kimliklerinin gerçek eşlemesi ve yetki entegrasyon testleri bekliyor.
+- [x] D1 migration 0012: `publication_era`, `tech_category`, `orbit_actor_subject`, revision tablosu. 0012-0016 dahil 16/16 migration izole D1 üzerinde geçti; legacy CHECK korundu.
+- [x] Üç alanlı haber doğrulayıcısı ve güvenli metin render'ı tamamlandı; 15 sözleşme testi, imzalı D1 yayın ve idempotency/sahiplik regresyonları geçti.
+- [x] Tek-adım görselsiz yayın, kaynak/başlık tekrar kontrolü ve Orbit imzalı JWT ile gerçek SQL şeması üstünde yerel E2E testler tamamlandı.
+- [ ] Gerçek Orbit hesabı ve farklı canlı/staging Worker isolate'ları arasında eşzamanlı uçtan uca kabul testi bekliyor.
+- [x] Sahiplik, düzenleme/kaldırma/geri alma, revizyon CAS, ayrı insan yönetici override ve idempotent replay yerel SQL/HTTP testlerinde doğrulandı.
+- [ ] Gerçek oturum ve gerçek ajan credential'ıyla staging yönetici/yazar kabulü bekliyor.
+- [x] Haber 2.0 altı kanonik Orbit eylemi ve Worker köprüsü geliştirildi; dört yazarın gerçek kararlı Orbit ID'siyle imzalı yerel yetki ve iki-repo kaynak sözleşmesi doğrulandı.
 - [ ] API iş akışını terminal kullanan Orbit ajanı ve MCP üzerinden uçtan uca test et.
 
 ### Faz 2: Orbit'te evrensel ajan okuma
 
-- [ ] Orbit reposunun `AGENTS.md` kurallarına ve canlı yetki mimarisine uygun şekilde account-linked değil Orbit-agent-authenticated public connected-site read işlemlerini ekle.
-- [ ] Bağlı siteye daha önce izin vermeyen bir Orbit ajanı haberi okuyabilsin, anonim erişim 401/403 alsın, başka insan/ajan özel bilgisi sızmasın.
-- [ ] Orbit OpenAPI ve skill.md / onboarding değişiklikleri ve regression testleri.
-- [ ] Eğer değişiklik iki repoyu etkiliyorsa uyumlu sürüm sırası ve testli staging geçişi.
+- [x] Orbit reposunda site grant'i istemeyen ama Orbit-agent bearer credential'ı zorunlu tutan iki yeni haber GET rotası eklendi (feature branch).
+- [x] Grant'siz aktif konuk ajan, anonim/askıdaki/emekli ajan ve içerik gizliliği yerel Worker HTTP + imzalı iki-repo testlerinde doğrulandı.
+- [x] Orbit OpenAPI, skill.md/onboarding ve regresyon testleri güncellendi; her iki gerçek repo sözleşmesi karşılaştırıldı.
+- [x] Orbit önce, Haber sonra sırası; 600 saniyelik katalog önbelleği ve iki sürümün uyumluluğu yerel testli; migration öncesi Orbit kontrolü CI'da zorunlu.
+- [ ] Gerçek dağıtım/staging ve canlı önbellek kabulü bekliyor.
 
 ### Faz 3: görselsiz yeni web tasarımı
 
-- [ ] Yeni design tokens, font hiyerarşisi, mobil masaüstü grid, açık/koyu tema, erişilebilir klavye navigasyonu.
-- [ ] Yeni ana sayfa, 6 kategori sayfaları, haber detayı ve kaynakça, ajan kimliği, Orbit Haber Masası ve ajan profil sayfaları.
-- [ ] Yeni dönemi eski arşivden ayır; eski URL ve SEO yönlendirmelerini koru.
-- [ ] Görsel işleme ve görsel render yollarını **yeni sürümden** çıkar; kullanıcısız eski arşiv verilerine dokunma.
-- [ ] RSS/robots/sitemap stratejisi: anonim RSS yeni ajan API'sinin alternatifi olmasın, fakat insan okur ve arama motoru ihtiyaçlarını ayrı değerlendir.
+- [x] Yeni tipografik tasarım, mobil/masaüstü düzen, açık/koyu tema ve erişilebilirlik kontrolleri yerel browser'da doğrulandı.
+- [x] Yeni ana sayfa, altı kategori, haber detayı ve kaynakça, ajan kimliği/profil bağlantıları, Orbit Haber Masası ve ajan profilleri tamamlandı.
+- [x] Yeni teknoloji dönemi tarihsel arşivden ayrıldı; 580 eski URL, SSR/statik parity ve SEO sınamaları yerel testlerde korunuyor.
+- [x] Yeni yayın render'ında haber görselleri kaldırıldı ve yasaklandı; eski arşiv verileri/depolama nesnelerine dokunulmadı.
+- [x] RSS, robots ve sitemap akışları güncel teknoloji yayınıyla tarihsel arşivi ayıracak şekilde yerel test edildi.
 
 ### Faz 4: kabul ve yayımlama
 
-- [ ] Astro typecheck, statik ve SSR build, Python + Node testleri, güvenlik, erişilebilirlik, mobil görünüm, canlı benzeri D1 smoke, dört yayıncının farklı oturumlarla sahiplik/yetki testleri.
-- [ ] Canlı yayından önce test izole D1'de; canlıya uydurma makale yayımlamayın.
+- [x] Astro TypeScript, statik/SSR, Python/Node, mobil görsel kontroller, gerçek yerel Wrangler D1, dört yayıncı imzası ve güvenlik regresyonları tamamlandı.
+- [ ] Farklı gerçek Orbit oturumlarıyla canlı/staging E2E testleri henüz yapılmadı.
+- [x] Testler izole D1/Worker üzerinde sentetik kayıtlarla yapıldı; canlıya test haberi yazılmadı.
 - [ ] Kod hazır olunca PR, CI, review; `main` otomatik deploy eder. Yarım akışı dağıtma. Orbit repo deploy'u kendi `AGENTS.md` onayına tabi.
 - [ ] Canlı yayın/okuma işlevi doğrulandıktan sonra denetleyici zamanlanmış görevi kur.
 
@@ -245,3 +249,12 @@ Equinox Haber sıfırdan tasarlanmış, **Türkçe teknoloji haberciliğine odak
 - Haber üretim akışındaki önemli sıralama riski kapatıldı: Orbit'in yeni iki güvenli Haber GET rotasını ve anonim 401 kontrolünü doğrulayan PUBLIC GET testi artık **D1 migration'dan ÖNCE** zorunlu. Yanlış sırayla sadece Haber merge edilirse migration başlamaz; aynı test deploy sonrası da korunur. Canlı Orbit henüz eski olduğundan bu kapı şu an bilinçli olarak başarısız olacak.
 - scripts/technology-deploy-order-tests.mjs GitHub Actions YAML'deki Orbit ön koşulu -> Time Travel -> migration -> yayıncı/admin doğrulama -> Worker deploy -> canlı kabul sırasını doğrular; yedi farklı kritik gate bozulmasını bilinçli mutate edip reddeder. 8 kontrol geçti. Kalite ve deploy pre-migration birim testlerine eklendi.
 - Orbit çapraz-repo testine hazırlanan sahte OpenAPI örneği yerine **gerçek Orbit agentApiContract ile Haber'in gerçek release-contract doğrulayıcısı** bağlandı; iki ajan-korumalı GET, altı kategori ve altı gerçek JWS haber okuma isteği başarılı. Production ve gerçek token kullanılmadı.
+
+## 15-16 Kasım 2026 on dördüncü checkpoint: tekrarlı dağıtım
+
+- İleri D1 migration başlamadan ÖNCE eski 0011 şemasına uyumlu salt-okunur yayıncı ön kontrolü eklendi: Hemera/Selene yetkisi ve ortak sponsor, yanlış imza, devre dışı eski anahtar, beklenmeyen önceden kayıtlı Nyx/Asteria, kopuk kaynak, 580 tarihsel yayımlanmış haber ve migration geçmişini denetler.
+- İlk geçişten sonraki main güncellemelerini bozmamak için aynı ön kontrol tam 0016 şemasını ve dört geçerli yayıncıyı da kabul ediyor; yarım kalmış 0012-0015 veya bilinmeyen 0017+ otomatik devam etmiyor. 27 gerçek SQLite güvenlik sınaması geçti.
+- Gerçek yerel Wrangler 0011 -> 0016 göçü ve ardından ikinci no-op deployment ön kontrolü başarılı; sahte sponsor uyumsuzluğu BLOCKED. Canlı D1 yalnız Cloudflare plugin SELECT ile okundu: iki sağlam eski publisher, sıfır beklenmeyen Nyx/Asteria kaydı, sıfır aktif eski anahtar, 11 migration, 580 yayımlanmış tarihsel haber, sıfır kopuk kaynak.
+- Postmigration readiness SQL'i 580 tarihi satırı değil, 580 yayında olan legacy URL'yi sayıyor. Soft-withdrawn tarihsellik yanlış başarıya yol açmıyor; 60 gerçek SQL migration kontrolü geçti.
+- Üretim CI sıra testinde Wrangler SSR gerçek deploy komutunun bulunması da zorunlu hale getirildi; önceki test bu satır kaldırılınca yanlışlıkla yeşil geçiyordu.
+- Plan checkbox'larında yerel tamamlanan fazlar işaretlendi, gerçek staging/MCP/üretim işleri halen açık bırakıldı.

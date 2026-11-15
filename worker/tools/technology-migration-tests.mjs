@@ -92,6 +92,26 @@ for (const mode of ['valid', 'missing', 'disabled', 'cannot-publish', 'no-sponso
       db.prepare('UPDATE publishers SET author=? WHERE subject=?')
         .run(nyx.author,'agent:'+nyx.id);
       assertions++;
+
+      // The initial release must preserve 580 *publicly readable* legacy
+      // URLs, not merely keep article rows while silently withdrawing them.
+      db.prepare(`INSERT INTO articles
+        (slug,title,description,category,author,body_md,body_html,render_version,
+         pub_date,updated_date,is_draft,breaking,editor_pick,created_at,updated_at)
+        VALUES(?,?,?,?,?,?,?,?,?,?,0,0,0,?,?)`).run(
+        'synthetic-existing-permalink','Historical test article','Local old article',
+        'Teknoloji','Legacy','Old text','<p>Old text</p>',1,
+        '2026-01-01','2026-01-01','2026-01-01','2026-01-01');
+      const sql=readFileSync(new URL('../queries/technology-release-readiness.sql',import.meta.url),'utf8');
+      assert.equal(db.prepare(sql).get().historical_rows,1,
+        'published legacy article must count toward the archive gate');
+      db.prepare('UPDATE articles SET is_draft=1 WHERE slug=?')
+        .run('synthetic-existing-permalink');
+      assert.equal(db.prepare(sql).get().historical_rows,0,
+        'withdrawn legacy article must NOT count as a working historic URL');
+      db.prepare('UPDATE articles SET is_draft=0 WHERE slug=?')
+        .run('synthetic-existing-permalink');
+      assertions+=2;
     }
     const admins=db.prepare('SELECT orbit_subject,disabled_at FROM newsroom_administrators').all();
     assert.equal(admins.length,expected,mode+' administrator grant');

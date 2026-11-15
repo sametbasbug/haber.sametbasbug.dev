@@ -64,6 +64,7 @@ jobs:
           npm run test:newsroom-catalog
           npm run test:technology-pagination
           npm run test:release-d1-check
+          npm run test:technology-preflight
           npm run test:d1-recovery
           npm run test:d1-export-integrity
           npm run test:technology-deploy-order

@@ -389,3 +389,36 @@ new-era receipt/admin/revision tables when migrations 0012-0016 are present.
 Actual old/new Wrangler local SQL dumps both passed this strengthened gate.
 The standalone verifier must be run on any separately authorized, privately
 stored production export before merging the Haber feature.
+
+## Checkpoint 14: pre-migration authorization gate
+
+The Haber production workflow now checks the existing Hemera and Selene
+publisher anchors BEFORE any forward-only D1 schema migration, after the
+public Orbit API readiness probe and before the Time Travel bookmark gate.
+
+The READ-ONLY worker/queries/technology-pre-migration-readiness.sql and
+scripts/technology-pre-migration-check.mjs use public Orbit agent IDs and
+return ONLY aggregate counts plus a public migration filename. They reject
+wrong or disabled authors, missing/mismatched sponsor bindings, active legacy
+publisher keys, orphan sources, too few historical published articles,
+unexpected prior Nyx/Asteria rows and any unknown migration state.
+
+Every future main push runs this gate, even AFTER first launch. Therefore it
+intentionally accepts exactly two reviewed states: pristine 0011 with two
+authorized old publisher anchors and zero new schema tables, OR complete
+0016 with four authorized agents and four required new schema tables.
+Partially migrated 0012-0015 and unreviewed future 0017+ are fail-closed.
+Update the preflight and its tests deliberately before any future migration.
+
+The postmigration SQL now counts PUBLISHED historical legacy articles,
+not archived rows that were quietly withdrawn and no longer have working
+public URLs. An isolated real SQL test confirms withdrawn legacy content
+does not count toward the minimum 580 working legacy permalinks.
+
+Validation: 27 SQLite preflight cases, real local Wrangler 0011 to 0016
+and a second no-op deployment. Both normal releases passed; partial schema
+and wrong sponsor were rejected. Read-only Cloudflare connector SELECT of
+the current live 0011 schema confirmed two aligned enabled Hemera/Selene
+publisher anchors, zero active legacy keys, zero unexpected Nyx/Asteria
+records, 580 published historical articles, 11 migrations and no orphan
+article sources. No private OAuth ID, token, row body, or write was used.

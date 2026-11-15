@@ -20,6 +20,7 @@ const required=[
   'Verify the editorial pipeline before migration',
   'Build the Worker',
   'Require the new Orbit agent news API before D1 migration',
+  'Verify legacy publisher anchors before D1 migration',
   'Confirm a D1 Time Travel recovery point before migrations',
   'Apply D1 migrations',
   'Verify production D1 publisher readiness after migrations',
@@ -42,6 +43,12 @@ export function verifyNewsroomDeployOrder(allSteps) {
     .run.includes('smoke:orbit-release-check')) {
     throw new Error('Pre-migration Orbit readiness probe is missing');
   }
+  const legacy=byName('Verify legacy publisher anchors before D1 migration').run;
+  if(!legacy.includes('technology-pre-migration-readiness.sql')
+    || !legacy.includes('technology-pre-migration-check.mjs')
+    || !legacy.includes('d1 execute DB --remote --json')){
+    throw new Error('Read-only existing publisher preflight must precede migrations');
+  }
   const recovery=byName('Confirm a D1 Time Travel recovery point before migrations').run;
   if(!recovery.includes('time-travel info DB --json')
     || !recovery.includes('d1-time-travel-check.mjs')
@@ -57,6 +64,12 @@ export function verifyNewsroomDeployOrder(allSteps) {
   if(!publisher.includes('technology-release-readiness.sql')
     || !publisher.includes('technology-release-d1-check.mjs')){
     throw new Error('D1 publisher authority gate is missing');
+  }
+  const deploy=byName('Deploy the Worker').run;
+  if(!deploy.includes('wrangler deploy')
+    || !deploy.includes('--config wrangler.ssr.jsonc')
+    || !deploy.includes('--message')) {
+    throw new Error('The production SSR Worker deploy step is missing or incorrect');
   }
   const live=byName('Verify the live site').run;
   if(!live.includes('orbit-technology-release-check.mjs')
@@ -78,13 +91,13 @@ mutate(rows=>rows.find(s=>s.name===required[4]).run='echo skipped');
 mutate(rows=>rows.find(s=>s.name===required[6]).run='echo skipped');
 mutate(rows=>rows.find(s=>s.name===required[8]).run='echo healthy');
 mutate(rows=>{
-  const from=rows.findIndex(s=>s.name===required[5]);
+  const from=rows.findIndex(s=>s.name==='Apply D1 migrations');
   const [migration]=rows.splice(from,1);
-  rows.splice(rows.findIndex(s=>s.name===required[3]),0,migration);
+  rows.splice(rows.findIndex(s=>s.name==='Require the new Orbit agent news API before D1 migration'),0,migration);
 });
 mutate(rows=>{
-  const from=rows.findIndex(s=>s.name===required[6]);
+  const from=rows.findIndex(s=>s.name==='Verify production D1 publisher readiness after migrations');
   const [publisher]=rows.splice(from,1);
-  rows.splice(rows.findIndex(s=>s.name===required[7])+1,0,publisher);
+  rows.splice(rows.findIndex(s=>s.name==='Deploy the Worker')+1,0,publisher);
 });
 console.log('Haber release workflow: 8 positive/negative ordering and gate assertions passed');

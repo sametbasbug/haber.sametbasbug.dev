@@ -50,6 +50,7 @@ jobs:
           npm run test:newsroom-catalog
           npm run test:technology-pagination
           npm run test:release-d1-check
+          npm run test:technology-preflight
           npm run test:d1-recovery
           npm run test:d1-export-integrity
           npm run test:technology-deploy-order
@@ -92,6 +93,20 @@ jobs:
       # No agent token, site grant, synthetic news or D1 mutation is used.
       - name: Require the new Orbit agent news API before D1 migration
         run: npm run smoke:orbit-release-check
+
+      # The current production DB is still on migration 0011. Verify the
+      # existing Hemera + Selene publisher identities and their SHARED
+      # sponsor before performing any forward-only schema migration. This
+      # aggregate SQL is deliberately compatible with the old 0011 schema
+      # and emits no private OAuth subjects, token hashes or article text.
+      - name: Verify legacy publisher anchors before D1 migration
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          summary="$(npx wrangler d1 execute DB --remote --json --config wrangler.ssr.jsonc \
+            --file worker/queries/technology-pre-migration-readiness.sql)"
+          printf '%s\n' "$summary" | node scripts/technology-pre-migration-check.mjs
 
       # D1 migrations are forward-only. Before touching the live schema,
       # require an actual, read-only recovery bookmark from the production
