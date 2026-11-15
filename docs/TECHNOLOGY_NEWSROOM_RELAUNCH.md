@@ -229,3 +229,19 @@ Equinox Haber sıfırdan tasarlanmış, **Türkçe teknoloji haberciliğine odak
 ### On ikinci checkpoint: Orbit-Haber farklı sürüm penceresi
 
 - Orbit tarafına izole katalog geçiş testi eklendi: yeni Orbit + eski Haber kataloğu 503, 600 saniye dolmadan eski cache 503, süre dolunca yeni Haber kataloğu ile 200 boş haber listesi, Haber eski kataloğa rollback olunca yeniden 503. Hiç gerçek ajan credential veya üretim haberi kullanılmadı. Eski pano eylemi asla yeni okuma yerine çalıştırılmadı.
+
+## 15 Kasım 2026 on üçüncü checkpoint, bağımsız yedek provası
+
+- Time Travel bookmark bağımsız yedek olmadığı için ayrı SQL export doğrulayıcısı eklendi. Production yedeği alınması hâlâ ayrı izin ve güvenli saklama gerektiriyor.
+- scripts/d1-export-integrity.mjs: D1 SQL yedeğini yalnız bellek içi SQLite'a yükler; en az 580 tarihsel yayımlanmış haber, her haberin kaynağı, kopuk kaynak/slug, migration geçmişi, integrity ve foreign key kontrolü. İçeriği, hassas hesap ve kaynak satırlarını loglamaz.
+- SQLite authorizer kötü niyetli ATTACH/DETACH komutunu reddediyor; host üzerinde başka dosya oluşturmuyor. 9 pozitif/negatif bütünlük/güvenlik testi geçti.
+- Gerçek yerel Wrangler D1 --local export dosyaları üzerinde eski şema (0011) ve yeni şema (0016) kontrol edildi: 580 haber, 590 kaynak ve migration geçmişi temiz. Üretim D1'e export çağrısı yapılmadı.
+- npm run test:d1-export-integrity ve GitHub kalite/production göç öncesi testleri eklendi. Gerçek production export için ancak onaylı operatörün uygulayacağı özel depolama + doğrulama prosedürü cutover dokümanına yazıldı.
+
+### On üçüncü checkpoint: dağıtım sırası ve yedek bütünlüğü güçlendirmesi
+
+- Bağımsız yedek doğrulayıcısı artık satır sayısıyla yetinmez: kaynak koleksiyonundaki 580 tarihsel slug'ın **tamamının** yedekte yayımlanmış eski haber olarak bulunmasını, her birinin kaynaklarını, migration dosya ADLARINI ve teknoloji dönemi tablolarını doğrular. Aynı sayıda ama farklı haberleri içeren yanlış backup reddedilir.
+- D1 SQL doğrulayıcısına SQLite authorizer ATTACH/DETACH ve load_extension reddi eklendi; zarar verebilecek dosya yan etkileri engellendi. 14 pozitif/negatif birim test ve gerçek yerel Wrangler export ile hem 0011 hem 0016 şeması başarılı.
+- Haber üretim akışındaki önemli sıralama riski kapatıldı: Orbit'in yeni iki güvenli Haber GET rotasını ve anonim 401 kontrolünü doğrulayan PUBLIC GET testi artık **D1 migration'dan ÖNCE** zorunlu. Yanlış sırayla sadece Haber merge edilirse migration başlamaz; aynı test deploy sonrası da korunur. Canlı Orbit henüz eski olduğundan bu kapı şu an bilinçli olarak başarısız olacak.
+- scripts/technology-deploy-order-tests.mjs GitHub Actions YAML'deki Orbit ön koşulu -> Time Travel -> migration -> yayıncı/admin doğrulama -> Worker deploy -> canlı kabul sırasını doğrular; yedi farklı kritik gate bozulmasını bilinçli mutate edip reddeder. 8 kontrol geçti. Kalite ve deploy pre-migration birim testlerine eklendi.
+- Orbit çapraz-repo testine hazırlanan sahte OpenAPI örneği yerine **gerçek Orbit agentApiContract ile Haber'in gerçek release-contract doğrulayıcısı** bağlandı; iki ajan-korumalı GET, altı kategori ve altı gerçek JWS haber okuma isteği başarılı. Production ve gerçek token kullanılmadı.

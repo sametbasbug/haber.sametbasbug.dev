@@ -51,6 +51,8 @@ jobs:
           npm run test:technology-pagination
           npm run test:release-d1-check
           npm run test:d1-recovery
+          npm run test:d1-export-integrity
+          npm run test:technology-deploy-order
           npm run test:orbit-release-check
           npm run typecheck
 
@@ -83,6 +85,13 @@ jobs:
           PUBLIC_EQUINOX_HUB_URL: https://equinox.sametbasbug.dev
           PUBLIC_NEWS_SUBDOMAIN_ENABLED: 'true'
         run: npm run build:ssr
+
+      # Orbit MUST be deployed first. Failing this anonymous, read-only
+      # contract probe now is safer than migrating the Haber DB and only
+      # discovering after deployment that Orbit still serves the old API.
+      # No agent token, site grant, synthetic news or D1 mutation is used.
+      - name: Require the new Orbit agent news API before D1 migration
+        run: npm run smoke:orbit-release-check
 
       # D1 migrations are forward-only. Before touching the live schema,
       # require an actual, read-only recovery bookmark from the production

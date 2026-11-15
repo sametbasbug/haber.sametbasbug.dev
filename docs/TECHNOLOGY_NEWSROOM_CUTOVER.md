@@ -329,3 +329,63 @@ refresh after TTL -> new read works; Haber catalogue rollback -> 503.
 The test cannot observe the actual production isolate cache after deploy.
 Keep the publication freeze until real operations appear in the agent MCP
 catalogue and signed guest reads have been separately validated.
+
+## Independent D1 SQL backup acceptance (checkpoint 13)
+
+A Time Travel bookmark is necessary but **not** an independent copy.
+Before approving production migration, an authorized operator must take a
+recent whole-DB Cloudflare D1 SQL export, store it privately outside the
+Git repository and verify it can be independently imported. Do NOT
+extract, print, upload, commit, or retain this sensitive production
+export without permission.
+
+With approval, choose an encrypted/private destination outside the repo:
+
+    npx wrangler d1 export DB --remote --config wrangler.ssr.jsonc --output /secure/private/haber-pre-migration.sql --skip-confirmation
+
+Verify it locally with NO remote mutation:
+
+    node scripts/d1-export-integrity.mjs /secure/private/haber-pre-migration.sql
+
+The checker imports SQL into in-memory Node SQLite. It validates:
+- SQLite integrity and foreign-key relationships;
+- at least 580 published historical articles, each with >=1 source;
+- no orphan source records and no duplicate article slug;
+- D1 migration history present, with at least the 11 live migrations.
+
+It prints only aggregate counts and schema era, never article contents,
+private account identifiers, publisher hashes, the export path or SQL
+parse errors. The SQLite authorizer denies ATTACH/DETACH to prevent an
+unexpected export from creating auxiliary files on the local device.
+Exports larger than 128 MiB require manual review. Keep backups outside
+the Git repository and delete temporary exports after authorized retention.
+
+Actual Wrangler **LOCAL** export format was tested on both old (migration
+0011) and new (migration 0016) schemas, each containing 580 published
+historical articles and 590 source records. These are not production
+exports. No live data was copied or restored.
+
+A remote production backup and a real remote restore remain separately
+authorized release blockers, not automatic CI mutations.
+
+### Coordinated release precondition: Orbit MUST go first
+
+The Haber deploy workflow now checks the real live Orbit OpenAPI and anonymous
+401 rejection BEFORE the Time Travel bookmark and D1 migrations, in addition
+to the existing post-deploy check. If the Orbit feature is not already live,
+Haber's production migration is blocked and the existing Haber Worker is
+unchanged. This is deliberately fail-closed; do not bypass it merely to turn
+the deployment green. When Orbit's public OpenAPI is stale, allow Cloudflare
+cache to refresh, then retry after confirming the real Orbit deployment.
+
+The durable release-order regression script tests the actual GitHub Actions
+YAML and seven deliberate broken order/gate mutations. Run:
+
+    npm run test:technology-deploy-order
+
+The independent SQL backup verifier compares EVERY canonical historical slug,
+not merely 580 total rows, verifies complete migration file names and checks
+new-era receipt/admin/revision tables when migrations 0012-0016 are present.
+Actual old/new Wrangler local SQL dumps both passed this strengthened gate.
+The standalone verifier must be run on any separately authorized, privately
+stored production export before merging the Haber feature.
