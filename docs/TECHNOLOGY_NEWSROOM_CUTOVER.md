@@ -647,3 +647,14 @@ publication guard let "İletişim" publish (expected test status 422 was
 201), and deleting "iletisim" from the reservation set caused the
 real Astro-route coverage test to fail. Restoring the source returned
 the full D1 publication test to GREEN. No production content was changed.
+
+Follow-up isolated HTTP proof for the route reservation: booting the SSR
+Worker against an EMPTY local D1 produced HTTP 500, as the application
+expected its schema to exist. After applying the real 0001-0016 Wrangler
+migrations into a temporary LOCAL D1 instance and restarting the same SSR
+Worker on loopback, GET /iletisim/, /hakkimizda/ and /yazarlar/ each returned
+HTTP 200. The /iletisim/ HTML title confirmed it is the STATIC contact
+page, not a dynamic article route. This confirms the route-shadowing risk
+that was caught by the publication test before fixing the reservation.
+The temporary D1 state and Worker process were deleted/stopped afterwards.
+This was NOT a Cloudflare production deployment or production DB mutation.
