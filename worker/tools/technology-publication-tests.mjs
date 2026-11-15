@@ -4,7 +4,8 @@ import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
 import { DatabaseSync } from "node:sqlite";
 import { renderTechnologyBody } from "../src/render.ts";
-import { publishTechnologyAs, listTechnologyAs, readTechnologyAs, editTechnologyAs, setTechnologyPublicationState, replayTechnologyAdminRequest } from "../src/technology-publication.ts";
+import { publishTechnologyAs, listTechnologyAs, readTechnologyAs, editTechnologyAs, setTechnologyPublicationState, replayTechnologyAdminRequest, storedArticleText } from "../src/technology-publication.ts";
+import { bodyMarkdown } from "../src/index.ts";
 
 import { TECHNOLOGY_AGENTS } from "../../src/data/technologyAgents.ts";
 import { siteAction } from "../src/orbit-eylem.ts";
@@ -34,6 +35,18 @@ import { retiredWriterResponse } from "../../src/server/routes/legacy-news-gate.
   assert.ok(!/<script|<img|onerror|javascript:|<iframe/iu.test(rendered.html), rendered.html);
   assert.ok(rendered.html.includes('href="https://example.com/guideline"'), rendered.html);
 }
+
+// Structured source citations must be removed from full-text API bodies,
+// while ordinary authored second-level headings are preserved byte-for-byte.
+const prose = "Teknoloji sistemleri hakkında geliştiricilerin yayımladığı açıklamaların incelenmesi. Açıklamada uygulama, uyumluluk ve yeni sürüm geçişi tartışılıyor.\n\n## Ayrıntılar\n\nİkinci bölümde teknik ayrıntılar yer alıyor.";
+const generated = bodyMarkdown(prose, [
+  {name:"example.com",url:"https://example.com/source"},
+  {name:"example.org",url:"https://example.org/second"},
+]);
+const roundTrip = storedArticleText("Örnek teknoloji incelemesi",generated);
+assert.equal(roundTrip,"# Örnek teknoloji incelemesi\n\n"+prose);
+assert.ok(!roundTrip.includes("## Kaynaklar"),"structured sources must not be duplicated in API text");
+assert.ok(!roundTrip.includes("## Ek kaynaklar"),"secondary sources must not leak into API text");
 
 const database = new DatabaseSync(":memory:");
 for (const file of readdirSync(new URL("../migrations/", import.meta.url)).filter((n) => n.endsWith(".sql")).sort()) {

@@ -116,6 +116,11 @@ export function validateTechnologyArticle(input: unknown): ContractResult {
     errors.push("haber metninde görsel kullanılamaz");
   }
   if (/^\s*# /mu.test(body)) errors.push("metnin içinde ikinci bir H1 başlık olamaz");
+  // Official citations are generated from structured kaynaklar. An agent
+  // cannot inject a second, misleading source heading into its prose.
+  if (/^\s*##\s+(?:Kaynaklar|Ek kaynaklar)\s*#*\s*$/gimu.test(body)) {
+    errors.push("kaynakça başlığını sistem oluşturur; metne eklenemez");
+  }
 
   const firstParagraph = body.split(/\n\s*\n/u).map((x) => x.replace(/\s+/gu, " ").trim()).find(Boolean) ?? "";
   const ozet = firstParagraph.length <= MAX_SUMMARY_LENGTH

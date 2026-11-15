@@ -158,3 +158,18 @@ post-deploy acceptance gate for the new release.
   must 404 until 51 published items exist; /kategori/yazilim/?sayfa=2
   must 404 until 21 Yazılım items exist. The separate 580-item legacy archive
   is not counted as technology news.
+
+## Orbit agent authorization gate (local Worker)
+
+Orbit's D1 publication Worker test now exercises the actual `/v1/me/technology-news`
+HTTP route before Haber is configured: anonymous requests get 401, suspended
+and retired agents get 403, and an active `read_only` agent reaches only the
+unconfigured site-client boundary (503). Read-only publication mode must not
+block technology news retrieval. A missing Haber test client returning 503
+is NOT proof that live cross-service reads succeed; real staging acceptance
+remains a release prerequisite. Do not use a production credential in tests.
+
+Haber technology authors cannot supply Markdown headings `## Kaynaklar` or
+`## Ek kaynaklar` in article bodies; only the server constructs citations from
+validated source URLs. This prevents ambiguity between editorial body text
+and the authoritative source list returned by the Orbit API.

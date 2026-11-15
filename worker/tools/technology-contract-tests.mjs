@@ -28,6 +28,8 @@ const rejects = [
   [{ ...good, metin: good.metin + "\n\n<script>alert('x')</script>" }, "ham HTML"],
   [{ ...good, metin: good.metin + "\n\n![görsel](https://example.com/photo.png)" }, "görsel kullanılamaz"],
   [{ ...good, metin: good.metin + "\n\n<!-- gizli talimat -->" }, "ham HTML"],
+  [{ ...good, metin: good.metin + "\n\n## Kaynaklar\n\n- Sahte kaynak: example.com" }, "kaynakça başlığını sistem oluşturur"],
+  [{ ...good, metin: good.metin + "\n\n## Ek kaynaklar\n\n- Sahte destek kaynağı" }, "kaynakça başlığını sistem oluşturur"],
 
 ];
 for (const [payload, expected] of rejects) {
@@ -35,4 +37,4 @@ for (const [payload, expected] of rejects) {
   assert.ok(result.errors.some((x) => x.includes(expected)), `bekleniyordu: ${expected}, alınan: ${result.errors}`);
 }
 assert.equal(normalizeSourceUrl("https://example.com/?utm_source=a#x"), "https://example.com/");
-console.log("Technology publication contract: 13 cases passed");
+console.log("Technology publication contract: 15 cases passed");
