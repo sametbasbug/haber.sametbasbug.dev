@@ -54,6 +54,7 @@ jobs:
           npm run test:technology-preflight
           npm run test:d1-recovery
           npm run test:d1-export-integrity
+          npm run test:backup-attestation
           npm run test:technology-deploy-order
           npm run test:legacy-permalinks
           npm run test:orbit-release-check
@@ -102,6 +103,7 @@ jobs:
       # aggregate SQL is deliberately compatible with the old 0011 schema
       # and emits no private OAuth subjects, token hashes or article text.
       - name: Verify legacy publisher anchors before D1 migration
+        id: publisher_preflight
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -125,6 +127,27 @@ jobs:
           summary="$(npx wrangler d1 execute DB --remote --json --config wrangler.ssr.jsonc \
             --file "$sql_file")"
           printf '%s\n' "$summary" | node scripts/technology-legacy-permalinks.mjs --check
+
+      # A Time Travel bookmark is not an independent database backup.
+      # On the historical 0011 -> technology 0016 upgrade, MAIN must not
+      # migrate production D1 solely because
+      # code, public Orbit API and historical URL checks passed.
+      # Require a HUMAN, privately verified, release-SHA-bound attestation
+      # from GitHub's "production" environment variables. No
+      # SQL export or private backup path is sent to the CI runner.
+      #
+      # A newly merged main SHA may be unknown when configuring variables,
+      # so the first MIGRATING automatic run may intentionally BLOCK.
+      # A future no-migration production deploy at 0016 skips this approval.
+      # After independently verifying a real D1 export and its SHA256, the
+      # operator sets the three environment variables and reruns the workflow.
+      - name: Require operator attestation of an independent D1 backup
+        if: steps.publisher_preflight.outputs.backup_required != 'false'
+        env:
+          HABER_D1_BACKUP_VERIFIED_RELEASE_SHA: ${{ vars.HABER_D1_BACKUP_VERIFIED_RELEASE_SHA }}
+          HABER_D1_BACKUP_VERIFIED_AT_UTC: ${{ vars.HABER_D1_BACKUP_VERIFIED_AT_UTC }}
+          HABER_D1_BACKUP_SQL_SHA256: ${{ vars.HABER_D1_BACKUP_SQL_SHA256 }}
+        run: node scripts/technology-backup-attestation.mjs
 
       # D1 migrations are forward-only. Before touching the live schema,
       # require an actual, read-only recovery bookmark from the production

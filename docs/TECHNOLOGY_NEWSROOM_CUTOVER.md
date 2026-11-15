@@ -712,3 +712,69 @@ valuable but are NOT a substitute for real staging. Do not mark the real
 two-Worker staging acceptance checklist complete. This documentation
 does not grant permission to create resources, access staging credentials
 or deploy either site.
+
+## Checkpoint 20: commit-bound independent D1 backup sign-off
+
+Cloudflare Time Travel is NOT an independent SQL backup. Before this
+checkpoint, an automatic main merge could migrate production 0011 through
+0016 without an operator confirming a separate, verified SQL export.
+The production workflow now FAILS CLOSED before migration if a newly
+required independent backup attestation is missing, stale or mismatched.
+
+The read-only D1 sponsor preflight emits GitHub Output backup_required=true
+when the known on-disk migration manifest is newer than the live schema.
+Historical 0011 with repo migrations through 0016 requires approval.
+Completed live 0016 with no new migration files uses backup_required=false
+and allows normal no-op deploys. Adding a future 0017 while live is 0016
+re-enables approval. Missing output is NOT treated as false. Duplicate or
+missing numbered migration files fail closed. The attestation step runs
+before Time Travel and before ANY D1 migration.
+
+Authorized release operator procedure:
+
+1. Privately export CURRENT production Haber D1 to independently controlled
+   encrypted/restricted storage outside GitHub, CI, the repository and logs.
+   Do not use Time Travel as the only backup.
+2. Run the offline Node SQL export integrity checker and a separately
+   isolated restore rehearsal. Verify all 580 canonical article URLs and
+   sources, migration history, foreign keys and that recovery is usable.
+   Securely retain the real backup and recovery instructions.
+3. Calculate the SQL file's lowercase SHA-256 checksum privately, note
+   the EXACT current 40-character main commit SHA and the UTC verification
+   time in format YYYY-MM-DDTHH:MM:SSZ.
+4. Set these non-secret release metadata VARIABLES under GitHub Settings,
+   Environments, production:
+       HABER_D1_BACKUP_VERIFIED_RELEASE_SHA = exact main SHA
+       HABER_D1_BACKUP_VERIFIED_AT_UTC = UTC verification timestamp
+       HABER_D1_BACKUP_SQL_SHA256 = actual SQL export SHA-256
+   Never supply backup bytes, SQL, storage paths, access tokens or PII.
+5. Rerun the failed automatic production workflow WITHIN THREE HOURS
+   of verifying the backup. An invalid SHA, checksum shape, stale time or
+   timestamp more than 60 seconds in the future blocks the migration.
+
+The automatic workflow may intentionally fail before migration on the
+first main merge: GitHub's final main SHA can differ from the feature
+branch SHA. It is expected to be rerun only after the operator has
+verified a current independent backup for the ACTUAL release revision.
+
+This is an operator attestation, NOT a cryptographic proof that the
+backup was really retained or restored. CI never reads the backup; it
+only checks the release-bound human-approved metadata. Do NOT set fake
+values to bypass this gate. Also verify the production GitHub Environment
+has appropriate protection rules; a named environment alone does not
+guarantee required reviewers are configured.
+
+Tests cover the actual GitHub Actions step ordering and variables,
+negative mutations removing/reordering the gate, missing output,
+historical and fully migrated D1 schemas, future 0017 migrations,
+missing/duplicate migration files, exact commit binding, UTC freshness
+and a real CLI invocation. All test values are synthetic.
+
+Checkpoint 20 final local integration proof: the actual preflight CLI was
+run with a synthetic, complete-0016 D1 aggregate. With the real on-disk
+16-file manifest it emitted backup_required=false. A TEMPORARY empty
+0017_cp20_synthetic.sql file was then placed in the local migration folder,
+and the SAME CLI emitted backup_required=true without changes to the D1
+aggregate. The temporary file and output were removed. This confirms
+the new-migration detection works through the real directory-reading
+code path, not only through mocked arrays. No remote D1 was accessed.

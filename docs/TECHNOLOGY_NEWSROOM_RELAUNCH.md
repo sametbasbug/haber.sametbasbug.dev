@@ -330,3 +330,12 @@ Equinox Haber sıfırdan tasarlanmış, **Türkçe teknoloji haberciliğine odak
 - Dolayısıyla Orbit'in mevcut staging:verify ve staging:slice4:e2e kontrolleri, yeni Haber 2.0 için iki gerçek staging Worker arasında imzalı ajan okuma kabulü yapmış sayılmaz. Staging isteğini production Haber'e yönlendirmek doğru veya yetkili bir test yöntemi değildir.
 - Gerçek staging için ayrı Haber staging Worker ve staging D1; staging issuer/audience ve ayrı site client kaydı; yalnız staging'de çalışan sabit, fail-closed first-party hedef seçimi; staging ajan kimliğiyle iki-Worker gerçek HTTP; anonim/askıdaki ajan ve yetkisiz yazmanın reddi; 580 eski URL kabulü gerekir. Production hedef sabitleri asla istekten veya dinamik grant'ten seçilemez.
 - Bu aşama onay ve staging kaynakları/kimlik bilgileri gerektiriyor. Hiçbir staging/production deploy, credential veya D1 yazımı yapılmadı; bu aşamanın tamamlandığı iddia edilmedi.
+
+## 16 Kasım 2026 yirminci checkpoint: bağımsız D1 yedek onayı
+
+- Main otomatik üretim deploy'u eskiden yalnız Time Travel kontrolüyle forward-only D1 migration başlatabiliyordu; bağımsız SQL yedeğinin onayını zorunlu tutmuyordu.
+- Yeni fail-closed deploy kapısı, eski 0011 şemasından 0016'ya veya daha sonra eklenen bir migration'a geçerken yalnız gerçek main commit SHA'sı, son 3 saatlik UTC onay zamanı ve bağımsız SQL yedeğinin 64 haneli SHA-256 değeriyle ilerler. CI yedek dosyasını görmez; bu ancak gerçek yedek+offline integrity+restore yapıldıktan sonra girilmesi gereken OPERATÖR onayıdır.
+- D1 preflight mevcut canlı şemayı okuyup local migration listesini kontrol ediyor. Geçerli 0016 ve bekleyen migration yoksa normal deploy yedek onayını yeniden istemez; yeni 0017 dosyası veya eski 0011 yeniden onay gerektirir; çıktı yoksa fail-closed.
+- GitHub production environment değişkenleri ve operatör adımları docs/TECHNOLOGY_NEWSROOM_CUTOVER.md'de açıklanıyor. Main'e ilk merge sonrası workflow bilinçli biçimde durabilir; gerçek main SHA için onay girildikten sonra elle tekrar çalıştırılmalıdır. Bu aşamada canlı D1 yedeği alınmadı, üretim verisi değiştirilmedi.
+
+- Gerçek migration klasörüne geçici 0017 test dosyası eklenerek üretim preflight CLI'si sınandı: 0016 tamamlanmış ve bekleyen migration yokken backup_required=false, yerel 0017 dosyası eklenince backup_required=true. Geçici SQL dosyası ve sonuçlar silindi. Gerçek üretim D1'e erişilmedi.

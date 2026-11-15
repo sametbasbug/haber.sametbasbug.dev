@@ -22,6 +22,7 @@ const required=[
   'Require the new Orbit agent news API before D1 migration',
   'Verify legacy publisher anchors before D1 migration',
   'Verify exact 580 legacy permalinks before D1 migrations',
+  'Require operator attestation of an independent D1 backup',
   'Confirm a D1 Time Travel recovery point before migrations',
   'Apply D1 migrations',
   'Verify production D1 publisher readiness after migrations',
@@ -62,6 +63,31 @@ export function verifyNewsroomDeployOrder(allSteps) {
       || !run.includes('trap') || !run.includes('rm -f')){
       throw new Error('Exact 580-URL release safety gate is missing or unsafe: '+name);
     }
+  }
+  const preflightStep=byName('Verify legacy publisher anchors before D1 migration');
+  if(preflightStep.id!=='publisher_preflight'
+    || !preflightStep.run.includes('technology-pre-migration-check.mjs')) {
+    throw new Error('Read-only D1 preflight must publish migration-pending state');
+  }
+  const backup=byName('Require operator attestation of an independent D1 backup');
+  if(backup.if!=="steps.publisher_preflight.outputs.backup_required != 'false'") {
+    throw new Error('Missing preflight output must require backup, not skip the gate');
+  }
+  if(!backup.run.includes('node scripts/technology-backup-attestation.mjs')) {
+    throw new Error('Independent D1 backup attestation must be mandatory before migration');
+  }
+  for(const name of [
+    'HABER_D1_BACKUP_VERIFIED_RELEASE_SHA',
+    'HABER_D1_BACKUP_VERIFIED_AT_UTC',
+    'HABER_D1_BACKUP_SQL_SHA256',
+  ]){
+    if(backup.env?.[name]!==('$'+'{{ vars.'+name+' }}')){
+      throw new Error('Independent D1 backup release proof must come from GitHub environment variable '+name);
+    }
+  }
+  const preflight=byName('Verify Orbit identity and Haber 2.0 contracts before migration').run;
+  if(!preflight.includes('npm run test:backup-attestation')) {
+    throw new Error('Backup attestation tests must run before production migration');
   }
   const recovery=byName('Confirm a D1 Time Travel recovery point before migrations').run;
   if(!recovery.includes('time-travel info DB --json')
@@ -117,8 +143,23 @@ mutate(rows=>{
   const [gate]=rows.splice(pos,1);
   rows.splice(rows.findIndex(s=>s.name==='Apply D1 migrations'),0,gate);
 });
-mutate(rows=>rows.find(s=>s.name===required[6]).run='echo skipped');
-mutate(rows=>rows.find(s=>s.name===required[8]).run='echo healthy');
+mutate(rows=>rows.find(s=>s.name==='Confirm a D1 Time Travel recovery point before migrations').run='echo skipped');
+mutate(rows=>rows.find(s=>s.name==='Verify production D1 publisher readiness after migrations').run='echo healthy');
+mutate(rows=>rows.splice(rows.findIndex(s=>s.name==='Require operator attestation of an independent D1 backup'),1));
+mutate(rows=>rows.find(s=>s.name==='Require operator attestation of an independent D1 backup').run='echo approved');
+mutate(rows=>rows.find(s=>s.name==='Require operator attestation of an independent D1 backup').if="steps.publisher_preflight.outputs.backup_required == 'true'");
+mutate(rows=>rows.find(s=>s.name==='Verify legacy publisher anchors before D1 migration').id='wrong-id');
+mutate(rows=>rows.find(s=>s.name==='Require operator attestation of an independent D1 backup').env.HABER_D1_BACKUP_SQL_SHA256='not-a-github-var');
+mutate(rows=>rows.find(s=>s.name==='Require operator attestation of an independent D1 backup').env.HABER_D1_BACKUP_VERIFIED_AT_UTC='not-a-github-var');
+mutate(rows=>rows.find(s=>s.name==='Require operator attestation of an independent D1 backup').env.HABER_D1_BACKUP_VERIFIED_RELEASE_SHA='not-a-github-var');
+mutate(rows=>{
+  const from=rows.findIndex(s=>s.name==='Require operator attestation of an independent D1 backup');
+  const [backup]=rows.splice(from,1);
+  rows.splice(rows.findIndex(s=>s.name==='Apply D1 migrations')+1,0,backup);
+});
+mutate(rows=>rows.find(s=>s.name==='Verify Orbit identity and Haber 2.0 contracts before migration').run=
+  rows.find(s=>s.name==='Verify Orbit identity and Haber 2.0 contracts before migration').run.replace('npm run test:backup-attestation','echo skipped'));
+
 mutate(rows=>rows.find(s=>s.name==='Verify the live site').run=
   rows.find(s=>s.name==='Verify the live site').run.replace(' /api/brief /api/publish',' /api/publish'));
 mutate(rows=>rows.find(s=>s.name==='Verify the live site').run=
@@ -135,4 +176,4 @@ mutate(rows=>{
   const [publisher]=rows.splice(from,1);
   rows.splice(rows.findIndex(s=>s.name==='Deploy the Worker')+1,0,publisher);
 });
-console.log('Haber release workflow: 14 positive/negative ordering and gate assertions passed');
+console.log('Haber release workflow: 23 positive/negative ordering and gate assertions passed');
