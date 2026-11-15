@@ -44,7 +44,18 @@ function json(data: unknown, status = 200): Response {
   });
 }
 
-export function isTechnologyPublisher(identity: Identity | undefined): identity is Identity {
+/**
+ * Human administrators never impersonate article owners or AI publishers.
+ * The server must first verify the HttpOnly Orbit session AND the separate
+ * newsroom_administrators D1 grant before constructing this identity.
+ */
+export function isNewsroomAdministrator(identity: Identity | undefined): boolean {
+  return Boolean(identity && identity.via === "orbit-session"
+    && identity.isNewsroomAdministrator === true && identity.mayPublish === false
+    && identity.actor === `admin:${identity.subject}`);
+}
+
+export function isTechnologyPublisher(identity: Identity | undefined): boolean {
   if (!identity?.actor || !identity.mayPublish || identity.via !== "orbit-action") return false;
   const approved = getTechnologyAgentByActor(identity.actor);
   return Boolean(approved && identity.author === approved.author);
@@ -229,8 +240,9 @@ export async function editTechnologyAs(
   input: Record<string, unknown>,
   env: Env,
 ): Promise<Response> {
-  if (!isTechnologyPublisher(identity)) {
-    return json({ error: "Orbit ajanı için düzenleme yetkisi yok" }, 403);
+  const admin = isNewsroomAdministrator(identity);
+  if (!admin && !isTechnologyPublisher(identity)) {
+    return json({ error: "düzenleme yetkisi yok" }, 403);
   }
   const slug = typeof input.slug === "string" ? input.slug : "";
   const reason = typeof input.gerekce === "string" ? input.gerekce.trim() : "";
@@ -247,7 +259,7 @@ export async function editTechnologyAs(
       pub_date,origin_url FROM articles WHERE slug=? AND publication_era='technology'`,
   ).bind(slug).first<any>();
   if (!row) return json({ problems: ["haber bulunamadı"] }, 404);
-  if (row.orbit_actor_subject !== identity.actor) {
+  if (!admin && row.orbit_actor_subject !== identity.actor) {
     return json({ error: "başka ajanın haberi düzenlenemez" }, 403);
   }
   if (row.is_draft !== 0) return json({ problems: ["yayından kaldırılmış haber düzenlenemez"] }, 409);
@@ -298,10 +310,10 @@ export async function editTechnologyAs(
     env.DB.prepare(
       `UPDATE articles SET title=?, description=?, tech_category=?, body_md=?, body_html=?,
         origin_url=?, updated_date=?, updated_at=?, render_version=?
-        WHERE slug=? AND orbit_actor_subject=? AND publication_era='technology' AND updated_at=?`,
+        WHERE slug=? AND publication_era='technology' AND updated_at=?`,
     ).bind(
       article.baslik, article.ozet, article.kategori, markdown, rendered.html,
-      article.sources[0].url, now, now, RENDER_VERSION, slug, identity.actor!, row.updated_at,
+      article.sources[0].url, now, now, RENDER_VERSION, slug, row.updated_at,
     ),
     env.DB.prepare("DELETE FROM article_sources WHERE slug=?").bind(slug),
     ...article.sources.map((s, i) =>
@@ -326,7 +338,8 @@ export async function setTechnologyPublicationState(
   env: Env,
   action: "withdraw" | "restore",
 ): Promise<Response> {
-  if (!isTechnologyPublisher(identity)) return json({ error: "Orbit ajanının yayın yönetme yetkisi yok" }, 403);
+  const admin = isNewsroomAdministrator(identity);
+  if (!admin && !isTechnologyPublisher(identity)) return json({ error: "yayın yönetme yetkisi yok" }, 403);
   const slug = typeof input.slug === "string" ? input.slug : "";
   const reason = typeof input.gerekce === "string" ? input.gerekce.trim() : "";
   if (!slug || reason.length < 10 || reason.length > 500
@@ -338,7 +351,7 @@ export async function setTechnologyPublicationState(
       FROM articles WHERE slug=? AND publication_era='technology'`,
   ).bind(slug).first<any>();
   if (!row) return json({ problems: ["haber bulunamadı"] }, 404);
-  if (row.orbit_actor_subject !== identity.actor) {
+  if (!admin && row.orbit_actor_subject !== identity.actor) {
     return json({ error: "başka ajanın haberi yönetilemez" }, 403);
   }
   const nextDraft = action === "withdraw" ? 1 : 0;
@@ -357,8 +370,8 @@ export async function setTechnologyPublicationState(
     ).bind(slug, action, row.body_md, row.tech_category,
       JSON.stringify(sources.results ?? []), row.updated_at, identity.actor!, reason, now),
     env.DB.prepare(
-      "UPDATE articles SET is_draft=?,updated_at=?,updated_date=? WHERE slug=? AND orbit_actor_subject=? AND updated_at=?",
-    ).bind(nextDraft, now, now, slug, identity.actor!, row.updated_at),
+      "UPDATE articles SET is_draft=?,updated_at=?,updated_date=? WHERE slug=? AND updated_at=?",
+    ).bind(nextDraft, now, now, slug, row.updated_at),
     env.DB.prepare(
       "UPDATE site_state SET content_version=content_version+1,updated_at=? WHERE id=1",
     ).bind(now),

@@ -9,6 +9,7 @@ export async function GET(context: { site?: URL }) {
   const site = context.site?.toString() ?? 'https://haber.sametbasbug.dev';
   const now = Date.now();
   const entries = await getPublishedEquinoxHaber({
+    publicationEra: 'technology',
     since: new Date(now - NEWS_WINDOW_MS),
     limit: MAX_ITEMS,
     includeTags: false,

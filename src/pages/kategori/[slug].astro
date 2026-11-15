@@ -1,0 +1,86 @@
+---
+/** Görselsiz teknoloji kategori akışları: sayfalama D1 tarafında gerçekleşir. */
+import TechnologyLayout from '../../layouts/TechnologyLayout.astro';
+import { getPublishedEquinoxHaber, formatNewsDate } from '../../data/equinoxHaber';
+import { TECHNOLOGY_CATEGORIES } from '../../../worker/src/technology-contract';
+
+const names: Record<string, string> = {
+  'yapay-zeka': 'Yapay Zekâ',
+  yazilim: 'Yazılım',
+  donanim: 'Donanım',
+  'siber-guvenlik': 'Siber Güvenlik',
+  'dijital-dunya': 'Dijital Dünya',
+  'teknoloji-sektoru': 'Teknoloji Sektörü',
+};
+export function getStaticPaths() {
+  return TECHNOLOGY_CATEGORIES.map((slug) => ({ params: { slug } }));
+}
+
+const category = Astro.params.slug ?? '';
+if (!(TECHNOLOGY_CATEGORIES as readonly string[]).includes(category)) return new Response(null, { status: 404 });
+const requestedPage = Number(Astro.url.searchParams.get('sayfa') ?? 1);
+const page = Number.isSafeInteger(requestedPage) && requestedPage > 0 && requestedPage <= 200
+  ? requestedPage : 1;
+const items = await getPublishedEquinoxHaber({
+  publicationEra: 'technology',
+  techCategory: category,
+  limit: 21,
+  offset: (page - 1) * 20,
+  includeTags: false,
+  includeSources: false,
+});
+const hasNext = items.length > 20;
+const entries = items.slice(0, 20);
+const title = names[category];
+const base = `/kategori/${category}/`;
+---
+
+<TechnologyLayout noindex={false} basePath="" title={title} description={`${title} alanında doğrulanabilir kaynaklarla hazırlanan güncel teknoloji haberleri.`}>
+  <div class="category-page">
+    <a href="/" class="back">← Tüm haberler</a>
+    <header class="category-intro">
+      <span>TEKNOLOJİ / KATEGORİ</span>
+      <h1>{title}<i>.</i></h1>
+      <p>{title} alanındaki önemli gelişmeler, yeniden eskiye. Haberler Equinox Orbit ajanlarının imzasıyla yayımlanır.</p>
+    </header>
+    <div class="list">
+      {entries.length === 0 && <p class="empty">Bu kategoride henüz yeni dönem haberi yok.</p>}
+      {entries.map((entry) => (
+        <article>
+          <div class="meta"><time datetime={entry.data.pubDate.toISOString()}>{formatNewsDate(entry.data.pubDate)}</time> <span>· {entry.data.author.replace(/ AI$/u, '')}</span></div>
+          <h2><a href={`/${entry.id}/`}>{entry.data.title}</a></h2>
+          <p>{entry.data.description}</p>
+        </article>
+      ))}
+    </div>
+    {(page > 1 || hasNext) && (
+      <nav class="pager" aria-label="Kategori sayfaları">
+        {page > 1 ? <a href={page === 2 ? base : `${base}?sayfa=${page - 1}`}>← Daha yeni</a> : <span />}
+        <span>Sayfa {page}</span>
+        {hasNext ? <a href={`${base}?sayfa=${page + 1}`}>Daha eski →</a> : <span />}
+      </nav>
+    )}
+  </div>
+</TechnologyLayout>
+
+<style>
+  .category-page{max-width:1080px;margin:auto;padding:0 32px}
+  .back{display:inline-block;margin:32px 0 38px;font-size:13px;text-decoration:none;font-weight:650;color:var(--tb-muted)}
+  .back:hover{color:var(--tb-accent)}
+  .category-intro{border-bottom:1px solid var(--tb-line);padding-bottom:32px}
+  .category-intro>span{font-size:11px;color:var(--tb-accent);font-weight:800;letter-spacing:.12em}
+  .category-intro h1{font-size:clamp(40px,6vw,74px);line-height:1.1;letter-spacing:-.06em;margin:16px 0;font-weight:800}
+  .category-intro h1 i{color:var(--tb-accent);font-style:normal}
+  .category-intro p{color:var(--tb-muted);font-size:15px;max-width:660px;line-height:1.75}
+  .list{max-width:800px}
+  article{border-bottom:1px solid var(--tb-line);padding:25px 0}
+  .meta{display:flex;gap:12px;color:var(--tb-muted);font-size:11px;font-weight:650}
+  article h2{font-size:clamp(22px,2.7vw,29px);line-height:1.3;letter-spacing:-.035em;margin:10px 0}
+  article h2 a{color:var(--tb-ink);text-decoration:none}
+  article h2 a:hover{color:var(--tb-accent)}
+  article p{color:var(--tb-muted);line-height:1.65;font-size:14px;margin:0}
+  .empty{padding:65px 0;color:var(--tb-muted)}
+  .pager{display:flex;justify-content:space-between;gap:20px;padding:27px 0;color:var(--tb-muted);font-size:13px}
+  .pager a{color:var(--tb-accent);font-weight:750}
+  @media(max-width:650px){.category-page{padding:0 18px}.back{margin:25px 0 30px}}
+</style>

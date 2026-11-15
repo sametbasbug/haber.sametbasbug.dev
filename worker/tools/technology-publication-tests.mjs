@@ -181,6 +181,34 @@ assert.equal(database.prepare("SELECT COUNT(*) AS n FROM article_revisions WHERE
 const winningBody = database.prepare("SELECT body_md FROM articles WHERE slug=?").get(slug).body_md;
 assert.ok(winningBody.includes("sistem açığını") || winningBody.includes("uygulama açığını"));
 
+// Human admin uses separate pairwise browser role and never becomes an AI publisher.
+const humanAdmin = {
+  subject: "person-a", actor: "admin:person-a", author: "Haber yöneticisi",
+  mayWriteBrief: false, mayPublish: false, via: "orbit-session", isNewsroomAdministrator: true,
+};
+r = await read(publishTechnologyAs(humanAdmin, {
+  ...article,
+  metin: article.metin.replace("yeni bir açık", "farklı bir açık"),
+  kaynaklar: ["https://example.org/human-cannot-publish"],
+}, env));
+assert.equal(r.status, 403, "human administrator never publishes pretending to be an AI");
+r = await read(editTechnologyAs({
+  ...humanAdmin, via: "orbit-action",
+}, { slug, gerekce: "should not work" }, env));
+assert.equal(r.status, 403, "agent action cannot impersonate human administrator");
+r = await read(editTechnologyAs(humanAdmin, {
+  slug, gerekce: "kaynakların editoryal kontrolü tamamlandı",
+  metin: article.metin.replace("yeni bir açık buldu", "yetkili yönetici tarafından kontrol edildi"),
+}, env));
+assert.equal(r.status, 200, "human admin can edit an article without owning the actor ID");
+r = await read(setTechnologyPublicationState(humanAdmin,
+  { slug, gerekce: "insan editör kaynağı geçici olarak denetliyor" }, env, "withdraw"));
+assert.equal(r.status, 200, "human admin may withdraw any published new-era story");
+r = await read(setTechnologyPublicationState(humanAdmin,
+  { slug, gerekce: "insan editör kaynak doğrulamasını tamamladı" }, env, "restore"));
+assert.equal(r.status, 200, "human admin may restore withdrawn new-era story");
+assert.ok(database.prepare("SELECT COUNT(*) AS n FROM article_revisions WHERE slug=? AND actor_subject='admin:person-a'").get(slug).n >= 3,
+  "administrator actions must be recorded separately from agent ownership");
 // Yeni dönem akışı yalnız yeni haberleri görür: eski arşiv kaydı sızmamalı.
 database.prepare(
   `INSERT INTO articles (
@@ -215,6 +243,12 @@ for (const agent of TECHNOLOGY_AGENTS) {
 }
 assert.equal(database.prepare("SELECT COUNT(*) AS n FROM publishers WHERE author IN ('Nyx AI','Hemera AI','Asteria AI','Selene AI')").get().n, 4);
 
+const adminRegistration = readFileSync(new URL("../migrations/0014_technology_newsroom_administrators.sql", import.meta.url), "utf8");
+const seedAdmin = adminRegistration.slice(adminRegistration.indexOf("INSERT INTO newsroom_administrators"));
+database.exec(seedAdmin);
+database.exec(seedAdmin);
+assert.equal(database.prepare("SELECT COUNT(*) AS n FROM newsroom_administrators").get().n, 1);
+assert.equal(database.prepare("SELECT orbit_subject FROM newsroom_administrators").get().orbit_subject, "person-a");
 const issuer = "https://orbit.example.test";
 const pair = await crypto.subtle.generateKey({ name: "ECDSA", namedCurve: "P-256" }, true, ["sign", "verify"]);
 const jwk = await crypto.subtle.exportKey("jwk", pair.publicKey);

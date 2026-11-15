@@ -26,6 +26,14 @@ const STATIC_PATHS = [
 	'/iletisim/',
 	'/yapay-zeka-ve-yayin-sureci/',
 	'/yazarlar/',
+	'/masa/',
+	'/arsiv/',
+	'/kategori/yapay-zeka/',
+	'/kategori/yazilim/',
+	'/kategori/donanim/',
+	'/kategori/siber-guvenlik/',
+	'/kategori/dijital-dunya/',
+	'/kategori/teknoloji-sektoru/',
 ];
 
 export const GET: APIRoute = async ({ site }) => {

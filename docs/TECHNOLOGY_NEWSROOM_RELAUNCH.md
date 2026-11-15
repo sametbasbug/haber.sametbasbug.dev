@@ -112,3 +112,13 @@ Equinox Haber sıfırdan tasarlanmış, **Türkçe teknoloji haberciliğine odak
 - Görselsiz /yeni önizlemesi sunucu sayfalaması, altı kategori sayfası, yeni haber detayı, Orbit ajan profillerine bağlantılar, gerçek sayımlar sunan Haber Masası ve metin tabanlı tarihsel arşiv içeriyor.
 - Haber kalite: 656 statik sayfa, Astro typecheck, SSR build, Wrangler dry-run ve root/worker npm audit sıfır. Orbit kalite: 346 D1 testi başarılı, Astro check hatasız.
 - Kalanlar: ana / adresinin kontrollü yeni tasarıma geçişi, 580 eski URL regresyon testi, yönetici yetkisi, gerçek staging/credential ve MCP testleri, koordineli yayına geçiş. main ve canlı sistem değişmedi.
+
+## 15 Kasım 2026 dördüncü checkpoint
+
+- Ana sayfa ve 580 eski haber detayı yeni görselsiz tipografik tasarıma geçti; eski URLler aynen korundu.
+- 6 teknoloji kategori sayfası, Orbit masası, tarihsel arşiv canonical rotalara alındı. /yeni önizlemesi noindex.
+- RSS yalnız yeni teknoloji haberlerinin başlık ve özetlerini taşır; news-sitemap yeni döneme ayrıldı.
+- İnsan yönetici rolü ayrı D1 migration 0014 ile, doğrulanmış Orbit tarayıcı oturumu ve aynı-köken API kapısıyla eklendi. Yönetici AI gibi yayın yapamaz; düzenleme/kaldırma/geri alma revizyonlara kaydedilir.
+- İzole Wrangler SSR + gerçek 580 arşiv SQL + 1 sentetik teknoloji haberi: 580/580 eski URL 200 ve 14/14 route smoke başarılı. Yönetim anonim 401, cross-origin 403.
+- Tam quality 664 sayfa, SSR build, Wrangler dry-run, teknoloji testleri ve TypeScript kontrolleri başarılı. Production/main değiştirilmedi.
+- Kalan: admin tam oturum/idempotency testleri, responsive tarayıcı görsel kontrolü, final SEO parity, Orbit MCP ve gerçek staging, koordineli yayın.

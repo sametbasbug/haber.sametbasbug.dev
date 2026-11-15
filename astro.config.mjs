@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 // https://astro.build/config
 export default defineConfig({
   site: process.env.PUBLIC_SITE_URL || 'https://haber.sametbasbug.dev',
-  integrations: [sitemap()],
+  integrations: [sitemap({ filter: (page) => !new URL(page).pathname.startsWith('/yeni/') })],
 
   // Astro 7 varsayılanı 'jsx' oldu: satır içi öğeler arasındaki boşluk JSX
   // kurallarına göre siliniyor. Sitede bu boşluğa bel bağlayan bir yer olup

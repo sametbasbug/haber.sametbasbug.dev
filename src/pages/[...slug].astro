@@ -1,504 +1,60 @@
 ---
 import { getArticlePage, renderEntry } from '#news-source';
-import NewsLayout from '../layouts/NewsLayout.astro';
-import NewsCard from '../components/news/NewsCard.astro';
-import { findAuthorByName } from '../data/authors';
-import { formatNewsDate, getEquinoxHaberCategories, getNewsCategoryToken, getPublishedEquinoxHaber, normalizeNewsCategory } from '../data/equinoxHaber';
-import { getNewsArticleHref, getNewsCanonicalUrl, getNewsHomeHref } from '../data/newsSite';
+import { getPublishedEquinoxHaber } from '../data/equinoxHaber';
+import TechnologyLayout from '../layouts/TechnologyLayout.astro';
+import TechnologyStory from '../components/news/TechnologyStory.astro';
+import { TECHNOLOGY_AGENTS, technologyAgentProfileUrl } from '../data/technologyAgents';
 import { getWithdrawal, kaldirilanSayfasi } from '../data/withdrawals';
 
-
+/** Older URLs are preserved one-for-one. New articles use the same
+ * canonical root slug path, never a /yeni/ preview URL. */
 export async function getStaticPaths() {
-	const entries = await getPublishedEquinoxHaber();
-	return entries.map((entry) => ({ params: { slug: entry.id } }));
+  const entries = await getPublishedEquinoxHaber();
+  return entries.map((entry) => ({ params: { slug: entry.id } }));
 }
 
-const routeSlug = Astro.params.slug;
-const articleSlug = routeSlug && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(routeSlug) ? routeSlug : null;
-
-/* Sunucu modunda tekil haber yolu bütün arşivi okumaz. D1 kaynağı mevcut
-   haber + komşular + ilgili üçlü için hedefli sorgular kullanır; statik kaynak
-   aynı şekli içerik koleksiyonundan kurar. */
-const articlePage = articleSlug ? await getArticlePage(articleSlug) : null;
-const entry = articlePage?.entry;
+const slug = Astro.params.slug;
+const validSlug = typeof slug === 'string' && /^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(slug) ? slug : null;
+const page = validSlug ? await getArticlePage(validSlug) : null;
+const entry = page?.entry;
 
 if (!entry) {
-	/* Dosya/klasör ve exploit-probe yollarını haber slug'ı sanıp D1'e sorma. */
-	if (!articleSlug) return new Response(null, { status: 404 });
-
-	/* Yayından kaldırılmış bir haber mi?
-	 *
-	 * Adres bir süre yayında kaldı; paylaşımlarda ve arama motorlarında
-	 * karşılığı olabilir. Sessizce 404 dönmek, hiç var olmamış gibi
-	 * davranmak olurdu — oysa vardı ve kaldırıldı. Fark okuyucu için de
-	 * arama motoru için de anlamlı: 410 "vardı, artık yok, indeksten
-	 * düşürebilirsin" demek.
-	 *
-	 * Sorgu YALNIZ 404 yolunda çalışıyor, her istekte değil. Var olan bir
-	 * haber buraya hiç düşmüyor.
-	 *
-	 * Gerekçe SAYFADA GÖSTERİLMİYOR: `article_withdrawals.reason` operatöre
-	 * yazılmış bir iç nottur ("kaynak yanlış, teyit bekliyoruz") ve
-	 * kendiliğinden yayımlanması sürpriz olurdu. */
-	const kaldirilan = await getWithdrawal(articleSlug);
-	if (kaldirilan) {
-		return new Response(kaldirilanSayfasi(kaldirilan.tarih), {
-			status: 410,
-			headers: {
-				'content-type': 'text/html; charset=utf-8',
-				'x-robots-tag': 'noindex',
-				'cache-control': 'no-store',
-			},
-		});
-	}
-
-	/* Statik modda buraya düşülmez: `getStaticPaths` yalnız var olan
-	   haberlerin adresini üretir. Sunucu modunda bilinmeyen bir slug normal
-	   bir istektir ve 404 doğru cevaptır — hata fırlatmak 500 üretirdi. */
-	return new Response(null, { status: 404 });
+  if (!validSlug) return new Response(null, { status: 404 });
+  // A withdrawn URL existed. Return 410, not a silent 404. Never reveal
+  // the internal operator reason of the withdrawal.
+  const withdrawn = await getWithdrawal(validSlug);
+  if (withdrawn) {
+    return new Response(kaldirilanSayfasi(withdrawn.tarih), {
+      status: 410,
+      headers: {
+        'content-type': 'text/html; charset=utf-8',
+        'x-robots-tag': 'noindex',
+        'cache-control': 'no-store',
+      },
+    });
+  }
+  return new Response(null, { status: 404 });
 }
 
-/* D1 girdisi yazma anında üretilmiş HTML taşır; koleksiyon girdisi markdown
-   taşır ve çalışma anında render edilir. İkisinin çıktısının aynı olduğu
-   ölçüldü (587/587) — bkz. `worker/tools/parity-render.mjs`. */
-/* Gövde listeyle birlikte gelmiyor (bkz. `equinoxHaberD1.ts`): liste yalnız
-   üstbilgi taşıyor, gövde yalnız gösterilen haber için okunuyor. */
-const pageData = articlePage!;
-const bodyHtml = pageData.bodyHtml;
-const Content = bodyHtml === null ? await renderEntry(entry) : null;
-const nextEntry = pageData.nextEntry;
-const prevEntry = pageData.prevEntry;
-const relatedEntries = pageData.relatedEntries;
-const authorProfile = findAuthorByName(entry.data.author);
-const categories = getEquinoxHaberCategories();
-const categoryToken = getNewsCategoryToken(entry.data.category);
-/* Gövde liste sorgusuyla gelmiyor; bu kontrol ayrıca çekilen gövdeye bakmalı.
-   Boş metne bakarsa "Kaynaklar bölümü yok" sonucuna varır ve şablon yedek
-   Kaynaklar bölümünü basar — yani her haberde çift Kaynaklar. */
-const hasInlineSourcesSection = /^##\s+Kaynaklar\b/m.test(pageData.body ?? entry.body ?? '');
-
-const title = entry.data.title;
-const description = entry.data.description;
-const siteUrl = Astro.site ?? new URL(Astro.url.origin);
-const canonicalUrl = getNewsCanonicalUrl(`/${routeSlug}/`) ?? new URL(Astro.url.pathname, siteUrl).toString();
-const heroImageUrl = entry.data.heroImage ? new URL(entry.data.heroImage, siteUrl).toString() : undefined;
-const newsArticleSchema = {
-	'@context': 'https://schema.org',
-	'@type': 'NewsArticle',
-	headline: entry.data.title,
-	description: entry.data.description,
-	datePublished: entry.data.pubDate.toISOString(),
-	dateModified: (entry.data.updatedDate ?? entry.data.pubDate).toISOString(),
-	mainEntityOfPage: {
-		'@type': 'WebPage',
-		'@id': canonicalUrl,
-	},
-	isAccessibleForFree: true,
-	author: {
-		'@type': (entry.data.author ?? 'Asteria AI').endsWith(' AI') ? 'Organization' : 'Person',
-		name: entry.data.author ?? 'Asteria AI',
-	},
-	publisher: {
-		'@type': 'NewsMediaOrganization',
-		name: 'Equinox Haber',
-		founder: {
-			'@type': 'Person',
-			name: 'Samet Başbuğ',
-		},
-		logo: {
-			'@type': 'ImageObject',
-			url: new URL('/favicon-96x96.png', siteUrl).toString(),
-		},
-	},
-	image: heroImageUrl ? [heroImageUrl] : undefined,
-	articleSection: entry.data.category,
-	keywords: entry.data.tags?.join(', '),
-};
-const breadcrumbSchema = {
-	'@context': 'https://schema.org',
-	'@type': 'BreadcrumbList',
-	itemListElement: [
-		{
-			'@type': 'ListItem',
-			position: 1,
-			name: 'Ana Sayfa',
-			item: new URL('/', siteUrl).toString(),
-		},
-		{
-			'@type': 'ListItem',
-			position: 2,
-			name: 'Equinox Haber',
-			item: new URL(getNewsHomeHref(), siteUrl).toString(),
-		},
-		{
-			'@type': 'ListItem',
-			position: 3,
-			name: entry.data.title,
-			item: canonicalUrl,
-		},
-	],
-};
-const newsStructuredData = [newsArticleSchema, breadcrumbSchema];
+const html = page!.bodyHtml;
+const Content = html === null ? await renderEntry(entry) : null;
+const legacy = !entry.data.techCategory;
+const agent = legacy ? undefined : TECHNOLOGY_AGENTS.find((item) => item.author === entry.data.author);
+const published = entry.data.pubDate.toISOString();
+const updated = (entry.data.updatedDate ?? entry.data.pubDate).toISOString();
 ---
-
-<script is:inline type="application/ld+json" set:html={JSON.stringify(newsStructuredData)} />
-
-<NewsLayout
-	title={title}
-	description={description}
-	pageTitle={entry.data.breaking ? 'Son Dakika' : 'Equinox Haber'}
-	pageDescription={entry.data.description}
-	categories={categories}
-	activeCategory={normalizeNewsCategory(entry.data.category) ?? 'Tümü'}
-	hidePageHero={true}
-	categoryNavForceReload={true}
-	ogImage={entry.data.heroImage}
-	ogImageAlt={entry.data.heroAlt}
+<TechnologyLayout
+  title={entry.data.title}
+  description={entry.data.description}
+  noindex={false}
+  basePath=""
+  article={{
+    author: entry.data.author,
+    datePublished: published,
+    dateModified: updated,
+    section: entry.data.techCategory ?? entry.data.category,
+    ...(agent ? { authorProfile: technologyAgentProfileUrl(agent.handle) } : {}),
+  }}
 >
-	<article class="news-article">
-		<div class="article-main">
-			<div class="article-hero-shell">
-				<div class="article-head-meta centered">
-					{entry.data.breaking && <span class="breaking-pill">SON DAKİKA</span>}
-					{entry.data.category && <span class="article-category" data-category={categoryToken}>{entry.data.category}</span>}
-				</div>
-
-				<h1>{entry.data.title}</h1>
-				<div class="article-byline-row centered">
-					<div class="article-byline article-meta-line">
-						<time datetime={entry.data.pubDate.toISOString()}>{formatNewsDate(entry.data.pubDate)}</time>
-						<strong>{entry.data.author ?? 'Asteria AI'}</strong>
-						{authorProfile?.role && <span>{authorProfile.role}</span>}
-					</div>
-				</div>
-			</div>
-
-			<div class="article-prose">
-				{bodyHtml === null ? <Content /> : <Fragment set:html={bodyHtml} />}
-			</div>
-
-			{!hasInlineSourcesSection && entry.data.sources && entry.data.sources.length > 0 && (
-				<section class="article-sources">
-					<h2>Kaynaklar</h2>
-					<ul>
-						{entry.data.sources.map((source) => (
-							<li><a href={source.url} target="_blank" rel="noopener noreferrer">{source.name}</a></li>
-						))}
-					</ul>
-				</section>
-			)}
-
-			<nav class="article-nav">
-				{prevEntry ? <a href={getNewsArticleHref(prevEntry.id)} class="article-nav-link">← Önceki haber</a> : <span></span>}
-				{nextEntry ? <a href={getNewsArticleHref(nextEntry.id)} class="article-nav-link next">Sonraki haber →</a> : <span></span>}
-			</nav>
-		</div>
-
-		<aside class="article-side">
-			{relatedEntries.length > 0 && (
-				<section class="article-panel latest-panel">
-					<h2>İlgili gelişmeler</h2>
-					<div class="article-latest-list">
-						{relatedEntries.map((item) => <NewsCard entry={item} compact={true} />)}
-					</div>
-				</section>
-			)}
-		</aside>
-	</article>
-</NewsLayout>
-
-<style>
-	.breaking-pill {
-		display: inline-flex;
-		align-items: center;
-		padding: 0.3rem 0.62rem;
-		border-radius: 999px;
-		background: #b91c1c;
-		color: white;
-		font-size: 0.72rem;
-		font-weight: 800;
-		letter-spacing: 0.08em;
-	}
-	/* OKUMA ÖLÇÜSÜ.
-	 *
-	 * Metin sütunu bir dönem `minmax(0, 1fr)` idi ve yan sütun yalnız 1320px
-	 * üstünde açılıyordu. Ama sayfa kabuğu (`.news-body`) zaten 1280px'de
-	 * duruyor — yani iki sütunlu düzen pratikte HİÇ kurulamıyordu ve haber
-	 * metni her masaüstü genişliğinde tek sütun olarak kenardan kenara
-	 * yayılıyordu. 1280px'de ölçüldü: paragraf 1240px, satır başına ~146
-	 * karakter. Rahat okuma 60-75 karakter.
-	 *
-	 * Sütun artık 640px ve punto 1.15rem; ikisi birlikte satırı 70-75
-	 * karaktere getiriyor (tarayıcıda satır satır sayılarak ölçüldü, tahmin
-	 * değil). Yan sütunun eşiği de kabuğun gerçekten ulaşabildiği bir
-	 * genişliğe indirildi. Mobil bu değişiklikten etkilenmiyor; orada ölçü
-	 * zaten doğruydu. */
-	.news-article {
-		display: grid;
-		grid-template-columns: minmax(0, 640px) minmax(240px, 300px);
-		justify-content: center;
-		gap: clamp(1.75rem, 4vw, 3.25rem);
-		padding-top: 1rem;
-	}
-	.article-main {
-		min-width: 0;
-	}
-	.article-hero-shell {
-		display: block;
-		padding-bottom: 1rem;
-		border-bottom: 1px solid color-mix(in srgb, var(--news-border) 82%, transparent);
-		margin-bottom: 1.15rem;
-	}
-	.article-head-meta {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 0.55rem;
-		align-items: center;
-		color: var(--news-muted);
-		font-size: 0.76rem;
-		margin-bottom: 0.8rem;
-	}
-	.article-head-meta.centered {
-		justify-content: center;
-	}
-	.article-category {
-		display: inline-flex;
-		align-items: center;
-		padding: 0.18rem 0.48rem;
-		border-radius: 999px;
-		font-weight: 800;
-		text-transform: uppercase;
-		letter-spacing: 0.08em;
-		color: var(--news-accent);
-		background: rgba(255,255,255,0.05);
-		border: 1px solid rgba(255,255,255,0.06);
-	}
-	.article-category[data-category='siyaset'] {
-		color: #f97360;
-		background: rgba(249, 115, 96, 0.12);
-		border-color: rgba(249, 115, 96, 0.2);
-	}
-	.article-category[data-category='ekonomi'] {
-		color: #f2b94b;
-		background: rgba(242, 185, 75, 0.12);
-		border-color: rgba(242, 185, 75, 0.22);
-	}
-	.article-category[data-category='bilim'] {
-		color: #60a5fa;
-		background: rgba(96, 165, 250, 0.12);
-		border-color: rgba(96, 165, 250, 0.2);
-	}
-	.article-category[data-category='teknoloji'] {
-		color: #34d399;
-		background: rgba(52, 211, 153, 0.12);
-		border-color: rgba(52, 211, 153, 0.2);
-	}
-	/* `-webkit-line-clamp: 3` KALDIRILDI. Masaüstünde dört satıra çıkan bir
-	   manşet sessizce üç noktayla kesiliyordu — okuyucu haberin başlığını
-	   eksik görüyordu ve kesildiğini anlamasının yolu yoktu. Bir kutuyu
-	   korumak için manşet kırpılmaz. Mobilde zaten kırpılmıyordu. */
-	/* Serif ve `font-weight: 700` birlikte gider: elimizde tek ağırlık var,
-	   900 istenirse tarayıcı harfleri yapay olarak şişirir. Harf aralığı da
-	   gevşedi — serif, sans kadar sıkı dizilmeyi kaldırmıyor. */
-	.article-main h1 {
-		font-family: var(--news-serif);
-		font-size: clamp(2.15rem, 4vw, 3.35rem);
-		line-height: 1.08;
-		margin: 0 auto 0.8rem;
-		font-weight: 700;
-		letter-spacing: -0.02em;
-		max-width: 24ch;
-		text-align: center;
-		text-wrap: balance;
-	}
-	.article-byline-row {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		gap: 0.8rem;
-		flex-wrap: wrap;
-		margin-bottom: 0.85rem;
-	}
-	.article-byline-row.centered {
-		justify-content: center;
-		flex-direction: column;
-		gap: 0.65rem;
-	}
-	.article-byline {
-		display: flex;
-		gap: 0.5rem;
-		flex-wrap: wrap;
-		color: var(--news-muted);
-		font-size: 0.82rem;
-	}
-	.article-meta-line {
-		justify-content: center;
-		gap: 0.7rem;
-	}
-	.article-meta-line span::before,
-	.article-meta-line strong::before {
-		content: '•';
-		margin-right: 0.7rem;
-		color: var(--news-border);
-	}
-	.article-meta-line strong {
-		font-weight: 800;
-	}
-	.article-byline strong {
-		color: var(--news-text);
-	}
-	.article-prose {
-		font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-		font-size: 1.15rem;
-		line-height: 1.75;
-		letter-spacing: -0.01em;
-		color: var(--news-text);
-		max-width: none;
-		width: 100%;
-		font-feature-settings: 'liga' 1, 'calt' 1;
-		text-rendering: optimizeLegibility;
-	}
-	.article-prose :global(h2) {
-		font-family: Inter, sans-serif;
-		font-size: 1.32rem;
-		margin-top: 1.9rem;
-		margin-bottom: 0.7rem;
-		letter-spacing: -0.03em;
-	}
-	.article-prose :global(h3) {
-		font-family: Inter, sans-serif;
-		font-size: 1.12rem;
-		margin-top: 1.55rem;
-		margin-bottom: 0.6rem;
-		letter-spacing: -0.02em;
-	}
-	.article-prose :global(p) {
-		margin-bottom: 1rem;
-	}
-	.article-prose :global(blockquote) {
-		margin: 1.7rem 0;
-		padding: 1.05rem 1.2rem;
-		border-left: 4px solid var(--news-accent);
-		background: color-mix(in srgb, var(--news-panel) 92%, transparent);
-		border-radius: 0.85rem;
-		color: var(--news-muted-strong);
-		font-size: 1.08rem;
-	}
-	.article-prose :global(a) {
-		color: var(--news-accent-soft);
-		text-decoration: underline;
-		text-decoration-color: color-mix(in srgb, var(--news-accent) 55%, transparent);
-	}
-	.article-prose :global(ul),
-	.article-prose :global(ol) {
-		margin: 0 0 1.3rem 1.25rem;
-		display: grid;
-		gap: 0.45rem;
-	}
-	.article-sources {
-		margin-top: 1.4rem;
-		padding-top: 0.9rem;
-		border-top: 1px solid color-mix(in srgb, var(--news-border) 82%, transparent);
-	}
-	.article-sources h2,
-	.article-panel h2 {
-		font-size: 0.9rem;
-		margin-bottom: 0.55rem;
-		font-weight: 850;
-	}
-	.article-sources ul {
-		padding-left: 1rem;
-		display: grid;
-		gap: 0.5rem;
-	}
-	.article-sources a {
-		color: var(--news-accent-soft);
-	}
-	.article-nav {
-		display: grid;
-		grid-template-columns: 1fr 1fr;
-		gap: 0.7rem;
-		align-items: center;
-		margin-top: 1.5rem;
-		padding-top: 0.95rem;
-		border-top: 1px solid color-mix(in srgb, var(--news-border) 82%, transparent);
-	}
-	.article-nav-link {
-		color: var(--news-accent-soft);
-		text-decoration: none;
-		font-weight: 800;
-	}
-	.article-nav-link.next {
-		justify-self: end;
-		text-align: right;
-	}
-	.article-side {
-		display: grid;
-		align-content: start;
-		gap: 0.9rem;
-		height: fit-content;
-		min-width: 0;
-	}
-	.article-panel {
-		padding: 0.9rem;
-		border: 1px solid color-mix(in srgb, var(--news-border) 80%, rgba(255,255,255,0.06));
-		border-radius: 1rem;
-		background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.012));
-		box-shadow: inset 0 1px 0 rgba(255,255,255,0.02);
-	}
-	.article-latest-list {
-		display: grid;
-	}
-	.latest-panel :global(.news-card:last-child) {
-		border-bottom: 0;
-		padding-bottom: 0;
-	}
-	/* Eşik 1320px'den 1060px'e indi: 720 + 240 + boşluk + sayfa kenarı bu
-	   genişlikte sığıyor. Altında tek sütuna düşüyoruz ve yan panel metnin
-	   altında ÜÇLÜ bir şerit oluyor — ama artık aynı 720px ölçüsünde
-	   ortalanmış olarak, metnin altında dar bir kolon gibi asılı kalmadan. */
-	@media (max-width: 1060px) {
-		.news-article {
-			grid-template-columns: minmax(0, 640px);
-		}
-		.article-side {
-			position: static;
-			grid-template-columns: repeat(3, minmax(0, 1fr));
-			gap: 0.85rem;
-		}
-	}
-	@media (max-width: 900px) {
-		.article-side {
-			grid-template-columns: 1fr;
-		}
-	}
-	@media (max-width: 700px) {
-		.article-main h1 {
-			font-size: 1.72rem;
-			line-height: 1.12;
-			max-width: 100%;
-		}
-		.article-meta-line {
-			gap: 0.45rem;
-		}
-		.article-meta-line span::before,
-		.article-meta-line strong::before {
-			margin-right: 0.45rem;
-		}
-		.article-standfirst {
-			font-size: 0.92rem;
-			line-height: 1.56;
-		}
-		.article-prose {
-			font-size: 1.04rem;
-			line-height: 1.78;
-		}
-		.article-nav {
-			grid-template-columns: 1fr 1fr;
-			gap: 0.6rem;
-		}
-		.article-nav-link.next {
-			justify-self: end;
-		}
-	}
-</style>
+  <TechnologyStory entry={entry} bodyHtml={html} Content={Content} legacy={legacy} basePath="" />
+</TechnologyLayout>

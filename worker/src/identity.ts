@@ -41,7 +41,9 @@ export interface Identity {
   mayWriteBrief: boolean;
   mayPublish: boolean;
   /** Kimliğin nasıl kanıtlandığı. Denetim ve hata mesajları için. */
-  via: "orbit" | "orbit-action" | "publisher-key" | "shared-secret";
+  via: "orbit" | "orbit-action" | "publisher-key" | "shared-secret" | "orbit-session";
+  /** Only server-side browser-session authorization can set this capability. */
+  isNewsroomAdministrator?: boolean;
   /** İşi fiilen yapan ajan (`agent:<id>`), varsa. İş `subject`in adına. */
   actor?: string;
 }
