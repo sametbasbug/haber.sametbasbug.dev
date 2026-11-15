@@ -246,7 +246,7 @@ export async function siteAction(request: Request, env: Env): Promise<Response> 
    * için "başarısız" demektir. Burada ilk cevabın aynısı dönüyor. */
   const gecmis = kayitTut
     ? await env.DB.prepare(
-      "SELECT input_digest, output FROM orbit_action_log WHERE subject = ? AND idempotency_key = ?",
+      "SELECT actor_subject, input_digest, output FROM orbit_action_log WHERE subject = ? AND idempotency_key = ?",
     ).bind(verified.subject, idempotencyKey).first<any>()
     : null;
 

@@ -224,6 +224,14 @@ console.log("\n── tekrar ──");
     yayinciSatiri: SELENE,
     gecmis: { actor_subject: AJAN, input_digest: ozet, output: JSON.stringify({ uygulandi: true, briefId: "ilk-calisma" }) },
   });
+  const originalPrepare = db.prepare.bind(db);
+  db.prepare = (sql) => {
+    if (sql.includes("FROM orbit_action_log")) {
+      check("  aktör alanı sorguda seçiliyor", /SELECT actor_subject, input_digest, output FROM orbit_action_log/u.test(sql), true);
+    }
+    return originalPrepare(sql);
+  };
+
   const r = await siteAction(istek(await belge(), { operationId: "haber.panoYaz", input: PANO }), { DB: db, ...ORTAM });
   const govde = await r.json();
   check("aynı anahtar + aynı gövde ilk cevabı döndürüyor", `${govde.status} ${govde.output.briefId}`, "replayed ilk-calisma");
@@ -235,6 +243,22 @@ console.log("\n── tekrar ──");
   check("aynı anahtar farklı gövde çakışma", await sonuc(r), '409 {"error":"aynı Idempotency-Key farklı bir istekle kullanıldı"}');
   check("  ve hiçbir şey yazılmıyor", db.yazilanlar.length, 0);
 }
+{
+  const bytes = await crypto.subtle.digest("SHA-256",
+    new TextEncoder().encode(JSON.stringify({ operationId: "haber.panoYaz", input: PANO })));
+  const correct = [...new Uint8Array(bytes)].map(b => b.toString(16).padStart(2, "0")).join("");
+  const db = sahteDB({
+    yayinciSatiri: SELENE,
+    gecmis: { actor_subject: "agent:a-different-actor", input_digest: correct,
+      output: JSON.stringify({ uygulandi: true, briefId: "private-to-other-actor" }) },
+  });
+  const r = await siteAction(
+    istek(await belge(), { operationId: "haber.panoYaz", input: PANO }),
+    { DB: db, ...ORTAM });
+  check("aynı sponsor başka ajanın eski cevabını okuyamıyor", r.status, 409);
+  check("  kayıt başka ajana sızmıyor", (await r.json()).status, undefined);
+}
+
 
 console.log("\n── yayından kaldırma ──");
 {

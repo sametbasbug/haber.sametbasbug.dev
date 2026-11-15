@@ -1,10 +1,19 @@
 ---
 import TechnologyLayout from '../../layouts/TechnologyLayout.astro';
 import TechnologyArchiveList from '../../components/news/TechnologyArchiveList.astro';
-import { getPublishedEquinoxHaber } from '../../data/equinoxHaber';
+import { getPublishedEquinoxHaber, getPublishedEquinoxHaberCount } from '../../data/equinoxHaber';
 
-const requested = Number(Astro.url.searchParams.get('sayfa') ?? 1);
-const page = Number.isSafeInteger(requested) && requested >= 1 && requested <= 200 ? requested : 1;
+const rawPage = Astro.url.searchParams.get('sayfa');
+const page = rawPage === null ? 1
+  : /^[1-9][0-9]*$/u.test(rawPage) ? Number(rawPage) : Number.NaN;
+const total = await getPublishedEquinoxHaberCount({ publicationEra: 'legacy' });
+const lastPage = Math.max(1, Math.ceil(total / 30));
+if (!Number.isSafeInteger(page) || page < 1 || page > lastPage) {
+  return new Response(null, {
+    status: 404,
+    headers: { 'cache-control': 'public, max-age=300' },
+  });
+}
 const raw = await getPublishedEquinoxHaber({
   publicationEra: 'legacy',
   limit: 31,

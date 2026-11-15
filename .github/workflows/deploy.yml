@@ -120,6 +120,10 @@ jobs:
             [[ "$code" == '200' ]] || fail=1
           fi
 
+          # Katalog gerçekten Haber 2.0 mı? Yanlış veya stale altı-işlem
+          # sözleşmesi yayın öncesi algılansın, yazma denemesi yok.
+          node scripts/newsroom-action-catalog.mjs https://haber.sametbasbug.dev || fail=1
+
           # Eski /api/publish artık Orbit yayıncı yetkisini baypas edemez.
           legacy_code="$(curl --silent --output /dev/null --write-out '%{http_code}' \
             --request POST --header 'content-type: application/json' \

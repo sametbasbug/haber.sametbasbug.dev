@@ -152,3 +152,19 @@ Equinox Haber sıfırdan tasarlanmış, **Türkçe teknoloji haberciliğine odak
 - İlk Haber production dağıtımının eski RSS doluluğu varsayımını düzeltmek için arşiv fallback URL çıkarıcı, testler ve Cloudflare deploy workflow kabul kontrolleri güncellendi. RSS boşken örnek haberi canlıya yayımlamaya gerek yok.
 - Ayrıntılı sıralı koordineli yayına geçiş planı: docs/TECHNOLOGY_NEWSROOM_CUTOVER.md. Orbit catalog TTL 600 saniye, migration önce-worker sırası, ilk gerçek haber kontrolü, fail-closed rollback ve açık push/deploy onayı gereksinimi belgelendi.
 - Kullanıcının canlı siteleri, main dalları, production D1 veya gerçek haber içerikleri henüz değiştirilmedi.
+
+## 15 Kasım 2026: Sekizinci checkpoint
+
+- Canlı Selene MCP kataloğu salt-okunur orbit_read(action=list) ile doğrulandı: Haber hâlâ eski pano eylemlerini gösteriyor. Yeni altı işlem canlıda henüz etkin değil. Kaynak koddan orbit-remote-mcp genel bağlı-site çağrı/keşif mekanizmasının işlem adlarını hardcode etmediği doğrulandı; MCP repo kod değişikliği gerekmiyor, mevcut npm run check 39/39 geçti.
+- Orbit belgeleri docs/baglisite-ajan-eylemleri.md ve docs/mcp-baglisite-koprusu.md yeni teknoloji haber eylemlerine, ayrı HTTP read API'ye ve cache geçişine göre güncellendi. MCP üzerinden Selene için bağlı-site grant gerekiyor; diğer ajanlar kendi Orbit HTTP credential'ıyla bağlı-site grant olmadan okuyabiliyor.
+- Cloudflare eklentisi ile üretim D1 SALT-OKUNUR kontrolü: 580 yayımlanmış eski haber mevcut; Hemera ve Selene'nin etkin publisher/sponsor eşlemesi var; technology_agent_requests henüz uygulanmamış; son migration 0011. 0012-0016 prod'da HENÜZ uygulanmadı. Worker binding kontrolü Orbit issuer/audience + D1 var, eski yazma uçlarını yeniden açan ENABLE_LEGACY_NEWS_ACTIONS binding'i yok. Production veritabanına yazma, token okuma veya deploy yapılmadı.
+- Eski Orbit pano geri dönüş kodunda SQL tekrar sorgusu actor_subject alanını SELECT etmediği hâlde karşılaştırıyordu. Düzeltildi; testin SQL'i gerçekten doğrulaması sağlandı. Başka aktörün önceki tekrar yanıtını görmesini reddeden regresyon eklendi. npm run test:orbit 73/73 geçti.
+- /arsiv/?sayfa=N gerçek legacy kayıt sayısının sonunu aştığında veya yanlış parametre verildiğinde 404 dönüyor; boş arşiv sayfaları indexlenmiyor. İzole Wrangler SSR + 580 arşiv haberi ile 11 rota kontrolü ve sayfa 20 içeriği geçti. 320px mobil Agent Browser'da arşiv ile Düzeltme Politikası sayfalarında taşma/görsel yok; doğru arşiv canonical query var.
+- Düzeltme Politikasındaki eski küçük düzenleme kayıtlı olmayabilir beyanı güncellendi. Yeni teknoloji haberinde her düzeltmenin revision/audit kaydı olduğu, iç gerekçelerin halka açık olmadığı açıklandı.
+- Henüz tamamlanmayan aşamalar: gerçek production Orbit imzasıyla staging ve dört ayrı gerçek ajan izinleri, Selene MCP'nin yeni katalogu canlıda görmesi, koordineli production migration+merge, canlı ilk gerçek haber. main ve prod değişmedi.
+
+### Sekizinci checkpoint ek kabul kapısı
+
+- Haber üretim GitHub Actions akışına deploy sonrası salt-okunur /orbit-actions.json kontrolü eklendi. İşlem listesi yalnız altı kanonik haber eylemi olmalı; katalog biçimi sürüm 1 kalmalı; yayımla yalnız metin, kategori, kaynaklar ve doğru altı teknoloji kategorisini içermeli. Eski pano ya da fazla alan sözleşmesiyle deploy yeşil görünmemeli. Cachebust ve no-cache header var, yönlendirme ve dış origin reddediliyor; gerçek yayın eylemi çalıştırılmıyor.
+- scripts/newsroom-action-catalog.mjs ve 11 negatif/pozitif regresyon; izole Wrangler Worker'ın gerçek JSON kataloğu ile HTTP 200 doğrulandı.
+- Orbit npm run verify, npm run check, gerçek çapraz-repo signer testi; Haber quality + SSR build + Wrangler dry-run, root ve worker npm audit başarıyla yeniden tamamlandı.

@@ -104,3 +104,38 @@ The URL extractor rejects cross-origin links and query/fragment mutations.
   manufacturing production news).
 - End-to-end Selene MCP connected-site action discovery on the fresh catalogue.
 - Production-time permission and cache-window acceptance before unfreezing.
+
+## Read-only production preflight snapshot (15 November 2026)
+
+Checked through the connected Cloudflare API, without writing D1:
+- Current archive has 580 published articles.
+- Last D1 migration applied: 0011_article_withdrawals.sql. Planned migrations 0012 through 0016 have not yet been applied.
+- The existing Hemera and Selene publication sponsors satisfy their enabled account-binding preconditions. The newer publisher allowlist is still migration-gated.
+- Live Haber Worker has D1 binding and Orbit issuer/audience configured; no ENABLE_LEGACY_NEWS_ACTIONS override binding was found.
+- Connected Selene MCP catalog still has old operations. Expected until the two-repository coordinated release. No experimental production post was made.
+- Current orbit-remote-mcp is dynamically catalog-driven; its 39 tests pass without a bridge code change.
+- This is a point-in-time snapshot, not a substitute for re-checking immediately before a production migration.
+
+The human administrator and agent publication receipts are deliberately persistent.
+Do not delete/expire idempotency receipts during the initial launch: doing so
+would allow a repeated old mutation key to lose its identity. A future
+retention plan needs an explicitly documented retry horizon and
+backward-compatible cleanup tests before introducing expiration.
+
+## Production action-catalog gate
+
+The Haber production GitHub workflow now fetches
+https://haber.sametbasbug.dev/orbit-actions.json after deployment and verifies,
+without mutating state:
+- exactly six new canonical Haber operations, no legacy pane operation;
+- schema version 1, strict input objects and idempotent declarations;
+- publish accepts exactly metin, kategori, kaynaklar;
+- exact six technology categories;
+- cache-busted JSON 200 response without redirects.
+
+Reusable read-only command from Haber repository:
+npm run smoke:newsroom-catalog
+
+Do not run this against production *before* coordinated deployment and
+misinterpret its expected failure as a current production incident. It is a
+post-deploy acceptance gate for the new release.

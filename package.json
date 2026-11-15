@@ -32,10 +32,12 @@
     "haber:ayna:kuru": "node scripts/haber-ayna.mjs --kuru",
     "test:newsroom": "newsroom/.venv/bin/python -m pytest newsroom/tests",
     "test:orbit": "node worker/tools/orbit-token-tests.mjs && node worker/tools/orbit-giris-tests.mjs && node worker/tools/identity-tests.mjs && node worker/tools/orbit-eylem-tests.mjs",
-    "quality": "npm run test:newsroom && npm run test:orbit && npm run test:technology && npm run test:smoke-url && npm run typecheck && npm run build",
+    "quality": "npm run test:newsroom && npm run test:orbit && npm run test:technology && npm run test:newsroom-catalog && npm run test:smoke-url && npm run typecheck && npm run build",
     "gorsel:kucuk": "node scripts/kucuk-gorsel.mjs",
     "test:technology": "node worker/tools/technology-contract-tests.mjs && node worker/tools/technology-publication-tests.mjs",
-    "test:smoke-url": "node scripts/first-article-url-tests.mjs"
+    "test:smoke-url": "node scripts/first-article-url-tests.mjs",
+    "test:newsroom-catalog": "node scripts/newsroom-action-catalog-tests.mjs",
+    "smoke:newsroom-catalog": "node scripts/newsroom-action-catalog.mjs"
   },
   "dependencies": {
     "@astrojs/markdown-remark": "^7.3.9",
