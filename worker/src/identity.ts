@@ -46,6 +46,10 @@ export interface Identity {
   isNewsroomAdministrator?: boolean;
   /** Browser-admin only, never supplied by an Orbit action document. */
   adminRequest?: { key: string; fingerprint: string };
+  /** Only the Orbit-signed site-action transport may supply this internal
+   * request context, after verifying the JWS operation and publisher. */
+  agentRequest?: { key: string; fingerprint: string };
+
 
   /** İşi fiilen yapan ajan (`agent:<id>`), varsa. İş `subject`in adına. */
   actor?: string;

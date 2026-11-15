@@ -9,7 +9,7 @@
  * buradan koşturmuyoruz; o R2 ve dolu bir veritabanı istiyor ve uçtan uca
  * Orbit üzerinden ayrıca doğrulandı. Buradaki iş kapı mantığı.
  */
-import { OPERATIONS, siteAction } from "../src/orbit-eylem.ts";
+import { OPERATIONS, LEGACY_OPERATIONS, siteAction } from "../src/orbit-eylem.ts";
 import { listPublished, restoreAs, withdrawAs } from "../src/index.ts";
 
 const ISSUER = "https://orbit.example.test";
@@ -104,7 +104,7 @@ function istek(token, govde, { idempotencyKey = "anahtar-1", method = "POST" } =
   });
 }
 
-const ORTAM = { ORBIT_ISSUER: ISSUER, ORBIT_AUDIENCE: AUDIENCE };
+const ORTAM = { ORBIT_ISSUER: ISSUER, ORBIT_AUDIENCE: AUDIENCE, ENABLE_LEGACY_NEWS_ACTIONS: "1" };
 const PANO = { board: [{ id: "a1", title: "Bir haber", url: "https://ornek.test/1", source: "Örnek" }], task: { selectCount: 1 } };
 
 const results = [];
@@ -149,7 +149,7 @@ console.log("\n── belge iddiaları ──");
 {
   /* En önemli vaka: pano için alınmış belge, gövdesi değiştirilerek yayına
    * çevrilemez. Belgedeki `operation` gömülü. */
-  const r = await siteAction(istek(await belge(), { operationId: "haber.yayinla", input: { briefId: "x", selections: [] } }),
+  const r = await siteAction(istek(await belge(), { operationId: "haber.legacyYayinla", input: { briefId: "x", selections: [] } }),
     { DB: sahteDB({ yayinciSatiri: SELENE }), ...ORTAM });
   check("belge başka işleme çevrilemiyor", await sonuc(r), '403 {"error":"belge bu işlem için verilmemiş"}');
 }
@@ -222,7 +222,7 @@ console.log("\n── tekrar ──");
   const ozet = [...new Uint8Array(bytes)].map((b) => b.toString(16).padStart(2, "0")).join("");
   const db = sahteDB({
     yayinciSatiri: SELENE,
-    gecmis: { input_digest: ozet, output: JSON.stringify({ uygulandi: true, briefId: "ilk-calisma" }) },
+    gecmis: { actor_subject: AJAN, input_digest: ozet, output: JSON.stringify({ uygulandi: true, briefId: "ilk-calisma" }) },
   });
   const r = await siteAction(istek(await belge(), { operationId: "haber.panoYaz", input: PANO }), { DB: db, ...ORTAM });
   const govde = await r.json();
@@ -230,7 +230,7 @@ console.log("\n── tekrar ──");
   check("  ve pano ikinci kez yazılmıyor", db.yazilanlar.length, 0);
 }
 {
-  const db = sahteDB({ yayinciSatiri: SELENE, gecmis: { input_digest: "baska-ozet", output: "{}" } });
+  const db = sahteDB({ yayinciSatiri: SELENE, gecmis: { actor_subject: AJAN, input_digest: "baska-ozet", output: "{}" } });
   const r = await siteAction(istek(await belge(), { operationId: "haber.panoYaz", input: PANO }), { DB: db, ...ORTAM });
   check("aynı anahtar farklı gövde çakışma", await sonuc(r), '409 {"error":"aynı Idempotency-Key farklı bir istekle kullanıldı"}');
   check("  ve hiçbir şey yazılmıyor", db.yazilanlar.length, 0);
@@ -414,7 +414,7 @@ console.log("\n── yetki katmanları ──");
 }
 {
   /* Ama yazma işlemleri duvarın arkasında kalmalı. */
-  for (const islem of ["haber.panoYaz", "haber.yayinla", "haber.yayindanKaldir", "haber.yayinaAlGeri", "haber.panoOku"]) {
+  for (const islem of ["haber.panoYaz", "haber.legacyYayinla", "haber.legacyYayindanKaldir", "haber.legacyYayinaAlGeri", "haber.panoOku"]) {
     const r = await siteAction(
       istek(await belge({ claims: { operation: islem } }), { operationId: islem, input: {} }),
       { DB: sahteDB({ yayinciSatiri: null }), ...ORTAM },
@@ -435,7 +435,7 @@ console.log("\n── katalog ──");
   const { readFileSync } = await import("node:fs");
   const katalog = JSON.parse(readFileSync(new URL("../../public/orbit-actions.json", import.meta.url), "utf8"));
   const ilanEdilen = katalog.operations.map((o) => o.operationId).sort().join(", ");
-  check("katalog sürümü", katalog.version, 1);
+  check("katalog biçim sürümü", katalog.version, 1);
   check("katalog ile uç aynı işlemleri taşıyor", ilanEdilen, [...OPERATIONS].sort().join(", "));
   check("her işlem şema ve özet taşıyor",
     katalog.operations.every((o) => typeof o.summary === "string" && o.summary.length > 0 && o.input?.type === "object"),
@@ -456,10 +456,10 @@ console.log("\n── denetim izi ──");
 }
 {
   const db = sahteDB({ yayinciSatiri: SELENE });
-  await siteAction(istek(await belge(), { operationId: "haber.yayinla", input: {} }), { DB: db, ...ORTAM });
+  await siteAction(istek(await belge(), { operationId: "haber.legacyYayinla", input: {} }), { DB: db, ...ORTAM });
   check("işlem uyuşmazlığı kaydediliyor", db.reddedilenler[0].args[4], 403);
   check("  gövdedeki ve belgedeki işlem ayrı tutuluyor",
-    `${db.reddedilenler[0].args[2]} · ${db.reddedilenler[0].args[3]}`, "haber.yayinla · haber.panoYaz");
+    `${db.reddedilenler[0].args[2]} · ${db.reddedilenler[0].args[3]}`, "haber.legacyYayinla · haber.panoYaz");
 }
 {
   /* İMZASIZ istek denetim izine YAZILMAMALI. `/api/orbit-eylem` herkese açık;
@@ -471,7 +471,7 @@ console.log("\n── denetim izi ──");
   check("imzasız ve sahte imzalı istekler yazılmıyor", db.reddedilenler.length, 0);
 }
 {
-  const db = sahteDB({ yayinciSatiri: SELENE, gecmis: { input_digest: "baska-ozet", output: "{}" } });
+  const db = sahteDB({ yayinciSatiri: SELENE, gecmis: { actor_subject: AJAN, input_digest: "baska-ozet", output: "{}" } });
   await siteAction(istek(await belge(), { operationId: "haber.panoYaz", input: PANO }), { DB: db, ...ORTAM });
   check("anahtar çakışması kaydediliyor", db.reddedilenler[0].args[4], 409);
 }

@@ -47,7 +47,11 @@ const normalize = (html) => html
   .replaceAll(/data-astro-cid-[a-z0-9]+/gu, "data-astro-cid-X")
   .replaceAll(/\/_astro\/([A-Za-z0-9_.-]+?)\.[A-Za-z0-9_-]{8}\.(css|js)/gu, "/_astro/$1.X.$2")
   .replaceAll("globalThis.process??={},globalThis.process.env??={};", "")
-  .replaceAll(/-webkit-backdrop-filter:[^;{}]+;?/gu, "");
+  .replaceAll(/-webkit-backdrop-filter:[^;{}]+;?/gu, "")
+  // Lightning CSS (SSR adapter) injects compiler-only light/dark sentinel
+  // custom properties in inline CSS. They never originate from an article.
+  // Keep other CSS intact so real layout differences still fail parity.
+  .replaceAll(/--lightningcss-(?:light|dark):[^;{}]*;/gu, "");
 
 let checked = 0, skipped = 0;
 const failures = [];

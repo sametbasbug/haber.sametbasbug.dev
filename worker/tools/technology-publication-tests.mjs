@@ -352,24 +352,138 @@ const orbitArticle = {
   kaynaklar: ["https://example.com/second-news"],
 };
 const key = "one-action-one-key";
-r = await throughOrbit("haber.teknolojiYayinla", orbitArticle, `agent:${TECHNOLOGY_AGENTS[3].id}`, key);
+r = await throughOrbit("haber.yayinla", orbitArticle, `agent:${TECHNOLOGY_AGENTS[3].id}`, key);
 assert.equal(r.status, 200, JSON.stringify(r.body));
 assert.equal(r.body.status, "applied");
 assert.equal(r.body.output.uygulandi, true);
 assert.equal(r.body.output.yazar, "Selene AI");
-r = await throughOrbit("haber.teknolojiYayinla", orbitArticle, `agent:${TECHNOLOGY_AGENTS[3].id}`, key);
+r = await throughOrbit("haber.yayinla", orbitArticle, `agent:${TECHNOLOGY_AGENTS[3].id}`, key);
 assert.equal(r.body.status, "replayed", "aynı logical intent iki defa yayımlanmamalı");
-r = await throughOrbit("haber.teknolojiYayinla", {
+r = await throughOrbit("haber.yayinla", {
   ...orbitArticle, kaynaklar: ["https://example.com/changed"],
 }, `agent:${TECHNOLOGY_AGENTS[3].id}`, key);
 assert.equal(r.status, 409, "aynı key farklı gövde reddedilmeli");
-r = await throughOrbit("haber.teknolojiHaberleriOku", {}, "agent:unlisted");
+r = await throughOrbit("haber.haberleriOku", {}, "agent:unlisted");
 assert.equal(r.status, 200, "yazma yetkisi olmayan Orbit ajanı haber okuyabilir");
 assert.equal(r.body.output.haberler.length, 2, "iki yeni dönem haberi listelenmeli");
-r = await throughOrbit("haber.teknolojiYayinla", {
+r = await throughOrbit("haber.yayinla", {
   ...orbitArticle, kaynaklar: ["https://example.com/third"],
 }, "agent:unlisted");
 assert.equal(r.status, 403, "yetkisiz Orbit ajanı haber yayımlayamaz");
+
+// Signed Orbit action idempotency is atomic with the D1 article mutation.
+const concurrentArticle = {
+  ...article,
+  metin: "# Açık kaynak veri aktarım standardında yeni bir sürüm duyuruldu\n\nTeknoloji geliştiricileri veri aktarım araçları için yeni bir sürüm taslağı yayımladı. Sürüm, farklı uygulamaların aynı veri biçimini kullanırken karşılaştığı uyumluluk sorunlarına çözüm getirmeyi hedefliyor.\n\nYeni değişikliklerin belgeleri ve uygulama takvimi ilgili ekibin teknik sayfasında yayımlandı.",
+  kaynaklar: ["https://example.com/concurrent-article-test"],
+};
+const agentReceiptsBefore = database.prepare("SELECT COUNT(*) AS n FROM technology_agent_requests").get().n;
+const twice = await Promise.all([
+  throughOrbit("haber.yayinla", concurrentArticle, selene.actor, "atomic-publish-unique-key-1"),
+  throughOrbit("haber.yayinla", concurrentArticle, selene.actor, "atomic-publish-unique-key-1"),
+]);
+assert.deepEqual(twice.map(x => x.status), [200, 200]);
+assert.deepEqual(twice.map(x => x.body.status).sort(), ["applied","replayed"]);
+assert.equal(twice[0].body.output.slug, twice[1].body.output.slug);
+assert.deepEqual(twice[0].body.output, twice[1].body.output);
+assert.equal(database.prepare("SELECT COUNT(*) AS n FROM technology_agent_requests").get().n,
+  agentReceiptsBefore + 1, "only one atomic Orbit receipt for two concurrent actions");
+assert.equal(database.prepare("SELECT COUNT(*) AS n FROM articles WHERE slug=?")
+  .get(twice[0].body.output.slug).n, 1);
+
+const otherAgentSameKey = await throughOrbit(
+  "haber.yayinla", concurrentArticle, hemera.actor, "atomic-publish-unique-key-1",
+);
+assert.equal(otherAgentSameKey.status, 409,
+  "different agent sharing a sponsor must never replay or learn the first agent's output");
+const changedPayloadSameKey = await throughOrbit(
+  "haber.yayinla", { ...concurrentArticle, kaynaklar: ["https://example.com/changed-concurrent"] },
+  selene.actor, "atomic-publish-unique-key-1",
+);
+assert.equal(changedPayloadSameKey.status, 409, "same agent and key cannot be reused for changed payload");
+
+const ownerSlug = twice[0].body.output.slug;
+const atomicCorrection = {
+  slug: ownerSlug,
+  gerekce: "eşzamanlı Orbit düzenlemesi için gerekçe",
+  metin: concurrentArticle.metin.replace("önemli bir güvenlik açığını", "güncellenmiş bir güvenlik açığını"),
+};
+const revisionCountBefore = database.prepare("SELECT COUNT(*) AS n FROM article_revisions WHERE slug=?").get(ownerSlug).n;
+const editTwice = await Promise.all([
+  throughOrbit("haber.duzenle", atomicCorrection, selene.actor, "atomic-edit-unique-key-2"),
+  throughOrbit("haber.duzenle", atomicCorrection, selene.actor, "atomic-edit-unique-key-2"),
+]);
+assert.deepEqual(editTwice.map(x => x.status), [200, 200]);
+assert.deepEqual(editTwice.map(x => x.body.status).sort(), ["applied","replayed"]);
+assert.deepEqual(editTwice[0].body.output, editTwice[1].body.output);
+assert.equal(database.prepare("SELECT COUNT(*) AS n FROM article_revisions WHERE slug=?").get(ownerSlug).n,
+  revisionCountBefore + 1, "concurrent signed edit adds precisely one revision");
+assert.equal((await throughOrbit("haber.duzenle", atomicCorrection, hemera.actor,
+  "atomic-owner-denied-3")).status, 403, "other authorized publisher cannot edit someone else's article");
+
+const stateInput = { slug: ownerSlug, gerekce: "kaynakların yeniden incelenmesi için geri çekildi" };
+const withdrawTwice = await Promise.all([
+  throughOrbit("haber.yayindanKaldir", stateInput, selene.actor, "atomic-withdraw-unique-key-4"),
+  throughOrbit("haber.yayindanKaldir", stateInput, selene.actor, "atomic-withdraw-unique-key-4"),
+]);
+assert.deepEqual(withdrawTwice.map(x => x.status), [200,200]);
+assert.deepEqual(withdrawTwice.map(x => x.body.status).sort(), ["applied","replayed"]);
+assert.equal(database.prepare("SELECT COUNT(*) AS n FROM articles WHERE slug=? AND is_draft=1").get(ownerSlug).n, 1);
+const restoreTwice = await Promise.all([
+  throughOrbit("haber.yayinaAlGeri",
+    { slug: ownerSlug, gerekce: "kaynaklar kontrol edildi ve tekrar onaylandı" },
+    selene.actor, "atomic-restore-unique-key-5"),
+  throughOrbit("haber.yayinaAlGeri",
+    { slug: ownerSlug, gerekce: "kaynaklar kontrol edildi ve tekrar onaylandı" },
+    selene.actor, "atomic-restore-unique-key-5"),
+]);
+assert.deepEqual(restoreTwice.map(x=>x.status), [200,200]);
+assert.deepEqual(restoreTwice.map(x=>x.body.status).sort(), ["applied","replayed"]);
+assert.equal(database.prepare("SELECT COUNT(*) AS n FROM articles WHERE slug=? AND is_draft=0").get(ownerSlug).n, 1);
+assert.equal(database.prepare("SELECT COUNT(*) AS n FROM article_revisions WHERE slug=?").get(ownerSlug).n,
+  revisionCountBefore + 3, "exactly one edit, withdrawal, restoration per unique signed action");
+
+// The catalog and runtime must advertise exactly the six v2 operations;
+// historical two-step actions can be enabled only via rollback flag.
+const legacyBlocked = await throughOrbit("haber.panoYaz",
+  { board: [] }, selene.actor, "blocked-retired-1");
+assert.equal(legacyBlocked.status, 404, "old public news board operation is unavailable by default");
+assert.equal(database.prepare("SELECT COUNT(*) AS n FROM technology_agent_requests").get().n,
+  agentReceiptsBefore + 4, "only successful signed tech mutations create receipts");
+
+// All four REAL Orbit agent identities can publish as themselves, but their
+// names come from the publisher DB, never the untrusted act.handle claim.
+const samples = [
+  ["Nyx", "Makine öğrenimi modelleri için yeni değerlendirme kılavuzu", "yapay-zeka"],
+  ["Hemera", "Yazılım derleme araçlarında yeni sürüm duyurusu", "yazilim"],
+  ["Asteria", "Güvenlik araştırmalarında açık raporlama standardı", "siber-guvenlik"],
+  ["Selene", "Donanım üreticileri için yeni enerji verimliliği yöntemi", "donanim"],
+];
+for (const [index, [name, title, category]] of samples.entries()) {
+  const agent = TECHNOLOGY_AGENTS.find(x => x.name === name);
+  assert.ok(agent);
+  const next = await throughOrbit("haber.yayinla", {
+    metin: `# ${title}\n\nTeknoloji topluluğunda kullanılmak üzere hazırlanan bir çalışma planının ayrıntıları paylaşıldı. Bu haber yalnızca imzalı Orbit kimliklerinin dört yayıncıyla doğru eşleştiğini yerel testte doğrulamak içindir.\n\nİçeriğin bir gerçek olay olduğu iddia edilmez; kaynak örnek bağlantısı yalnızca test içindir.`,
+    kategori: category,
+    kaynaklar: [`https://example.net/agent-${index}-local-smoke`],
+  }, `agent:${agent.id}`, `four-publisher-proof-${index}`);
+  assert.equal(next.status, 200, `${name}: ${JSON.stringify(next.body)}`);
+  assert.equal(next.body.output.uygulandi, true);
+  assert.equal(next.body.output.yazar, agent.author);
+  assert.equal(next.body.output.orbitActor, `agent:${agent.id}`);
+  assert.equal(database.prepare("SELECT author FROM articles WHERE slug=?").get(next.body.output.slug).author,
+    agent.author, `${name} is attributed from the trusted identity DB`);
+}
+const catalog = JSON.parse(readFileSync(new URL("../../public/orbit-actions.json", import.meta.url), "utf8"));
+assert.equal(catalog.version, 1);
+assert.deepEqual(catalog.operations.map(x=>x.operationId).sort(), [
+  "haber.yayinla", "haber.haberleriOku", "haber.haberOku",
+  "haber.duzenle", "haber.yayindanKaldir", "haber.yayinaAlGeri",
+].sort());
+assert.equal(catalog.operations.find(x=>x.operationId==="haber.yayinla").input.required.join(","),
+  "metin,kategori,kaynaklar");
+assert.ok(!catalog.operations.some(x=>/pano|legacy|teknoloji/i.test(x.operationId)),
+  "old two-step UI actions must not leak into the public catalogue");
 
 database.close();
 console.log("Technology publication E2E: all checks passed (in-memory SQLite, Orbit JWS, admin idempotency)");

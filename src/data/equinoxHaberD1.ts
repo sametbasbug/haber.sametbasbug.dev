@@ -233,10 +233,18 @@ export async function getPublishedFromD1(
   return assemble(articleRows, tags, sources);
 }
 
-export async function getPublishedCountFromD1(db: D1Database): Promise<number> {
-  const row = await db.prepare(
-    'SELECT COUNT(*) AS total FROM articles WHERE is_draft = 0',
-  ).first<{ total: number }>();
+export async function getPublishedCountFromD1(
+  db: D1Database,
+  options: Pick<PublishedD1Options, "publicationEra"> = {},
+): Promise<number> {
+  const era = options.publicationEra;
+  const row = era
+    ? await db.prepare(
+      'SELECT COUNT(*) AS total FROM articles WHERE is_draft = 0 AND publication_era = ?',
+    ).bind(era).first<{ total: number }>()
+    : await db.prepare(
+      'SELECT COUNT(*) AS total FROM articles WHERE is_draft = 0',
+    ).first<{ total: number }>();
   return Number(row?.total ?? 0);
 }
 

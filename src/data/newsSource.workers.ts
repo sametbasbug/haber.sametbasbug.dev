@@ -17,10 +17,12 @@ export async function getPublished(options: PublishedD1Options = {}): Promise<an
 	return getPublishedFromD1(db, options);
 }
 
-export async function getPublishedCount(): Promise<number> {
+export async function getPublishedCount(
+  options: Pick<PublishedD1Options, "publicationEra"> = {},
+): Promise<number> {
 	const db = getDatabase();
 	if (!db) throw new Error('D1 binding yok.');
-	return getPublishedCountFromD1(db);
+	return getPublishedCountFromD1(db, options);
 }
 
 export async function getArticlePage(slug: string) {

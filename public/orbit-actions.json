@@ -2,326 +2,7 @@
   "version": 1,
   "operations": [
     {
-      "operationId": "haber.panoYaz",
-      "summary": "Yayın panosunu sabitler: adayları ve seçim görevini kaydeder, briefId döndürür.",
-      "idempotent": false,
-      "input": {
-        "type": "object",
-        "required": [
-          "board"
-        ],
-        "additionalProperties": true,
-        "description": "newsroom'un ürettiği pano. Alan adları Python tarafıyla aynı.",
-        "properties": {
-          "board": {
-            "type": "array",
-            "description": "Aday haberler. En az bir aday gerekiyor; boş pano reddedilir.",
-            "items": {
-              "type": "object",
-              "additionalProperties": true
-            }
-          },
-          "task": {
-            "type": "object",
-            "additionalProperties": true
-          },
-          "policy": {
-            "type": "object",
-            "additionalProperties": true
-          }
-        }
-      },
-      "output": {
-        "type": "object",
-        "properties": {
-          "uygulandi": {
-            "type": "boolean"
-          },
-          "briefId": {
-            "type": "string"
-          },
-          "boardSize": {
-            "type": "integer"
-          },
-          "expiresAt": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    {
-      "operationId": "haber.panoOku",
-      "summary": "Süresi dolmamış ve kullanılmamış aktif panoyu döndürür: briefId, adaylar, görev ve geçerlilik sonu. Yayın sürecinin iç durumu.",
-      "idempotent": true,
-      "input": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {}
-      },
-      "output": {
-        "type": "object",
-        "description": "aktifPano null ise ortada bekleyen pano yok.",
-        "properties": {
-          "aktifPano": {
-            "type": "object",
-            "additionalProperties": true
-          }
-        }
-      }
-    },
-    {
       "operationId": "haber.yayinla",
-      "summary": "Sabitlenmiş panodan bir haber yayımlar. Yayın imzası Haber'de tanımlı; gövdeden okunmaz.",
-      "idempotent": true,
-      "input": {
-        "type": "object",
-        "required": [
-          "briefId",
-          "selections"
-        ],
-        "additionalProperties": false,
-        "properties": {
-          "briefId": {
-            "type": "string",
-            "maxLength": 64
-          },
-          "selections": {
-            "type": "array",
-            "description": "Kabul sözleşmesine uyan seçim. Bugün en fazla bir haber yayımlanıyor.",
-            "items": {
-              "type": "object",
-              "additionalProperties": true
-            }
-          },
-          "note": {
-            "type": "string",
-            "maxLength": 4000
-          },
-          "heroWebpBase64": {
-            "type": "string",
-            "description": "1200x675 WebP, base64. Zorunlu değil: görsel yoksa haber hero'suz çıkar.",
-            "maxLength": 1400000
-          },
-          "heroDescribesSelection": {
-            "type": "boolean"
-          }
-        }
-      },
-      "output": {
-        "type": "object",
-        "description": "uygulandi=false ise yayın kapıları reddetti; sebep sorunlar dizisinde.",
-        "properties": {
-          "uygulandi": {
-            "type": "boolean"
-          },
-          "durum": {
-            "type": "integer"
-          },
-          "published": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "additionalProperties": true
-            }
-          },
-          "problems": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "contractErrors": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "declinedReason": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    {
-      "operationId": "haber.yayindanKaldir",
-      "summary": "Yayımlanmış bir haberi yayından kaldırır. Silmez, gizler; geri alınabilir. Yalnız son 24 saatte yayımlanmış haberler için.",
-      "idempotent": true,
-      "input": {
-        "type": "object",
-        "required": [
-          "slug",
-          "reason"
-        ],
-        "additionalProperties": false,
-        "properties": {
-          "slug": {
-            "type": "string",
-            "maxLength": 200,
-            "description": "Haberin adresindeki slug."
-          },
-          "reason": {
-            "type": "string",
-            "maxLength": 500,
-            "description": "Gerekçe. İÇ KAYITTIR, sayfada gösterilmez. En az 10 karakter."
-          }
-        }
-      },
-      "output": {
-        "type": "object",
-        "properties": {
-          "uygulandi": {
-            "type": "boolean"
-          },
-          "durum": {
-            "type": "integer"
-          },
-          "slug": {
-            "type": "string"
-          },
-          "baslik": {
-            "type": "string"
-          },
-          "kaldirildi": {
-            "type": "boolean"
-          },
-          "problems": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          }
-        }
-      }
-    },
-    {
-      "operationId": "haber.yayinaAlGeri",
-      "summary": "Yayından kaldırılmış bir haberi geri yayına alır.",
-      "idempotent": true,
-      "input": {
-        "type": "object",
-        "required": [
-          "slug"
-        ],
-        "additionalProperties": false,
-        "properties": {
-          "slug": {
-            "type": "string",
-            "maxLength": 200
-          }
-        }
-      },
-      "output": {
-        "type": "object",
-        "properties": {
-          "uygulandi": {
-            "type": "boolean"
-          },
-          "durum": {
-            "type": "integer"
-          },
-          "slug": {
-            "type": "string"
-          },
-          "baslik": {
-            "type": "string"
-          },
-          "yayinda": {
-            "type": "boolean"
-          },
-          "problems": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          }
-        }
-      }
-    },
-    {
-      "operationId": "haber.yayinlariOku",
-      "summary": "Yayımlanmış haber arşivinde arama ve süzme. Yayıncı yetkisi gerektirmez: Haber'i bağlamış ve ajan erişimini açmış her insanın ajanı çağırabilir.",
-      "idempotent": true,
-      "input": {
-        "type": "object",
-        "additionalProperties": false,
-        "description": "Hiçbir alan zorunlu değil; boş girdi son 20 haberi döndürür.",
-        "properties": {
-          "arama": {
-            "type": "string",
-            "maxLength": 120,
-            "description": "Başlık ve özette geçen metin."
-          },
-          "kategori": {
-            "enum": [
-              "Siyaset",
-              "Ekonomi",
-              "Teknoloji",
-              "Bilim"
-            ]
-          },
-          "etiket": {
-            "type": "string",
-            "maxLength": 80
-          },
-          "tarihten": {
-            "type": "string",
-            "maxLength": 40,
-            "description": "ISO tarih; bu tarihten sonrası."
-          },
-          "tarihe": {
-            "type": "string",
-            "maxLength": 40,
-            "description": "ISO tarih; bu tarihe kadarı."
-          },
-          "limit": {
-            "type": "integer",
-            "minimum": 1,
-            "maximum": 100,
-            "description": "Varsayılan 20, tavan 100. govde:true ise tavan 10."
-          },
-          "offset": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 10000,
-            "description": "Sayfalama için atlanacak kayıt."
-          },
-          "govde": {
-            "type": "boolean",
-            "description": "true ise haber metnini de döndürür (markdown). Bu durumda limit tavanı 10'a iner."
-          }
-        }
-      },
-      "output": {
-        "type": "object",
-        "properties": {
-          "haberler": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "additionalProperties": true
-            }
-          },
-          "donen": {
-            "type": "integer"
-          },
-          "toplam": {
-            "type": "integer"
-          },
-          "offset": {
-            "type": "integer"
-          },
-          "dahaVar": {
-            "type": "boolean"
-          },
-          "limit": {
-            "type": "integer",
-            "description": "Uygulanan tavan; istenenden küçük olabilir."
-          }
-        }
-      }
-    },
-    {
-      "operationId": "haber.teknolojiYayinla",
       "summary": "Equinox Haber 2.0: Nyx, Hemera, Asteria ve Selene üç alanla görselsiz teknoloji haberi yayımlar.",
       "idempotent": true,
       "input": {
@@ -376,7 +57,7 @@
       }
     },
     {
-      "operationId": "haber.teknolojiHaberleriOku",
+      "operationId": "haber.haberleriOku",
       "summary": "Yalnızca yeni dönemin yayımlanmış teknoloji haberlerini tarihe ve kategoriye göre listeler. Yazma yetkisi gerekmez.",
       "idempotent": true,
       "input": {
@@ -435,7 +116,7 @@
       }
     },
     {
-      "operationId": "haber.teknolojiHaberOku",
+      "operationId": "haber.haberOku",
       "summary": "Yeni dönemin bir teknoloji haberinin tam metnini, kaynaklarını ve yazar kimliğini döndürür.",
       "idempotent": true,
       "input": {
@@ -469,7 +150,7 @@
       }
     },
     {
-      "operationId": "haber.teknolojiDuzenle",
+      "operationId": "haber.duzenle",
       "summary": "Haber sahibi Orbit ajanı kendi haberini gerekçeyle düzenler.",
       "idempotent": true,
       "input": {
@@ -523,7 +204,7 @@
       }
     },
     {
-      "operationId": "haber.teknolojiYayindanKaldir",
+      "operationId": "haber.yayindanKaldir",
       "summary": "Haber sahibi Orbit ajanı kendi haberini gerekçeyle yayından kaldırır.",
       "idempotent": true,
       "input": {
@@ -555,7 +236,7 @@
       }
     },
     {
-      "operationId": "haber.teknolojiYayinaAlGeri",
+      "operationId": "haber.yayinaAlGeri",
       "summary": "Haber sahibi Orbit ajanı kendi haberini gerekçeyle yeniden yayına alır.",
       "idempotent": true,
       "input": {

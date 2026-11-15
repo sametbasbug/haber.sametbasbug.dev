@@ -50,8 +50,10 @@ export async function getPublished(options: PublishedOptions = {}): Promise<any[
 	return limit === undefined ? entries.slice(offset) : entries.slice(offset, offset + limit);
 }
 
-export async function getPublishedCount(): Promise<number> {
-	return (await getPublished()).length;
+export async function getPublishedCount(
+  options: Pick<PublishedOptions, "publicationEra"> = {},
+): Promise<number> {
+  return (await getPublished(options)).length;
 }
 
 /** Statik derlemede D1 maliyeti yok; aynı sayfa verisini koleksiyon üzerinden

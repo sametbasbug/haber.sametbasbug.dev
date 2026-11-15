@@ -83,6 +83,48 @@ export async function replayTechnologyAdminRequest(
   });
 }
 
+/** Only publisher-write receipts are stored here; open reads never write D1.
+ * The result is always the successful response body, never private errors. */
+function agentReceipt(identity: Identity, env: Env, data: Record<string, unknown>, at: string) {
+  if (!isTechnologyPublisher(identity) || !identity.agentRequest) return [];
+  return [env.DB.prepare(
+    `INSERT INTO technology_agent_requests
+      (subject,request_key,actor_subject,input_digest,output_json,created_at)
+      VALUES (?,?,?,?,?,?)`,
+  ).bind(
+    identity.subject,
+    identity.agentRequest.key,
+    identity.actor!,
+    identity.agentRequest.fingerprint,
+    JSON.stringify({ uygulandi: true, ...data }),
+    at,
+  )];
+}
+
+export async function replayTechnologyAgentRequest(
+  identity: Identity,
+  db: Env["DB"],
+): Promise<Response | null> {
+  if (!identity.agentRequest || !identity.actor || identity.via !== "orbit-action") return null;
+  const row = await db.prepare(
+    "SELECT actor_subject,input_digest,output_json FROM technology_agent_requests WHERE subject=? AND request_key=?",
+  ).bind(identity.subject, identity.agentRequest.key).first<{
+    actor_subject: string; input_digest: string; output_json: string;
+  }>();
+  if (!row) return null;
+  if (row.actor_subject !== identity.actor || row.input_digest !== identity.agentRequest.fingerprint) {
+    return json({ error: "Idempotency-Key baska bir eylem, aktor veya istek icin kullanildi" }, 409);
+  }
+  return new Response(row.output_json, {
+    status: 200,
+    headers: {
+      "content-type": "application/json; charset=utf-8",
+      "cache-control": "no-store",
+      "x-haber-idempotency-replay": "1",
+    },
+  });
+}
+
 function adminReceipt(identity: Identity, env: Env, data: Record<string, unknown>, at: string) {
   if (!isNewsroomAdministrator(identity) || !identity.adminRequest) return [];
   return [env.DB.prepare(
@@ -129,7 +171,14 @@ export async function publishTechnologyAs(
       break;
     }
   }
-  if (problems.length > 0) return json({ problems }, 409);
+  if (problems.length > 0) {
+    // Another worker may have committed the SAME signed request between
+    // validation and the duplicate-title/slug check. Reuse the atomic
+    // receipt rather than misreporting a successful retry as a conflict.
+    const replay = await replayTechnologyAgentRequest(identity, env.DB);
+    if (replay) return replay;
+    return json({ problems }, 409);
+  }
 
   // Kaynakları yayına sistem ekler; ajan markdown'ı kaynağı taklit edemez.
   const markdown = bodyMarkdown(article.body, article.sources);
@@ -140,10 +189,17 @@ export async function publishTechnologyAs(
     return json({ problems: [`haber render edilemedi: ${String(error)}`] }, 500);
   }
   const timestamp = new Date().toISOString(); // UTC, +03:00 string değiştirme YOK.
+  const success = {
+    slug, baslik: article.baslik, kategori: article.kategori,
+    yazar: identity.author, orbitActor: identity.actor,
+    orbitProfil: technologyAgentProfileUrl(getTechnologyAgentByActor(identity.actor!)!.handle),
+    yayinTarihi: timestamp, url: articleUrl(slug), gorsel: null,
+  };
 
-  // D1 batch atomiktir. Bir kaynak kaydı düşerse haberin tamamı geri alınır.
+  // Haber ve Orbit tekrar kaydı AYNI D1 batch içinde kesinleşir.
   try {
     await env.DB.batch([
+      ...agentReceipt(identity, env, success, timestamp),
       env.DB.prepare(
         `INSERT INTO articles (
           slug,title,description,category,author,body_md,body_html,render_version,
@@ -166,22 +222,14 @@ export async function publishTechnologyAs(
   } catch (error) {
     // Çakışan eşzamanlı yayın (slug/origin UNIQUE) beklenen 409'dur.
     if (/UNIQUE constraint failed|SQLITE_CONSTRAINT/u.test(String(error))) {
+      const replay = await replayTechnologyAgentRequest(identity, env.DB);
+      if (replay) return replay;
       return json({ problems: ["bu haber eşzamanlı olarak yayımlanmış"] }, 409);
     }
     throw error;
   }
 
-  return json({
-    slug,
-    baslik: article.baslik,
-    kategori: article.kategori,
-    yazar: identity.author,
-    orbitActor: identity.actor,
-    orbitProfil: technologyAgentProfileUrl(getTechnologyAgentByActor(identity.actor!)!.handle),
-    yayinTarihi: timestamp,
-    url: articleUrl(slug),
-    gorsel: null,
-  }, 201);
+  return json(success, 201);
 }
 
 /** Orbit'in doğruladığı ajan kimliği bu işlemin tek erişim kapısıdır.
@@ -336,6 +384,7 @@ export async function editTechnologyAs(
   try {
   await env.DB.batch([
     ...adminReceipt(identity, env, success, now),
+    ...agentReceipt(identity, env, success, now),
     env.DB.prepare(
       `INSERT INTO article_revisions
         (slug,action,previous_body_md,previous_category,previous_sources_json,previous_updated_at,actor_subject,reason,created_at)
@@ -359,7 +408,8 @@ export async function editTechnologyAs(
   ]);
   } catch (error) {
     if (revisionConflict(error)) {
-      const replay = await replayTechnologyAdminRequest(identity, env.DB);
+      const replay = await replayTechnologyAdminRequest(identity, env.DB)
+        ?? await replayTechnologyAgentRequest(identity, env.DB);
       if (replay) return replay;
       return json({ problems: ["haber başka bir işlemde güncellendi, yeniden okuyun"] }, 409);
     }
@@ -394,7 +444,8 @@ export async function setTechnologyPublicationState(
   }
   const nextDraft = action === "withdraw" ? 1 : 0;
   if (row.is_draft === nextDraft) {
-    const replay = await replayTechnologyAdminRequest(identity, env.DB);
+    const replay = await replayTechnologyAdminRequest(identity, env.DB)
+      ?? await replayTechnologyAgentRequest(identity, env.DB);
     if (replay) return replay;
     return json({ problems: ["haber zaten istenen durumda"] }, 409);
   }
@@ -407,6 +458,7 @@ export async function setTechnologyPublicationState(
   try {
   await env.DB.batch([
     ...adminReceipt(identity, env, success, now),
+    ...agentReceipt(identity, env, success, now),
     env.DB.prepare(
       `INSERT INTO article_revisions
         (slug,action,previous_body_md,previous_category,previous_sources_json,previous_updated_at,actor_subject,reason,created_at)
@@ -422,7 +474,8 @@ export async function setTechnologyPublicationState(
   ]);
   } catch (error) {
     if (revisionConflict(error)) {
-      const replay = await replayTechnologyAdminRequest(identity, env.DB);
+      const replay = await replayTechnologyAdminRequest(identity, env.DB)
+        ?? await replayTechnologyAgentRequest(identity, env.DB);
       if (replay) return replay;
       return json({ problems: ["haber başka bir işlemde güncellendi, yeniden okuyun"] }, 409);
     }

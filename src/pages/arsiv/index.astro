@@ -1,11 +1,10 @@
 ---
-/** Tarihsel yayınları koruyan metin tabanlı arşiv.
- * Eski 580 bağlantı asıl URL'lerinde kalır; bu yeni bir dizin yüzeyidir. */
 import TechnologyLayout from '../../layouts/TechnologyLayout.astro';
-import { getPublishedEquinoxHaber, formatNewsDate } from '../../data/equinoxHaber';
+import TechnologyArchiveList from '../../components/news/TechnologyArchiveList.astro';
+import { getPublishedEquinoxHaber } from '../../data/equinoxHaber';
 
-const parsed = Number(Astro.url.searchParams.get('sayfa') ?? 1);
-const page = Number.isSafeInteger(parsed) && parsed >= 1 && parsed <= 200 ? parsed : 1;
+const requested = Number(Astro.url.searchParams.get('sayfa') ?? 1);
+const page = Number.isSafeInteger(requested) && requested >= 1 && requested <= 200 ? requested : 1;
 const raw = await getPublishedEquinoxHaber({
   publicationEra: 'legacy',
   limit: 31,
@@ -15,55 +14,12 @@ const raw = await getPublishedEquinoxHaber({
 });
 const hasMore = raw.length > 30;
 const entries = raw.slice(0, 30);
+const newerHref = page > 1 ? (page === 2 ? '/arsiv/' : `/arsiv/?sayfa=${page-1}`) : null;
+const olderHref = hasMore ? `/arsiv/?sayfa=${page+1}` : null;
 ---
-
-<TechnologyLayout noindex={false} basePath="" title="Tarihsel haber arşivi" description="Equinox Haber'in önceki dönemlerinden korunan haberler ve kaynakları.">
-  <div class="archive">
-    <a class="back" href="/">← Güncel teknoloji haberleri</a>
-    <header>
-      <span>GEÇMİŞ YAYINLAR / ARŞİV</span>
-      <h1>Haber <em>arşivi.</em></h1>
-      <p>Equinox Haber'in teknolojiye odaklanmadan önce yayımladığı içerikler. Eski haberlerin adresleri ve kaynakları korunmaktadır; bu liste güncel teknoloji akışına dahil değildir.</p>
-    </header>
-    <div class="archive-list">
-      {entries.length === 0 && <p class="empty">Bu sayfada arşiv haberi bulunmuyor.</p>}
-      {entries.map((entry) => (
-        <article>
-          <div class="meta"><span>{entry.data.category}</span><time datetime={entry.data.pubDate.toISOString()}>{formatNewsDate(entry.data.pubDate)}</time></div>
-          <h2><a href={`/${entry.id}/`}>{entry.data.title}</a></h2>
-          <p>{entry.data.description}</p>
-        </article>
-      ))}
-    </div>
-    {(page > 1 || hasMore) && (
-      <nav class="pager" aria-label="Arşiv sayfaları">
-        {page > 1 ? <a href={page === 2 ? '/arsiv/' : `/arsiv/?sayfa=${page - 1}`}>← Daha yeni</a> : <span />}
-        <span>Sayfa {page}</span>
-        {hasMore ? <a href={`/arsiv/?sayfa=${page + 1}`}>Daha eski →</a> : <span />}
-      </nav>
-    )}
-  </div>
+<TechnologyLayout noindex={false} basePath=""
+  title={page === 1 ? 'Tarihsel haber arşivi' : `Tarihsel haber arşivi, sayfa ${page}`}
+  description="Equinox Haber'in önceki dönemlerinden korunan haberler ve kaynakları.">
+  <TechnologyArchiveList entries={entries} page={page} hasMore={hasMore}
+    olderHref={olderHref} newerHref={newerHref} />
 </TechnologyLayout>
-
-<style>
-  .archive{max-width:1080px;margin:auto;padding:0 32px}
-  .back{display:inline-block;margin:31px 0 42px;color:var(--tb-muted);font-size:13px;font-weight:650;text-decoration:none}
-  .back:hover{color:var(--tb-accent)}
-  header{border-bottom:1px solid var(--tb-line);padding-bottom:34px}
-  header>span{color:var(--tb-accent);font-size:11px;font-weight:800;letter-spacing:.1em}
-  header h1{font-size:clamp(39px,6vw,74px);font-weight:800;letter-spacing:-.06em;margin:15px 0;line-height:1.1}
-  header h1 em{font-style:normal;color:var(--tb-accent)}
-  header p{font-size:15px;color:var(--tb-muted);max-width:720px;line-height:1.7}
-  .archive-list{max-width:800px}
-  article{border-bottom:1px solid var(--tb-line);padding:23px 0}
-  .meta{display:flex;gap:15px;color:var(--tb-muted);font-size:11px;font-weight:650}
-  .meta span{color:var(--tb-accent);font-weight:800;text-transform:uppercase}
-  article h2{font-size:clamp(21px,2.7vw,27px);letter-spacing:-.035em;line-height:1.28;margin:10px 0}
-  article h2 a{color:var(--tb-ink);text-decoration:none}
-  article h2 a:hover{color:var(--tb-accent)}
-  article p{color:var(--tb-muted);font-size:14px;line-height:1.65;margin:0}
-  .empty{padding:60px 0;color:var(--tb-muted)}
-  .pager{display:flex;align-items:center;justify-content:space-between;padding:27px 0;gap:15px;font-size:13px;color:var(--tb-muted)}
-  .pager a{color:var(--tb-accent);font-weight:750}
-  @media(max-width:650px){.archive{padding:0 18px}.back{margin:24px 0 30px}}
-</style>

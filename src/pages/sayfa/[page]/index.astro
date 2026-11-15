@@ -1,91 +1,53 @@
 ---
+/**
+ * Historic /sayfa/N URLs are not discarded, redirected or reindexed as new
+ * technology content. Only the 580 legacy records are paginated here.
+ * The same visual archive component is used by /arsiv.
+ */
 import type { GetStaticPaths, Page } from 'astro';
-import NewsLayout from '../../../layouts/NewsLayout.astro';
-import NewsStream from '../../../components/news/NewsStream.astro';
-import ArchivePagination from '../../../components/news/ArchivePagination.astro';
-import { EQUINOX_HABER_ARCHIVE_PAGE_SIZE, getEquinoxHaberCategories, getPublishedEquinoxHaber, getPublishedEquinoxHaberCount, type EquinoxHaberEntry } from '../../../data/equinoxHaber';
+import TechnologyLayout from '../../../layouts/TechnologyLayout.astro';
+import TechnologyArchiveList from '../../../components/news/TechnologyArchiveList.astro';
+import {
+  EQUINOX_HABER_ARCHIVE_PAGE_SIZE,
+  getPublishedEquinoxHaber,
+  getPublishedEquinoxHaberCount,
+  type EquinoxHaberEntry,
+} from '../../../data/equinoxHaber';
 
 export const getStaticPaths = (async ({ paginate }) => {
-	const entries = await getPublishedEquinoxHaber();
-	return paginate(entries, { pageSize: EQUINOX_HABER_ARCHIVE_PAGE_SIZE });
+  const entries = await getPublishedEquinoxHaber({ publicationEra: 'legacy' });
+  return paginate(entries, { pageSize: EQUINOX_HABER_ARCHIVE_PAGE_SIZE });
 }) satisfies GetStaticPaths;
 
-interface Props {
-	page: Page<EquinoxHaberEntry>;
-}
-
-/*
- * `paginate()` yalnız statik modda çalışır: `getStaticPaths` sunucu modunda
- * yok sayılıyor ve `Astro.props.page` boş geliyor. Aynı sayfalama çalışma
- * anında yeniden kuruluyor.
- *
- * Kullanılan üç alan var — `data`, `currentPage`, `lastPage` — ve üçü de
- * `paginate()`'in ürettiğiyle aynı anlamı taşımak zorunda; aksi halde iki mod
- * farklı sayfalar üretir. Denklik `worker/tools/parity-page.mjs` içinde
- * ölçülüyor.
- */
+interface Props { page: Page<EquinoxHaberEntry> }
 let { page } = Astro.props as Props;
 
 if (!page) {
-	const size = EQUINOX_HABER_ARCHIVE_PAGE_SIZE;
-	const totalEntries = await getPublishedEquinoxHaberCount();
-	const lastPage = Math.max(1, Math.ceil(totalEntries / size));
-	const requested = Number(Astro.params.page ?? 1);
-
-	/* Aralık dışı sayfa numarası uydurulmuyor: statik modda o adres hiç
-	   üretilmezdi, sunucu modunda da var olmamalı. */
-	if (!Number.isInteger(requested) || requested < 1 || requested > lastPage) {
-		return new Response(null, { status: 404 });
-	}
-
-	const entries = await getPublishedEquinoxHaber({
-		limit: size,
-		offset: (requested - 1) * size,
-		includeTags: false,
-		includeSources: false,
-	});
-	page = {
-		data: entries,
-		currentPage: requested,
-		lastPage,
-	} as Props['page'];
+  const size = EQUINOX_HABER_ARCHIVE_PAGE_SIZE;
+  const total = await getPublishedEquinoxHaberCount({ publicationEra: 'legacy' });
+  const lastPage = Math.max(1, Math.ceil(total / size));
+  const requested = Number(Astro.params.page ?? 1);
+  if (!Number.isSafeInteger(requested) || requested < 1 || requested > lastPage) {
+    return new Response(null, { status: 404 });
+  }
+  const entries = await getPublishedEquinoxHaber({
+    publicationEra: 'legacy',
+    limit: size,
+    offset: (requested - 1) * size,
+    includeTags: false,
+    includeSources: false,
+  });
+  page = { data: entries, currentPage: requested, lastPage } as Props['page'];
 }
 
-const categories = getEquinoxHaberCategories();
-const currentPage = page.currentPage;
-const totalPages = page.lastPage;
-const isFirstPage = currentPage === 1;
-
-// BaseLayout başlığın önüne yayın adını kendisi ekliyor; buraya tekrar yazmak
-// "Equinox Haber | Equinox Haber | ..." üretiyordu.
-const title = isFirstPage ? 'Arşiv' : `Arşiv, sayfa ${currentPage}`;
-const description = isFirstPage
-	? `Equinox Haber arşivi: yayımlanmış tüm haberler, en yeniden eskiye ${totalPages} sayfa halinde.`
-	: `Equinox Haber arşivi, sayfa ${currentPage}. Yayımlanmış haberlerin en yeniden eskiye tam listesi.`;
+const current = page.currentPage;
+const last = page.lastPage;
+const title = current === 1 ? 'Tarihsel arşiv' : `Tarihsel arşiv, sayfa ${current}`;
 ---
-
-<NewsLayout
-	title={title}
-	description={description}
-	kicker=""
-	pageTitle={isFirstPage ? 'Arşiv' : `Arşiv · Sayfa ${currentPage}`}
-	pageDescription={`Yayımlanmış haberlerin tamamı, en yeniden eskiye. ${totalPages} sayfa.`}
-	categories={categories}
-	activeCategory="Tümü"
->
-	<section class="news-page-wrap">
-		<div class="news-page-main">
-			<NewsStream entries={page.data} currentPage={currentPage} totalPages={totalPages} showArchiveLink={false} />
-			<ArchivePagination currentPage={currentPage} totalPages={totalPages} />
-		</div>
-	</section>
-</NewsLayout>
-
-<style>
-	.news-page-wrap {
-		padding-top: 1rem;
-	}
-	.news-page-main {
-		max-width: 100%;
-	}
-</style>
+<TechnologyLayout title={title}
+  description={`Equinox Haber tarihsel arşivi. Önceki dönem yayınları, sayfa ${current} / ${last}.`}
+  noindex={false} basePath="">
+  <TechnologyArchiveList entries={page.data} page={current} hasMore={current < last}
+    newerHref={current > 1 ? `/sayfa/${current - 1}/` : null}
+    olderHref={current < last ? `/sayfa/${current + 1}/` : null} />
+</TechnologyLayout>

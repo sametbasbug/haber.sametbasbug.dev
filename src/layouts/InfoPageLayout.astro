@@ -1,6 +1,5 @@
 ---
-import NewsLayout from './NewsLayout.astro';
-import { getEquinoxHaberCategories } from '../data/equinoxHaber';
+import TechnologyLayout from './TechnologyLayout.astro';
 
 interface Props {
 	title: string;
@@ -14,6 +13,7 @@ interface Props {
 	 * "9 Haziran 2026" diyordu, hiçbiri o gün güncellenmemişti.
 	 */
 	updatedLabel: string;
+	noindex?: boolean;
 }
 
 const {
@@ -21,21 +21,12 @@ const {
 	description,
 	kicker = 'Yayın bilgileri',
 	updatedLabel,
+	noindex = false,
 } = Astro.props;
-
-const categories = getEquinoxHaberCategories();
 const normalizedUpdatedLabel = updatedLabel.replace(/^Son güncelleme:\s*/i, '');
 ---
 
-<NewsLayout
-	title={title}
-	description={description}
-	pageTitle={title}
-	pageDescription={description}
-	hidePageHero={true}
-	categories={categories}
-	activeCategory="Tümü"
->
+<TechnologyLayout title={title} description={description} noindex={noindex} basePath="">
 	<article class="info-page">
 		<header class="info-page__header">
 			<div class="info-page__meta" aria-label="Sayfa bilgileri">
@@ -50,22 +41,22 @@ const normalizedUpdatedLabel = updatedLabel.replace(/^Son güncelleme:\s*/i, '')
 			<slot />
 		</div>
 	</article>
-</NewsLayout>
+</TechnologyLayout>
 
 <style>
 	.info-page {
-		width: min(100%, 760px);
+		width: min(100%, 840px);
 		margin: 0 auto;
-		padding: clamp(1.05rem, 3vw, 1.65rem) 0 clamp(2rem, 5vw, 3.5rem);
-		color: var(--news-text);
+		padding: clamp(2rem, 5vw, 3.5rem) 24px clamp(3rem, 7vw, 5rem);
+		color: var(--tb-ink);
 	}
 	.info-page .info-page__header {
 		position: relative;
 		padding: 0.95rem 0 1.05rem;
 		margin-bottom: 1.45rem;
 		border: 0;
-		border-top: 1px solid color-mix(in srgb, var(--news-border) 88%, transparent);
-		border-bottom: 1px solid color-mix(in srgb, var(--news-border) 88%, transparent);
+		border-top: 1px solid color-mix(in srgb, var(--tb-line) 88%, transparent);
+		border-bottom: 1px solid color-mix(in srgb, var(--tb-line) 88%, transparent);
 		border-radius: 0;
 		background: transparent;
 		box-shadow: none;
@@ -78,7 +69,7 @@ const normalizedUpdatedLabel = updatedLabel.replace(/^Son güncelleme:\s*/i, '')
 		left: 0;
 		width: 3.2rem;
 		height: 1px;
-		background: var(--news-accent);
+		background: var(--tb-accent);
 	}
 	.info-page__meta {
 		display: flex;
@@ -86,26 +77,26 @@ const normalizedUpdatedLabel = updatedLabel.replace(/^Son güncelleme:\s*/i, '')
 		align-items: center;
 		gap: 0.32rem 0.55rem;
 		margin-bottom: 0.48rem;
-		color: var(--news-muted);
+		color: var(--tb-muted);
 		font-size: 0.72rem;
 		font-weight: 760;
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
 	}
 	.info-page__meta span:first-child {
-		color: var(--news-accent-soft);
+		color: var(--tb-accent);
 	}
 	.info-page__meta span + span::before {
 		content: '•';
 		margin-right: 0.55rem;
-		color: color-mix(in srgb, var(--news-muted) 68%, transparent);
+		color: color-mix(in srgb, var(--tb-muted) 68%, transparent);
 	}
 	/* Haber manşetiyle aynı kural: sayfa başlığı serif, gövde ara başlıkları
 	   sans kalıyor (bkz. `[...slug].astro`). Ağırlık 700 — tek ağırlık
 	   yüklüyoruz, daha kalını istenirse tarayıcı harfleri yapay şişirir. */
 	.info-page__header h1 {
 		margin: 0;
-		font-family: var(--news-serif);
+		font-family: inherit;
 		font-size: clamp(1.7rem, 3.2vw, 2.4rem);
 		line-height: 1.14;
 		font-weight: 700;
@@ -115,7 +106,7 @@ const normalizedUpdatedLabel = updatedLabel.replace(/^Son güncelleme:\s*/i, '')
 	.info-page__description {
 		margin: 0.55rem 0 0;
 		max-width: 68ch;
-		color: var(--news-muted-strong);
+		color: var(--tb-muted);
 		font-size: 0.96rem;
 		line-height: 1.62;
 	}
@@ -138,30 +129,30 @@ const normalizedUpdatedLabel = updatedLabel.replace(/^Son güncelleme:\s*/i, '')
 	}
 	.info-page__body :global(p) {
 		margin: 0;
-		color: var(--news-muted-strong);
+		color: var(--tb-muted);
 	}
 	.info-page__body :global(ul) {
 		margin: 0;
 		padding-left: 1.15rem;
 		display: grid;
 		gap: 0.45rem;
-		color: var(--news-muted-strong);
+		color: var(--tb-muted);
 	}
 	.info-page__body :global(li::marker) {
-		color: var(--news-accent-soft);
+		color: var(--tb-accent);
 	}
 	.info-page__body :global(a) {
-		color: var(--news-accent-soft);
+		color: var(--tb-accent);
 		font-weight: 750;
 		text-decoration: underline;
-		text-decoration-color: color-mix(in srgb, var(--news-accent) 55%, transparent);
+		text-decoration-color: color-mix(in srgb, var(--tb-accent) 55%, transparent);
 		text-underline-offset: 0.18em;
 	}
 	.info-page__body :global(.info-note) {
 		padding: 0.95rem 1rem;
-		border: 1px solid color-mix(in srgb, var(--news-border) 82%, transparent);
+		border: 1px solid color-mix(in srgb, var(--tb-line) 82%, transparent);
 		border-radius: 1rem;
-		background: color-mix(in srgb, var(--news-panel) 92%, transparent);
+		background: color-mix(in srgb, var(--tb-surface) 92%, transparent);
 	}
 	.info-page__body :global(.info-people) {
 		display: grid;
@@ -171,19 +162,19 @@ const normalizedUpdatedLabel = updatedLabel.replace(/^Son güncelleme:\s*/i, '')
 	}
 	.info-page__body :global(.info-person) {
 		padding: 1rem;
-		border: 1px solid color-mix(in srgb, var(--news-border) 82%, transparent);
+		border: 1px solid color-mix(in srgb, var(--tb-line) 82%, transparent);
 		border-radius: 1rem;
-		background: color-mix(in srgb, var(--news-panel) 94%, transparent);
+		background: color-mix(in srgb, var(--tb-surface) 94%, transparent);
 	}
 	.info-page__body :global(.info-person strong) {
 		display: block;
-		color: var(--news-text);
+		color: var(--tb-ink);
 		font-size: 1rem;
 	}
 	.info-page__body :global(.info-person span) {
 		display: block;
 		margin-top: 0.12rem;
-		color: var(--news-accent-soft);
+		color: var(--tb-accent);
 		font-size: 0.84rem;
 		font-weight: 800;
 	}

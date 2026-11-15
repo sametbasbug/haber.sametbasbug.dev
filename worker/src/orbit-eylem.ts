@@ -19,23 +19,35 @@ import {
   writeBriefAs,
   type Env,
 } from "./index.ts";
-import { editTechnologyAs, listTechnologyAs, publishTechnologyAs, readTechnologyAs, setTechnologyPublicationState } from "./technology-publication.ts";
+import { editTechnologyAs, listTechnologyAs, publishTechnologyAs, readTechnologyAs, setTechnologyPublicationState, replayTechnologyAgentRequest } from "./technology-publication.ts";
 import { authorizeAction, verifyOrbitActionToken, type Identity } from "./identity.ts";
 
+/** Version 2: the ONLY advertised Haber actions. */
 export const OPERATIONS = [
-  "haber.panoYaz",
-  "haber.panoOku",
   "haber.yayinla",
+  "haber.haberleriOku",
+  "haber.haberOku",
+  "haber.duzenle",
   "haber.yayindanKaldir",
   "haber.yayinaAlGeri",
-  "haber.yayinlariOku",
-  "haber.teknolojiYayinla",
-  "haber.teknolojiHaberleriOku",
-  "haber.teknolojiHaberOku",
-  "haber.teknolojiDuzenle",
-  "haber.teknolojiYayindanKaldir",
-  "haber.teknolojiYayinaAlGeri",
 ] as const;
+
+/** Historical two-step newsroom, disabled in deployed builds.
+ * Retained only for controlled rollback tests; never in public catalog. */
+export const LEGACY_OPERATIONS = [
+  "haber.panoYaz",
+  "haber.panoOku",
+  "haber.legacyYayinla",
+  "haber.legacyYayindanKaldir",
+  "haber.legacyYayinaAlGeri",
+  "haber.yayinlariOku",
+] as const;
+
+const TECHNOLOGY_MUTATIONS = new Set<string>([
+  "haber.yayinla", "haber.duzenle",
+  "haber.yayindanKaldir", "haber.yayinaAlGeri",
+]);
+
 
 /* İKİ YETKİ KATMANI VAR VE BU YENİ BİR KURAL — yazıldığı yer burası.
  *
@@ -50,14 +62,18 @@ export const OPERATIONS = [
  *
  * Bu listeye bir işlem eklemek onu izin duvarının DIŞINA çıkarmaktır; yazma
  * yapan hiçbir işlem buraya girmemeli. */
-const YETKI_GEREKTIRMEYENLER = new Set<string>(["haber.yayinlariOku", "haber.teknolojiHaberleriOku", "haber.teknolojiHaberOku"]);
+const YETKI_GEREKTIRMEYENLER = new Set<string>([
+  "haber.haberleriOku", "haber.haberOku", "haber.yayinlariOku",
+]);
 
 /* Tekrar kaydı tutulmayan işlemler.
  *
  * Okuma işleminde tekrar diye bir sorun yok: ikinci kez çalışması zararsız ve
  * taze cevap bayat cevaptan iyidir. Kayıt tutsaydık her okuma bir satır
  * yazardı — okuma yolunu yazma yoluna çevirmek olurdu. */
-const KAYITSIZ = new Set<string>(["haber.yayinlariOku", "haber.panoOku", "haber.teknolojiHaberleriOku", "haber.teknolojiHaberOku"]);
+const KAYITSIZ = new Set<string>([
+  "haber.haberleriOku", "haber.haberOku", "haber.yayinlariOku", "haber.panoOku",
+]);
 
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
@@ -196,16 +212,34 @@ export async function siteAction(request: Request, env: Env): Promise<Response> 
   if (verified.operation !== operationId) {
     return reddetVeYaz(403, "belge bu işlem için verilmemiş");
   }
-  if (!(OPERATIONS as readonly string[]).includes(operationId)) {
+  const isLegacy = (LEGACY_OPERATIONS as readonly string[]).includes(operationId);
+  if (!(OPERATIONS as readonly string[]).includes(operationId) && !isLegacy) {
     return reddetVeYaz(404, `bilinmeyen işlem: ${operationId}`);
+  }
+  // Legacy is not exposed at production. A controlled explicit override is
+  // needed only for historical regression/rollback exercises.
+  if (isLegacy && (env as Env & { ENABLE_LEGACY_NEWS_ACTIONS?: string }).ENABLE_LEGACY_NEWS_ACTIONS !== "1") {
+    return reddetVeYaz(404, "eski haber eylemi kullanımdan kaldırıldı");
   }
 
   const yetkiGerekiyor = !YETKI_GEREKTIRMEYENLER.has(operationId);
   const auth = yetkiGerekiyor ? await authorizeAction(verified, env) : null;
   if (auth && !auth.ok) return reddetVeYaz(auth.status, auth.error);
 
-  const kayitTut = !KAYITSIZ.has(operationId);
+  const atomicTechnologyWrite = TECHNOLOGY_MUTATIONS.has(operationId);
+  const kayitTut = !KAYITSIZ.has(operationId) && !atomicTechnologyWrite;
   const inputDigest = await digest(JSON.stringify({ operationId, input }));
+
+  // Agent technology writes no longer rely on the *post-mutation* legacy log.
+  // Their output receipt is inserted in the same D1 transaction as the news.
+  if (atomicTechnologyWrite && auth?.ok) {
+    auth.identity.agentRequest = { key: idempotencyKey, fingerprint: inputDigest };
+    const receipt = await replayTechnologyAgentRequest(auth.identity, env.DB);
+    if (receipt) {
+      if (receipt.status === 409) return reddetVeYaz(409, "aynı anahtar başka ajan veya istek tarafından kullanıldı");
+      return json({ status: "replayed", output: await receipt.json() });
+    }
+  }
 
   /* Tekrar mı? Aynı anahtar + aynı gövde ise ilk çalışmanın cevabı dönüyor.
    * Yayının kendi kapıları çoğu tekrarı zaten durdurur ama 409 ile — ajan
@@ -220,18 +254,19 @@ export async function siteAction(request: Request, env: Env): Promise<Response> 
     /* Aynı anahtar FARKLI gövdeyle geldi: bu bir tekrar değil, çakışma.
      * Sessizce ilk cevabı döndürmek, ajanın yaptığını sandığı işin hiç
      * yapılmaması olurdu. */
-    if (gecmis.input_digest !== inputDigest) {
+    if (gecmis.input_digest !== inputDigest || gecmis.actor_subject !== verified.actorSubject) {
       return reddetVeYaz(409, "aynı Idempotency-Key farklı bir istekle kullanıldı");
     }
     return json({ status: "replayed", output: JSON.parse(gecmis.output) });
   }
 
   const response = await calistir(operationId, auth?.identity, input, env);
+  const wasReplayed = response.headers.get("x-haber-idempotency-replay") === "1";
 
   const sonuc = await sonucaCevir(response, reddetVeYaz);
   if (sonuc instanceof Response) return sonuc;
 
-  if (!kayitTut) return json({ status: "applied", output: sonuc.output });
+  if (!kayitTut) return json({ status: wasReplayed ? "replayed" : "applied", output: sonuc.output });
 
   /* Kayıt yazmadan önce iş bitmiş oluyor ve bu sıra bilerek: kaydı önce
    * yazsaydık, yayın çökerse ajan "yapıldı" cevabını sonsuza kadar tekrar
@@ -264,18 +299,19 @@ async function calistir(
   env: Env,
 ): Promise<Response> {
   switch (operationId) {
+    case "haber.yayinla": return publishTechnologyAs(identity!, input, env);
+    case "haber.haberleriOku": return listTechnologyAs(input, env);
+    case "haber.haberOku": return readTechnologyAs(input, env);
+    case "haber.duzenle": return editTechnologyAs(identity!, input, env);
+    case "haber.yayindanKaldir": return setTechnologyPublicationState(identity!, input, env, "withdraw");
+    case "haber.yayinaAlGeri": return setTechnologyPublicationState(identity!, input, env, "restore");
+    // Old operations exist only under a server-controlled rollback flag.
     case "haber.panoYaz": return writeBriefAs(identity!, input, env);
     case "haber.panoOku": return readBoardAs(identity!, env);
-    case "haber.yayinla": return publishAs(identity!, input, env);
-    case "haber.yayindanKaldir": return withdrawAs(identity!, input, env);
-    case "haber.yayinaAlGeri": return restoreAs(identity!, input, env);
+    case "haber.legacyYayinla": return publishAs(identity!, input, env);
+    case "haber.legacyYayindanKaldir": return withdrawAs(identity!, input, env);
+    case "haber.legacyYayinaAlGeri": return restoreAs(identity!, input, env);
     case "haber.yayinlariOku": return listPublished(input, env);
-    case "haber.teknolojiYayinla": return publishTechnologyAs(identity!, input, env);
-    case "haber.teknolojiHaberleriOku": return listTechnologyAs(input, env);
-    case "haber.teknolojiHaberOku": return readTechnologyAs(input, env);
-    case "haber.teknolojiDuzenle": return editTechnologyAs(identity!, input, env);
-    case "haber.teknolojiYayindanKaldir": return setTechnologyPublicationState(identity!, input, env, "withdraw");
-    case "haber.teknolojiYayinaAlGeri": return setTechnologyPublicationState(identity!, input, env, "restore");
     default: return json({ error: `bilinmeyen işlem: ${operationId}` }, 404);
   }
 }
