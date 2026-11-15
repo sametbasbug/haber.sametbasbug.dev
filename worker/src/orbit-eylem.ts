@@ -19,6 +19,7 @@ import {
   writeBriefAs,
   type Env,
 } from "./index.ts";
+import { editTechnologyAs, listTechnologyAs, publishTechnologyAs, readTechnologyAs, setTechnologyPublicationState } from "./technology-publication.ts";
 import { authorizeAction, verifyOrbitActionToken, type Identity } from "./identity.ts";
 
 export const OPERATIONS = [
@@ -28,6 +29,12 @@ export const OPERATIONS = [
   "haber.yayindanKaldir",
   "haber.yayinaAlGeri",
   "haber.yayinlariOku",
+  "haber.teknolojiYayinla",
+  "haber.teknolojiHaberleriOku",
+  "haber.teknolojiHaberOku",
+  "haber.teknolojiDuzenle",
+  "haber.teknolojiYayindanKaldir",
+  "haber.teknolojiYayinaAlGeri",
 ] as const;
 
 /* İKİ YETKİ KATMANI VAR VE BU YENİ BİR KURAL — yazıldığı yer burası.
@@ -43,14 +50,14 @@ export const OPERATIONS = [
  *
  * Bu listeye bir işlem eklemek onu izin duvarının DIŞINA çıkarmaktır; yazma
  * yapan hiçbir işlem buraya girmemeli. */
-const YETKI_GEREKTIRMEYENLER = new Set<string>(["haber.yayinlariOku"]);
+const YETKI_GEREKTIRMEYENLER = new Set<string>(["haber.yayinlariOku", "haber.teknolojiHaberleriOku", "haber.teknolojiHaberOku"]);
 
 /* Tekrar kaydı tutulmayan işlemler.
  *
  * Okuma işleminde tekrar diye bir sorun yok: ikinci kez çalışması zararsız ve
  * taze cevap bayat cevaptan iyidir. Kayıt tutsaydık her okuma bir satır
  * yazardı — okuma yolunu yazma yoluna çevirmek olurdu. */
-const KAYITSIZ = new Set<string>(["haber.yayinlariOku", "haber.panoOku"]);
+const KAYITSIZ = new Set<string>(["haber.yayinlariOku", "haber.panoOku", "haber.teknolojiHaberleriOku", "haber.teknolojiHaberOku"]);
 
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
@@ -263,6 +270,12 @@ async function calistir(
     case "haber.yayindanKaldir": return withdrawAs(identity!, input, env);
     case "haber.yayinaAlGeri": return restoreAs(identity!, input, env);
     case "haber.yayinlariOku": return listPublished(input, env);
+    case "haber.teknolojiYayinla": return publishTechnologyAs(identity!, input, env);
+    case "haber.teknolojiHaberleriOku": return listTechnologyAs(input, env);
+    case "haber.teknolojiHaberOku": return readTechnologyAs(input, env);
+    case "haber.teknolojiDuzenle": return editTechnologyAs(identity!, input, env);
+    case "haber.teknolojiYayindanKaldir": return setTechnologyPublicationState(identity!, input, env, "withdraw");
+    case "haber.teknolojiYayinaAlGeri": return setTechnologyPublicationState(identity!, input, env, "restore");
     default: return json({ error: `bilinmeyen işlem: ${operationId}` }, 404);
   }
 }

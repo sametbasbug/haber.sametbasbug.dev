@@ -23,9 +23,13 @@ export interface PublishedOptions {
 	since?: Date | string;
 	includeTags?: boolean;
 	includeSources?: boolean;
+	publicationEra?: "legacy" | "technology";
+	techCategory?: string;
 }
 
 export async function getPublished(options: PublishedOptions = {}): Promise<any[]> {
+	// Statik koleksiyon eski dönem arşivini taşır. Yeni dönem yalnız D1'de üretilir.
+	if (options.publicationEra === "technology" || options.techCategory) return [];
 	let entries = (await getCollection('equinoxHaber'))
 		.filter((entry) => !entry.data.isDraft)
 		.sort((a, b) => {

@@ -25,6 +25,8 @@ export interface PublishedD1Options {
   since?: Date | string;
   includeTags?: boolean;
   includeSources?: boolean;
+  publicationEra?: "legacy" | "technology";
+  techCategory?: string;
 }
 
 export interface D1NewsEntry {
@@ -43,6 +45,7 @@ export interface D1NewsEntry {
     tags: string[];
     author: string;
     category: string;
+    techCategory?: string;
     breaking: boolean;
     editorPick: boolean;
     sources: NewsSource[];
@@ -55,6 +58,7 @@ interface ArticleRow {
   hero_image: string | null; hero_alt: string | null;
   pub_date: string; updated_date: string;
   is_draft: number; breaking: number; editor_pick: number;
+  tech_category?: string | null;
 }
 
 /** D1 satırlarını koleksiyon girdisi biçimine çevirir.
@@ -96,6 +100,7 @@ function assemble(
       tags: tagsBySlug.get(row.slug) ?? [],
       author: row.author,
       category: row.category,
+      techCategory: row.tech_category ?? undefined,
       breaking: row.breaking === 1,
       editorPick: row.editor_pick === 1,
       sources: sourcesBySlug.get(row.slug) ?? [],
@@ -169,6 +174,14 @@ export async function getPublishedFromD1(
   const where = ['is_draft = 0'];
   const bindings: unknown[] = [];
 
+  if (options.publicationEra) {
+    where.push('publication_era = ?');
+    bindings.push(options.publicationEra);
+  }
+  if (options.techCategory) {
+    where.push('tech_category = ?');
+    bindings.push(options.techCategory);
+  }
   if (options.category) {
     where.push('category = ?');
     bindings.push(options.category);
@@ -188,7 +201,7 @@ export async function getPublishedFromD1(
 
   const articles = await db.prepare(
     `SELECT slug, title, description, category, author, ${bodyColumns}
-            hero_image, hero_alt, pub_date, updated_date, is_draft, breaking, editor_pick
+            hero_image, hero_alt, pub_date, updated_date, is_draft, breaking, editor_pick, tech_category
        FROM articles
       WHERE ${where.join(' AND ')}
       ORDER BY pub_date DESC, slug ASC${pagination}`,

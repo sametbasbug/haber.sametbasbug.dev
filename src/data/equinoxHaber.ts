@@ -23,6 +23,8 @@ export interface PublishedNewsOptions {
 	since?: Date | string;
 	includeTags?: boolean;
 	includeSources?: boolean;
+	publicationEra?: "legacy" | "technology";
+	techCategory?: string;
 }
 
 /**

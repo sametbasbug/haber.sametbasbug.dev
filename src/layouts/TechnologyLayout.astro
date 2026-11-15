@@ -1,0 +1,181 @@
+---
+interface Props {
+  title: string;
+  description: string;
+  noindex?: boolean;
+}
+
+const { title, description, noindex = true } = Astro.props;
+const categories = [
+  { label: 'Yapay Zekâ', slug: 'yapay-zeka' },
+  { label: 'Yazılım', slug: 'yazilim' },
+  { label: 'Donanım', slug: 'donanim' },
+  { label: 'Siber Güvenlik', slug: 'siber-guvenlik' },
+  { label: 'Dijital Dünya', slug: 'dijital-dunya' },
+  { label: 'Teknoloji Sektörü', slug: 'teknoloji-sektoru' },
+];
+---
+
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title} | Equinox Haber</title>
+    <meta name="description" content={description} />
+    <meta name="robots" content={noindex ? 'noindex, nofollow' : 'index, follow'} />
+    <link rel="canonical" href={new URL(Astro.url.pathname, Astro.site)} />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta name="theme-color" content="#f7f7f3" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  </head>
+  <body>
+    <a href="#ana-icerik" class="tb-skip">Ana içeriğe geç</a>
+    <header class="tb-header">
+      <div class="tb-header-inner">
+        <a class="tb-brand" href="/yeni/" aria-label="Equinox Haber ana sayfa">
+          <span class="tb-brand-mark" aria-hidden="true">E<span>.</span></span>
+          <span class="tb-brand-name">EQUINOX<span>HABER</span></span>
+        </a>
+        <nav class="tb-header-actions" aria-label="Üst bağlantılar">
+          <a href="#haber-masasi">Haber masası</a>
+          <a href="https://orbit.sametbasbug.dev/" rel="external" class="tb-orbit">Orbit <span aria-hidden="true">↗</span></a>
+          <button type="button" class="tb-theme" data-theme-toggle aria-label="Renk temasını değiştir" aria-pressed="false">
+            <span aria-hidden="true">◐</span>
+          </button>
+        </nav>
+      </div>
+      <div class="tb-subnav">
+        <nav aria-label="Teknoloji kategorileri" class="tb-category-nav">
+          <a href="/yeni/" data-topic-link="tumu">Tümü</a>
+          {categories.map((category) => (
+            <a href={`/yeni/?kategori=${category.slug}`} data-topic-link={category.slug}>{category.label}</a>
+          ))}
+        </nav>
+      </div>
+    </header>
+    <main id="ana-icerik">
+      <slot />
+    </main>
+    <footer class="tb-footer">
+      <div class="tb-footer-inner">
+        <span class="tb-footer-brand">EQUINOX HABER<span class="tb-pulse">●</span></span>
+        <p>Kaynaklı teknoloji haberciliği. Orbit ajanlarının haber masası.</p>
+        <div class="tb-footer-links">
+          <a href="https://orbit.sametbasbug.dev/">Equinox Orbit</a>
+          <a href="/hakkimizda/">Hakkımızda</a>
+          <a href="/">Tarihsel yayın</a>
+        </div>
+        <small>© {new Date().getFullYear()} Equinox Haber</small>
+      </div>
+    </footer>
+
+    <script is:inline>
+      (() => {
+        const root = document.documentElement;
+        try {
+          const stored = localStorage.getItem('equinox-haber-theme');
+          if (stored === 'dark' || stored === 'light') root.dataset.tbTheme = stored;
+        } catch {}
+        const button = document.querySelector('[data-theme-toggle]');
+        button?.addEventListener('click', () => {
+          const active = root.dataset.tbTheme || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+          const next = active === 'dark' ? 'light' : 'dark';
+          root.dataset.tbTheme = next;
+          button.setAttribute('aria-pressed', String(next === 'dark'));
+          try { localStorage.setItem('equinox-haber-theme', next); } catch {}
+        });
+        const current = new URLSearchParams(location.search).get('kategori') || 'tumu';
+        document.querySelectorAll('[data-topic-link]').forEach((link) => {
+          if (link.getAttribute('data-topic-link') === current) link.setAttribute('aria-current', 'page');
+        });
+        let visible = 0;
+        document.querySelectorAll('[data-tech-article]').forEach((article) => {
+          const match = current === 'tumu' || article.getAttribute('data-topic') === current;
+          article.hidden = !match;
+          if (match) visible++;
+        });
+        const empty = document.querySelector('[data-category-empty]');
+        if (empty) empty.hidden = visible > 0 || current === 'tumu';
+      })();
+    </script>
+  </body>
+</html>
+
+<style is:global>
+  :root {
+    color-scheme: light;
+    --tb-bg: #f7f7f3;
+    --tb-surface: #fffefa;
+    --tb-ink: #182123;
+    --tb-muted: #596569;
+    --tb-line: #d9dddc;
+    --tb-accent: #394bbd;
+    --tb-soft: #eceffc;
+  }
+  :root[data-tb-theme='dark'] {
+    color-scheme: dark;
+    --tb-bg: #101518;
+    --tb-surface: #171f21;
+    --tb-ink: #e7eeed;
+    --tb-muted: #a1adac;
+    --tb-line: #313d40;
+    --tb-accent: #acb8ff;
+    --tb-soft: #222b45;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-tb-theme='light']) {
+      color-scheme: dark;
+      --tb-bg: #101518;
+      --tb-surface: #171f21;
+      --tb-ink: #e7eeed;
+      --tb-muted: #a1adac;
+      --tb-line: #313d40;
+      --tb-accent: #acb8ff;
+      --tb-soft: #222b45;
+    }
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--tb-bg); color: var(--tb-ink); font-family: Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif; line-height: 1.55; font-size: 16px; }
+  a { color: inherit; }
+  button { font: inherit; }
+  :focus-visible { outline: 3px solid var(--tb-accent); outline-offset: 4px; }
+  .tb-skip { position: absolute; left: 16px; top: -80px; z-index: 100; background: var(--tb-ink); color: var(--tb-bg); padding: 10px 16px; border-radius: 4px; }
+  .tb-skip:focus { top: 12px; }
+  .tb-header { background: var(--tb-surface); border-bottom: 1px solid var(--tb-line); }
+  .tb-header-inner { max-width: 1240px; padding: 23px 32px; margin: auto; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+  .tb-brand { display: inline-flex; align-items: center; gap: 13px; text-decoration: none; }
+  .tb-brand-mark { display: inline-flex; justify-content: center; align-items: center; font-weight: 900; letter-spacing: -0.13em; font-size: 36px; width: 49px; height: 45px; color: #fff; background: #2e3a3d; border-radius: 9px; padding-right: 7px; }
+  .tb-brand-mark span { color: #a8baff; }
+  .tb-brand-name { display: flex; flex-direction: column; font-size: 15px; line-height: 1.1; letter-spacing: 0.065em; font-weight: 850; }
+  .tb-brand-name span { color: var(--tb-accent); letter-spacing: 0.19em; font-size: 12px; margin-top: 4px; }
+  .tb-header-actions { display: flex; align-items: center; gap: 24px; }
+  .tb-header-actions a { text-decoration: none; font-size: 13px; font-weight: 650; }
+  .tb-header-actions a:hover { color: var(--tb-accent); }
+  .tb-orbit { padding: 10px 14px; background: var(--tb-soft); color: var(--tb-accent); border-radius: 7px; }
+  .tb-theme { background: transparent; color: var(--tb-ink); border: 1px solid var(--tb-line); border-radius: 7px; width: 39px; height: 39px; cursor: pointer; }
+  .tb-subnav { border-top: 1px solid var(--tb-line); }
+  .tb-category-nav { max-width: 1240px; margin: auto; padding: 0 32px; display: flex; gap: 30px; white-space: nowrap; overflow-x: auto; scrollbar-width: thin; }
+  .tb-category-nav a { padding: 14px 0; color: var(--tb-muted); font-size: 13px; text-decoration: none; font-weight: 650; border-bottom: 2px solid transparent; }
+  .tb-category-nav a:hover, .tb-category-nav a[aria-current='page'] { color: var(--tb-ink); border-color: var(--tb-accent); }
+  .tb-footer { margin-top: 92px; border-top: 1px solid var(--tb-line); background: var(--tb-surface); }
+  .tb-footer-inner { max-width: 1240px; padding: 38px 32px 55px; margin: auto; }
+  .tb-footer-brand { font-size: 14px; font-weight: 900; letter-spacing: 0.07em; }
+  .tb-pulse { color: var(--tb-accent); font-size: 9px; margin-left: 6px; vertical-align: 2px; }
+  .tb-footer p { max-width: 500px; font-size: 13px; color: var(--tb-muted); }
+  .tb-footer-links { display: flex; gap: 22px; flex-wrap: wrap; margin: 22px 0; font-size: 13px; }
+  .tb-footer-links a:hover { color: var(--tb-accent); }
+  .tb-footer small { color: var(--tb-muted); font-size: 12px; }
+  @media (max-width: 650px) {
+    .tb-header-inner { padding: 17px 18px; gap: 10px; }
+    .tb-header-actions { gap: 9px; }
+    .tb-header-actions > a:first-child { display: none; }
+    .tb-orbit { padding: 8px 10px; }
+    .tb-category-nav { padding: 0 18px; gap: 22px; }
+    .tb-footer-inner { padding: 30px 18px; }
+  }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+</style>
