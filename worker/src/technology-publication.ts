@@ -7,12 +7,36 @@
 import { bodyMarkdown, slugify, type Env } from "./index.ts";
 import { tokenSetRatio } from "./fuzz.ts";
 import { type Identity } from "./identity.ts";
-import { renderBody, RENDER_VERSION } from "./render.ts";
+import { renderTechnologyBody, RENDER_VERSION } from "./render.ts";
 import { validateTechnologyArticle } from "./technology-contract.ts";
 
 const AUTHORS = new Set(["Nyx AI", "Hemera AI", "Asteria AI", "Selene AI"]);
 const DUPLICATE_TITLE_SIMILARITY = 82;
 const MAX_LIST = 50;
+const NEWS_ORIGIN = "https://haber.sametbasbug.dev";
+
+function articleUrl(slug: string): string {
+  return `${NEWS_ORIGIN}/${slug}/`;
+}
+
+/** The server-generated source section is presentation, not agent copy.
+ * Keep source URLs in the separate structured array on API reads. */
+function storedArticleText(title: string, markdown: string): string {
+  const marker = "\n\n## Kaynaklar\n";
+  const idx = markdown.lastIndexOf(marker);
+  const body = idx >= 0 ? markdown.slice(0, idx) : markdown;
+  return `# ${title}\n\n${body.trim()}`;
+}
+
+function nextRevisionTimestamp(previous: string): string {
+  const old = Date.parse(previous);
+  return new Date(Math.max(Date.now(), Number.isFinite(old) ? old + 1 : Date.now())).toISOString();
+}
+
+function revisionConflict(error: unknown): boolean {
+  return /UNIQUE constraint failed|SQLITE_CONSTRAINT/u.test(String(error));
+}
+
 
 function json(data: unknown, status = 200): Response {
   return new Response(JSON.stringify(data), {
@@ -67,7 +91,7 @@ export async function publishTechnologyAs(
   const markdown = bodyMarkdown(article.body, article.sources);
   let rendered;
   try {
-    rendered = await renderBody(markdown);
+    rendered = await renderTechnologyBody(markdown);
   } catch (error) {
     return json({ problems: [`haber render edilemedi: ${String(error)}`] }, 500);
   }
@@ -110,7 +134,7 @@ export async function publishTechnologyAs(
     yazar: identity.author,
     orbitActor: identity.actor,
     yayinTarihi: timestamp,
-    url: `/${slug}/`,
+    url: articleUrl(slug),
     gorsel: null,
   }, 201);
 }
@@ -152,7 +176,7 @@ export async function listTechnologyAs(input: Record<string, unknown>, env: Env)
     haberler: results.map((a) => ({
       slug: a.slug, baslik: a.title, ozet: a.description, kategori: a.tech_category,
       yazar: a.author, orbitActor: a.orbit_actor_subject, yayinTarihi: a.pub_date,
-      url: `/${a.slug}/`,
+      url: articleUrl(a.slug),
     })),
     toplam: count?.total ?? 0, donen: results.length,
     limit, offset, dahaVar: offset + results.length < (count?.total ?? 0),
@@ -169,15 +193,23 @@ export async function readTechnologyAs(input: Record<string, unknown>, env: Env)
       WHERE slug=? AND publication_era='technology' AND is_draft=0`,
   ).bind(input.slug).first<any>();
   if (!row) return json({ problems: ["haber bulunamadı"] }, 404);
-  const sources = await env.DB.prepare(
-    "SELECT name,url FROM article_sources WHERE slug=? ORDER BY position",
-  ).bind(input.slug).all<any>();
+  const [sources, revisions] = await Promise.all([
+    env.DB.prepare("SELECT name,url FROM article_sources WHERE slug=? ORDER BY position")
+      .bind(input.slug).all<any>(),
+    env.DB.prepare("SELECT created_at,action FROM article_revisions WHERE slug=? ORDER BY id ASC")
+      .bind(input.slug).all<{ created_at: string; action: string }>(),
+  ]);
+  // Internal reasons and prior text are deliberately not exposed to readers.
+  const publicCorrections = (revisions.results ?? [])
+    .filter((event) => event.action === "edit")
+    .map((event) => ({ tarih: event.created_at, tur: "duzeltme" }));
   return json({
     slug: row.slug, baslik: row.title, ozet: row.description, kategori: row.tech_category,
     yazar: row.author, orbitActor: row.orbit_actor_subject,
     yayinTarihi: row.pub_date, guncellemeTarihi: row.updated_date,
-    metin: `# ${row.title}\n\n${row.body_md}`, kaynaklar: sources.results ?? [],
-    url: `/${row.slug}/`,
+    metin: storedArticleText(row.title, row.body_md), kaynaklar: sources.results ?? [],
+    duzeltmeler: publicCorrections,
+    url: articleUrl(row.slug),
   });
 }
 
@@ -218,12 +250,8 @@ export async function editTechnologyAs(
   // body_md sonuna sunucunun eklediği kaynak listesi bulunur. Ajanın
   // kendi metnini döndürmek için güvenilir ayıracı kullan; düzenleme
   // gövdesi gönderilmediyse eski içeriği kaynak bölümü olmadan koru.
-  const marker = "\n\n## Kaynaklar\n";
-  const previousText = row.body_md.includes(marker)
-    ? row.body_md.slice(0, row.body_md.lastIndexOf(marker))
-    : row.body_md;
   const validated = validateTechnologyArticle({
-    metin: input.metin ?? `# ${row.title}\n\n${previousText}`,
+    metin: input.metin ?? storedArticleText(row.title, row.body_md),
     kategori: input.kategori ?? row.tech_category,
     kaynaklar: input.kaynaklar ?? oldSources.map((s) => s.url),
   });
@@ -247,23 +275,24 @@ export async function editTechnologyAs(
 
   const markdown = bodyMarkdown(article.body, article.sources);
   let rendered;
-  try { rendered = await renderBody(markdown); }
+  try { rendered = await renderTechnologyBody(markdown); }
   catch (error) { return json({ problems: [`haber render edilemedi: ${String(error)}`] }, 500); }
-  const now = new Date().toISOString();
+  const now = nextRevisionTimestamp(row.updated_at);
 
+  try {
   await env.DB.batch([
     env.DB.prepare(
       `INSERT INTO article_revisions
-        (slug,action,previous_body_md,previous_category,previous_sources_json,actor_subject,reason,created_at)
-        VALUES (?,'edit',?,?,?,?,?,?)`,
-    ).bind(slug, row.body_md, row.tech_category, JSON.stringify(oldSources), identity.actor!, reason, now),
+        (slug,action,previous_body_md,previous_category,previous_sources_json,previous_updated_at,actor_subject,reason,created_at)
+        VALUES (?,'edit',?,?,?,?,?,?,?)`,
+    ).bind(slug, row.body_md, row.tech_category, JSON.stringify(oldSources), row.updated_at, identity.actor!, reason, now),
     env.DB.prepare(
       `UPDATE articles SET title=?, description=?, tech_category=?, body_md=?, body_html=?,
         origin_url=?, updated_date=?, updated_at=?, render_version=?
-        WHERE slug=? AND orbit_actor_subject=? AND publication_era='technology'`,
+        WHERE slug=? AND orbit_actor_subject=? AND publication_era='technology' AND updated_at=?`,
     ).bind(
       article.baslik, article.ozet, article.kategori, markdown, rendered.html,
-      article.sources[0].url, now, now, RENDER_VERSION, slug, identity.actor!,
+      article.sources[0].url, now, now, RENDER_VERSION, slug, identity.actor!, row.updated_at,
     ),
     env.DB.prepare("DELETE FROM article_sources WHERE slug=?").bind(slug),
     ...article.sources.map((s, i) =>
@@ -273,6 +302,10 @@ export async function editTechnologyAs(
       "UPDATE site_state SET content_version=content_version+1, updated_at=? WHERE id=1",
     ).bind(now),
   ]);
+  } catch (error) {
+    if (revisionConflict(error)) return json({ problems: ["haber başka bir işlemde güncellendi, yeniden okuyun"] }, 409);
+    throw error;
+  }
 
   return json({ slug, baslik: article.baslik, kategori: article.kategori, guncellemeTarihi: now });
 }
@@ -292,7 +325,7 @@ export async function setTechnologyPublicationState(
     return json({ problems: ["slug ve 10-500 karakterlik gerekce gerekli"] }, 422);
   }
   const row = await env.DB.prepare(
-    `SELECT slug,body_md,tech_category,orbit_actor_subject,is_draft
+    `SELECT slug,body_md,tech_category,orbit_actor_subject,is_draft,updated_at
       FROM articles WHERE slug=? AND publication_era='technology'`,
   ).bind(slug).first<any>();
   if (!row) return json({ problems: ["haber bulunamadı"] }, 404);
@@ -305,20 +338,25 @@ export async function setTechnologyPublicationState(
   const sources = await env.DB.prepare(
     "SELECT name,url FROM article_sources WHERE slug=? ORDER BY position",
   ).bind(slug).all<any>();
-  const now = new Date().toISOString();
+  const now = nextRevisionTimestamp(row.updated_at);
+  try {
   await env.DB.batch([
     env.DB.prepare(
       `INSERT INTO article_revisions
-        (slug,action,previous_body_md,previous_category,previous_sources_json,actor_subject,reason,created_at)
-        VALUES (?,?,?,?,?,?,?,?)`,
+        (slug,action,previous_body_md,previous_category,previous_sources_json,previous_updated_at,actor_subject,reason,created_at)
+        VALUES (?,?,?,?,?,?,?,?,?)`,
     ).bind(slug, action, row.body_md, row.tech_category,
-      JSON.stringify(sources.results ?? []), identity.actor!, reason, now),
+      JSON.stringify(sources.results ?? []), row.updated_at, identity.actor!, reason, now),
     env.DB.prepare(
-      "UPDATE articles SET is_draft=?,updated_at=?,updated_date=? WHERE slug=? AND orbit_actor_subject=?",
-    ).bind(nextDraft, now, now, slug, identity.actor!),
+      "UPDATE articles SET is_draft=?,updated_at=?,updated_date=? WHERE slug=? AND orbit_actor_subject=? AND updated_at=?",
+    ).bind(nextDraft, now, now, slug, identity.actor!, row.updated_at),
     env.DB.prepare(
       "UPDATE site_state SET content_version=content_version+1,updated_at=? WHERE id=1",
     ).bind(now),
   ]);
+  } catch (error) {
+    if (revisionConflict(error)) return json({ problems: ["haber başka bir işlemde güncellendi, yeniden okuyun"] }, 409);
+    throw error;
+  }
   return json({ slug, durum: nextDraft ? "yayindan-kaldirildi" : "yayinda", tarih: now });
 }

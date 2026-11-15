@@ -58,8 +58,8 @@ Equinox Haber sıfırdan tasarlanmış, **Türkçe teknoloji haberciliğine odak
 
 - [x] D1 migration 0012: `publication_era`, `tech_category`, `orbit_actor_subject`, revision tablosu. 12/12 migration izole D1 üzerinde geçti; legacy CHECK korundu.
 - [x] Üç alanlı yeni haber doğrulayıcısı yazıldı; 13 kontrat testi ve bellek içi SQLite ile 31 yayın/sahiplik kontrolü geçti.
-- [ ] Yeni Orbit eylemiyle tek-adım yayınlama, kaynak/başlık tekrar kontrolü, idempotency köprüsü kodlandı; uçtan uca Orbit belge testi ve yüklü üretim eşzamanlılık testleri bekliyor.
-- [ ] Ajan sahipliği temelli düzenleme/kaldırma/geri alma ve revizyon izi kodlandı, SQLite testleri geçti; yönetici override ve gerçek Orbit entegrasyon testi bekliyor.
+- [ ] Tek-adım görselsiz yayın + kaynak/başlık tekrar kontrolü + Orbit imzalı JWT uçtan uca SQLite testleri geçti; farklı Workers isolate arasında gerçek eşzamanlı staging testi bekliyor.
+- [ ] Sahiplik, düzenleme/kaldırma/geri alma ve revizyon CAS koruması (aynı sürümü eşzamanlı düzenleme reddi) test edildi. Yönetici override ve tam Orbit staging entegrasyonu bekliyor.
 - [ ] Haber 2.0 Orbit action kataloğu ve Worker köprüsü geliştirildi; 4 yazarın kayıtlı kalıcı Orbit ajan kimliklerinin gerçek eşlemesi ve yetki entegrasyon testleri bekliyor.
 - [ ] API iş akışını terminal kullanan Orbit ajanı ve MCP üzerinden uçtan uca test et.
 
@@ -92,3 +92,12 @@ Equinox Haber sıfırdan tasarlanmış, **Türkçe teknoloji haberciliğine odak
 - Haber'in şu anki `briefId` / aday panosu zinciri legacy kod olarak kalabilir ama yeni ajan deneyimi için **önkoşul değildir**; tamamlanınca kaldırılır.
 - Her fazın sonunda dokümandaki checkbox'ları ve gerçek test sonuçlarını güncelle; tamamlanmayan aşamayı tamamlandı gösterme.
 - Bilinmeyen gerçek ajan kimliklerini asla elle uydurma; Orbit kimlik kaydını güvenli tanımlamayla tamamla.
+
+## 15 Kasım 2026 ikinci checkpoint
+
+- Güvenlik: Eski renderer görsel, ham HTML ve javascript: URL üretebiliyordu. Yeni yayınlar için ayrı renderTechnologyBody, rehype-sanitize 6.0.0 allowlist ve Markdown'da resim/ham HTML reddi eklendi. Legacy render yolu ve 580 haberin HTML eşitliği korunuyor.
+- D1: 0012 migration'ındaki article_revisions (slug,previous_updated_at) UNIQUE ve her güncellemede eski timestamp kontrolüyle eşzamanlı iki düzenleme aynı sürümü iki kez yazamıyor. İkinci işlem 409 alır.
+- API: Yeni haberlerin url alanı mutlak kanonik bağlantıya çevrildi; tam metin okuma ayrı structured kaynaklar ve özel gerekçeleri açığa çıkarmayan düzeltme olayları dönüyor.
+- Önizleme: /yeni/ akışından /yeni/[slug]/ detayına bağlantılar eklendi. Yayın ekranına henüz aktarılmadı.
+- Orbit yerel repo /Volumes/KIOXIA/orbit-project için feat/orbit-authenticated-haber-reads dalı; public issue https://github.com/sametbasbug/orbit.sametbasbug.dev/issues/91. İmzalı, sabit iki okuma eylemine yönlenen GET /v1/me/technology-news ve GET /v1/me/technology-news/{slug} geliştirildi. Site grant gerektirmez ama aktif Orbit ajan credential ister. Orbit OpenAPI 1.6.0 ve skill rehberi 3.9.0 şeklinde aşamalı hazırlanmıştır. Her iki sistem birlikte yayımlanmadan gerçek canlı kullanıma hazır sayılmaz.
+- Kontroller: Haber tam quality, SSR, root + worker npm audit (0); Orbit 345 D1 testi, check 0 uyarı, build + site/browser testleri başarılı. Prod'a push/deploy olmadı. Staging gerçek Orbit credential, 4 yayıncı ID eşlemesi ve web UI responsive görsel testi bekliyor.

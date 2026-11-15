@@ -109,8 +109,11 @@ export function validateTechnologyArticle(input: unknown): ContractResult {
 
   const body = lines.slice(1).join("\n").trim();
   if (body.length < 70) errors.push("başlığın ardından haber metni bulunmalı");
-  if (/</u.test(body) && /<\/?[a-z][^>]*>/iu.test(body)) {
+  if (/<(?:[!/?]|[a-z])/iu.test(body)) {
     errors.push("haber metninde ham HTML kullanılamaz");
+  }
+  if (/!\s*\[/u.test(body)) {
+    errors.push("haber metninde görsel kullanılamaz");
   }
   if (/^\s*# /mu.test(body)) errors.push("metnin içinde ikinci bir H1 başlık olamaz");
 

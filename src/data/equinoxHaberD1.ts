@@ -264,7 +264,7 @@ export async function getArticlePageFromD1(
 ): Promise<D1ArticlePageData | null> {
   const current = await db.prepare(
     `SELECT slug, title, description, category, author, body_md, body_html,
-            hero_image, hero_alt, pub_date, updated_date, is_draft, breaking, editor_pick
+            hero_image, hero_alt, pub_date, updated_date, is_draft, breaking, editor_pick, tech_category
        FROM articles
       WHERE slug = ? AND is_draft = 0`,
   ).bind(slug).first<ArticleRow>();

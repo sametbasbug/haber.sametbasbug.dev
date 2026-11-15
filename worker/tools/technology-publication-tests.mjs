@@ -3,15 +3,31 @@
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
 import { DatabaseSync } from "node:sqlite";
+import { renderTechnologyBody } from "../src/render.ts";
 import { publishTechnologyAs, listTechnologyAs, readTechnologyAs, editTechnologyAs, setTechnologyPublicationState } from "../src/technology-publication.ts";
 
 import { siteAction } from "../src/orbit-eylem.ts";
+
+// Security regression: raw HTML, executable links and image Markdown
+// never appear in the new rendering path (legacy parity stays intact).
+{
+  const rendered = await renderTechnologyBody([
+    '<script>alert(1)</script>',
+    '<img src=x onerror=alert(1)>',
+    '![a](https://example.com/image.png)',
+    '[harmful](javascript:alert(1))',
+    '[safe](https://example.com/guideline)',
+  ].join("\n\n"));
+  assert.ok(!/<script|<img|onerror|javascript:|<iframe/iu.test(rendered.html), rendered.html);
+  assert.ok(rendered.html.includes('href="https://example.com/guideline"'), rendered.html);
+}
 
 const database = new DatabaseSync(":memory:");
 for (const file of readdirSync(new URL("../migrations/", import.meta.url)).filter((n) => n.endsWith(".sql")).sort()) {
   database.exec(readFileSync(new URL(`../migrations/${file}`, import.meta.url), "utf8"));
 }
 
+let batchQueue = Promise.resolve();
 const DB = {
   prepare(sql) {
     return {
@@ -28,16 +44,23 @@ const DB = {
     };
   },
   async batch(statements) {
-    database.exec("BEGIN");
-    try {
-      const result = [];
-      for (const s of statements) result.push(await s.run());
-      database.exec("COMMIT");
-      return result;
-    } catch (error) {
-      database.exec("ROLLBACK");
-      throw error;
-    }
+    // workerd D1.batch serializes each transaction; the SQLite simulation
+    // must not interleave BEGIN/COMMIT statements across awaited writes.
+    const execute = async () => {
+      database.exec("BEGIN");
+      try {
+        const result = [];
+        for (const s of statements) result.push(await s.run());
+        database.exec("COMMIT");
+        return result;
+      } catch (error) {
+        database.exec("ROLLBACK");
+        throw error;
+      }
+    };
+    const current = batchQueue.then(execute);
+    batchQueue = current.then(() => undefined, () => undefined);
+    return current;
   },
 };
 
@@ -98,6 +121,9 @@ r = await read(readTechnologyAs({ slug }, env));
 assert.equal(r.status, 200);
 assert.equal(r.body.kaynaklar.length, 2);
 assert.ok(r.body.metin.startsWith("# Güvenlik"));
+assert.ok(!r.body.metin.includes("## Kaynaklar"), "API source list must not duplicate the generated source section");
+assert.equal(r.body.url, `https://haber.sametbasbug.dev/${slug}/`);
+assert.deepEqual(r.body.duzeltmeler, [], "new article has no corrections");
 r = await read(readTechnologyAs({ slug: "../../private" }, env));
 assert.equal(r.status, 400);
 
@@ -113,6 +139,9 @@ assert.equal(r.status, 200, JSON.stringify(r.body));
 assert.equal(database.prepare("SELECT COUNT(*) AS n FROM article_revisions WHERE slug=?").get(slug).n, 1);
 r = await read(readTechnologyAs({ slug }, env));
 assert.ok(r.body.metin.includes("kritik bir güvenlik açığını"));
+assert.equal(r.body.duzeltmeler.length, 1);
+assert.equal(r.body.duzeltmeler[0].tur, "duzeltme");
+assert.ok(!JSON.stringify(r.body).includes("teknik açıklama düzeltildi"), "internal edit reason must stay private");
 
 r = await read(setTechnologyPublicationState(selene, { slug, gerekce: "kaynak bilgisi doğrulanacak" }, env, "withdraw"));
 assert.equal(r.status, 200);
@@ -127,6 +156,25 @@ assert.equal(r.status, 200);
 r = await read(listTechnologyAs({}, env));
 assert.equal(r.body.toplam, 1);
 assert.equal(database.prepare("SELECT COUNT(*) AS n FROM article_revisions WHERE slug=?").get(slug).n, 3);
+
+// Two agents/requests editing the *same version* cannot both append a
+// revision or interleave source changes. The database UNIQUE constraint
+// enforces this inside the same atomic batch, not in application memory.
+const concurrentResults = await Promise.all([
+  read(editTechnologyAs(selene, {
+    slug, gerekce: "birinci eşzamanlı düzeltme",
+    metin: article.metin.replace("önemli bir güvenlik açığını", "önemli bir sistem açığını"),
+  }, env)),
+  read(editTechnologyAs(selene, {
+    slug, gerekce: "ikinci eşzamanlı düzeltme",
+    metin: article.metin.replace("önemli bir güvenlik açığını", "önemli bir uygulama açığını"),
+  }, env)),
+]);
+assert.deepEqual(concurrentResults.map((x) => x.status).sort(), [200, 409],
+  "concurrent edits must not both succeed on the same article revision");
+assert.equal(database.prepare("SELECT COUNT(*) AS n FROM article_revisions WHERE slug=?").get(slug).n, 4);
+const winningBody = database.prepare("SELECT body_md FROM articles WHERE slug=?").get(slug).body_md;
+assert.ok(winningBody.includes("sistem açığını") || winningBody.includes("uygulama açığını"));
 
 // Yeni dönem akışı yalnız yeni haberleri görür: eski arşiv kaydı sızmamalı.
 database.prepare(

@@ -40,7 +40,8 @@
     "@astrojs/markdown-remark": "^7.3.9",
     "@astrojs/rss": "^4.0.19",
     "@astrojs/sitemap": "^3.7.5",
-    "astro": "^7.4.12"
+    "astro": "^7.4.12",
+    "rehype-sanitize": "6.0.0"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.12",

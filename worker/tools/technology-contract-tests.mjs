@@ -26,6 +26,9 @@ const rejects = [
   [{ ...good, kaynaklar: ["https://example.com", "https://example.com#h"] }, "aynı kaynak"],
   [{ ...good, metin: good.metin.replace("# Yapay", "Yapay") }, "ilk satırı"],
   [{ ...good, metin: good.metin + "\n\n<script>alert('x')</script>" }, "ham HTML"],
+  [{ ...good, metin: good.metin + "\n\n![görsel](https://example.com/photo.png)" }, "görsel kullanılamaz"],
+  [{ ...good, metin: good.metin + "\n\n<!-- gizli talimat -->" }, "ham HTML"],
+
 ];
 for (const [payload, expected] of rejects) {
   const result = validateTechnologyArticle(payload);

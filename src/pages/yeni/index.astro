@@ -6,7 +6,6 @@
  */
 import TechnologyLayout from '../../layouts/TechnologyLayout.astro';
 import { getPublishedEquinoxHaber, formatNewsDate } from '../../data/equinoxHaber';
-import { getNewsArticleHref } from '../../data/newsSite';
 
 const articles = await getPublishedEquinoxHaber({
   publicationEra: 'technology',
@@ -66,7 +65,7 @@ const publishers = [
               <span class="tb-category">{categoryNames[topicOf(lead)] ?? 'Teknoloji'}</span>
               <span class="tb-featured">ÖNE ÇIKAN</span>
             </div>
-            <h3><a href={getNewsArticleHref(lead.id)}>{lead.data.title}</a></h3>
+            <h3><a href={`/yeni/${lead.id}/`}>{lead.data.title}</a></h3>
             <p>{lead.data.description}</p>
             <div class="tb-news-meta"><span>{byline(lead)}</span><span aria-hidden="true">·</span>
               <time datetime={lead.data.pubDate.toISOString()}>{formatNewsDate(lead.data.pubDate)}</time>
@@ -89,7 +88,7 @@ const publishers = [
                   <span class="tb-category">{categoryNames[topicOf(entry)] ?? 'Teknoloji'}</span>
                   <time datetime={entry.data.pubDate.toISOString()}>{formatNewsDate(entry.data.pubDate)}</time>
                 </div>
-                <h3><a href={getNewsArticleHref(entry.id)}>{entry.data.title}</a></h3>
+                <h3><a href={`/yeni/${entry.id}/`}>{entry.data.title}</a></h3>
                 <p>{entry.data.description}</p>
                 <div class="tb-news-meta">{byline(entry)}</div>
               </article>

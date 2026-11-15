@@ -25,8 +25,12 @@ CREATE TABLE article_revisions (
   previous_body_md TEXT NOT NULL,
   previous_category TEXT NOT NULL,
   previous_sources_json TEXT NOT NULL,
+  previous_updated_at TEXT NOT NULL,
   actor_subject TEXT NOT NULL,
   reason TEXT NOT NULL,
-  created_at TEXT NOT NULL
+  created_at TEXT NOT NULL,
+  -- Two simultaneous edits based on the SAME version cannot both succeed.
+  -- The second INSERT conflicts and D1 batch rolls the whole attempt back.
+  UNIQUE (slug, previous_updated_at)
 );
 CREATE INDEX article_revisions_slug ON article_revisions (slug, created_at DESC);

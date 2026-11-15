@@ -39,6 +39,7 @@
  * ———————————————————————————————————————————————————————————————— */
 
 import { createMarkdownProcessor } from "@astrojs/markdown-remark";
+import rehypeSanitize, { defaultSchema } from "rehype-sanitize";
 
 /* Renderer değiştiğinde artır. Satırlardaki `render_version` hangi haberin
  * bayat HTML taşıdığını söyler; bu sorgulanabilir olsun diye sayı satırda
@@ -91,6 +92,43 @@ export async function renderBody(markdown: string): Promise<RenderResult> {
   return {
     html: result.code,
     headings: result.metadata.headings as RenderResult["headings"],
+    renderVersion: RENDER_VERSION,
+  };
+}
+
+/**
+ * Haber 2.0 accepts text from *autonomous agents*, not pre-screened archive
+ * fixtures. The legacy renderer stays unchanged for parity, but new content
+ * must use a separate, allowlisted sanitizer before HTML reaches D1.
+ *
+ * Tags not on this list, including img, picture, script, iframe, SVG,
+ * form, audio and video, can never appear in a new article's HTML.
+ * Links accept only http/https; javascript:, data: and other executable
+ * protocols are stripped even if the input validator misses a variant.
+ */
+const TECHNOLOGY_SANITIZE_SCHEMA = {
+  ...defaultSchema,
+  tagNames: [
+    "p", "h2", "h3", "h4", "h5", "h6", "blockquote",
+    "strong", "em", "del", "code", "pre", "ul", "ol", "li",
+    "a", "br", "hr", "table", "thead", "tbody", "tr", "th",
+    "td", "sup", "sub",
+  ],
+  attributes: { a: ["href", "title"], th: ["align"], td: ["align"] },
+  protocols: { href: ["http", "https"] },
+};
+
+let technologyProcessorPromise: Promise<Processor> | null = null;
+
+export async function renderTechnologyBody(markdown: string): Promise<RenderResult> {
+  technologyProcessorPromise ??= createMarkdownProcessor({
+    syntaxHighlight: false,
+    rehypePlugins: [[rehypeSanitize, TECHNOLOGY_SANITIZE_SCHEMA]],
+  });
+  const output = await (await technologyProcessorPromise).render(markdown);
+  return {
+    html: output.code,
+    headings: output.metadata.headings as RenderResult["headings"],
     renderVersion: RENDER_VERSION,
   };
 }
