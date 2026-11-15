@@ -21,9 +21,11 @@ const required=[
   'Build the Worker',
   'Require the new Orbit agent news API before D1 migration',
   'Verify legacy publisher anchors before D1 migration',
+  'Verify exact 580 legacy permalinks before D1 migrations',
   'Confirm a D1 Time Travel recovery point before migrations',
   'Apply D1 migrations',
   'Verify production D1 publisher readiness after migrations',
+  'Verify exact 580 legacy permalinks after D1 migrations',
   'Deploy the Worker',
   'Verify the live site',
 ];
@@ -48,6 +50,18 @@ export function verifyNewsroomDeployOrder(allSteps) {
     || !legacy.includes('technology-pre-migration-check.mjs')
     || !legacy.includes('d1 execute DB --remote --json')){
     throw new Error('Read-only existing publisher preflight must precede migrations');
+  }
+  for(const [name,mode] of [
+    ['Verify exact 580 legacy permalinks before D1 migrations','historical'],
+    ['Verify exact 580 legacy permalinks after D1 migrations','technology'],
+  ]){
+    const run=byName(name).run;
+    if(!run.includes('technology-legacy-permalinks.mjs --sql='+mode)
+      || !run.includes('technology-legacy-permalinks.mjs --check')
+      || !run.includes('d1 execute DB --remote --json')
+      || !run.includes('trap') || !run.includes('rm -f')){
+      throw new Error('Exact 580-URL release safety gate is missing or unsafe: '+name);
+    }
   }
   const recovery=byName('Confirm a D1 Time Travel recovery point before migrations').run;
   if(!recovery.includes('time-travel info DB --json')
@@ -76,6 +90,14 @@ export function verifyNewsroomDeployOrder(allSteps) {
     || !live.includes('newsroom-action-catalog.mjs')) {
     throw new Error('Post-deployment dual-service acceptance is missing');
   }
+  if(!live.includes('for legacy_path in /api/brief /api/publish')
+    || !live.includes(`"$legacy_code" == '410'`)
+    || !live.includes('unknown-article-')
+    || !live.includes(`"$unknown_code" == '404'`)
+    || !live.includes('--max-time 15')
+    || !live.includes('--connect-timeout 5')) {
+    throw new Error('Post-deployment legacy writer and 404 checks are incomplete');
+  }
   return true;
 }
 
@@ -88,8 +110,21 @@ function mutate(fn){
 mutate(rows=>rows.splice(rows.findIndex(s=>s.name===required[3]),1));
 mutate(rows=>rows.find(s=>s.name===required[3]).run='echo no-op');
 mutate(rows=>rows.find(s=>s.name===required[4]).run='echo skipped');
+mutate(rows=>rows.find(s=>s.name==='Verify exact 580 legacy permalinks before D1 migrations').run='echo skipped');
+mutate(rows=>rows.find(s=>s.name==='Verify exact 580 legacy permalinks after D1 migrations').run='echo skipped');
+mutate(rows=>{
+  const pos=rows.findIndex(s=>s.name==='Verify exact 580 legacy permalinks after D1 migrations');
+  const [gate]=rows.splice(pos,1);
+  rows.splice(rows.findIndex(s=>s.name==='Apply D1 migrations'),0,gate);
+});
 mutate(rows=>rows.find(s=>s.name===required[6]).run='echo skipped');
 mutate(rows=>rows.find(s=>s.name===required[8]).run='echo healthy');
+mutate(rows=>rows.find(s=>s.name==='Verify the live site').run=
+  rows.find(s=>s.name==='Verify the live site').run.replace(' /api/brief /api/publish',' /api/publish'));
+mutate(rows=>rows.find(s=>s.name==='Verify the live site').run=
+  rows.find(s=>s.name==='Verify the live site').run.replace('unknown-article-','known-article-'));
+mutate(rows=>rows.find(s=>s.name==='Verify the live site').run=
+  rows.find(s=>s.name==='Verify the live site').run.replaceAll('--max-time 15',''));
 mutate(rows=>{
   const from=rows.findIndex(s=>s.name==='Apply D1 migrations');
   const [migration]=rows.splice(from,1);
@@ -100,4 +135,4 @@ mutate(rows=>{
   const [publisher]=rows.splice(from,1);
   rows.splice(rows.findIndex(s=>s.name==='Deploy the Worker')+1,0,publisher);
 });
-console.log('Haber release workflow: 8 positive/negative ordering and gate assertions passed');
+console.log('Haber release workflow: 14 positive/negative ordering and gate assertions passed');

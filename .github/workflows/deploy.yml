@@ -54,6 +54,7 @@ jobs:
           npm run test:d1-recovery
           npm run test:d1-export-integrity
           npm run test:technology-deploy-order
+          npm run test:legacy-permalinks
           npm run test:orbit-release-check
           npm run typecheck
 
@@ -108,6 +109,22 @@ jobs:
             --file worker/queries/technology-pre-migration-readiness.sql)"
           printf '%s\n' "$summary" | node scripts/technology-pre-migration-check.mjs
 
+      # A count of 580 rows does not prove that the ORIGINAL 580 public
+      # article URLs still exist. Check all immutable Markdown slugs using
+      # a generated read-only SQL statement; D1 returns ONLY three counts.
+      # Before migration, the historical schema has no publication_era.
+      - name: Verify exact 580 legacy permalinks before D1 migrations
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          sql_file="$(mktemp)"
+          trap 'rm -f "$sql_file"' EXIT
+          node scripts/technology-legacy-permalinks.mjs --sql=historical > "$sql_file"
+          summary="$(npx wrangler d1 execute DB --remote --json --config wrangler.ssr.jsonc \
+            --file "$sql_file")"
+          printf '%s\n' "$summary" | node scripts/technology-legacy-permalinks.mjs --check
+
       # D1 migrations are forward-only. Before touching the live schema,
       # require an actual, read-only recovery bookmark from the production
       # database. GitHub summary stores ONLY a safe UTC timestamp so an
@@ -143,6 +160,21 @@ jobs:
             --file worker/queries/technology-release-readiness.sql)"
           printf '%s\n' "$summary" | node scripts/technology-release-d1-check.mjs
 
+      # The migration must not turn an old published URL into a draft
+      # or new-era article. The same exact 580 slugs must now have
+      # publication_era='legacy' AND is_draft=0, with source records.
+      - name: Verify exact 580 legacy permalinks after D1 migrations
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          sql_file="$(mktemp)"
+          trap 'rm -f "$sql_file"' EXIT
+          node scripts/technology-legacy-permalinks.mjs --sql=technology > "$sql_file"
+          summary="$(npx wrangler d1 execute DB --remote --json --config wrangler.ssr.jsonc \
+            --file "$sql_file")"
+          printf '%s\n' "$summary" | node scripts/technology-legacy-permalinks.mjs --check
+
       - name: Deploy the Worker
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
@@ -167,7 +199,7 @@ jobs:
         run: |
           fail=0
           for i in $(seq 1 8); do
-            code="$(curl --silent --output /dev/null --write-out '%{http_code}' \
+            code="$(curl --silent --connect-timeout 5 --max-time 15 --output /dev/null --write-out '%{http_code}' \
               "https://haber.sametbasbug.dev/?cachebust=${GITHUB_SHA}-${i}")"
             echo "ana sayfa #${i}: ${code}"
             [[ "$code" == '200' ]] || fail=1
@@ -176,7 +208,7 @@ jobs:
           # Yeni dönem başlangıcında RSS boş olabilir; arşiv ve Haber Masası
           # gerçek yayın yüzeyinin zorunlu parçaları.
           for path in /rss.xml /sayfa/2/ /hakkimizda/ /arsiv/ /masa/ /kategori/yazilim/; do
-            code="$(curl --silent --output /dev/null --write-out '%{http_code}' \
+            code="$(curl --silent --connect-timeout 5 --max-time 15 --output /dev/null --write-out '%{http_code}' \
               "https://haber.sametbasbug.dev${path}")"
             echo "${path}: ${code}"
             [[ "$code" == '200' ]] || fail=1
@@ -184,17 +216,17 @@ jobs:
 
           # RSS'de henüz teknoloji haberi yoksa arşivdeki gerçek bir haberi
           # doğrula. Yayın testi için sentetik içerik CANLIYA gönderilmez.
-          article="$(curl --silent --fail https://haber.sametbasbug.dev/rss.xml \
+          article="$(curl --silent --connect-timeout 5 --max-time 15 --fail https://haber.sametbasbug.dev/rss.xml \
             | node scripts/first-article-url.mjs rss)"
           if [[ -z "$article" ]]; then
-            article="$(curl --silent --fail https://haber.sametbasbug.dev/arsiv/ \
+            article="$(curl --silent --connect-timeout 5 --max-time 15 --fail https://haber.sametbasbug.dev/arsiv/ \
               | node scripts/first-article-url.mjs archive)"
           fi
           if [[ -z "$article" ]]; then
             echo 'RSS ve arşivde doğrulanabilir haber adresi yok.' >&2
             fail=1
           else
-            code="$(curl --silent --output /dev/null --write-out '%{http_code}' "$article")"
+            code="$(curl --silent --connect-timeout 5 --max-time 15 --output /dev/null --write-out '%{http_code}' "$article")"
             echo "haber: $article, HTTP $code"
             [[ "$code" == '200' ]] || fail=1
           fi
@@ -208,16 +240,28 @@ jobs:
           # Token yok, grant yok, yalnız kamuya açık GET + beklenen 401.
           node scripts/orbit-technology-release-check.mjs || fail=1
 
-          # Eski /api/publish artık Orbit yayıncı yetkisini baypas edemez.
-          legacy_code="$(curl --silent --output /dev/null --write-out '%{http_code}' \
-            --request POST --header 'content-type: application/json' \
-            --data '{}' https://haber.sametbasbug.dev/api/publish)"
-          echo "eski /api/publish: $legacy_code"
-          [[ "$legacy_code" == '410' ]] || fail=1
+          # BOTH obsolete endpoints previously bypassed Orbit's new
+          # four-agent authorization model. A single 410 on /api/publish
+          # is not enough if /api/brief stays accidentally enabled.
+          for legacy_path in /api/brief /api/publish; do
+            legacy_code="$(curl --silent --connect-timeout 5 --max-time 15 \
+              --output /dev/null --write-out '%{http_code}' \
+              --request POST --header 'content-type: application/json' \
+              --data '{}' "https://haber.sametbasbug.dev${legacy_path}")"
+            echo "retired writer ${legacy_path}: ${legacy_code}"
+            [[ "$legacy_code" == '410' ]] || fail=1
+          done
+
+          # No stale static catch-all must render unknown article URLs as 200.
+          unknown_code="$(curl --silent --connect-timeout 5 --max-time 15 \
+            --output /dev/null --write-out '%{http_code}' \
+            "https://haber.sametbasbug.dev/unknown-article-${GITHUB_SHA}/")"
+          echo "bilinmeyen haber: ${unknown_code}"
+          [[ "$unknown_code" == '404' ]] || fail=1
 
           headers="$(mktemp)"
           trap 'rm -f "$headers"' EXIT
-          curl --silent --output /dev/null --dump-header "$headers" \
+          curl --silent --connect-timeout 5 --max-time 15 --output /dev/null --dump-header "$headers" \
             https://haber.sametbasbug.dev/
 
           # Cloudflare'den mi geliyor? `cf-ray` yoksa istek Worker'a hiç

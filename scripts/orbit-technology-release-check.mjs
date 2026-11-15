@@ -6,6 +6,7 @@
  * connects a site, publishes test content, or calls the private D1 database.
  */
 import { pathToFileURL } from 'node:url';
+import { readReleaseJson } from './release-bounded-json.mjs';
 
 const ORBIT_ORIGIN='https://orbit.sametbasbug.dev';
 
@@ -49,10 +50,7 @@ export async function verifyOrbitNewsRelease(fetchImpl=fetch) {
   if(res.status!==200 || !(res.headers.get('content-type')??'').includes('application/json')) {
     throw new Error('Orbit OpenAPI GET must return JSON 200 without redirects');
   }
-  if(Number(res.headers.get('content-length')??0)>1024*1024) {
-    throw new Error('Orbit OpenAPI response exceeded expected size');
-  }
-  const contract=validateOrbitTechnologyContract(await res.json());
+  const contract=validateOrbitTechnologyContract(await readReleaseJson(res,1024*1024));
   // No Authorization header is intentionally supplied. It must be impossible
   // to read even a zero-item agent feed without registering on Orbit.
   const anonymous=await fetchImpl(new URL('/v1/me/technology-news?limit=1',base),{

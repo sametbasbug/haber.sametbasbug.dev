@@ -422,3 +422,61 @@ the current live 0011 schema confirmed two aligned enabled Hemera/Selene
 publisher anchors, zero active legacy keys, zero unexpected Nyx/Asteria
 records, 580 published historical articles, 11 migrations and no orphan
 article sources. No private OAuth ID, token, row body, or write was used.
+
+## Checkpoint 15: enforce the EXACT 580 historical permalinks
+
+The old release gate only counted at least 580 published historical rows. A
+database with 579 original articles plus one unrelated replacement could
+still pass that aggregate gate, even though one real permalink disappeared.
+
+The new read-only production checks generate SQL dynamically from the
+exact 580 public Markdown filenames in src/content/equinoxHaber:
+
+- scripts/technology-legacy-permalinks.mjs --sql=historical (pre-migration
+  schema, no publication_era column);
+- scripts/technology-legacy-permalinks.mjs --sql=technology (postmigration,
+  each URL must also be in the legacy era);
+- scripts/technology-legacy-permalinks.mjs --check (verifies Wrangler D1
+  aggregate JSON, never exposes individual database rows).
+
+The generated SQL has 580 explicit public slugs but returns ONLY three
+counts: expected_permalinks, published_permalinks, sourced_permalinks.
+All three MUST equal 580. This protects each original URL, its published
+status, source association and correct new-era classification. It uses
+no credential, private sponsor, article body or unexpected mutation.
+
+The checks run in GitHub Actions BEFORE migrations and AFTER migration
+but BEFORE the new Worker deploy. SQL is generated into a temporary
+file with an EXIT trap and is deleted even if an intermediate command
+fails. Any missing link prevents migration/release.
+
+Verified with real Wrangler LOCAL D1 using the actual 580-item archive:
+- pre-0012 SQL query: 580/580 READY;
+- after applying 0012-0016: 580/580 READY;
+- deliberately withdrawing ONE old article in isolated D1: 579/580
+  BLOCKED as intended.
+- 32 in-memory SQLite, invalid manifest, wrong era, malformed response
+  and CLI leak tests green; 14 workflow gate mutation/ordering checks green.
+- READ ONLY Cloudflare plugin execution of the same generated pre-migration
+  SQL against current real Haber production D1 returned 580 expected,
+  580 published, 580 sourced, with no errors. No article text, private row,
+  token or database mutation was used.
+
+This adds a strict invariant: changing the legacy Markdown manifest from
+exactly 580 files requires a reviewed change to these tests and the D1
+migration plan. Never silently loosen it to accept missing historical URLs.
+
+### Postdeploy smoke resilience
+
+Both retired legacy HTTP writer endpoints MUST return 410:
+POST /api/brief and POST /api/publish. The old workflow checked only
+/api/publish. An unknown article URL must return 404 instead of silently
+falling back to a generic success page. The postdeploy curl probes now
+include 5-second connection and 15-second total timeouts to avoid hanging
+indefinitely on a broken runtime.
+
+Public Orbit OpenAPI and Haber action-catalog smoke responses are now
+size-bounded during streaming, not *after* Response.json()/text() has
+allocated an arbitrary upstream payload. Invalid UTF-8, oversized streams,
+unexpected JSON and parsing errors fail closed with sanitized error messages.
+These checks do not publish content or use real agent credentials.

@@ -258,3 +258,13 @@ Equinox Haber sıfırdan tasarlanmış, **Türkçe teknoloji haberciliğine odak
 - Postmigration readiness SQL'i 580 tarihi satırı değil, 580 yayında olan legacy URL'yi sayıyor. Soft-withdrawn tarihsellik yanlış başarıya yol açmıyor; 60 gerçek SQL migration kontrolü geçti.
 - Üretim CI sıra testinde Wrangler SSR gerçek deploy komutunun bulunması da zorunlu hale getirildi; önceki test bu satır kaldırılınca yanlışlıkla yeşil geçiyordu.
 - Plan checkbox'larında yerel tamamlanan fazlar işaretlendi, gerçek staging/MCP/üretim işleri halen açık bırakıldı.
+
+## 16 Kasım 2026 on beşinci checkpoint: tam eski URL koruması ve yayın kabulü
+
+- Üretim öncesi/sonrası D1 kabulü yalnız 580 toplam eski haber sayısına bakıyordu. Yeni scripts/technology-legacy-permalinks.mjs, src/content/equinoxHaber içindeki **580 kanonik Markdown slug'ını** tek tek salt-okunur SQL ile eşleştirip dışarıya sadece üç sayım döndürüyor: beklenen, yayındaki ve kaynağı bulunan 580 URL. Göç sonrası sorguda ayrıca publication_era=legacy şartı var.
+- 32 yerel SQLite, slug değiştirme, tek haberin taslağa alınması, yanlış kaynak, yanlış dönem ve bozuk JSON/CLI güvenlik testi yeşil. GERÇEK yerel Wrangler 0011 ve 0016 D1 sorgularında 580/580 READY, tek tarihsel haberi taslağa çekince 579/580 BLOCKED.
+- Aynı public-slug SQL'i Cloudflare plugin üzerinden GERÇEK canlı Haber D1'de SADECE SELECT olarak çalıştırıldı: expected=580, published=580, sourced=580. Gizli satır, token veya haber gövdesi döndürülmedi; production'a yazılmadı.
+- Github deploy now checks exact 580 URL before migration and again after migration before Worker deployment; temp SQL files trap ile temizlenir. CI gate mutation/order testleri 14 kontrol başarılı.
+- Üretim sonrası test eski iki HTTP yazma ucunu da 410 Gone şartıyla kapatıyor (hem /api/brief hem /api/publish) ve bilinmeyen haber yolu 404 olmalı. Ağ kontrolleri 5 saniye bağlantı, 15 saniye toplam HTTP timeout alıyor.
+- Orbit OpenAPI ve Haber altı-eylem katalog smoke kontrolleri, sınırsız response.text()/json() yerine boyutu streaming sırasında sınırlanan güvenli JSON okuyucuya geçti. Hatalı JSON, UTF-8 ve taşan yanıt kullanıcıya/CI günlüğüne ham içerik sızdırmadan reddediliyor.
+- Canlı Orbit yeni API henüz yayınlanmadı, üretim backup export/gerçek credential staging ve Selene MCP canlı keşif hala onaylı release aşamasında. Ana dallara push veya production deploy yapılmadı.

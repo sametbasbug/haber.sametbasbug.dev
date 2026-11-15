@@ -54,4 +54,18 @@ await assert.rejects(verifyOrbitNewsRelease(async (resource,options)=>{
   return String(resource).includes('technology-news')
     ? Response.json({haberler:[]}) : result;
 }),/anonymous access with 401/);
-console.log('Coordinated Orbit release contract: 8 positive/negative checks passed');
+await assert.rejects(verifyOrbitNewsRelease(async (resource,options)=>{
+  if(String(resource).includes('openapi.json')){
+    return new Response(new Uint8Array(1024*1024+1),
+      {headers:{'content-type':'application/json'}});
+  }
+  return fakeFetch(resource,options);
+}),/allowed size/u);
+await assert.rejects(verifyOrbitNewsRelease(async (resource,options)=>{
+  if(String(resource).includes('openapi.json')){
+    return new Response('SECRET-DO-NOT-ECHO',
+      {headers:{'content-type':'application/json'}});
+  }
+  return fakeFetch(resource,options);
+}),/invalid UTF-8 or JSON/u);
+console.log('Coordinated Orbit release contract: 10 positive/negative checks including bounds passed');

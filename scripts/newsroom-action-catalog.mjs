@@ -6,6 +6,7 @@
  * Intentionally no credentials, API mutations or D1 access here.
  */
 import { pathToFileURL } from 'node:url';
+import { readReleaseJson } from './release-bounded-json.mjs';
 
 export const EXPECTED_OPERATIONS = Object.freeze([
   'haber.yayinla',
@@ -71,9 +72,7 @@ export async function checkNewsroomCatalog(origin, fetchImpl = fetch) {
     || !(response.headers.get('content-type') ?? '').includes('application/json')) {
     throw new Error('Haber katalogu HTTPS 200 application/json dönmeli');
   }
-  const body = await response.text();
-  if (body.length > 90000) throw new Error('Haber katalogu beklenenden büyük');
-  return validateNewsroomCatalog(JSON.parse(body));
+  return validateNewsroomCatalog(await readReleaseJson(response,128*1024));
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

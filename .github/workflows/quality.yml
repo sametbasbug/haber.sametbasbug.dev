@@ -68,6 +68,7 @@ jobs:
           npm run test:d1-recovery
           npm run test:d1-export-integrity
           npm run test:technology-deploy-order
+          npm run test:legacy-permalinks
           npm run test:orbit-release-check
 
       # Tür kontrolü 2026-08-21'e kadar HİÇ koşmuyordu: tsconfig'deki
