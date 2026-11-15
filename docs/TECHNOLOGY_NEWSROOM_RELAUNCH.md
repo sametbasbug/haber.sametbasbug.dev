@@ -286,3 +286,8 @@ Equinox Haber sıfırdan tasarlanmış, **Türkçe teknoloji haberciliğine odak
 
 - Canlı Orbit kamuya açık discovery 842 bayt, JWKS 193 bayt ve 1 açık doğrulama anahtarı içeriyor. Yeni 32/64 KiB streaming ve 16 anahtar limitlerinin altında, GET dışında işlem veya özel anahtar erişimi yok.
 - Testlerin doğru nedenle başarısız olup olmadığını görmek için OpenAPI anonim security alternatifi, JWKS dış origin reddi ve tema ilk aria-pressed sync korumaları yerelde birer kez geçici bozularak sınandı. Her üç gerçek test RED oldu; kaynaklar geri alınınca üçü de GREEN. Geçici kopyalar silindi.
+
+### On altıncı checkpoint: bozuk JWT imzasının güvenli reddi
+
+- Açık /api/orbit-eylem HTTP ucunda geçerli başlık/gövdeyle gelen ama hatalı Base64URL imzalı JWT, doğrudan atob/WebCrypto üzerinden uncaught exception üretebiliyordu. JWT 8 KiB ile sınırlandı; gerçek ES256/P-256 imzası 64 bayt olmalı, bozuk/boş/kısa/uzun imza veya WebCrypto istisnası kontrolsüz 500 yerine 401 alıyor.
+- Gerçek WebCrypto ile üretilmiş token'lar üzerinden beş yeni olumsuz kontrol eklendi. worker/tools/orbit-token-tests.mjs 65/65 ve imzalı teknoloji yayın E2E tekrar başarılı; gerçek kullanıcı/token/canlı veritabanı kullanılmadı.

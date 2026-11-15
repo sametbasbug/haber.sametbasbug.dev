@@ -170,6 +170,23 @@ for (const [label, token] of [["boş", ""], ["tek parça", "abc"], ["iki parça"
   check("çözülemeyen base64", outcome(r), "401 token çözülemedi");
 }
 
+console.log("\n── bozuk ECDSA imza ve token uzunluğu ──");
+{
+  const [header,payload] = (await mint(key)).split('.');
+  for(const [label,badSig] of [
+    ['imza base64url dışı karakter', '~invalid~'],
+    ['boş imza', ''],
+    ['bir baytlık imza', 'AQ'],
+    ['gereğinden büyük imza', 'A'.repeat(160)],
+  ]){
+    const r=await verifyOrbitToken(`${header}.${payload}.${badSig}`,ISSUER,AUDIENCE);
+    check(label,outcome(r),'401 imza doğrulanmadı');
+  }
+  const large=(await mint(key))+'A'.repeat(8300);
+  const oversized=await verifyOrbitToken(large,ISSUER,AUDIENCE);
+  check('aşırı büyük JWT daha decode etmeden 401',outcome(oversized),'401 token biçimi geçersiz');
+}
+
 console.log("\n── anahtar değişimi ──");
 {
   const before = jwksHits;

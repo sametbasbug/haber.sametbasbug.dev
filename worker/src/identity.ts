@@ -207,6 +207,11 @@ async function verifySignedOrbitToken(
   issuer: string,
   audience: string,
 ): Promise<{ claims: any } | AuthFailure> {
+  // Signed action documents contain only a short set of claims, NOT the
+  // article body. Bound the total token before decoding Base64 or allocating
+  // its JSON fields. Public callers must not be able to force giant
+  // allocations or trigger uncaught DOMException errors.
+  if (token.length > 8192) return { status: 401, error: "token biçimi geçersiz" };
   const parts = token.split(".");
   if (parts.length !== 3) return { status: 401, error: "token biçimi geçersiz" };
 
@@ -236,14 +241,31 @@ async function verifySignedOrbitToken(
   const key = keys.get(header.kid);
   if (!key) return { status: 401, error: "token bilinmeyen bir anahtarla imzalanmış" };
 
-  const signature = base64UrlToBytes(parts[2]);
+  let signature: Uint8Array<ArrayBuffer>;
+  try {
+    if (!/^[A-Za-z0-9_-]+$/u.test(parts[2])) {
+      return { status: 401, error: "imza doğrulanmadı" };
+    }
+    signature = base64UrlToBytes(parts[2]);
+    // WebCrypto ES256/P-256 produces a raw 64-byte (r || s) signature.
+    if (signature.byteLength !== 64) {
+      return { status: 401, error: "imza doğrulanmadı" };
+    }
+  } catch {
+    return { status: 401, error: "imza doğrulanmadı" };
+  }
   const signed = new TextEncoder().encode(`${parts[0]}.${parts[1]}`);
-  const valid = await crypto.subtle.verify(
-    { name: "ECDSA", hash: "SHA-256" },
-    key,
-    signature,
-    signed,
-  );
+  let valid = false;
+  try {
+    valid = await crypto.subtle.verify(
+      { name: "ECDSA", hash: "SHA-256" },
+      key,
+      signature,
+      signed,
+    );
+  } catch {
+    return { status: 401, error: "imza doğrulanmadı" };
+  }
   if (!valid) return { status: 401, error: "imza doğrulanmadı" };
 
   if (claims.iss !== issuer) return { status: 401, error: "token başka bir sağlayıcıdan" };

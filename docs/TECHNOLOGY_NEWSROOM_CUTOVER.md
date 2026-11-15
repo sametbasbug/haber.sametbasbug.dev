@@ -527,3 +527,13 @@ removing the JWKS issuer-origin constraint, and skipping initial dark-mode
 aria-pressed synchronization. After restoration, the real tests passed.
 This confirms the red/green signal instead of merely relying on green-only
 fixtures. All temporary mutation copies were deleted.
+
+Additional checkpoint 16 input boundary: a signed site-action JWT never
+contains the 25,000-character article body, only short identity claims.
+The signature verifier now rejects tokens above 8 KiB before Base64/JSON
+decoding; only the 64-byte raw P-256 ECDSA signature form is accepted.
+Malformed Base64URL, empty/truncated/oversized signatures and WebCrypto
+verification exceptions return a normal HTTP 401, never an uncaught
+server error. Five new genuine WebCrypto negative checks were added to
+worker/tools/orbit-token-tests.mjs (65/65 total). Correctly signed
+documents and key rotation remain accepted.
