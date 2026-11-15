@@ -8,8 +8,20 @@ import { publishTechnologyAs, listTechnologyAs, readTechnologyAs, editTechnology
 
 import { TECHNOLOGY_AGENTS } from "../../src/data/technologyAgents.ts";
 import { siteAction } from "../src/orbit-eylem.ts";
+import { retiredWriterResponse } from "../../src/server/routes/legacy-news-gate.ts";
 
-// Security regression: raw HTML, executable links and image Markdown
+// The two legacy HTTP writers must not bypass the new four Orbit agent rule.
+{
+  const retired = retiredWriterResponse({});
+  assert.equal(retired?.status, 410, "old publisher-key HTTP publishing is closed by default");
+  assert.match(await retired.text(), /Orbit kimliği/u);
+  assert.equal(retiredWriterResponse({ ENABLE_LEGACY_NEWS_ACTIONS: "true" })?.status, 410,
+    "arbitrary truthy values cannot reopen legacy publishing");
+  assert.equal(retiredWriterResponse({ ENABLE_LEGACY_NEWS_ACTIONS: "1" }), null,
+    "only explicit server-controlled rollback flag enables legacy");
+}
+
+// // Security regression: raw HTML, executable links and image Markdown
 // never appear in the new rendering path (legacy parity stays intact).
 {
   const rendered = await renderTechnologyBody([

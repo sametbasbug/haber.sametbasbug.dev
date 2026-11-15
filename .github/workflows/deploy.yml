@@ -94,30 +94,38 @@ jobs:
             [[ "$code" == '200' ]] || fail=1
           done
 
-          # `/sayfa/2/` sayfalanmış listeyi, `/hakkimizda/` statik sayfayı
-          # kapsıyor. Arşiv kökü (`/arsiv/`) BİLEREK yok: canlıda 404 dönüyor,
-          # yani listeye konsaydı her dağıtımı düşürürdü.
-          for path in /rss.xml /sayfa/2/ /hakkimizda/; do
+          # Yeni dönem başlangıcında RSS boş olabilir; arşiv ve Haber Masası
+          # gerçek yayın yüzeyinin zorunlu parçaları.
+          for path in /rss.xml /sayfa/2/ /hakkimizda/ /arsiv/ /masa/ /kategori/yazilim/; do
             code="$(curl --silent --output /dev/null --write-out '%{http_code}' \
               "https://haber.sametbasbug.dev${path}")"
             echo "${path}: ${code}"
             [[ "$code" == '200' ]] || fail=1
           done
 
-          # Bir haber sayfası. Slug sabit yazılmıyor: haberler birleştirilebilir
-          # veya kaldırılabilir ve sabit bir slug, içerik değiştiği gün
-          # dağıtımı bozardı. En yeni haberin adresi RSS'ten okunuyor.
-          article="$(curl --silent https://haber.sametbasbug.dev/rss.xml \
-            | sed -n 's|.*<link>\(https://haber\.sametbasbug\.dev/[^<]*/\)</link>.*|\1|p' \
-            | head -1)"
+          # RSS'de henüz teknoloji haberi yoksa arşivdeki gerçek bir haberi
+          # doğrula. Yayın testi için sentetik içerik CANLIYA gönderilmez.
+          article="$(curl --silent --fail https://haber.sametbasbug.dev/rss.xml \
+            | node scripts/first-article-url.mjs rss)"
           if [[ -z "$article" ]]; then
-            echo 'RSS içinden bir haber adresi çıkarılamadı.' >&2
+            article="$(curl --silent --fail https://haber.sametbasbug.dev/arsiv/ \
+              | node scripts/first-article-url.mjs archive)"
+          fi
+          if [[ -z "$article" ]]; then
+            echo 'RSS ve arşivde doğrulanabilir haber adresi yok.' >&2
             fail=1
           else
             code="$(curl --silent --output /dev/null --write-out '%{http_code}' "$article")"
-            echo "haber (${article}): ${code}"
+            echo "haber: $article, HTTP $code"
             [[ "$code" == '200' ]] || fail=1
           fi
+
+          # Eski /api/publish artık Orbit yayıncı yetkisini baypas edemez.
+          legacy_code="$(curl --silent --output /dev/null --write-out '%{http_code}' \
+            --request POST --header 'content-type: application/json' \
+            --data '{}' https://haber.sametbasbug.dev/api/publish)"
+          echo "eski /api/publish: $legacy_code"
+          [[ "$legacy_code" == '410' ]] || fail=1
 
           headers="$(mktemp)"
           trap 'rm -f "$headers"' EXIT

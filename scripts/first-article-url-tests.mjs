@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import { firstArticleUrl } from './first-article-url.mjs';
+const origin='https://haber.sametbasbug.dev';
+const path='/gercek-haber-ornegi/';
+assert.equal(firstArticleUrl('<rss><channel><item><title>Haber</title><link>'+origin+path+'</link></item></channel></rss>', 'rss'), origin+path);
+assert.equal(firstArticleUrl('<rss><channel></channel></rss>','rss'),'');
+assert.equal(firstArticleUrl('<article><div class="meta">Bilim</div><h2><a href="'+path+'">Arşiv</a></h2></article>','archive'),origin+path);
+assert.equal(firstArticleUrl('<article><h2><a href="https://evil.example/bad/">Bad</a></h2></article>','archive'),'');
+assert.equal(firstArticleUrl('<article><h2><a href="/tech-story/?draft=1">Bad</a></h2></article>','archive'),'');
+assert.equal(firstArticleUrl('<article><h2><a href="/tech-story/#fragment">Bad</a></h2></article>','archive'),'');
+assert.equal(firstArticleUrl('<div><h2><a href="/tech-story/">Not archived</a></h2></div>','archive'),'');
+console.log('Initial-release article discovery: 7 regression checks passed');

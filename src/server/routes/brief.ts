@@ -8,7 +8,13 @@
 import type { APIRoute } from 'astro';
 import { writeBrief } from '../../../worker/src/index';
 import { getWorkerEnv } from '#runtime-env';
+import { retiredWriterResponse } from './legacy-news-gate';
 
 export const prerender = false;
 
-export const POST: APIRoute = async ({ request }) => writeBrief(request, getWorkerEnv());
+export const POST: APIRoute = async ({ request }) => {
+  const env = getWorkerEnv();
+  const retired = retiredWriterResponse(env);
+  if (retired) return retired;
+  return writeBrief(request, env);
+};

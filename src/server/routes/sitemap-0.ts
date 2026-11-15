@@ -38,9 +38,14 @@ const STATIC_PATHS = [
 
 export const GET: APIRoute = async ({ site }) => {
 	const base = (site ?? new URL('https://haber.sametbasbug.dev')).toString().replace(/\/$/, '');
-	const entries = await getPublished({ includeTags: false, includeSources: false });
+	const [entries, historical] = await Promise.all([
+		getPublished({ includeTags: false, includeSources: false }),
+		getPublished({ publicationEra: 'legacy', includeTags: false, includeSources: false }),
+	]);
 
-	const pageCount = Math.max(1, Math.ceil(entries.length / EQUINOX_HABER_ARCHIVE_PAGE_SIZE));
+	// /sayfa/N is a historical archive, never the technology feed.
+	// Counting new tech stories here generates phantom /sayfa/ URLs.
+	const pageCount = Math.max(1, Math.ceil(historical.length / EQUINOX_HABER_ARCHIVE_PAGE_SIZE));
 	const paths = [
 		...STATIC_PATHS,
 		...Array.from({ length: pageCount }, (_, i) => `/sayfa/${i + 1}/`),
