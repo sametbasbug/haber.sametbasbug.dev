@@ -227,3 +227,105 @@ correctly returned BLOCKED because the new credential-protected Haber
 operations were absent in the live OpenAPI. This is an expected deployment
 precondition, not a production incident. Never add a bypass to make the
 pre-release response pass.
+
+## D1 Time Travel and migration recovery (15 November 2026)
+
+**Verified READ ONLY through the Cloudflare connector:** Haber D1 has
+version=production; the Time Travel bookmark endpoint reports an available
+current bookmark. No bookmark value or private sponsor was copied into code,
+chat or a repository file.
+
+Current docs: https://developers.cloudflare.com/d1/reference/time-travel/
+
+Modern D1 automatically enables Time Travel. Retention is 7 days for Workers
+Free and 30 days for Workers Paid; do not assume the account plan. Cloudflare
+Time Travel RESTORE is destructive: it overwrites the *whole database* in
+place. It is NOT a Worker code rollback, clone, or automatic deployment undo.
+
+### Production pre-migration gate
+
+Before every production D1 migration, the Haber GitHub Action now:
+
+1. Records a UTC timestamp while publishing is frozen.
+2. Calls the read-only Wrangler D1 time-travel info command with --json.
+   A helper validates the returned bookmark shape; failure STOPS the run
+   before D1 mutations.
+3. Saves ONLY the UTC timestamp to the GitHub run summary. The bookmark
+   is deliberately not printed, committed, or uploaded as an artifact.
+   An authorized operator can resolve the bookmark from that timestamp.
+4. Does not initiate any Time Travel restore under any circumstances.
+
+Read-only command for the authorized recovery operator:
+
+    npx wrangler d1 time-travel info DB --config wrangler.ssr.jsonc --timestamp="YYYY-MM-DDTHH:MM:SSZ"
+
+Tests: npm run test:d1-recovery (13 positive and negative checks).
+
+### Incident and recovery decision tree
+
+- Migration fails BEFORE Worker deployment: leave old Worker running,
+  inspect D1 migration history and old pages. Do not blindly reapply
+  partial migrations or automatically restore production.
+- Migration completes but publisher readiness fails: fail closed, keep
+  old Worker and publishing frozen. Inspect authorized sponsor/admin data.
+- New Worker is broken, but D1 remains sound: prefer an explicitly
+  authorized Worker CODE rollback first. Additive schema migrations
+  usually leave old article queries intact. Verify 580 legacy URLs.
+- Actual D1 data corruption: freeze ALL writers, retrieve a current
+  recovery bookmark, review whether any legitimate news, edits or
+  sessions occurred since the recorded pre-migration UTC reference.
+  A Time Travel restore would DELETE every later write, not just the
+  faulty migration. Before a destructive restore, obtain an independently
+  secured production export, a reconciliation plan and explicit approval.
+  After restore, verify migration history, historic articles, actor
+  bindings, session safety, site metadata and Orbit integrations.
+- Never enable the retired publisher-key HTTP endpoints as an emergency
+  workaround. Never automate destructive restore in CI.
+
+### What the local restoration rehearsal proves
+
+worker/tools/technology-local-recovery-tests.mjs reconstructs the actual
+580 published Markdown archives with sources/tags in pre-0012 SQLite, saves
+an in-memory SQLite snapshot, runs REAL migrations 0012-0016, creates
+one synthetic technology row, and restores the prior snapshot into a fresh
+in-memory database. It verifies unchanged historical content hash, sources,
+tags, site version, legacy schema, disappearance of the synthetic row and
+valid SQLite integrity/foreign keys.
+
+This DOES NOT test Cloudflare Time Travel's remote restore implementation.
+The bookmark preflight and a separately approved real recovery remain
+necessary. The local test writes no production record and deletes temp SQL.
+
+### Legacy publisher entrypoint: read-only verification
+
+The connected Cloudflare API was queried read-only on 15 November 2026:
+- active legacy publisher-key digests: 0
+- legacy publisher-key digests of any status: 0
+- active publisher rows whose subject is NOT an agent identity: 1
+
+No key digest, OAuth pairwise subject, token or sensitive row was retrieved.
+This confirms there is **no old publisher-key credential to revoke** at
+present. Do not add an unnecessary irreversible key-revocation migration.
+
+However the currently deployed *old* Worker still permits its former
+human Orbit ID-token publication path. The publication freeze before
+coordinated migrations therefore remains an actual operational
+requirement until the new Worker explicitly returns HTTP 410 on both
+old /api/brief and /api/publish. If the after-migration D1 readiness
+gate blocks the Worker deployment, the old Worker's writes are not
+automatically frozen by the existence of a Time Travel bookmark.
+Do not infer a freeze from a green build or a successful SQL migration.
+
+No production publisher permission or identity was modified while making
+this read-only observation.
+
+### Two-version cache window, locally verified
+
+Orbit's real cached first-party site action discovery has a 600-second TTL.
+The new isolated test scripts/orbit-haber-cutover-tests.ts covers:
+new Orbit + old Haber catalogue -> 503 with ZERO signed read delegation;
+new Haber catalogue within old cached TTL -> remains 503 until expiry;
+refresh after TTL -> new read works; Haber catalogue rollback -> 503.
+The test cannot observe the actual production isolate cache after deploy.
+Keep the publication freeze until real operations appear in the agent MCP
+catalogue and signed guest reads have been separately validated.

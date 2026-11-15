@@ -211,3 +211,21 @@ Equinox Haber sıfırdan tasarlanmış, **Türkçe teknoloji haberciliğine odak
 - Birlikte dağıtım kabul testi Haber scripts/orbit-technology-release-check.mjs: yalnız anonim kamu GET ile Orbit OpenAPI 3.2'de iki yeni credential-protected haber okuma rotası ve altı kategori hazır mı, anonim /v1/me/technology-news isteği 401 mi doğruluyor. Sekiz pozitif/negatif test. Token, grant veya üretim haberi gerekmez. Haber production CI postdeploy smoketest'e eklendi; canlıda henüz çalıştırılmadı.
 - Orbit OpenAPI iki haber GET rotası için bozuk/time-out Haber yanıtı 502 ve konfigürasyon eksikliği 503 ayrımını açıkça belirtir; ajan skill.md kaynağına da aynı retry rehberi eklendi; OpenAPI normatif schema testi ve yeni auth/hata doküman regresyonu geçti.
 - Haber tam quality (664 sayfa), SSR build ve Wrangler dry-run; Orbit tam verify (3462 site / 855 browser), check 0 error/warning/hint, crossrepo gerçek ES256 altı imzalı okuma ve prod config check 85 doğrulama geçti. Gerçek production credential staging, 4 yayıncı gerçek hesap smoke, Selene MCP yeni altı katalog eylemi ve onaylı PR/merge/deploy halen bekliyor. Hiç üretim verisi değişmedi.
+
+## 15 Kasım 2026 on ikinci checkpoint: D1 kurtarma önkoşulu
+
+- Başlangıçta Haber d8f4b5e ve Orbit 4ab5e4f temizdi; AGENTS ve koordineli yayın planı yeniden okundu.
+- Cloudflare plugin SALT-OKUNUR canlı D1 sorgusu: version=production ve Time Travel bookmark mevcut. Bookmark/token/sponsor herhangi bir log veya repo dosyasına yazılmadı. Restore çalıştırılmadı.
+- Cloudflare resmi belgeleri: Free 7 gün, Paid 30 gün otomatik Time Travel saklama; hesabın planı tahmin edilmedi. Restoring tüm DB'yi yıkıcı biçimde geriye alır; kod rollback ile aynı değildir.
+- Haber GitHub üretim akışına D1 migration'ları ÖNCESİNDE Wrangler Time Travel bookmark varlık kapısı eklendi. Başarısızsa migration başlamaz; gerçek bookmark yazdırılmaz, yalnız UTC kurtarma referans zamanı GitHub job summary'de tutulur. Unit testleri 13/13 ve YAML sıra denetimi başarılı.
+- Tam gerçek 580 arşiv haberi, kaynaklar ve etiketlerle eski 0001-0011 yerel SQLite schema üzerinde bellek içi snapshot alındı. Yeni migration 0012-0016 ve sentetik teknoloji haberi uygulandı, sonra snapshot geri açıldı. 580 tarihsel haber içerik hash ve kaynak ilişkileri aynı, sentetik haber kayboldu, eski şema ve SQLite bütünlüğü doğrulandı. Bu yerel test Cloudflare'ın gerçek production Time Travel RESTORE sonucunu garanti etmez.
+- D1 recovery için yeni runbook: Worker kod geri dönüşünü önceliklendirme, başarısız migration fail-closed, sonradan yazılan gerçek kayıtların silinme riski, bağımsız export ve açık yıkıcı işlem onayı. Production export/restore ve gerçek ajan staging henüz yapılmadı.
+
+### On ikinci checkpoint: legacy yetkilerin salt-okunur ön denetimi
+
+- Canlı Haber D1'de anonim/özel anahtarları okumadan sadece sayım yapıldı: eski publisher-key digest'leri 0, aktif eski publisher-key 0. Başka bir migration ile zaten kullanılmayan key'leri silmek gereksiz görüldü; migration 0017 EKLENMEDİ.
+- Bir etkin insan publisher satırı hâlâ mevcut. Eski Worker üretimde olduğu sürece insan Orbit ID token'ıyla eski yayın ucu kullanımı teorik olarak açık kalabilir; otomatik yayının dondurulması bu nedenle operasyonel yayın koşulu. Yeni sürümde eski iki HTTP uç varsayılan 410; yedek bookmark alınması eski Worker'daki yayın kapısını kendiliğinden kapatmaz.
+
+### On ikinci checkpoint: Orbit-Haber farklı sürüm penceresi
+
+- Orbit tarafına izole katalog geçiş testi eklendi: yeni Orbit + eski Haber kataloğu 503, 600 saniye dolmadan eski cache 503, süre dolunca yeni Haber kataloğu ile 200 boş haber listesi, Haber eski kataloğa rollback olunca yeniden 503. Hiç gerçek ajan credential veya üretim haberi kullanılmadı. Eski pano eylemi asla yeni okuma yerine çalıştırılmadı.
