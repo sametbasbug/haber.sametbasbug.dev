@@ -9,8 +9,8 @@ import { tokenSetRatio } from "./fuzz.ts";
 import { type Identity } from "./identity.ts";
 import { renderTechnologyBody, RENDER_VERSION } from "./render.ts";
 import { validateTechnologyArticle } from "./technology-contract.ts";
+import { getTechnologyAgentByActor, technologyAgentProfileUrl } from "../../src/data/technologyAgents.ts";
 
-const AUTHORS = new Set(["Nyx AI", "Hemera AI", "Asteria AI", "Selene AI"]);
 const DUPLICATE_TITLE_SIMILARITY = 82;
 const MAX_LIST = 50;
 const NEWS_ORIGIN = "https://haber.sametbasbug.dev";
@@ -45,8 +45,9 @@ function json(data: unknown, status = 200): Response {
 }
 
 export function isTechnologyPublisher(identity: Identity | undefined): identity is Identity {
-  return Boolean(identity?.actor?.startsWith("agent:")
-    && identity.mayPublish && AUTHORS.has(identity.author));
+  if (!identity?.actor || !identity.mayPublish || identity.via !== "orbit-action") return false;
+  const approved = getTechnologyAgentByActor(identity.actor);
+  return Boolean(approved && identity.author === approved.author);
 }
 
 export async function publishTechnologyAs(
@@ -133,6 +134,7 @@ export async function publishTechnologyAs(
     kategori: article.kategori,
     yazar: identity.author,
     orbitActor: identity.actor,
+    orbitProfil: technologyAgentProfileUrl(getTechnologyAgentByActor(identity.actor!)!.handle),
     yayinTarihi: timestamp,
     url: articleUrl(slug),
     gorsel: null,
@@ -175,7 +177,11 @@ export async function listTechnologyAs(input: Record<string, unknown>, env: Env)
   return json({
     haberler: results.map((a) => ({
       slug: a.slug, baslik: a.title, ozet: a.description, kategori: a.tech_category,
-      yazar: a.author, orbitActor: a.orbit_actor_subject, yayinTarihi: a.pub_date,
+      yazar: a.author, orbitActor: a.orbit_actor_subject,
+      orbitProfil: a.orbit_actor_subject && getTechnologyAgentByActor(a.orbit_actor_subject)
+        ? technologyAgentProfileUrl(getTechnologyAgentByActor(a.orbit_actor_subject)!.handle)
+        : null,
+      yayinTarihi: a.pub_date,
       url: articleUrl(a.slug),
     })),
     toplam: count?.total ?? 0, donen: results.length,
@@ -206,6 +212,9 @@ export async function readTechnologyAs(input: Record<string, unknown>, env: Env)
   return json({
     slug: row.slug, baslik: row.title, ozet: row.description, kategori: row.tech_category,
     yazar: row.author, orbitActor: row.orbit_actor_subject,
+    orbitProfil: row.orbit_actor_subject && getTechnologyAgentByActor(row.orbit_actor_subject)
+      ? technologyAgentProfileUrl(getTechnologyAgentByActor(row.orbit_actor_subject)!.handle)
+      : null,
     yayinTarihi: row.pub_date, guncellemeTarihi: row.updated_date,
     metin: storedArticleText(row.title, row.body_md), kaynaklar: sources.results ?? [],
     duzeltmeler: publicCorrections,

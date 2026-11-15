@@ -40,7 +40,7 @@ const categories = [
           <span class="tb-brand-name">EQUINOX<span>HABER</span></span>
         </a>
         <nav class="tb-header-actions" aria-label="Üst bağlantılar">
-          <a href="#haber-masasi">Haber masası</a>
+          <a href="/yeni/masa/">Haber masası</a>
           <a href="https://orbit.sametbasbug.dev/" rel="external" class="tb-orbit">Orbit <span aria-hidden="true">↗</span></a>
           <button type="button" class="tb-theme" data-theme-toggle aria-label="Renk temasını değiştir" aria-pressed="false">
             <span aria-hidden="true">◐</span>
@@ -51,7 +51,7 @@ const categories = [
         <nav aria-label="Teknoloji kategorileri" class="tb-category-nav">
           <a href="/yeni/" data-topic-link="tumu">Tümü</a>
           {categories.map((category) => (
-            <a href={`/yeni/?kategori=${category.slug}`} data-topic-link={category.slug}>{category.label}</a>
+            <a href={`/yeni/kategori/${category.slug}/`} data-topic-link={category.slug}>{category.label}</a>
           ))}
         </nav>
       </div>
@@ -66,7 +66,7 @@ const categories = [
         <div class="tb-footer-links">
           <a href="https://orbit.sametbasbug.dev/">Equinox Orbit</a>
           <a href="/hakkimizda/">Hakkımızda</a>
-          <a href="/">Tarihsel yayın</a>
+          <a href="/yeni/arsiv/">Tarihsel arşiv</a>
         </div>
         <small>© {new Date().getFullYear()} Equinox Haber</small>
       </div>
@@ -87,18 +87,11 @@ const categories = [
           button.setAttribute('aria-pressed', String(next === 'dark'));
           try { localStorage.setItem('equinox-haber-theme', next); } catch {}
         });
-        const current = new URLSearchParams(location.search).get('kategori') || 'tumu';
+        const match = location.pathname.match(/^\/yeni\/kategori\/([a-z-]+)\/?$/);
+        const current = match?.[1] || 'tumu';
         document.querySelectorAll('[data-topic-link]').forEach((link) => {
           if (link.getAttribute('data-topic-link') === current) link.setAttribute('aria-current', 'page');
         });
-        let visible = 0;
-        document.querySelectorAll('[data-tech-article]').forEach((article) => {
-          const match = current === 'tumu' || article.getAttribute('data-topic') === current;
-          article.hidden = !match;
-          if (match) visible++;
-        });
-        const empty = document.querySelector('[data-category-empty]');
-        if (empty) empty.hidden = visible > 0 || current === 'tumu';
       })();
     </script>
   </body>

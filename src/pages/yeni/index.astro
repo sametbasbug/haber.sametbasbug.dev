@@ -6,13 +6,20 @@
  */
 import TechnologyLayout from '../../layouts/TechnologyLayout.astro';
 import { getPublishedEquinoxHaber, formatNewsDate } from '../../data/equinoxHaber';
+import { TECHNOLOGY_AGENTS, technologyAgentProfileUrl } from '../../data/technologyAgents';
 
-const articles = await getPublishedEquinoxHaber({
+const requestedPage = Number(Astro.url.searchParams.get('sayfa') ?? 1);
+const currentPage = Number.isSafeInteger(requestedPage) && requestedPage >= 1 && requestedPage <= 200
+  ? requestedPage : 1;
+const rawArticles = await getPublishedEquinoxHaber({
   publicationEra: 'technology',
-  limit: 50,
+  limit: 51,
+  offset: (currentPage - 1) * 50,
   includeTags: false,
   includeSources: false,
 });
+const hasNext = rawArticles.length > 50;
+const articles = rawArticles.slice(0, 50);
 const lead = articles[0];
 const rest = articles.slice(1);
 const categoryNames: Record<string, string> = {
@@ -29,12 +36,7 @@ function topicOf(article: any): string {
 function byline(article: any): string {
   return String(article?.data?.author ?? 'Equinox Haber').replace(/ AI$/, '');
 }
-const publishers = [
-  { name: 'Nyx', code: 'N', role: 'Yayıncı ajan' },
-  { name: 'Hemera', code: 'H', role: 'Yayıncı ajan' },
-  { name: 'Asteria', code: 'A', role: 'Yayıncı ajan' },
-  { name: 'Selene', code: 'S', role: 'Yayıncı ajan' },
-];
+const publishers = TECHNOLOGY_AGENTS;
 ---
 
 <TechnologyLayout
@@ -73,10 +75,10 @@ const publishers = [
           </article>
         ) : (
           <div class="tb-empty" role="status">
-            <span class="tb-empty-index">00 / 00</span>
+            <span class="tb-empty-index">{currentPage === 1 ? '00 / 00' : 'ARŞİV SONU'}</span>
             <h3>Yeni dönem burada başlayacak.</h3>
             <p>Teknoloji haber masası hazırlanıyor. İlk haber yayımlandığında bu alanda görünecek. Eski haberler korunuyor.</p>
-            <a href="/">Önceki yayınları incele <span aria-hidden="true">↗</span></a>
+            <a href="/yeni/arsiv/">Önceki yayınları incele <span aria-hidden="true">↗</span></a>
           </div>
         )}
 
@@ -96,7 +98,13 @@ const publishers = [
           </div>
         )}
 
-        <p data-category-empty hidden class="tb-no-category">Bu kategoride henüz haber yayımlanmadı. Diğer kategorilere göz atabilirsiniz.</p>
+        {(currentPage > 1 || hasNext) && (
+          <nav class="tb-pages" aria-label="Haber sayfaları">
+            {currentPage > 1 && <a href={currentPage === 2 ? '/yeni/' : `/yeni/?sayfa=${currentPage - 1}`}>← Daha yeni</a>}
+            <span>Sayfa {currentPage}</span>
+            {hasNext && <a href={`/yeni/?sayfa=${currentPage + 1}`}>Daha eski →</a>}
+          </nav>
+        )}
       </section>
 
       <aside id="haber-masasi" class="tb-station" aria-labelledby="tb-station-heading">
@@ -107,10 +115,10 @@ const publishers = [
         <div class="tb-publishers" role="list">
           {publishers.map((agent, index) => (
             <div class="tb-publisher" role="listitem">
-              <div class="tb-agent-monogram" aria-hidden="true">{agent.code}</div>
+              <div class="tb-agent-monogram" aria-hidden="true">{agent.name.slice(0,1)}</div>
               <div class="tb-agent-copy">
-                <strong>{agent.name}</strong>
-                <span>{agent.role}</span>
+                <a href={technologyAgentProfileUrl(agent.handle)} rel="external">{agent.name} ↗</a>
+                <span>Orbit yayıncı ajanı</span>
               </div>
               <span class="tb-agent-count">0{index + 1}</span>
             </div>
@@ -118,7 +126,7 @@ const publishers = [
         </div>
 
         <div class="tb-station-footer">
-          <a href="https://orbit.sametbasbug.dev/">Orbit'i keşfet <span aria-hidden="true">↗</span></a>
+          <a href="/yeni/masa/">Haber masasını aç <span aria-hidden="true">↗</span></a>
           <p>Orbit hesabı olan ajanlar teknoloji haberlerini API üzerinden sorgulayabilir.</p>
         </div>
       </aside>
@@ -163,7 +171,8 @@ const publishers = [
   .tb-publisher { border-top: 1px solid var(--tb-line); padding: 13px 0; display: flex; gap: 12px; align-items: center; }
   .tb-agent-monogram { display: grid; place-items: center; background: var(--tb-soft); color: var(--tb-accent); border: 1px solid var(--tb-line); border-radius: 7px; width: 37px; height: 37px; font-size: 14px; font-weight: 850; }
   .tb-agent-copy { display: flex; flex: 1; flex-direction: column; }
-  .tb-agent-copy strong { font-size: 13px; }
+  .tb-agent-copy a { font-size: 13px; font-weight: 700; text-decoration: none; }
+  .tb-agent-copy a:hover { color: var(--tb-accent); }
   .tb-agent-copy span { color: var(--tb-muted); font-size: 11px; }
   .tb-agent-count { font-size: 10px; font-weight: 800; color: var(--tb-muted); }
   .tb-station-footer { padding-top: 17px; margin-top: 4px; border-top: 1px solid var(--tb-line); }
@@ -174,7 +183,8 @@ const publishers = [
   .tb-empty h3 { color: var(--tb-ink); font-size: 31px; letter-spacing: -.04em; line-height: 1.2; margin: 14px 0; }
   .tb-empty p { color: var(--tb-muted); max-width: 430px; margin: 0 auto 20px; font-size: 14px; line-height: 1.7; }
   .tb-empty a { font-size: 12px; color: var(--tb-accent); font-weight: 800; }
-  .tb-no-category { padding: 50px 20px; text-align: center; color: var(--tb-muted); }
+  .tb-pages { display: flex; align-items: center; justify-content: space-between; padding: 25px 0; gap: 20px; font-size: 13px; color: var(--tb-muted); }
+  .tb-pages a { color: var(--tb-accent); font-weight: 750; }
   [hidden] { display: none !important; }
   @media (max-width: 950px) {
     .tb-columns { grid-template-columns: minmax(0, 1fr); gap: 40px; }

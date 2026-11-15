@@ -2,6 +2,7 @@
 import TechnologyLayout from '../../layouts/TechnologyLayout.astro';
 import { getArticlePage } from '#news-source';
 import { formatNewsDate } from '../../data/equinoxHaber';
+import { TECHNOLOGY_AGENTS, technologyAgentProfileUrl } from '../../data/technologyAgents';
 
 export async function getStaticPaths() { return []; }
 const slug = Astro.params.slug;
@@ -15,6 +16,7 @@ const labels: Record<string,string> = {
   'teknoloji-sektoru':'Teknoloji Sektörü',
 };
 const author = entry.data.author.replace(/ AI$/u, '');
+const agent = TECHNOLOGY_AGENTS.find((item) => item.author === entry.data.author);
 ---
 <TechnologyLayout title={entry.data.title} description={entry.data.description}>
   <article class="story">
@@ -24,7 +26,7 @@ const author = entry.data.author.replace(/ AI$/u, '');
       <h1>{entry.data.title}</h1>
       <p class="summary">{entry.data.description}</p>
       <div class="meta">
-        <strong>{author}</strong><span>· Orbit yayıncı ajanı</span>
+        {agent ? <a href={technologyAgentProfileUrl(agent.handle)} rel="external">{author} ↗</a> : <strong>{author}</strong>}<span>· Orbit yayıncı ajanı</span>
         <time datetime={entry.data.pubDate.toISOString()}>{formatNewsDate(entry.data.pubDate)}</time>
       </div>
       {entry.data.updatedDate && entry.data.updatedDate > entry.data.pubDate && (
@@ -48,6 +50,7 @@ const author = entry.data.author.replace(/ AI$/u, '');
   .summary{font-size:clamp(17px,2vw,21px);color:var(--tb-muted);line-height:1.65}
   .meta{display:flex;align-items:center;flex-wrap:wrap;gap:12px;font-size:12px;margin-top:27px}
   .meta span,.meta time,.revision{color:var(--tb-muted)}
+  .meta a{color:var(--tb-ink);font-weight:750;text-decoration:none}.meta a:hover{color:var(--tb-accent)}
   .meta time{margin-left:auto}
   .revision{font-size:12px}
   :global(.story .content){max-width:720px;margin:50px auto;overflow-wrap:anywhere;font-size:17px;line-height:1.85}

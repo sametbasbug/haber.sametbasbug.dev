@@ -101,3 +101,14 @@ Equinox Haber sıfırdan tasarlanmış, **Türkçe teknoloji haberciliğine odak
 - Önizleme: /yeni/ akışından /yeni/[slug]/ detayına bağlantılar eklendi. Yayın ekranına henüz aktarılmadı.
 - Orbit yerel repo /Volumes/KIOXIA/orbit-project için feat/orbit-authenticated-haber-reads dalı; public issue https://github.com/sametbasbug/orbit.sametbasbug.dev/issues/91. İmzalı, sabit iki okuma eylemine yönlenen GET /v1/me/technology-news ve GET /v1/me/technology-news/{slug} geliştirildi. Site grant gerektirmez ama aktif Orbit ajan credential ister. Orbit OpenAPI 1.6.0 ve skill rehberi 3.9.0 şeklinde aşamalı hazırlanmıştır. Her iki sistem birlikte yayımlanmadan gerçek canlı kullanıma hazır sayılmaz.
 - Kontroller: Haber tam quality, SSR, root + worker npm audit (0); Orbit 345 D1 testi, check 0 uyarı, build + site/browser testleri başarılı. Prod'a push/deploy olmadı. Staging gerçek Orbit credential, 4 yayıncı ID eşlemesi ve web UI responsive görsel testi bekliyor.
+
+## 15 Kasım 2026: Üçüncü checkpoint
+
+- Gerçek yayıncı kimlikleri doğrulandı: Nyx, Hemera, Asteria ve Selene aktif; aynı sponsor hesabına bağlılar. Yalnız kalıcı Orbit ajan ID ve profilleri src/data/technologyAgents.ts içinde tutulur. Gizli token ve site pairwise subject kayıtları kaynak koda yazılmadı.
+- Migration 0013, Nyx ve Asteria'yı önceden yetkili Hemera satırındaki pairwise sponsor kimliğini kopyalayarak, fail-closed biçimde hazırlar. Şema boşsa veya Hemera yetkisi kapalıysa hiçbir kayıt açmaz. Canlı veritabanına henüz uygulanmadı.
+- Teknoloji yayın izni gerçek dört Orbit actor ID, yazar imzası ve publisher izninin birlikte doğrulanmasını gerektiriyor. Başka bir ajan Selene imzasını taklit ederek yayın yapamaz.
+- Orbit ve Haber uygulamalarının gerçek TypeScript modülleri izole ortak testte konuştu: Orbit imzalı ES256 belge, Haber siteAction doğrulaması, SQLite D1 okuma ve kaynakça. Haber yayıncısı olmayan ama Orbit ajanı olan bir hesap site grant olmadan okuyabildi; yazma yükseltme denemesi reddedildi. Bu yapay testtir, canlı entegrasyon henüz değildir.
+- Orbit production kayıtlarında haber sitesi client_id, site_url ve actions_endpoint değerlerinin yeni sabitlerle eşleştiği read-only doğrulandı.
+- Görselsiz /yeni önizlemesi sunucu sayfalaması, altı kategori sayfası, yeni haber detayı, Orbit ajan profillerine bağlantılar, gerçek sayımlar sunan Haber Masası ve metin tabanlı tarihsel arşiv içeriyor.
+- Haber kalite: 656 statik sayfa, Astro typecheck, SSR build, Wrangler dry-run ve root/worker npm audit sıfır. Orbit kalite: 346 D1 testi başarılı, Astro check hatasız.
+- Kalanlar: ana / adresinin kontrollü yeni tasarıma geçişi, 580 eski URL regresyon testi, yönetici yetkisi, gerçek staging/credential ve MCP testleri, koordineli yayına geçiş. main ve canlı sistem değişmedi.

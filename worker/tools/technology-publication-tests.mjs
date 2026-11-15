@@ -6,6 +6,7 @@ import { DatabaseSync } from "node:sqlite";
 import { renderTechnologyBody } from "../src/render.ts";
 import { publishTechnologyAs, listTechnologyAs, readTechnologyAs, editTechnologyAs, setTechnologyPublicationState } from "../src/technology-publication.ts";
 
+import { TECHNOLOGY_AGENTS } from "../../src/data/technologyAgents.ts";
 import { siteAction } from "../src/orbit-eylem.ts";
 
 // Security regression: raw HTML, executable links and image Markdown
@@ -65,8 +66,8 @@ const DB = {
 };
 
 const env = { DB };
-const selene = { subject: "person-a", actor: "agent:selene", author: "Selene AI", mayPublish: true, mayWriteBrief: true, via: "orbit-action" };
-const hemera = { subject: "person-a", actor: "agent:hemera", author: "Hemera AI", mayPublish: true, mayWriteBrief: true, via: "orbit-action" };
+const selene = { subject: "person-a", actor: `agent:${TECHNOLOGY_AGENTS[3].id}`, author: "Selene AI", mayPublish: true, mayWriteBrief: true, via: "orbit-action" };
+const hemera = { subject: "person-a", actor: `agent:${TECHNOLOGY_AGENTS[1].id}`, author: "Hemera AI", mayPublish: true, mayWriteBrief: true, via: "orbit-action" };
 const unauthorized = { subject: "person-x", actor: "agent:unlisted", author: "Fake AI", mayPublish: true, mayWriteBrief: true, via: "orbit-action" };
 const article = {
   metin: "# Güvenlik araştırmacıları yeni bir açık buldu\n\nAraştırmacılar, yazılımı etkileyen önemli bir güvenlik açığını açıkladı. Geliştirici, hatayı gidermek için yeni bir güncelleme yayımladığını duyurdu.\n\nGüncelleme kullanılabilir durumda; kullanıcıların ilgili sürümü yüklemeleri öneriliyor.",
@@ -82,6 +83,10 @@ assert.equal(database.prepare("SELECT COUNT(*) AS n FROM articles").get().n, 0);
 
 r = await read(publishTechnologyAs({ ...selene, actor: undefined }, article, env));
 assert.equal(r.status, 403);
+r = await read(publishTechnologyAs({ ...selene, actor: "agent:unlisted" }, article, env));
+assert.equal(r.status, 403, "unregistered Orbit agent cannot claim Selene author name");
+r = await read(publishTechnologyAs({ ...selene, actor: `agent:${TECHNOLOGY_AGENTS[0].id}` }, article, env));
+assert.equal(r.status, 403, "Nyx's ID cannot claim Selene's author name");
 
 r = await read(publishTechnologyAs(selene, { ...article, author: "Hemera AI" }, env));
 assert.equal(r.status, 422);
@@ -89,7 +94,7 @@ assert.equal(r.status, 422);
 r = await read(publishTechnologyAs(selene, article, env));
 assert.equal(r.status, 201, JSON.stringify(r.body));
 assert.equal(r.body.yazar, "Selene AI");
-assert.equal(r.body.orbitActor, "agent:selene");
+assert.equal(r.body.orbitActor, `agent:${TECHNOLOGY_AGENTS[3].id}`);
 assert.equal(r.body.kategori, "siber-guvenlik");
 assert.equal(r.body.gorsel, null);
 assert.ok(r.body.yayinTarihi.endsWith("Z"), r.body.yayinTarihi);
@@ -99,7 +104,7 @@ const row = database.prepare("SELECT * FROM articles WHERE slug=?").get(slug);
 assert.equal(row.publication_era, "technology");
 assert.equal(row.category, "Teknoloji");
 assert.equal(row.tech_category, "siber-guvenlik");
-assert.equal(row.orbit_actor_subject, "agent:selene");
+assert.equal(row.orbit_actor_subject, `agent:${TECHNOLOGY_AGENTS[3].id}`);
 assert.equal(row.hero_image, null);
 assert.ok(row.body_html.includes("Kaynaklar"));
 assert.equal(database.prepare("SELECT COUNT(*) AS n FROM article_sources WHERE slug=?").get(slug).n, 2);
@@ -112,7 +117,7 @@ assert.equal(r.status, 409, "başka ajanın aynı kaynağı yayımlaması engell
 r = await read(listTechnologyAs({ kategori: "siber-guvenlik" }, env));
 assert.equal(r.status, 200);
 assert.equal(r.body.toplam, 1);
-assert.equal(r.body.haberler[0].orbitActor, "agent:selene");
+assert.equal(r.body.haberler[0].orbitActor, `agent:${TECHNOLOGY_AGENTS[3].id}`);
 assert.equal(r.body.haberler[0].gorsel, undefined);
 r = await read(listTechnologyAs({ kategori: "yapay-zeka" }, env));
 assert.equal(r.body.toplam, 0);
@@ -194,7 +199,22 @@ database.prepare(
   `INSERT INTO publishers
     (subject,author,may_write_brief,may_publish,created_at,acts_for)
     VALUES (?,?,?,?,?,?)`,
-).run("agent:selene", "Selene AI", 0, 1, new Date().toISOString(), "person-a");
+).run(`agent:${TECHNOLOGY_AGENTS[3].id}`, "Selene AI", 0, 1, new Date().toISOString(), "person-a");
+database.prepare(
+  `INSERT INTO publishers (subject,author,may_write_brief,may_publish,created_at,acts_for)
+   VALUES (?,?,?,?,?,?)`,
+).run(`agent:${TECHNOLOGY_AGENTS[1].id}`, "Hemera AI", 1, 1, new Date().toISOString(), "person-a");
+const registerTechnology = readFileSync(new URL("../migrations/0013_register_technology_publishers.sql", import.meta.url), "utf8");
+database.exec(registerTechnology);
+database.exec(registerTechnology);
+for (const agent of TECHNOLOGY_AGENTS) {
+  const row = database.prepare("SELECT author,may_publish,acts_for FROM publishers WHERE subject=?").get(`agent:${agent.id}`);
+  assert.equal(row?.author, agent.author, `${agent.name} should be enrolled`);
+  assert.equal(row?.may_publish, 1);
+  assert.equal(row?.acts_for, "person-a");
+}
+assert.equal(database.prepare("SELECT COUNT(*) AS n FROM publishers WHERE author IN ('Nyx AI','Hemera AI','Asteria AI','Selene AI')").get().n, 4);
+
 const issuer = "https://orbit.example.test";
 const pair = await crypto.subtle.generateKey({ name: "ECDSA", namedCurve: "P-256" }, true, ["sign", "verify"]);
 const jwk = await crypto.subtle.exportKey("jwk", pair.publicKey);
@@ -209,7 +229,7 @@ globalThis.fetch = async (url) => {
   return new Response("not found", { status: 404 });
 };
 const encode = (x) => Buffer.from(typeof x === "string" ? x : JSON.stringify(x)).toString("base64url");
-async function signedAction(operation, actor = "agent:selene") {
+async function signedAction(operation, actor = `agent:${TECHNOLOGY_AGENTS[3].id}`) {
   const now = Math.floor(Date.now() / 1000);
   const header = encode({ alg: "ES256", kid: "key1" });
   const claims = encode({ iss: issuer, aud: "orbit-haber", sub: "person-a",
@@ -219,7 +239,7 @@ async function signedAction(operation, actor = "agent:selene") {
     new TextEncoder().encode(`${header}.${claims}`));
   return `${header}.${claims}.${Buffer.from(signature).toString("base64url")}`;
 }
-async function throughOrbit(operation, input, actor = "agent:selene", key = crypto.randomUUID()) {
+async function throughOrbit(operation, input, actor = `agent:${TECHNOLOGY_AGENTS[3].id}`, key = crypto.randomUUID()) {
   return read(siteAction(new Request("https://haber.example.test/api/orbit-eylem", {
     method: "POST",
     headers: { authorization: `Bearer ${await signedAction(operation, actor)}`,
@@ -233,16 +253,16 @@ const orbitArticle = {
   kaynaklar: ["https://example.com/second-news"],
 };
 const key = "one-action-one-key";
-r = await throughOrbit("haber.teknolojiYayinla", orbitArticle, "agent:selene", key);
+r = await throughOrbit("haber.teknolojiYayinla", orbitArticle, `agent:${TECHNOLOGY_AGENTS[3].id}`, key);
 assert.equal(r.status, 200, JSON.stringify(r.body));
 assert.equal(r.body.status, "applied");
 assert.equal(r.body.output.uygulandi, true);
 assert.equal(r.body.output.yazar, "Selene AI");
-r = await throughOrbit("haber.teknolojiYayinla", orbitArticle, "agent:selene", key);
+r = await throughOrbit("haber.teknolojiYayinla", orbitArticle, `agent:${TECHNOLOGY_AGENTS[3].id}`, key);
 assert.equal(r.body.status, "replayed", "aynı logical intent iki defa yayımlanmamalı");
 r = await throughOrbit("haber.teknolojiYayinla", {
   ...orbitArticle, kaynaklar: ["https://example.com/changed"],
-}, "agent:selene", key);
+}, `agent:${TECHNOLOGY_AGENTS[3].id}`, key);
 assert.equal(r.status, 409, "aynı key farklı gövde reddedilmeli");
 r = await throughOrbit("haber.teknolojiHaberleriOku", {}, "agent:unlisted");
 assert.equal(r.status, 200, "yazma yetkisi olmayan Orbit ajanı haber okuyabilir");
