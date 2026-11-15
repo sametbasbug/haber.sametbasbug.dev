@@ -75,6 +75,10 @@ const JWKS_TTL_MS = 10 * 60 * 1000;
 
 interface JwksCache { keys: Map<string, CryptoKey>; fetchedAt: number; }
 let jwksCache: JwksCache | null = null;
+// Many public requests may arrive with the same unknown signing kid at once.
+// Share an in-flight discovery instead of multiplying Orbit requests per
+// isolate. Known cached keys never wait for the forced refresh.
+let jwksFetchInFlight: Promise<Map<string, CryptoKey>> | null = null;
 
 // Both documents are tiny in the Orbit signing implementation. These
 // bounds prevent an identity-provider outage or misconfiguration from
@@ -155,6 +159,18 @@ async function loadJwks(issuer: string, force: boolean): Promise<Map<string, Cry
   const fresh = jwksCache !== null && Date.now() - jwksCache.fetchedAt < JWKS_TTL_MS;
   if (fresh && !force) return jwksCache!.keys;
 
+  // Concurrent key misses should create ONE remote refresh. Guard the
+  // cleanup with promise identity so an older caller cannot clear a newer
+  // pending fetch. Each request still verifies its own signature afterwards.
+  const pending = jwksFetchInFlight ?? (jwksFetchInFlight = fetchJwks(issuer));
+  try {
+    return await pending;
+  } finally {
+    if (jwksFetchInFlight === pending) jwksFetchInFlight = null;
+  }
+}
+
+async function fetchJwks(issuer: string): Promise<Map<string, CryptoKey>> {
   /* Keşif belgesi üzerinden gidiliyor, `jwks_uri` varsayılmıyor. Orbit bugün
    * `{issuer}/.well-known/jwks.json` yayınlıyor ama bu bir uygulama ayrıntısı;
    * keşif belgesi sözleşmenin kendisi. */
@@ -223,8 +239,30 @@ async function verifySignedOrbitToken(
     return { status: 401, error: "token çözülemedi" };
   }
 
+  // JSON.parse accepts primitive values and arrays. A public caller can
+  // submit null header or claims: dereferencing header.alg or claims.iss
+  // must never throw an unhandled TypeError (HTTP 500).
+  if (!header || typeof header !== "object" || Array.isArray(header)
+    || !claims || typeof claims !== "object" || Array.isArray(claims)) {
+    return { status: 401, error: "token çözülemedi" };
+  }
+
   if (header.alg !== "ES256") return { status: 401, error: "beklenen imza ES256" };
   if (typeof header.kid !== "string") return { status: 401, error: "token kid taşımıyor" };
+
+  let signature: Uint8Array<ArrayBuffer>;
+  try {
+    if (!/^[A-Za-z0-9_-]+$/u.test(parts[2])) {
+      return { status: 401, error: "imza doğrulanmadı" };
+    }
+    signature = base64UrlToBytes(parts[2]);
+    // WebCrypto ES256/P-256 produces a raw 64-byte (r || s) signature.
+    if (signature.byteLength !== 64) {
+      return { status: 401, error: "imza doğrulanmadı" };
+    }
+  } catch {
+    return { status: 401, error: "imza doğrulanmadı" };
+  }
 
   let keys: Map<string, CryptoKey>;
   try {
@@ -241,19 +279,6 @@ async function verifySignedOrbitToken(
   const key = keys.get(header.kid);
   if (!key) return { status: 401, error: "token bilinmeyen bir anahtarla imzalanmış" };
 
-  let signature: Uint8Array<ArrayBuffer>;
-  try {
-    if (!/^[A-Za-z0-9_-]+$/u.test(parts[2])) {
-      return { status: 401, error: "imza doğrulanmadı" };
-    }
-    signature = base64UrlToBytes(parts[2]);
-    // WebCrypto ES256/P-256 produces a raw 64-byte (r || s) signature.
-    if (signature.byteLength !== 64) {
-      return { status: 401, error: "imza doğrulanmadı" };
-    }
-  } catch {
-    return { status: 401, error: "imza doğrulanmadı" };
-  }
   const signed = new TextEncoder().encode(`${parts[0]}.${parts[1]}`);
   let valid = false;
   try {
@@ -336,6 +361,15 @@ export async function verifyOrbitActionToken(
 
   if (claims.scope !== SITE_ACTION_SCOPE) {
     return { status: 401, error: "token eylem belgesi değil" };
+  }
+  // Orbit issues site-action tokens for exactly 60 seconds. The shared
+  // token verifier also accepts regular OIDC ID tokens, which can have a
+  // different TTL, so restrict the 60-second window ONLY on this path.
+  // Signing a longer-lived/undated action document must not silently turn
+  // a revocable per-request delegation into durable publication power.
+  if (!Number.isSafeInteger(claims.iat) || !Number.isSafeInteger(claims.exp)
+    || claims.exp < claims.iat || claims.exp - claims.iat > 60) {
+    return { status: 401, error: "token zaman iddiaları geçersiz" };
   }
   if (typeof claims.operation !== "string" || claims.operation.length === 0) {
     return { status: 401, error: "belge işlem taşımıyor" };

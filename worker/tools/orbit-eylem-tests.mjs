@@ -172,6 +172,20 @@ console.log("── kapı ──");
   check("yanlış content-type 415 alıyor",
     (await siteAction(make("{}", "text/plain"), backend)).status, 415);
 }
+{
+  // This is the actual public HTTP entrypoint, not a call directly to the
+  // verifier. A valid JSON body with a primitive JWT header must return
+  // controlled HTTP 401 rather than crashing the Worker with TypeError.
+  const db = sahteDB({ yayinciSatiri: SELENE });
+  const primitive = encodeJson(null) + "." + encodeJson({}) + ".AQ";
+  const response = await siteAction(
+    istek(primitive, { operationId: "haber.haberleriOku", input: {} }),
+    { DB: db, ...ORTAM },
+  );
+  check("null JWT header on public HTTP route returns 401", response.status, 401);
+  check("null JWT header causes no DB writes", db.yazilanlar.length, 0);
+  check("null JWT header causes no denied-action DB log", db.reddedilenler.length, 0);
+}
 console.log("\n── belge iddiaları ──");
 {
   /* En önemli vaka: pano için alınmış belge, gövdesi değiştirilerek yayına

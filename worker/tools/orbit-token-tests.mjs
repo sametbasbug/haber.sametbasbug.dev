@@ -8,7 +8,7 @@
  * AYRIŞTIRMASINI atlamaz — o kod gerçekten çalışıyor. Ağın kendisi ayrıca
  * `tools/e2e-orbit.sh` içinde çalışan Worker'a karşı sınanıyor.
  */
-import { verifyOrbitToken, validatedOrbitJwksUrl } from "../src/identity.ts";
+import { verifyOrbitToken, verifyOrbitActionToken, validatedOrbitJwksUrl } from "../src/identity.ts";
 
 const ISSUER = "https://orbit.example.test";
 const AUDIENCE = "haber.sametbasbug.dev";
@@ -187,6 +187,56 @@ console.log("\n── bozuk ECDSA imza ve token uzunluğu ──");
   check('aşırı büyük JWT daha decode etmeden 401',outcome(oversized),'401 token biçimi geçersiz');
 }
 
+console.log("\n── JSON claims yapısı ve kısa ömürlü eylem belgesi ──");
+{
+  async function mintRaw(head, payload) {
+    const headerSegment=encodeJson(head);
+    const bodySegment=encodeJson(payload);
+    const signature=await crypto.subtle.sign(
+      {name:"ECDSA",hash:"SHA-256"},key.privateKey,
+      new TextEncoder().encode(headerSegment+"."+bodySegment),
+    );
+    return headerSegment+"."+bodySegment+"."+b64url(new Uint8Array(signature));
+  }
+  const now=Math.floor(Date.now()/1000);
+  const normalHeader={alg:"ES256",kid:key.kid};
+  const baseClaims={iss:ISSUER,sub:"orbit-sub-selene",aud:AUDIENCE,iat:now,exp:now+60};
+  const actionClaims={...baseClaims,scope:"site.actions",operation:"haber.haberOku",
+    act:{sub:"agent:synthetic",handle:"selene"},jti:"local-unique"};
+  for (const [label,header] of [
+    ["header null",null],["header array",[]],["header string","object yerine metin"],
+  ]) {
+    const r=await verifyOrbitToken(await mintRaw(header,baseClaims),ISSUER,AUDIENCE);
+    check(label,outcome(r),"401 token çözülemedi");
+  }
+  for (const [label,body] of [
+    ["claims null",null],["claims array",[]],["claims number",42],
+  ]) {
+    const r=await verifyOrbitToken(await mintRaw(normalHeader,body),ISSUER,AUDIENCE);
+    check(label,outcome(r),"401 token çözülemedi");
+  }
+  for (const [label,claims] of [
+    ["site action missing iat",{...actionClaims,iat:undefined}],
+    ["site action wrong iat",{...actionClaims,iat:"now"}],
+    ["site action impossible exp before iat",{...actionClaims,exp:now-10}],
+    ["site action exp 61 seconds",{...actionClaims,exp:now+61}],
+    ["site action exp too far ahead",{...actionClaims,exp:now+3600}],
+  ]) {
+    const r=await verifyOrbitActionToken(await mintRaw(normalHeader,claims),ISSUER,AUDIENCE);
+    check(label,("error" in r)?(r.status+" "+r.error):"ACCEPTED",
+      "401 token zaman iddiaları geçersiz");
+  }
+  const good=await verifyOrbitActionToken(await mintRaw(normalHeader,actionClaims),ISSUER,AUDIENCE);
+  check("gerçek biçimde 60sn Orbit eylemi hâlâ geçer","error" in good?"ERROR":good.operation,
+    "haber.haberOku");
+  const hitsBefore=jwksHits;
+  const fakeHeader={alg:"ES256",kid:"kid-not-yet-published"};
+  const invalidSignature=encodeJson(fakeHeader)+"."+encodeJson(actionClaims)+".AQ";
+  const malformed=await verifyOrbitToken(invalidSignature,ISSUER,AUDIENCE);
+  check("bozuk imza bilinmeyen kid bile olsa 401",outcome(malformed),"401 imza doğrulanmadı");
+  check("bozuk imza hiçbir JWKS yenilemesine neden olmaz",jwksHits,hitsBefore);
+}
+
 console.log("\n── anahtar değişimi ──");
 {
   const before = jwksHits;
@@ -269,6 +319,74 @@ console.log("\n── OIDC JWKS ağ güvenliği ──");
     ?discover():Response.json({keys:published}));
   check('geçerli yeni kid hâlâ tanınıyor',outcome(response),'sub=orbit-sub-selene');
   published=[key.jwk,rotatedKey.jwk];
+}
+
+console.log("\n── eşzamanlı bilinmeyen kid ve JWKS yeniden keşfi ──");
+{
+  // An untrusted caller can send a syntactically valid ES256 token with a
+  // made-up kid. Six simultaneous probes should share ONE identity-provider
+  // refresh, not produce a fan-out of six discovery + JWKS downloads.
+  let discoveryCalls=0,jwksCalls=0;
+  const originalFetch=globalThis.fetch;
+  globalThis.fetch=async(url)=>{
+    const path=String(url);
+    await Promise.resolve();
+    if(path.endsWith("/.well-known/openid-configuration")){
+      discoveryCalls++;
+      return Response.json({issuer:ISSUER,jwks_uri:ISSUER+"/.well-known/jwks.json"});
+    }
+    if(path.endsWith("/.well-known/jwks.json")){
+      jwksCalls++;
+      return Response.json({keys:[key.jwk,rotatedKey.jwk]});
+    }
+    throw new Error("Unexpected JWKS test request");
+  };
+  try {
+    const unknownKidKey=await makeKey("unpublished-concurrent-kid");
+    const unknownKidToken=await mint(unknownKidKey);
+    const attempts=await Promise.all(
+      Array.from({length:6},()=>verifyOrbitToken(unknownKidToken,ISSUER,AUDIENCE)),
+    );
+    check("altı bilinmeyen kid güvenli reddedildi",
+      attempts.every(r=>r.status===401),true);
+    check("eşzamanlı discovery bir kez çalıştı",discoveryCalls,1);
+    check("eşzamanlı JWKS bir kez indirildi",jwksCalls,1);
+
+    // A known cached key must remain usable while an unknown kid is
+    // being refreshed (and must not trigger another network request).
+    const signedWithKnownKey=await mint(key);
+    const known=await Promise.all(
+      Array.from({length:4},()=>verifyOrbitToken(signedWithKnownKey,ISSUER,AUDIENCE)),
+    );
+    check("önbellekteki geçerli kimlikler çalışıyor",
+      known.every(r=>r.subject==="orbit-sub-selene"),true);
+    check("geçerli anahtar için tekrar keşif yapılmıyor",jwksCalls,1);
+
+    let unavailableHits=0;
+    globalThis.fetch=async()=>{unavailableHits++;return new Response("temporary", {status:503});};
+    const duringOutage=await Promise.all(
+      Array.from({length:5},()=>verifyOrbitToken(unknownKidToken,ISSUER,AUDIENCE)),
+    );
+    check("eşzamanlı JWKS kesintisi güvenli 503 döner",
+      duringOutage.every(r=>r.status===503),true);
+    check("kesintide tek discovery isteği yapıldı",unavailableHits,1);
+
+    globalThis.fetch=async(url)=>{
+      const path=String(url);
+      if(path.endsWith("/.well-known/openid-configuration")){
+        discoveryCalls++;
+        return Response.json({issuer:ISSUER,jwks_uri:ISSUER+"/.well-known/jwks.json"});
+      }
+      if(path.endsWith("/.well-known/jwks.json")){
+        jwksCalls++;
+        return Response.json({keys:[key.jwk,rotatedKey.jwk]});
+      }
+      throw new Error("Unexpected JWKS retry test request");
+    };
+    const retry=await verifyOrbitToken(unknownKidToken,ISSUER,AUDIENCE);
+    check("başarısız keşiften sonra sonraki yenileme çalışıyor",retry.status,401);
+    check("yeni yenileme isteği gerçekten yapılmış",jwksCalls,2);
+  }finally{globalThis.fetch=originalFetch;}
 }
 
 const failed = results.filter((r) => !r.ok);

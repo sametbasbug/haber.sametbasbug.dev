@@ -291,3 +291,20 @@ Equinox Haber sıfırdan tasarlanmış, **Türkçe teknoloji haberciliğine odak
 
 - Açık /api/orbit-eylem HTTP ucunda geçerli başlık/gövdeyle gelen ama hatalı Base64URL imzalı JWT, doğrudan atob/WebCrypto üzerinden uncaught exception üretebiliyordu. JWT 8 KiB ile sınırlandı; gerçek ES256/P-256 imzası 64 bayt olmalı, bozuk/boş/kısa/uzun imza veya WebCrypto istisnası kontrolsüz 500 yerine 401 alıyor.
 - Gerçek WebCrypto ile üretilmiş token'lar üzerinden beş yeni olumsuz kontrol eklendi. worker/tools/orbit-token-tests.mjs 65/65 ve imzalı teknoloji yayın E2E tekrar başarılı; gerçek kullanıcı/token/canlı veritabanı kullanılmadı.
+
+## 16 Kasım 2026 on yedinci checkpoint: JWT null, süre ve JWKS eşzamanlılığı
+
+- Haber doğrulayıcısına imzasız bir null JSON JWT header verildiğinde TypeError ile hata fırlatıldığı yerelde gerçekten yeniden üretildi. Header ve claims değerleri null/dizi/ilkel tipse artık 401 dönülüyor. Gerçek /api/orbit-eylem HTTP giriş noktası testi de 401 ve 0 DB yazımı kanıtlıyor.
+- Orbit'in 60 saniyelik imzalı eylem belgesi sınırı Haber tarafında doğrulanıyor: geçerli tam 60sn eylemi kabul, eksik/geçersiz iat, exp < iat, 61sn veya çok uzun eylem reddediliyor. Normal uzun ömürlü OIDC ID token sözleşmesi değişmedi.
+- Geçersiz ECDSA imza biçimi JWKS'e ağ isteği atmadan reddediliyor. Altı paralel bilinmeyen kid isteği eskiden 6 keşif + 6 JWKS indirmesi başlatıyordu (RED ile kanıtlandı); artık tek bir devam eden fetch paylaşılarak 1+1 yapılıyor (GREEN). Cached anahtarlar servis kesintisinde çalışmayı sürdürüyor; aynı anda beş JWKS outage isteği tek 503 kaynağına indiriliyor ve hata sonrası yeni deneme tekrardan ağ isteği yapabiliyor.
+- WebCrypto gerçek imza ve yerel API negatif testleri 88 kimlik ve 82 eylem kontrolü geçti; teknoloji yayın E2E de başarılı. İki repo ve ana üretim verileri izinsiz değiştirilmedi; gerçek credential/staging ve release onayı hâlâ bekleniyor.
+
+### On yedinci checkpoint: gerçek yerel HTTP kabulü
+
+- Yeni SSR Worker gerçek yerel Wrangler üzerinde çalıştırıldı; yalnız izole test sunucusuna kamuya açık Orbit issuer adresi verildi. HTTP POST /api/orbit-eylem, JSON null JWT header karşısında 401 ve sanitize edilmiş hata döndürdü (eski kod 500 üretebiliyordu). İlk deneme yerel ORBIT_ISSUER eksikliği nedeniyle güvenli 503 döndü; üretim binding'i veya canlı veri değiştirilmeden yerel test konfigürasyonu düzeltildi. Sunucu, test D1 state'i ve geçici dosyalar kapatılıp silindi.
+
+### On yedinci checkpoint: negatif mutasyon ve HTTP son doğrulama
+
+- Eylem JWT süresini kontrol eden koşul geçici olarak 60 saniyeden 6000 saniyeye gevşetildi. Gerçek JWT testi hem 61 saniyelik hem aşırı uzun eylemin yanlış kabulünü RED olarak yakaladı. Kaynak geri alındı, testler 88/88 tekrar GREEN; geçici kopya silindi.
+- Tam Haber quality, 664 statik sayfa, SSR derleme, Wrangler --dry-run, root ve worker npm audit 0; Orbit verify (3462 site/855 browser), check (219 dosya 0 hata), gerçek iki-repo ES256 6 okuma ve production config 85 başarıyla tamamlandı.
+- Testler yalnız yerel ve kamuya açık test fixture üzerinde yapıldı. Kullanıcı onayı gerektiren gerçek prod D1 export, Orbit/Haber PR-merge-deploy, gerçek ajan credential staging ve Selene MCP canlı keşfi hâlâ bekliyor.

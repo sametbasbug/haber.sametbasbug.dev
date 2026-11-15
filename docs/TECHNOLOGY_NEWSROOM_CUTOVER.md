@@ -537,3 +537,53 @@ verification exceptions return a normal HTTP 401, never an uncaught
 server error. Five new genuine WebCrypto negative checks were added to
 worker/tools/orbit-token-tests.mjs (65/65 total). Correctly signed
 documents and key rotation remain accepted.
+
+## Checkpoint 17: malformed signed claims and concurrent signing-key lookups
+
+A public malformed JWT containing a JSON null header used to throw an
+unhandled TypeError when Haber dereferenced header.alg, potentially
+returning HTTP 500 instead of rejecting an unauthenticated caller.
+The actual before-fix regression reproduced the exception. The common
+Orbit token verifier now rejects null, primitive and array header/claims
+before property access, with HTTP 401. The public /api/orbit-eylem entrypoint
+also has an explicit test that malformed JWTs return 401 without database
+writes or denial-audit rows. Correctly signed normal ID tokens continue to
+work, and the release does not bypass ES256 verification.
+
+The Orbit signed site-action contract grants exactly 60 seconds of authority.
+The action verifier now requires integral issued-at and expiry claims, an
+expiry not earlier than issuance, and exp-iat no greater than 60 seconds.
+This restriction applies to *site-action* documents, NOT ordinary Orbit
+ID tokens, which can legitimately have a longer lifetime. Local true-ES256
+tests include a valid 60-second document, an invalid 61-second document,
+missing/wrong issue times and a far-future expiry.
+
+Malformed ECDSA signature shapes are now checked BEFORE a potential network
+fetch for unknown JWKS key IDs. Untrusted invalid signatures cannot force
+a signing-key rediscovery merely by supplying an unpublished kid.
+
+Concurrent requests for an unknown kid previously triggered separate
+discovery+JWKS downloads per caller. A shared per-isolate in-flight promise
+now coalesces simultaneous refreshes while keeping cached known keys
+available. The regression was red before the fix (six discoveries and six
+JWKS fetches), green after (one discovery and one JWKS fetch). Tests also
+cover a temporary provider outage (all callers get sanitized 503, only one
+fetch attempted), and a successful later retry after the failed in-flight
+promise is cleared. Serial unknown-kid probing remains subject to existing
+Worker/HTTP protections; single-flight is NOT a network-wide rate limiter.
+
+No production JWT, account, key material, or D1 mutation is used in these
+tests. Actual Orbit ES256-signed cross-repo read requests must still pass
+before a coordinated production release.
+
+Checkpoint 17 local HTTP acceptance: the actual built Haber SSR Worker was
+started with local Wrangler on loopback, isolated /tmp D1 persistence and
+a PUBLIC issuer URL supplied only to that test server. A synthetic malformed
+JWT with JSON null as its header was POSTed to /api/orbit-eylem. The Worker
+returned HTTP 401 with the expected sanitized invalid-token message,
+not HTTP 500. No D1 query or write was required on that path. The first
+probe correctly returned 503 because the default local Wrangler
+configuration lacks ORBIT_ISSUER; retesting with an explicit PUBLIC local
+issuer binding produced 401. This is not evidence of a real Orbit credential
+being authenticated, and the live deployment was not touched. Local Worker
+process and isolated D1 state were removed on exit.
