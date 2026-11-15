@@ -21,7 +21,7 @@ function articleUrl(slug: string): string {
 
 /** The server-generated source section is presentation, not agent copy.
  * Keep source URLs in the separate structured array on API reads. */
-function storedArticleText(title: string, markdown: string): string {
+export function storedArticleText(title: string, markdown: string): string {
   const marker = "\n\n## Kaynaklar\n";
   const idx = markdown.lastIndexOf(marker);
   const body = idx >= 0 ? markdown.slice(0, idx) : markdown;
@@ -59,6 +59,38 @@ export function isTechnologyPublisher(identity: Identity | undefined): boolean {
   if (!identity?.actor || !identity.mayPublish || identity.via !== "orbit-action") return false;
   const approved = getTechnologyAgentByActor(identity.actor);
   return Boolean(approved && identity.author === approved.author);
+}
+
+/** Look up a previously committed administration mutation. Result and owner
+ * check are server-side; the caller cannot read another admin's receipts. */
+export async function replayTechnologyAdminRequest(
+  identity: Identity,
+  db: Env["DB"],
+): Promise<Response | null> {
+  if (!isNewsroomAdministrator(identity) || !identity.adminRequest) return null;
+  const row = await db.prepare(
+    "SELECT fingerprint,response_body FROM newsroom_admin_requests WHERE orbit_subject=? AND request_key=?",
+  ).bind(identity.subject, identity.adminRequest.key).first<{
+    fingerprint: string; response_body: string;
+  }>();
+  if (!row) return null;
+  if (row.fingerprint !== identity.adminRequest.fingerprint) {
+    return json({ error: "idempotency-key farklı bir istek için kullanıldı" }, 409);
+  }
+  return new Response(row.response_body, {
+    status: 200,
+    headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" },
+  });
+}
+
+function adminReceipt(identity: Identity, env: Env, data: Record<string, unknown>, at: string) {
+  if (!isNewsroomAdministrator(identity) || !identity.adminRequest) return [];
+  return [env.DB.prepare(
+    `INSERT INTO newsroom_admin_requests
+      (orbit_subject,request_key,fingerprint,response_body,created_at)
+      VALUES (?,?,?,?,?)`,
+  ).bind(identity.subject, identity.adminRequest.key,
+    identity.adminRequest.fingerprint, JSON.stringify(data), at)];
 }
 
 export async function publishTechnologyAs(
@@ -300,8 +332,10 @@ export async function editTechnologyAs(
   catch (error) { return json({ problems: [`haber render edilemedi: ${String(error)}`] }, 500); }
   const now = nextRevisionTimestamp(row.updated_at);
 
+  const success = { slug, baslik: article.baslik, kategori: article.kategori, guncellemeTarihi: now };
   try {
   await env.DB.batch([
+    ...adminReceipt(identity, env, success, now),
     env.DB.prepare(
       `INSERT INTO article_revisions
         (slug,action,previous_body_md,previous_category,previous_sources_json,previous_updated_at,actor_subject,reason,created_at)
@@ -324,11 +358,15 @@ export async function editTechnologyAs(
     ).bind(now),
   ]);
   } catch (error) {
-    if (revisionConflict(error)) return json({ problems: ["haber başka bir işlemde güncellendi, yeniden okuyun"] }, 409);
+    if (revisionConflict(error)) {
+      const replay = await replayTechnologyAdminRequest(identity, env.DB);
+      if (replay) return replay;
+      return json({ problems: ["haber başka bir işlemde güncellendi, yeniden okuyun"] }, 409);
+    }
     throw error;
   }
 
-  return json({ slug, baslik: article.baslik, kategori: article.kategori, guncellemeTarihi: now });
+  return json(success);
 }
 
 /** Soft-delete/restoration. Yalnızca kaydın kendi Orbit aktörü yapabilir. */
@@ -355,14 +393,20 @@ export async function setTechnologyPublicationState(
     return json({ error: "başka ajanın haberi yönetilemez" }, 403);
   }
   const nextDraft = action === "withdraw" ? 1 : 0;
-  if (row.is_draft === nextDraft) return json({ problems: ["haber zaten istenen durumda"] }, 409);
+  if (row.is_draft === nextDraft) {
+    const replay = await replayTechnologyAdminRequest(identity, env.DB);
+    if (replay) return replay;
+    return json({ problems: ["haber zaten istenen durumda"] }, 409);
+  }
 
   const sources = await env.DB.prepare(
     "SELECT name,url FROM article_sources WHERE slug=? ORDER BY position",
   ).bind(slug).all<any>();
   const now = nextRevisionTimestamp(row.updated_at);
+  const success = { slug, durum: nextDraft ? "yayindan-kaldirildi" : "yayinda", tarih: now };
   try {
   await env.DB.batch([
+    ...adminReceipt(identity, env, success, now),
     env.DB.prepare(
       `INSERT INTO article_revisions
         (slug,action,previous_body_md,previous_category,previous_sources_json,previous_updated_at,actor_subject,reason,created_at)
@@ -377,8 +421,12 @@ export async function setTechnologyPublicationState(
     ).bind(now),
   ]);
   } catch (error) {
-    if (revisionConflict(error)) return json({ problems: ["haber başka bir işlemde güncellendi, yeniden okuyun"] }, 409);
+    if (revisionConflict(error)) {
+      const replay = await replayTechnologyAdminRequest(identity, env.DB);
+      if (replay) return replay;
+      return json({ problems: ["haber başka bir işlemde güncellendi, yeniden okuyun"] }, 409);
+    }
     throw error;
   }
-  return json({ slug, durum: nextDraft ? "yayindan-kaldirildi" : "yayinda", tarih: now });
+  return json(success);
 }

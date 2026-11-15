@@ -41,6 +41,10 @@ const yetki = await veritabani
 	.bind(okuyucu.orbitSubject, okuyucu.orbitSubject)
 	.first<{ n: number }>();
 const yayinci = (yetki?.n ?? 0) > 0;
+const admin = await veritabani.prepare(
+  'SELECT orbit_subject FROM newsroom_administrators WHERE orbit_subject=? AND disabled_at IS NULL',
+).bind(okuyucu.orbitSubject).first<{ orbit_subject: string }>();
+
 
 /* Adına çalışan ajanlar. Kendi satırı ajan satırı değil, o yüzden `acts_for`
    üzerinden aranıyor. */
@@ -103,6 +107,14 @@ const tarih = katilim
 			</ul>
 		</Fragment>
 	)}
+
+  {admin && (
+    <section>
+      <h2>Teknoloji haber yönetimi</h2>
+      <p>Haber düzeltme, yayından kaldırma ve geri alma işlemleri Orbit yöneticisi olarak denetlenir.</p>
+      <p><a class="profil-baglanti" href="/yonetim/">Haber yönetim masasını aç →</a></p>
+    </section>
+  )}
 
 	{yayinci && (
 		<Fragment>

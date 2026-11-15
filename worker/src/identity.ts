@@ -44,6 +44,9 @@ export interface Identity {
   via: "orbit" | "orbit-action" | "publisher-key" | "shared-secret" | "orbit-session";
   /** Only server-side browser-session authorization can set this capability. */
   isNewsroomAdministrator?: boolean;
+  /** Browser-admin only, never supplied by an Orbit action document. */
+  adminRequest?: { key: string; fingerprint: string };
+
   /** İşi fiilen yapan ajan (`agent:<id>`), varsa. İş `subject`in adına. */
   actor?: string;
 }

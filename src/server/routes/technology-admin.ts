@@ -8,7 +8,7 @@
 import type { APIRoute } from 'astro';
 import { getDatabase, getWorkerEnv } from '#runtime-env';
 import { oturumOku } from '../session';
-import { editTechnologyAs, setTechnologyPublicationState } from '../../../worker/src/technology-publication';
+import { editTechnologyAs, setTechnologyPublicationState, replayTechnologyAdminRequest } from '../../../worker/src/technology-publication';
 import type { Identity } from '../../../worker/src/identity';
 
 export const prerender = false;
@@ -58,6 +58,16 @@ export const POST: APIRoute = async ({ request }) => {
     return deny(400, 'invalid administration fields');
   }
 
+  const requestKey = request.headers.get('idempotency-key');
+  if (!requestKey || !/^[a-zA-Z0-9_-]{8,128}$/u.test(requestKey)) {
+    return deny(428, 'Idempotency-Key gerekli (8-128 karakter)');
+  }
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(
+    JSON.stringify({ action, input }),
+  ));
+  const fingerprint = [...new Uint8Array(digest)]
+    .map((byte) => byte.toString(16).padStart(2, '0')).join('');
+
   const identity: Identity = {
     subject: reader.orbitSubject,
     actor: `admin:${reader.orbitSubject}`,
@@ -66,7 +76,15 @@ export const POST: APIRoute = async ({ request }) => {
     mayPublish: false,
     via: 'orbit-session',
     isNewsroomAdministrator: true,
+    adminRequest: { key: requestKey, fingerprint },
   };
+  const replay = await replayTechnologyAdminRequest(identity, db);
+  if (replay) {
+    const headers = new Headers(replay.headers);
+    headers.set('cache-control', 'private, no-store');
+    headers.set('x-robots-tag', 'noindex');
+    return new Response(replay.body, { status: replay.status, headers });
+  }
   const env = { ...getWorkerEnv(), DB: db };
   let result: Response;
   if (action === 'edit') result = await editTechnologyAs(identity, input as Record<string, unknown>, env);

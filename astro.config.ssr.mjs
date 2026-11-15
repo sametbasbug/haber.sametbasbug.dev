@@ -35,6 +35,7 @@ function yayinUclari() {
         injectRoute({ pattern: '/api/publish', entrypoint: './src/server/routes/publish.ts' });
         injectRoute({ pattern: '/api/orbit-eylem', entrypoint: './src/server/routes/orbit-eylem.ts' });
         injectRoute({ pattern: '/api/haber-yonetim', entrypoint: './src/server/routes/technology-admin.ts' });
+        injectRoute({ pattern: '/yonetim', entrypoint: './src/server/routes/technology-admin.astro' });
         /* Denetim sayfası da yalnız sunucu modunda. `src/pages/` altına
            konulduğunda STATİK derleme kırılıyor: `prerender = false` taşıyan
            bir sayfa adaptörsüz derlemede `NoAdapterInstalled` veriyor. Statik

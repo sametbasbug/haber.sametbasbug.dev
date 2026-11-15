@@ -122,3 +122,13 @@ Equinox Haber sıfırdan tasarlanmış, **Türkçe teknoloji haberciliğine odak
 - İzole Wrangler SSR + gerçek 580 arşiv SQL + 1 sentetik teknoloji haberi: 580/580 eski URL 200 ve 14/14 route smoke başarılı. Yönetim anonim 401, cross-origin 403.
 - Tam quality 664 sayfa, SSR build, Wrangler dry-run, teknoloji testleri ve TypeScript kontrolleri başarılı. Production/main değiştirilmedi.
 - Kalan: admin tam oturum/idempotency testleri, responsive tarayıcı görsel kontrolü, final SEO parity, Orbit MCP ve gerçek staging, koordineli yayın.
+
+## 15 Kasım 2026: Beşinci checkpoint
+
+- İnsan yönetim API'sine atomik kalıcı idempotency: migration 0015 newsroom_admin_requests; oturum sahibi, anahtar, girdi SHA-256 özeti ve ilk başarılı yanıt aynı D1 batch içinde saklanıyor. Aynı anahtar farklı gövdeyle gelirse 409. Eşzamanlı/replay düzenleme, kaldırma ve geri alma ilk yanıtı döndürür, ikinci revizyon yazılmaz.
+- /yonetim/ SSR editör ekranı: yalnız Orbit oturumlu izinli insan yönetici erişebilir. Haber listesi, Markdown, kaynaklar, kategori, gerekçeli kaldırma/geri alma ve erişilebilir çıktı. /profil/ bağlantısı güncellendi. Her POST'ta yeniden sunucu tarafı yetkilendirme şart.
+- Gerçek yerel Wrangler HTTP testi: geçerli test oturumuyla düzenleme, idempotent replay, eşzamanlı iki düzenleme, kaldırma ve geri alma. Eksik oturum 401, yabancı Origin 403, eksik idempotency anahtarı 428, değişmiş girdiyle anahtar çakışması 409. Yalnız sentetik yerel veriler kullanıldı.
+- Agent Browser görsel/viewport kontrolü: 1440 masaüstü, 390 ve 320 mobil. Haber ve ana sayfada yatay taşma veya article image yok. Haber kaynakları, kanonik URL, görselsiz OG metaverisi ve dark mode doğrulandı. Yönetici ekranı da 320 mobilde taşmıyor; gerçek browser form POST çalıştı.
+- Pagination canonical query desteği ve RSS keşif meta bağlantısı eklendi. Koyu temada editör birincil butonunun kontrastı iyileştirildi.
+- 664 statik sayfalık full quality, SSR build, Cloudflare dry-run, teknoloji yayın testleri ve root/worker npm audit sıfır geçti.
+- Kalanlar: Orbit ve Haber yayın action adlarının kararlı sözleşmeye geçmesi, gerçek staging, Selene MCP entegrasyonu, eski pano hattının kontrollü kapanışı, eski sayfa/info layout tutarlılığı, koordineli PR ve deploy. Main ve üretim değiştirilmedi.

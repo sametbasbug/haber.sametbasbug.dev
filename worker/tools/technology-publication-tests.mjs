@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
 import { DatabaseSync } from "node:sqlite";
 import { renderTechnologyBody } from "../src/render.ts";
-import { publishTechnologyAs, listTechnologyAs, readTechnologyAs, editTechnologyAs, setTechnologyPublicationState } from "../src/technology-publication.ts";
+import { publishTechnologyAs, listTechnologyAs, readTechnologyAs, editTechnologyAs, setTechnologyPublicationState, replayTechnologyAdminRequest } from "../src/technology-publication.ts";
 
 import { TECHNOLOGY_AGENTS } from "../../src/data/technologyAgents.ts";
 import { siteAction } from "../src/orbit-eylem.ts";
@@ -209,6 +209,71 @@ r = await read(setTechnologyPublicationState(humanAdmin,
 assert.equal(r.status, 200, "human admin may restore withdrawn new-era story");
 assert.ok(database.prepare("SELECT COUNT(*) AS n FROM article_revisions WHERE slug=? AND actor_subject='admin:person-a'").get(slug).n >= 3,
   "administrator actions must be recorded separately from agent ownership");
+// Durable administration request idempotency: receipt and article mutation
+// are one atomic transaction. A retried POST must not add a revision.
+const requestId = { key: "admin-idempotent-edit-0001", fingerprint: "same-payload-a" };
+const idempotentAdmin = { ...humanAdmin, adminRequest: requestId };
+const idempotentInput = {
+  slug, gerekce: "tekrarlanan ağ isteği korunuyor",
+  metin: article.metin.replace("önemli bir güvenlik açığını", "incelemedeki güvenlik açığını"),
+};
+const previousRevisions = database.prepare("SELECT COUNT(*) AS n FROM article_revisions WHERE slug=?").get(slug).n;
+const firstEdit = await read(editTechnologyAs(idempotentAdmin, idempotentInput, env));
+assert.equal(firstEdit.status, 200);
+const replayedEdit = await read(replayTechnologyAdminRequest(idempotentAdmin, DB));
+assert.deepEqual(replayedEdit, firstEdit);
+const retriedEdit = await read(editTechnologyAs(idempotentAdmin, idempotentInput, env));
+assert.deepEqual(retriedEdit, firstEdit, "same admin key and same body must return exact original result");
+assert.equal(database.prepare("SELECT COUNT(*) AS n FROM article_revisions WHERE slug=?").get(slug).n,
+  previousRevisions + 1, "retries may not insert additional revisions");
+
+const changedAdminKey = { ...humanAdmin,
+  adminRequest: { key: requestId.key, fingerprint: "different-body-b" } };
+const mismatchedReplay = await read(replayTechnologyAdminRequest(changedAdminKey, DB));
+assert.equal(mismatchedReplay.status, 409, "same key with changed payload rejected");
+const mismatchedAction = await read(editTechnologyAs(changedAdminKey, {
+  ...idempotentInput, gerekce: "değiştirilen içerikli aynı istek anahtarı",
+}, env));
+assert.equal(mismatchedAction.status, 409, "duplicate request key with new body cannot mutate");
+
+const raceAdmin = { ...humanAdmin,
+  adminRequest: { key: "admin-simultaneous-0002", fingerprint: "same-transaction-c" } };
+const raceInput = { slug, gerekce: "eşzamanlı yönetici düzeltmesi doğrulandı",
+  metin: article.metin.replace("önemli bir güvenlik açığını", "ikinci doğrulanmış güvenlik açığını"),
+};
+const beforeRace = database.prepare("SELECT COUNT(*) AS n FROM article_revisions WHERE slug=?").get(slug).n;
+const simultaneous = await Promise.all([
+  read(editTechnologyAs(raceAdmin, raceInput, env)),
+  read(editTechnologyAs(raceAdmin, raceInput, env)),
+]);
+assert.deepEqual(simultaneous.map((value) => value.status), [200, 200]);
+assert.deepEqual(simultaneous[0].body, simultaneous[1].body,
+  "duplicate concurrent request returns the original committed reply");
+assert.equal(database.prepare("SELECT COUNT(*) AS n FROM article_revisions WHERE slug=?").get(slug).n,
+  beforeRace + 1, "concurrent identical key must write a single revision");
+
+const withdrawAdmin = { ...humanAdmin,
+  adminRequest: { key: "admin-withdraw-0003", fingerprint: "withdraw-a" } };
+const originalWithdraw = await read(setTechnologyPublicationState(withdrawAdmin,
+  { slug, gerekce: "idempotent yönetim kaldirma denemesi" }, env, "withdraw"));
+assert.equal(originalWithdraw.status, 200);
+const repeatedWithdraw = await read(replayTechnologyAdminRequest(withdrawAdmin, DB));
+assert.deepEqual(repeatedWithdraw, originalWithdraw, "withdrawal replay must preserve original 200 reply");
+const repeatedWithdrawAction = await read(setTechnologyPublicationState(withdrawAdmin,
+  { slug, gerekce: "idempotent yönetim kaldirma denemesi" }, env, "withdraw"));
+assert.deepEqual(repeatedWithdrawAction, originalWithdraw,
+  "already-withdrawn concurrent request with same key must replay rather than return 409");
+const restoreAdmin = { ...humanAdmin,
+  adminRequest: { key: "admin-restore-0004", fingerprint: "restore-a" } };
+assert.equal((await read(setTechnologyPublicationState(restoreAdmin,
+  { slug, gerekce: "idempotent yönetim geri alma denemesi" }, env, "restore"))).status, 200);
+assert.equal(database.prepare("SELECT COUNT(*) AS n FROM newsroom_admin_requests").get().n, 4,
+  "exactly one receipt per unique successful request");
+const strangerReplay = await replayTechnologyAdminRequest({
+  ...humanAdmin, subject: "different-human", actor: "admin:different-human", adminRequest: requestId,
+}, DB);
+assert.equal(strangerReplay, null, "other human cannot read admin receipts");
+
 // Yeni dönem akışı yalnız yeni haberleri görür: eski arşiv kaydı sızmamalı.
 database.prepare(
   `INSERT INTO articles (
@@ -307,4 +372,4 @@ r = await throughOrbit("haber.teknolojiYayinla", {
 assert.equal(r.status, 403, "yetkisiz Orbit ajanı haber yayımlayamaz");
 
 database.close();
-console.log("Technology publication E2E: 40 assertions passed (in-memory real SQLite and renderer)");
+console.log("Technology publication E2E: all checks passed (in-memory SQLite, Orbit JWS, admin idempotency)");

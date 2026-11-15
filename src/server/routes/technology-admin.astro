@@ -1,0 +1,213 @@
+---
+/**
+ * Human editor console (SSR only). Never pre-render or expose drafts to
+ * public/Orbit agent news endpoints. Authorization is checked on both GET
+ * and the separate POST mutator, never only in the frontend.
+ */
+export const prerender = false;
+
+import TechnologyLayout from '../../layouts/TechnologyLayout.astro';
+import { getDatabase } from '#runtime-env';
+import { oturumOku } from '../session';
+import { storedArticleText } from '../../../worker/src/technology-publication';
+
+Astro.response.headers.set('cache-control', 'private, no-store');
+Astro.response.headers.set('x-robots-tag', 'noindex');
+
+const db = getDatabase();
+const reader = db ? await oturumOku(db, Astro.request, Date.now()) : null;
+if (!db) return new Response('Veritabanı bağlantısı kullanılamıyor.', { status: 503 });
+if (!reader) return new Response(null, {
+  status: 303, headers: { location: '/', 'cache-control': 'private, no-store' },
+});
+
+const permitted = await db.prepare(
+  'SELECT orbit_subject FROM newsroom_administrators WHERE orbit_subject=? AND disabled_at IS NULL',
+).bind(reader.orbitSubject).first<{ orbit_subject: string }>();
+if (!permitted) return new Response('Haber yönetimi yetkiniz bulunmuyor.', {
+  status: 403,
+  headers: { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'private, no-store' },
+});
+
+const articles = await db.prepare(
+  `SELECT slug,title,author,tech_category,is_draft,updated_date
+     FROM articles WHERE publication_era='technology'
+     ORDER BY pub_date DESC,slug ASC LIMIT 80`,
+).all<{ slug: string; title: string; author: string; tech_category: string;
+         is_draft: number; updated_date: string }>();
+const entries = articles.results ?? [];
+const requested = Astro.url.searchParams.get('slug');
+const selectedSlug = requested && /^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(requested) ? requested : entries[0]?.slug;
+const article = selectedSlug ? await db.prepare(
+  `SELECT slug,title,author,tech_category,body_md,is_draft,updated_date
+     FROM articles WHERE slug=? AND publication_era='technology'`,
+).bind(selectedSlug).first<{ slug: string; title: string; author: string;
+  tech_category: string; body_md: string; is_draft: number; updated_date: string }>() : null;
+
+const sources = article ? await db.prepare(
+  'SELECT url FROM article_sources WHERE slug=? ORDER BY position',
+).bind(article.slug).all<{ url: string }>() : { results: [] as { url: string }[] };
+
+const categories = [
+  { slug: 'yapay-zeka', name: 'Yapay Zekâ' },
+  { slug: 'yazilim', name: 'Yazılım' },
+  { slug: 'donanim', name: 'Donanım' },
+  { slug: 'siber-guvenlik', name: 'Siber Güvenlik' },
+  { slug: 'dijital-dunya', name: 'Dijital Dünya' },
+  { slug: 'teknoloji-sektoru', name: 'Teknoloji Sektörü' },
+];
+---
+
+<TechnologyLayout title="Haber yönetimi" description="Equinox Haber editoryal yönetici paneli." basePath="" noindex={true}>
+  <div class="editor">
+    <header class="editor-head">
+      <a href="/" class="back">← Haber akışına dön</a>
+      <div class="eyebrow">ORBIT / YETKİLİ EDİTÖR</div>
+      <h1>Haber yönetimi<span>.</span></h1>
+      <p>Bu panel yalnız doğrulanmış Orbit yöneticisine açıktır. Her müdahale, kimliğiniz ve gerekçesiyle değiştirilemez sürüm geçmişine kaydedilir.</p>
+    </header>
+
+    <div class="editor-grid">
+      <section class="story-list" aria-labelledby="list-heading">
+        <h2 id="list-heading">Teknoloji yayınları <span>({entries.length})</span></h2>
+        {entries.length === 0 && <p class="empty">Henüz yeni dönem haberi yayımlanmadı.</p>}
+        {entries.map((entry) => (
+          <a class:list={['story-link', { selected: article?.slug === entry.slug }]} href={`/yonetim/?slug=${entry.slug}`}>
+            <span class="story-state">{entry.is_draft ? 'YAYINDAN KALDIRILDI' : 'YAYINDA'}</span>
+            <strong>{entry.title}</strong>
+            <small>{entry.author} · {entry.tech_category}</small>
+          </a>
+        ))}
+      </section>
+
+      <section class="story-editor" aria-labelledby="editor-heading">
+        {article ? (
+          <>
+            <div class="story-heading">
+              <h2 id="editor-heading">{article.title}</h2>
+              <span class="status">{article.is_draft ? 'Yayından kaldırılmış' : 'Yayında'}</span>
+            </div>
+            <p class="story-author">Yazar: {article.author}. Yönetici işlemi yazarlığı değiştirmez.</p>
+            <form id="news-edit" data-action="edit">
+              <input type="hidden" name="slug" value={article.slug} />
+              <label for="news-text">Haber metni (Markdown)</label>
+              <textarea id="news-text" name="metin" rows="13" required disabled={article.is_draft === 1}>{storedArticleText(article.title, article.body_md)}</textarea>
+
+              <label for="news-category">Teknoloji kategorisi</label>
+              <select id="news-category" name="kategori" disabled={article.is_draft === 1}>
+                {categories.map((category) => (
+                  <option value={category.slug} selected={category.slug === article.tech_category}>{category.name}</option>
+                ))}
+              </select>
+
+              <label for="news-sources">Kaynaklar (her satıra bir URL)</label>
+              <textarea id="news-sources" name="kaynaklar" rows="4" required disabled={article.is_draft === 1}>{(sources.results ?? []).map((source) => source.url).join('\n')}</textarea>
+
+              <label for="news-reason">Düzeltme gerekçesi (yalnız denetim kaydı)</label>
+              <input id="news-reason" name="gerekce" required minLength="10" maxLength="500" placeholder="En az 10 karakterlik açıklama" disabled={article.is_draft === 1} />
+
+              <button type="submit" class="primary" disabled={article.is_draft === 1}>Düzeltmeyi kaydet</button>
+            </form>
+            <div class="divider"></div>
+            <form id="news-state" data-action={article.is_draft ? 'restore' : 'withdraw'}>
+              <input type="hidden" name="slug" value={article.slug} />
+              <label for="state-reason">{article.is_draft ? 'Geri alma' : 'Yayından kaldırma'} gerekçesi</label>
+              <input id="state-reason" name="gerekce" required minLength="10" maxLength="500"
+                placeholder="En az 10 karakterlik gerekçe" />
+              <button type="submit" class="secondary">
+                {article.is_draft ? 'Haberi yeniden yayımla' : 'Haberi yayından kaldır'}
+              </button>
+            </form>
+            <output id="editor-result" role="status" aria-live="polite"></output>
+          </>
+        ) : (
+          <p class="empty">Düzenlenecek haber bulunamadı. Soldaki listeden bir haber seçebilirsiniz.</p>
+        )}
+      </section>
+    </div>
+  </div>
+</TechnologyLayout>
+
+<script>
+  const feedback = document.querySelector<HTMLOutputElement>('#editor-result');
+  const pending = new Map<string, string>();
+  for (const form of document.querySelectorAll<HTMLFormElement>('form[data-action]')) {
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      if (!form.reportValidity()) return;
+      const button = form.querySelector<HTMLButtonElement>('button[type=submit]');
+      const fields = new FormData(form);
+      const action = form.dataset.action;
+      const input: Record<string, unknown> = {
+        slug: fields.get('slug'),
+        gerekce: fields.get('gerekce'),
+      };
+      if (action === 'edit') {
+        input.metin = fields.get('metin');
+        input.kategori = fields.get('kategori');
+        input.kaynaklar = String(fields.get('kaynaklar') ?? '').split(/\r?\n/u)
+          .map((source) => source.trim()).filter(Boolean);
+      }
+      const message = JSON.stringify({ action, input });
+      const key = pending.get(message) ?? crypto.randomUUID();
+      pending.set(message, key);
+      if (button) button.disabled = true;
+      if (feedback) feedback.textContent = 'İşlem kaydediliyor…';
+      try {
+        const response = await fetch('/api/haber-yonetim', {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: { 'content-type': 'application/json', 'idempotency-key': key },
+          body: message,
+        });
+        const result = await response.json() as { error?: string; problems?: string[] };
+        if (!response.ok) {
+          if (feedback) feedback.textContent = result.error ?? result.problems?.join(', ')
+            ?? `İşlem tamamlanamadı (HTTP ${response.status}).`;
+          return;
+        }
+        if (feedback) feedback.textContent = 'İşlem başarıyla kaydedildi. Haber listesi yenileniyor.';
+        window.location.reload();
+      } catch {
+        if (feedback) feedback.textContent = 'Bağlantı sorunu. Yeniden deneyebilirsiniz; aynı istek iki kez kaydedilmez.';
+      } finally {
+        if (button) button.disabled = false;
+      }
+    });
+  }
+</script>
+
+<style>
+  .editor{max-width:1230px;margin:0 auto;padding:38px 26px 90px}
+  .back{font-size:13px;color:var(--tb-muted);text-decoration:none}
+  .eyebrow{margin-top:36px;color:var(--tb-accent);font-size:11px;font-weight:800;letter-spacing:.12em}
+  .editor-head h1{font-size:clamp(34px,5vw,59px);line-height:1.12;letter-spacing:-.05em;margin:12px 0}
+  .editor-head h1 span{color:var(--tb-accent)}
+  .editor-head>p{color:var(--tb-muted);max-width:750px;line-height:1.7;font-size:14px}
+  .editor-grid{display:grid;grid-template-columns:minmax(250px,320px) minmax(0,1fr);gap:26px;margin-top:32px}
+  .story-list,.story-editor{border:1px solid var(--tb-line);border-radius:12px;background:var(--tb-surface);padding:22px}
+  .story-list h2,.story-editor h2{font-size:19px;letter-spacing:-.035em;margin:0 0 22px}
+  .story-list h2 span{font-size:12px;color:var(--tb-muted)}
+  .story-link{display:flex;flex-direction:column;text-decoration:none;border-top:1px solid var(--tb-line);padding:14px 10px;gap:5px;font-size:14px;border-radius:5px}
+  .story-link:hover,.story-link.selected{background:var(--tb-soft)}
+  .story-link small{font-size:11px;color:var(--tb-muted)}
+  .story-state{font-size:10px;letter-spacing:.06em;font-weight:800;color:var(--tb-accent)}
+  .story-heading{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .story-heading h2{margin:0}
+  .status{font-size:11px;font-weight:750;color:var(--tb-muted)}
+  .story-author{color:var(--tb-muted);font-size:13px;margin:10px 0 25px}
+  form{display:flex;flex-direction:column;gap:10px}
+  form label{font-size:12px;font-weight:750;margin-top:10px}
+  form :is(textarea,input,select){font:inherit;color:var(--tb-ink);background:var(--tb-bg);border:1px solid var(--tb-line);border-radius:7px;padding:10px 12px;max-width:100%;min-width:0}
+  form textarea{resize:vertical}
+  form :is(textarea,input,select):disabled{opacity:.55;cursor:not-allowed}
+  button{font:inherit;cursor:pointer;border:1px solid var(--tb-line);border-radius:7px;padding:11px 16px;align-self:flex-start;margin-top:10px;font-size:13px;font-weight:750}
+  button:disabled{opacity:.6;cursor:not-allowed}
+  .primary{background:var(--tb-accent);color:var(--tb-on-accent);border-color:var(--tb-accent)}
+  .secondary{background:transparent;color:var(--tb-ink)}
+  .divider{height:1px;background:var(--tb-line);margin:25px 0}
+  .empty{font-size:14px;color:var(--tb-muted)}
+  output{display:block;margin-top:18px;font-size:13px;color:var(--tb-accent)}
+  @media(max-width:810px){.editor-grid{grid-template-columns:minmax(0,1fr)}.story-list{max-height:320px;overflow-y:auto}}
+  @media(max-width:480px){.editor{padding:26px 16px 60px}.story-list,.story-editor{padding:16px}}
+</style>
