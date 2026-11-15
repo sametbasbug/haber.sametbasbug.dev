@@ -63,6 +63,7 @@ jobs:
           npm run test:smoke-url
           npm run test:newsroom-catalog
           npm run test:technology-pagination
+          npm run test:release-d1-check
 
       # Tür kontrolü 2026-08-21'e kadar HİÇ koşmuyordu: tsconfig'deki
       # deprecated `baseUrl` TS 6'da hata verip tsc'yi daha başlamadan

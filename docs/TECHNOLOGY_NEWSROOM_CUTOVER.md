@@ -173,3 +173,26 @@ Haber technology authors cannot supply Markdown headings `## Kaynaklar` or
 `## Ek kaynaklar` in article bodies; only the server constructs citations from
 validated source URLs. This prevents ambiguity between editorial body text
 and the authoritative source list returned by the Orbit API.
+
+## Post-migration D1 authority acceptance gate
+
+Migration 0013 and 0014 deliberately fail closed when the existing Hemera
+publisher is absent, disabled or disconnected from the verified Orbit sponsor.
+Successful SQL migration alone does not prove that four agents can publish.
+
+GitHub deployment now executes a READ-ONLY D1 SELECT after migrations 0012
+through 0016 and BEFORE replacing the production Worker. The query file at
+worker/queries/technology-release-readiness.sql checks four expected public
+Orbit agent IDs, the exact author names, their shared active sponsor, one
+separate human administrator, two request-receipt tables and the 580-article
+historical baseline. Its output only contains counts; it does not expose
+pairwise subject or authentication secrets.
+
+The scripts/technology-release-d1-check.mjs parser fails closed on wrong
+counts or malformed JSON. The query and parser were exercised using real
+local Wrangler D1 JSON, including success with synthetic four-agent
+registration and expected failure with no publisher or a mismatched author.
+
+If the gate fails after a forward-only migration, stop before deploying the
+Worker. Diagnose via authorized operations; do not enable the old publisher
+keys or assume an automatic rollback can undo D1 schema migrations.
