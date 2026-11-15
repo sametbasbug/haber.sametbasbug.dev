@@ -15,22 +15,22 @@
  * Orbit'in kasten kapattığı kapıyı arkadan açmak olurdu.
  *
  * ————————————————————————————————————————————————————————————————
- * ÜÇ KİMLİK YOLU VAR
+ * ÜÇ TARİHSEL KİMLİK YOLU VAR
  *
- *   1. Yayıncı anahtarı (`hbr_pub_v1_…`) — bugün Selene'nin kullandığı yol.
- *   2. Orbit ID token'ı — insanın kendisi yayımlarsa.
- *   3. Orbit EYLEM BELGESİ — ajan, insanın adına. `orbit-eylem.ts`.
+ *   1. Yayıncı anahtarı (`hbr_pub_v1_…`) — eski pano akışının mirası.
+ *   2. Orbit ID token'ı — eski insan yayıncısı HTTP akışının mirası.
+ *   3. Orbit EYLEM BELGESİ — Haber 2.0 ajan yayınının tek yetkili yolu.
  *
- * Üçüncüsü 23 Ağustos 2026'da eklendi ve anahtar yolunun gerekçesini
- * geçersiz kıldı: o tarihe kadar Orbit'te bir ajanın alabileceği kimlik
- * yoktu, artık var. Ajan Haber'e doğrudan konuşmuyor — Orbit konuşuyor, 60
- * saniyelik imzalı bir belgeyle. Ajanın elinde saklanan hiçbir sır yok,
- * dolayısıyla iptal tek yerde: insan Orbit panelinden kapatır, kapanır.
+ * Haber 2.0'da /api/brief ve /api/publish varsayılan olarak 410 Gone
+ * döndürür. 15 Kasım 2026'da canlı D1'de etkin/eski publisher key
+ * kalmadığı salt-okunur sayım ile doğrulandı. Bu modül eski HTTP
+ * kimliklerini yalnız göç/geri dönüş uyumluluğu için tanımaya devam eder.
  *
- * Anahtar yolu kendiliğinden kapanmıyor ve kapanmamalı: geçiş sırasında
- * ikisinin birden çalışması gerekiyor, yoksa açıldığı an Selene yayımlayamaz
- * hale gelir. Kapatmak `publishers.key_digest` sütununu boşaltmakla olur —
- * açık ve geri alınabilir bir işlem.
+ * Yeni teknoloji yayınında Orbit, 60 saniyelik imzalı eylem belgesi
+ * taşır. Ajan Haber'e bağımsız bir anahtar göndermez; kimliği Orbit
+ * doğrular, yayın hakkını bu sitenin dört-ajan allowlist'i ve D1
+ * publisher kaydı belirler. Eski anahtar veya ID token'ı bu yetkiyi
+ * vermez. Ayrı insan yönetici oturumu da ajan kimliğini taklit etmez.
  * ———————————————————————————————————————————————————————————————— */
 
 export interface Identity {
@@ -76,6 +76,63 @@ const JWKS_TTL_MS = 10 * 60 * 1000;
 interface JwksCache { keys: Map<string, CryptoKey>; fetchedAt: number; }
 let jwksCache: JwksCache | null = null;
 
+// Both documents are tiny in the Orbit signing implementation. These
+// bounds prevent an identity-provider outage or misconfiguration from
+// making every authenticated news request hang or allocate unbounded RAM.
+const OIDC_TIMEOUT_MS = 8_000;
+const OIDC_DISCOVERY_MAX_BYTES = 32 * 1024;
+const OIDC_JWKS_MAX_BYTES = 64 * 1024;
+const OIDC_JWKS_MAX_KEYS = 16;
+
+async function boundedOidcDocument(response: Response, maxBytes: number): Promise<Record<string, any>> {
+  const declared = response.headers.get('content-length');
+  if (declared !== null && (!/^\d+$/u.test(declared) || Number(declared) > maxBytes)) {
+    await response.body?.cancel().catch(() => undefined);
+    throw new Error('oidc_document_too_large');
+  }
+  const reader = response.body?.getReader();
+  if (!reader) throw new Error('oidc_document_empty');
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    total += value.byteLength;
+    if (total > maxBytes) {
+      await reader.cancel().catch(() => undefined);
+      throw new Error('oidc_document_too_large');
+    }
+    chunks.push(value);
+  }
+  const bytes = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  const document: unknown = JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(bytes));
+  if (!document || typeof document !== 'object' || Array.isArray(document)) {
+    throw new Error('oidc_document_malformed');
+  }
+  return document as Record<string, any>;
+}
+
+/** Discovery cannot move the signing-key fetch to a different host. A token
+ * that is *supposed* to authenticate Orbit must not trigger an unrelated
+ * network request based on an unexpected JWKS URI in a discovery response. */
+export function validatedOrbitJwksUrl(issuer: string, raw: unknown): string {
+  if (typeof raw !== 'string') throw new Error('oidc_jwks_uri_missing');
+  const issuerUrl = new URL(issuer);
+  const candidate = new URL(raw);
+  if (issuerUrl.protocol !== 'https:' || candidate.protocol !== 'https:'
+    || candidate.origin !== issuerUrl.origin
+    || candidate.username || candidate.password
+    || candidate.hash) {
+    throw new Error('oidc_jwks_origin_mismatch');
+  }
+  return candidate.toString();
+}
+
 /* Dönüş türü `Uint8Array<ArrayBuffer>`, çıplak `Uint8Array` değil. Çıplak
  * biçim `Uint8Array<ArrayBufferLike>`e denk ve o, paylaşımlı belleği
  * (`SharedArrayBuffer`) de kapsıyor; `crypto.subtle.verify` ise yalnız
@@ -101,16 +158,26 @@ async function loadJwks(issuer: string, force: boolean): Promise<Map<string, Cry
   /* Keşif belgesi üzerinden gidiliyor, `jwks_uri` varsayılmıyor. Orbit bugün
    * `{issuer}/.well-known/jwks.json` yayınlıyor ama bu bir uygulama ayrıntısı;
    * keşif belgesi sözleşmenin kendisi. */
-  const discovery = await fetch(`${issuer}/.well-known/openid-configuration`);
-  if (!discovery.ok) throw new Error(`keşif belgesi alınamadı: ${discovery.status}`);
-  const { jwks_uri: jwksUri } = await discovery.json<{ jwks_uri: string }>();
+  const discovery = await fetch(`${issuer}/.well-known/openid-configuration`, {
+    redirect: 'manual', signal: AbortSignal.timeout(OIDC_TIMEOUT_MS),
+  });
+  if (discovery.status !== 200) throw new Error('oidc_discovery_unavailable');
+  const metadata = await boundedOidcDocument(discovery, OIDC_DISCOVERY_MAX_BYTES);
+  if (metadata.issuer !== issuer) throw new Error('oidc_discovery_issuer_mismatch');
+  const jwksUri = validatedOrbitJwksUrl(issuer, metadata.jwks_uri);
 
-  const response = await fetch(jwksUri);
-  if (!response.ok) throw new Error(`JWKS alınamadı: ${response.status}`);
-  const { keys: jwks } = await response.json<{ keys: any[] }>();
+  const response = await fetch(jwksUri, {
+    redirect: 'manual', signal: AbortSignal.timeout(OIDC_TIMEOUT_MS),
+  });
+  if (response.status !== 200) throw new Error('oidc_jwks_unavailable');
+  const jwksDocument = await boundedOidcDocument(response, OIDC_JWKS_MAX_BYTES);
+  const jwks: unknown = jwksDocument.keys;
+  if (!Array.isArray(jwks) || jwks.length > OIDC_JWKS_MAX_KEYS) {
+    throw new Error('oidc_jwks_invalid_key_set');
+  }
 
   const keys = new Map<string, CryptoKey>();
-  for (const jwk of jwks ?? []) {
+  for (const jwk of jwks) {
     // Yalnız ES256/P-256 kabul ediliyor. Algoritmayı token'ın header'ından
     // okumak, saldırgana algoritma seçtirmek demektir (`alg: none` ailesi).
     if (jwk.kty !== "EC" || jwk.crv !== "P-256" || typeof jwk.kid !== "string") continue;
@@ -159,10 +226,11 @@ async function verifySignedOrbitToken(
     keys = await loadJwks(issuer, false);
     // Bilinmeyen kid: anahtar değişimi olmuş olabilir, bir kez zorla yenile.
     if (!keys.has(header.kid)) keys = await loadJwks(issuer, true);
-  } catch (error) {
-    // Anahtar alınamıyorsa "yetkisiz" demek yanıltıcı olurdu: sorun istekte
-    // değil bizde. 503, çağıranın tekrar denemesi gerektiğini söyler.
-    return { status: 503, error: `imza anahtarları alınamadı: ${String(error)}` };
+  } catch {
+    // Discovery/JWKS failures are transient service issues, not invalid
+    // user credentials. Do not leak fetch/parse exception details, URLs or
+    // upstream document fragments to public agent responses.
+    return { status: 503, error: 'imza anahtarları alınamadı' };
   }
 
   const key = keys.get(header.kid);

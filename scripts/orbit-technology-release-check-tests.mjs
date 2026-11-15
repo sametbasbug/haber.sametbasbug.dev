@@ -8,7 +8,9 @@ const categories=[
   'yapay-zeka','yazilim','donanim','siber-guvenlik','dijital-dunya','teknoloji-sektoru',
 ];
 const makeContract=()=>({
-  openapi:'3.2.0',paths:{
+  openapi:'3.2.0',
+  components:{securitySchemes:{agentCredential:{type:'http',scheme:'bearer'}}},
+  paths:{
     '/me/technology-news':{get:{
       operationId:'listTechnologyNews',security:[{agentCredential:[]}],
       parameters:[{name:'kategori',schema:{enum:categories}}],
@@ -25,6 +27,12 @@ assert.deepEqual(validateOrbitTechnologyContract(good),{
 for(const mutate of [
   (d)=>{d.paths['/me/technology-news'].get.security=[]},
   (d)=>{d.paths['/me/technology-news/{slug}'].get.security=[]},
+  (d)=>{d.paths['/me/technology-news'].get.security=[{}, {agentCredential:[]}]},
+  (d)=>{d.paths['/me/technology-news/{slug}'].get.security=[{agentCredential:[]},{}]},
+  (d)=>{d.paths['/me/technology-news'].get.security=[{agentCredential:[],otherAuth:[]}]},
+  (d)=>{d.paths['/me/technology-news'].get.security=[{agentCredential:['publish']}]},
+  (d)=>{delete d.components.securitySchemes.agentCredential},
+  (d)=>{d.components.securitySchemes.agentCredential.scheme='basic'},
   (d)=>{d.paths['/me/technology-news'].get.operationId='unrelated'},
   (d)=>{d.paths['/me/technology-news'].get.parameters[0].schema.enum=['Siyaset']},
   (d)=>{delete d.paths['/me/technology-news/{slug}']},
@@ -48,12 +56,20 @@ const fakeFetch=async (resource,options)=>{
       {status:401,headers:{'content-type':'application/json'}});
 };
 assert.equal((await verifyOrbitNewsRelease(fakeFetch)).operations,2);
-assert.equal(calls,2);
+assert.equal(calls,3);
 await assert.rejects(verifyOrbitNewsRelease(async (resource,options)=>{
   const result=await fakeFetch(resource,options);
   return String(resource).includes('technology-news')
     ? Response.json({haberler:[]}) : result;
 }),/anonymous access with 401/);
+await assert.rejects(verifyOrbitNewsRelease(async (resource,options)=>{
+  const url=String(resource);
+  if(url.includes('/technology-news/release-auth-probe')){
+    return Response.json({slug:'release-auth-probe',metin:'SHOULD-NOT-BE-PUBLIC'});
+  }
+  return fakeFetch(resource,options);
+}),/anonymous access with 401/u);
+
 await assert.rejects(verifyOrbitNewsRelease(async (resource,options)=>{
   if(String(resource).includes('openapi.json')){
     return new Response(new Uint8Array(1024*1024+1),
@@ -68,4 +84,4 @@ await assert.rejects(verifyOrbitNewsRelease(async (resource,options)=>{
   }
   return fakeFetch(resource,options);
 }),/invalid UTF-8 or JSON/u);
-console.log('Coordinated Orbit release contract: 10 positive/negative checks including bounds passed');
+console.log('Coordinated Orbit release contract: 17 checks including bearer-only security, anonymous list/detail and bounded payloads passed');

@@ -51,14 +51,14 @@ const TECHNOLOGY_MUTATIONS = new Set<string>([
 
 /* İKİ YETKİ KATMANI VAR VE BU YENİ BİR KURAL — yazıldığı yer burası.
  *
- *   yazma ve iç durum → `publishers` satırı gerekiyor
- *   yayımlanmış haberi okuma → bağlı olmak yeterli, satır gerekmiyor
+ *   yazma ve iç durum → `publishers` kaydı + dört-ajan allowlist'i gerekir
+ *   yayımlanmış teknoloji haberi okuma → Orbit'in imzaladığı etkin ajan
+ *   kimliği yeterlidir; insanın bağlı-site grant'i veya publisher satırı gerekmez
  *
- * Alttaki katmanın gerekçesi: Orbit ekosistemindeki başka bir ajan "bugünün
- * haberlerini getir" diyebilmeli ve bunun için yayıncı listesine girmesi
- * saçma olurdu. Ama "herkese açık" da değil — belge yine Orbit imzalı, yani
- * karşı tarafta bir Orbit kimliği ve insanın açtığı bir ajan erişimi var.
- * Yani "önüne gelen" değil, "Orbit'te kimliği olan".
+ * Orbit'teki herhangi bir aktif ajan güncel haberleri okuyabilir. Bu anonim
+ * erişim DEĞİLDİR: Orbit bearer credential'ı zorunludur ve siteye
+ * iletilen belge operasyon/kısa süre/audience ile imzalanmıştır.
+ * Bu allowlist'e yeni bir yazma eylemi eklemek yetki kapısını açar.
  *
  * Bu listeye bir işlem eklemek onu izin duvarının DIŞINA çıkarmaktır; yazma
  * yapan hiçbir işlem buraya girmemeli. */

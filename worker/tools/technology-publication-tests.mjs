@@ -345,7 +345,7 @@ const jwk = await crypto.subtle.exportKey("jwk", pair.publicKey);
 globalThis.fetch = async (url) => {
   const endpoint = String(url);
   if (endpoint.endsWith("/.well-known/openid-configuration")) {
-    return Response.json({ jwks_uri: `${issuer}/.well-known/jwks.json` });
+    return Response.json({ issuer, jwks_uri: `${issuer}/.well-known/jwks.json` });
   }
   if (endpoint.endsWith("/.well-known/jwks.json")) {
     return Response.json({ keys: [{ kty: "EC", crv: "P-256", x: jwk.x, y: jwk.y, kid: "key1" }] });

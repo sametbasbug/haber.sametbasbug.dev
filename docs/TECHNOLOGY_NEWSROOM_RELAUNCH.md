@@ -268,3 +268,21 @@ Equinox Haber sıfırdan tasarlanmış, **Türkçe teknoloji haberciliğine odak
 - Üretim sonrası test eski iki HTTP yazma ucunu da 410 Gone şartıyla kapatıyor (hem /api/brief hem /api/publish) ve bilinmeyen haber yolu 404 olmalı. Ağ kontrolleri 5 saniye bağlantı, 15 saniye toplam HTTP timeout alıyor.
 - Orbit OpenAPI ve Haber altı-eylem katalog smoke kontrolleri, sınırsız response.text()/json() yerine boyutu streaming sırasında sınırlanan güvenli JSON okuyucuya geçti. Hatalı JSON, UTF-8 ve taşan yanıt kullanıcıya/CI günlüğüne ham içerik sızdırmadan reddediliyor.
 - Canlı Orbit yeni API henüz yayınlanmadı, üretim backup export/gerçek credential staging ve Selene MCP canlı keşif hala onaylı release aşamasında. Ana dallara push veya production deploy yapılmadı.
+
+## 16 Kasım 2026 on altıncı checkpoint: kimlik ve erişilebilirlik güvenliği
+
+- Haber scripts/orbit-technology-release-check.mjs OpenAPI security listesinin OR semantiğine göre sıkılaştırıldı. Her iki GET işlemi yalnız tek HTTP Bearer agentCredential gerektirmeli; anonim alternatif, başka kapsam veya auth şeması kabul edilmez. Hem liste hem tekil haber anonim GET çağrısı 401 dönmeli. Yanlış açık tekil haber rotası negatif testte reddedildi.
+- Haber Orbit ES256 anahtar keşfi worker/src/identity.ts içinde 8 sn HTTP timeout, yalnız HTTPS ve Orbit issuer-origin JWKS, redirectsiz fetch, streaming boyut sınırları (32 KiB keşif / 64 KiB JWKS), en fazla 16 anahtar ve sanitize edilmiş 503 ile güvenceye alındı. Gerçek kriptoyla sahte issuer, farklı JWKS host, redirect, bozuk JSON, aşırı büyük yanıt ve normal key rotation kontrolleri başarılı.
+- Canlı Orbit kamu OIDC keşfi SADECE GET ile doğrulandı: issuer ve JWKS origin kanonik alan adıyla eşleşiyor; özel anahtar veya erişim token'ı alınmadı.
+- Yeni görselsiz layout tema toggle düğmesi ilk yüklemede aria-pressed değerini kayıtlı/sistem tercihine göre doğru belirliyor. Sistem teması değişimi ve kapalı tarayıcı depolaması dahil gerçek Astro JS'ini çalıştıran 15 erişilebilirlik testi başarılı.
+- Gerçek Orbit OpenAPI ile Haber doğrulayıcısını kullanan çapraz repo testinde altı imzalı JWS okuma yine geçti. Üretim ajan credential staging, Selene MCP canlı katalog ve onaylı deployment hala bekliyor.
+
+### On altıncı checkpoint: imza anahtarı fixture uyumu
+
+- Daha sıkı OIDC discovery issuer doğrulaması tam kalite turunda iki eski izole test fixture'ını bilinçli biçimde kırdı: worker/tools/technology-publication-tests.mjs ve Orbit scripts/orbit-haber-cross-repo-tests.ts sahte JSON'larda jwks_uri sunuyor fakat issuer alanını eksik bırakıyordu. Gerçek canlı Orbit OIDC keşfi bu alanı zaten doğru taşıyor. Güvenlik kontrolü gevşetilmedi; iki test fixture'ına gerçek OIDC issuer eklendi. Böylece Haber local publisher JWS E2E, Orbit gerçek modüllerle imzalı cross-repo altı okuma tekrar yeşil.
+- Başka repo kodu veya API sözleşmesi değiştirilmedi. İmza anahtarı fetch katmanı böylece hem doğru sağlayıcı kimliğini hem yanlış host/redirect/büyük response sınırlarını production'da denetlemeye devam edecek.
+
+### On altıncı checkpoint: canlı kamu OIDC uyumluluğu ve negatif mutasyon kanıtı
+
+- Canlı Orbit kamuya açık discovery 842 bayt, JWKS 193 bayt ve 1 açık doğrulama anahtarı içeriyor. Yeni 32/64 KiB streaming ve 16 anahtar limitlerinin altında, GET dışında işlem veya özel anahtar erişimi yok.
+- Testlerin doğru nedenle başarısız olup olmadığını görmek için OpenAPI anonim security alternatifi, JWKS dış origin reddi ve tema ilk aria-pressed sync korumaları yerelde birer kez geçici bozularak sınandı. Her üç gerçek test RED oldu; kaynaklar geri alınınca üçü de GREEN. Geçici kopyalar silindi.

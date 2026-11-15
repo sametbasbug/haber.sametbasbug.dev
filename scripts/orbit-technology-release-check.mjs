@@ -16,16 +16,29 @@ export function validateOrbitTechnologyContract(doc) {
     || !doc.paths || typeof doc.paths !== 'object') {
     throw new Error('Orbit OpenAPI contract missing or malformed');
   }
+  const agentScheme=doc.components?.securitySchemes?.agentCredential;
+  if(agentScheme?.type!=='http' || agentScheme.scheme!=='bearer'){
+    throw new Error('Orbit must define agentCredential as an HTTP bearer scheme');
+  }
   const expected=[
     ['/me/technology-news','listTechnologyNews'],
     ['/me/technology-news/{slug}','getTechnologyNewsArticle'],
   ];
   for(const [path,operationId] of expected) {
     const operation=doc.paths[path]?.get;
+    // OpenAPI security requirements are OR alternatives. Checking merely
+    // .some(agentCredential) would ACCEPT [{}, {agentCredential:[]}],
+    // where the empty requirement also advertises anonymous access.
+    // One exact Bearer requirement, no alternative or extra scopes.
+    const security=operation?.security;
     if(!operation || operation.operationId !== operationId
-      || !Array.isArray(operation.security)
-      || !operation.security.some((item)=>Array.isArray(item?.agentCredential))) {
-      throw new Error('Orbit technology news must require an agent credential at '+path);
+      || !Array.isArray(security) || security.length!==1
+      || !security[0] || typeof security[0]!=='object'
+      || Array.isArray(security[0])
+      || Object.keys(security[0]).length!==1
+      || !Array.isArray(security[0].agentCredential)
+      || security[0].agentCredential.length!==0){
+      throw new Error('Orbit technology news must require only an agent bearer credential at '+path);
     }
   }
   const parameters=doc.paths['/me/technology-news']?.get?.parameters;
@@ -53,14 +66,22 @@ export async function verifyOrbitNewsRelease(fetchImpl=fetch) {
   const contract=validateOrbitTechnologyContract(await readReleaseJson(res,1024*1024));
   // No Authorization header is intentionally supplied. It must be impossible
   // to read even a zero-item agent feed without registering on Orbit.
-  const anonymous=await fetchImpl(new URL('/v1/me/technology-news?limit=1',base),{
-    method:'GET',redirect:'manual',signal:AbortSignal.timeout(12000),
-    headers:{ accept:'application/json','cache-control':'no-cache' },
-  });
-  if(anonymous.status!==401) {
-    throw new Error('Orbit technology-news endpoint did not reject anonymous access with 401');
+  // Both list and detail are protected independently. Protecting only the
+  // list would not prevent fetching the full article by a known slug.
+  for(const route of [
+    '/v1/me/technology-news?limit=1',
+    '/v1/me/technology-news/release-auth-probe',
+  ]) {
+    const anonymous=await fetchImpl(new URL(route,base),{
+      method:'GET',redirect:'manual',signal:AbortSignal.timeout(12000),
+      headers:{ accept:'application/json','cache-control':'no-cache' },
+    });
+    if(anonymous.status!==401) {
+      await anonymous.body?.cancel().catch(()=>undefined);
+      throw new Error('Orbit technology-news endpoint did not reject anonymous access with 401: '+route);
+    }
+    await anonymous.body?.cancel().catch(()=>undefined);
   }
-  await anonymous.body?.cancel().catch(()=>undefined);
   return contract;
 }
 

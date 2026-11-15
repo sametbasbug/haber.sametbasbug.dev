@@ -8,7 +8,7 @@
  * AYRIŞTIRMASINI atlamaz — o kod gerçekten çalışıyor. Ağın kendisi ayrıca
  * `tools/e2e-orbit.sh` içinde çalışan Worker'a karşı sınanıyor.
  */
-import { verifyOrbitToken } from "../src/identity.ts";
+import { verifyOrbitToken, validatedOrbitJwksUrl } from "../src/identity.ts";
 
 const ISSUER = "https://orbit.example.test";
 const AUDIENCE = "haber.sametbasbug.dev";
@@ -191,6 +191,67 @@ console.log("\n── sağlayıcı erişilemiyor ──");
   const r = await verifyOrbitToken(await mint(otherKey), ISSUER, AUDIENCE);
   check("JWKS alınamıyorsa 503", String(r.status), "503", "(401 demek yanıltıcı olurdu)");
   globalThis.fetch = saved;
+}
+
+console.log("\n── OIDC JWKS ağ güvenliği ──");
+{
+  const valid = `${ISSUER}/.well-known/jwks.json`;
+  check("aynı HTTPS sağlayıcıdan JWKS",validatedOrbitJwksUrl(ISSUER,valid),valid);
+  for(const bad of [
+    'http://orbit.example.test/.well-known/jwks.json',
+    'https://evil.example.test/jwks.json',
+    'https://orbit.example.test.evil.example.test/jwks.json',
+    'https://user:secret@orbit.example.test/.well-known/jwks.json',
+    'https://orbit.example.test/.well-known/jwks.json#anchor',
+    null,
+  ]){
+    let rejected=false;
+    try{validatedOrbitJwksUrl(ISSUER,bad);}catch{rejected=true;}
+    check("yetkisiz JWKS URI reddi",rejected,true);
+  }
+  const originalFetch=globalThis.fetch;
+  async function attempt(factory){
+    const visited=[];
+    globalThis.fetch=async (url,options)=>{
+      visited.push(String(url));
+      if(options?.redirect!=='manual' || !(options?.signal instanceof AbortSignal)){
+        throw new Error('unbounded_oidc_fetch');
+      }
+      return factory(String(url),options,visited);
+    };
+    try{
+      const response=await verifyOrbitToken(await mint(otherKey),ISSUER,AUDIENCE);
+      return {response,visited};
+    }finally{globalThis.fetch=originalFetch;}
+  }
+  const discover=(overrides={})=>Response.json({
+    issuer:ISSUER,jwks_uri:valid,...overrides,
+  });
+  for(const [label,factory] of [
+    ['farklı domaine JWKS discovery',url=>discover({jwks_uri:'https://evil.example.test/jwks.json'})],
+    ['keşif sağlayıcısı uyuşmuyor',url=>discover({issuer:'https://evil.example.test'})],
+    ['keşif redirect reddi',url=>Response.redirect('https://evil.example.test/oidc')],
+    ['keşif content-length taşması',url=>new Response('{}',{headers:{'content-length':'90000'}})],
+    ['keşif akış taşması',url=>new Response('x'.repeat(33*1024))],
+    ['keşif bozuk JSON',url=>new Response('broken PRIVATE_SHOULD_NOT_LEAK')],
+    ['JWKS redirect reddi',url=>url.endsWith('openid-configuration')?discover():Response.redirect('https://evil.example.test/jwks')],
+    ['JWKS boyut taşması',url=>url.endsWith('openid-configuration')?discover():new Response('x'.repeat(65*1024))],
+    ['JWKS çok fazla anahtar',url=>url.endsWith('openid-configuration')?discover():Response.json({keys:Array(17).fill(key.jwk)})],
+    ['JWKS anahtar dizisi değil',url=>url.endsWith('openid-configuration')?discover():Response.json({keys:{kid:key.kid}})],
+  ]){
+    const {response,visited}=await attempt(factory);
+    check(label,response.status,503);
+    check('  izinli sağlayıcı dışına çıkmadı',
+      visited.every(url=>url.startsWith(ISSUER+'/')),true);
+    check('  gizli upstream hata gövdesi sızmadı',
+      !String(response.error).includes('PRIVATE_SHOULD_NOT_LEAK'),true);
+  }
+  // A newly rotated legitimate signing key must still be discoverable.
+  published=[key.jwk,rotatedKey.jwk,otherKey.jwk];
+  const {response}=await attempt(url=>url.endsWith('openid-configuration')
+    ?discover():Response.json({keys:published}));
+  check('geçerli yeni kid hâlâ tanınıyor',outcome(response),'sub=orbit-sub-selene');
+  published=[key.jwk,rotatedKey.jwk];
 }
 
 const failed = results.filter((r) => !r.ok);

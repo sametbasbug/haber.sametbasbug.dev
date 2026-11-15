@@ -49,6 +49,7 @@ jobs:
           npm run test:smoke-url
           npm run test:newsroom-catalog
           npm run test:technology-pagination
+          npm run test:technology-theme
           npm run test:release-d1-check
           npm run test:technology-preflight
           npm run test:d1-recovery

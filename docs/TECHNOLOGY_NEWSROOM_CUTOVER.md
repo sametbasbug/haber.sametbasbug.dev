@@ -480,3 +480,50 @@ size-bounded during streaming, not *after* Response.json()/text() has
 allocated an arbitrary upstream payload. Invalid UTF-8, oversized streams,
 unexpected JSON and parsing errors fail closed with sanitized error messages.
 These checks do not publish content or use real agent credentials.
+
+## Checkpoint 16: strict agent authentication and signing-key resilience
+
+The release acceptance previously checked that *some* OpenAPI security
+requirement on the new Orbit technology-news GET operations included
+agentCredential. OpenAPI security requirements are OR alternatives:
+[{},{agentCredential:[]}] incorrectly satisfies a "some" check even though
+the first entry advertises anonymous access. The gate now demands exactly
+one authorization requirement with exactly the empty-scoped agentCredential
+key, and validates the declared scheme is HTTP bearer. Both list AND
+detail endpoints must return HTTP 401 without an agent credential.
+Regression tests deliberately add an anonymous alternative, extra scope,
+unrelated scheme and unprotected detail endpoint: each is rejected.
+
+Haber independently verifies Orbit ES256 documents against JWKS. OIDC
+discovery and JWKS fetch are now restricted to HTTPS and configured Orbit
+issuer origin, with manual redirects, 8-second timeouts per fetch, 32 KiB
+discovery and 64 KiB JWKS streaming limits and at most 16 signing keys.
+Invalid or inaccessible documents return a sanitized HTTP 503 rather than
+leaking upstream response fragments. Cached keys continue to work and
+unknown signing key IDs can be refreshed, preserving planned rotation.
+The live public Orbit discovery metadata was checked read-only: issuer
+and JWKS origin both match https://orbit.sametbasbug.dev. No token,
+account record or production D1 mutation was involved.
+
+The technology layout theme toggle now initializes aria-pressed from saved
+or operating-system theme and updates it when an unoverridden system theme
+changes. scripts/technology-theme-tests.mjs executes the REAL Astro inline
+controller in deterministic DOM/MediaQuery mocks and checks initial dark,
+initial light, OS changes, user overrides and unavailable browser storage.
+
+These safeguards are local feature-branch work. They do not prove that
+live production agent credentials or upgraded two-Worker staging have
+already been accepted. Do not bypass live-read, issuer or publisher checks.
+
+Checkpoint 16 final validation: the live public Orbit discovery response was
+842 bytes and the public JWKS was 193 bytes containing one signing key, below
+both newly enforced streaming and key-count limits. This was an anonymous
+GET only and did not access any private signing key or bearer credential.
+
+Negative mutation proof: each of the three key regression checks was
+intentionally weakened in a disposable local edit, and its real test
+FAILED as expected: allowing multiple OpenAPI security alternatives,
+removing the JWKS issuer-origin constraint, and skipping initial dark-mode
+aria-pressed synchronization. After restoration, the real tests passed.
+This confirms the red/green signal instead of merely relying on green-only
+fixtures. All temporary mutation copies were deleted.

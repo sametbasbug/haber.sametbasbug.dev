@@ -104,11 +104,20 @@ const categories = [
           if (stored === 'dark' || stored === 'light') root.dataset.tbTheme = stored;
         } catch {}
         const button = document.querySelector('[data-theme-toggle]');
+        const systemTheme = window.matchMedia('(prefers-color-scheme: dark)');
+        const currentTheme = () => root.dataset.tbTheme || (systemTheme.matches ? 'dark' : 'light');
+        const updateThemeAccessibility = () => {
+          button?.setAttribute('aria-pressed', String(currentTheme() === 'dark'));
+        };
+        // The system or saved preference may start in dark mode. Keep the
+        // toggle state correct BEFORE its first click, including when OS
+        // preferences change and no explicit choice was stored.
+        updateThemeAccessibility();
+        systemTheme.addEventListener?.('change', updateThemeAccessibility);
         button?.addEventListener('click', () => {
-          const active = root.dataset.tbTheme || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-          const next = active === 'dark' ? 'light' : 'dark';
+          const next = currentTheme() === 'dark' ? 'light' : 'dark';
           root.dataset.tbTheme = next;
-          button.setAttribute('aria-pressed', String(next === 'dark'));
+          updateThemeAccessibility();
           try { localStorage.setItem('equinox-haber-theme', next); } catch {}
         });
         const match = location.pathname.match(/\/kategori\/([a-z-]+)\/?$/);
