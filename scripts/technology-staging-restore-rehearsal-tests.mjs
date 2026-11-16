@@ -29,6 +29,11 @@ test('rehearsal cannot send SQL restore to a remote D1 or alias production', () 
   assert.match(SOURCE, /'d1', 'execute', DB, '--local', '--config', CONFIG/u);
   assert.doesNotMatch(SOURCE, /'d1', 'execute', DB, '--remote'/u);
   assert.match(SOURCE, /await rm\(scratch, \{ recursive: true, force: true \}\)/u);
+  assert.match(SOURCE, /verifyStagingRestoredArchive\(/u);
+  assert.match(SOURCE, /canonicalLegacySlugs\(\)/u);
+  assert.match(SOURCE, /expectedMigrationNames:/u);
+  assert.match(SOURCE, /missingPublishedSources:/u);
+  assert.match(SOURCE, /orphanSources:/u);
 });
 
 test('production backup attestation is never claimed by stage-only restore', () => {

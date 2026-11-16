@@ -136,6 +136,7 @@ export function verifyNewsroomDeployOrder(allSteps) {
     'test:oauth-errors',
     'test:oidc-jwks',
     'test:staging-restore-safety',
+    'test:staging-restore-integrity',
     'test:live-permalink-probe',
   ]){
     if(!localPreflightLines.has('npm run '+name)) {

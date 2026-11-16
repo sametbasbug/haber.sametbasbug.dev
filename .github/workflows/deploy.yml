@@ -60,6 +60,7 @@ jobs:
           npm run test:oauth-errors
           npm run test:oidc-jwks
           npm run test:staging-restore-safety
+          npm run test:staging-restore-integrity
           npm run test:live-permalink-probe
           npm run test:staging-seo
           npm run test:backup-attestation

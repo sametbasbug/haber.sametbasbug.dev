@@ -653,3 +653,28 @@ versiyon farkı; eski 580 haberin bozulduğu anlamına gelmiyor.
 Yeni ana SHA, staging'de gerçekten sınanan kodla eşleşmeden
 onaylanmamalı; birleştirme sonrası sürüm değişirse izole
 staging yeniden test edilmeli.
+
+## 16 Kasım 2026 checkpoint 39: staging kurtarma ve imzalı çağrı izolasyonu
+
+Staging D1 gerçek SQL export ve izole yerel restore provası,
+580 haberin tam özgün slug eşleşmesi, 16 migration dosyasının
+isimleri ve tüm kaynak ilişkileriyle doğrulandı.
+Sonuç 580/580, 16/16, 590 kaynak, 4 yayıncı, 1 yönetici,
+quick_check OK ve foreign key hatası sıfır. Geçici SQL ve
+yerel veritabanı dosyaları silindi. Cloudflare salt-okunur
+sorgu, staging 580/590/16 ve production 580/590/11
+sayılarını bağımsız doğruladı.
+
+Orbit staging'de kayıtlı Haber istemcisinin yanlışlıkla
+production Haber adresine veya başka bir hosta imzalı
+belge göndermesini engelleyen ek güvenlik kuralı uygulandı.
+Katalog ve eylemler yalnız iki izinli Haber staging yoluna
+gidebiliyor. Diğer bağlı sitelerin normal işleyişi aynı.
+Orbit staging Worker yeniden dağıtıldı ve HTTP kontrolü geçti.
+
+Gerçek sahibi hesabının Orbit dashboard/ sayfasında
+Equinox Haber Staging bağlı site kaydı ile mevcut
+Ajan erişimini aç kontrolü bulunuyor. İşaretlenmedi.
+Önce gizli istemci eşleştirmesi, ardından sahici OAuth
+ve ajan E2E testleri tamamlanacak. Staging restore,
+production için bağımsız şifreli SQL yedeği değildir.

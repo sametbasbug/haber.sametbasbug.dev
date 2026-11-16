@@ -10,10 +10,12 @@
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { resolve, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { canonicalLegacySlugs } from './technology-legacy-permalinks.mjs';
+import { verifyStagingRestoredArchive } from './technology-staging-restore-integrity.mjs';
 import {
   parseWranglerJsonc,
   readHaberProductionConfig,
@@ -91,6 +93,26 @@ async function main() {
     `)[0];
     const integrity = query(localDir, 'PRAGMA quick_check');
     const invalidForeignKeys = query(localDir, 'PRAGMA foreign_key_check');
+    // Count-only checks cannot catch replacement of the 580 original URLs
+    // or a migration history with different names but the same row count.
+    const restoredLegacySlugs = query(localDir,
+      "SELECT slug FROM articles WHERE publication_era='legacy' AND is_draft=0"
+    ).map(row => row.slug);
+    const restoredMigrationNames = query(localDir,
+      'SELECT name FROM d1_migrations'
+    ).map(row => row.name);
+    const sourceIntegrity = query(localDir, `
+      SELECT
+        (SELECT COUNT(*) FROM articles a
+          WHERE a.publication_era='legacy' AND a.is_draft=0
+          AND NOT EXISTS (SELECT 1 FROM article_sources s WHERE s.slug=a.slug)
+        ) AS missingPublishedSources,
+        (SELECT COUNT(*) FROM article_sources s
+          LEFT JOIN articles a ON a.slug=s.slug
+          WHERE a.slug IS NULL
+        ) AS orphanSources
+    `)[0];
+
     if (counts.historical !== EXPECTED_LEGACY
       || counts.sources < EXPECTED_SOURCES
       || counts.migrations < EXPECTED_MIGRATIONS
@@ -100,6 +122,16 @@ async function main() {
       || invalidForeignKeys.length !== 0) {
       throw new Error('staging_d1_restore_integrity_failed');
     }
+
+    verifyStagingRestoredArchive({
+      restoredLegacySlugs,
+      canonicalLegacySlugs: canonicalLegacySlugs(),
+      restoredMigrationNames,
+      expectedMigrationNames: readdirSync(resolve(ROOT, 'worker/migrations'))
+        .filter(name => /^\d{4}_.+\.sql$/u.test(name)),
+      missingPublishedSources: sourceIntegrity?.missingPublishedSources,
+      orphanSources: sourceIntegrity?.orphanSources,
+    });
 
     // These are aggregate public archive counts, not SQL data or private
     // identities. Never expose the temporary export URL, path or contents.
@@ -112,6 +144,9 @@ async function main() {
       recordedMigrations: counts.migrations,
       stagingWriterRows: counts.permitted_writers,
       stagingAdminRows: counts.administrators,
+      exactHistoricalSlugs: '580_of_580',
+      exactMigrationNames: '16_of_16',
+      historicalSources: 'complete_without_orphans',
       integrity: 'ok',
       foreignKeyViolations: 0,
       restore: 'isolated_local_d1_only',

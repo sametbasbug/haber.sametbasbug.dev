@@ -1602,3 +1602,53 @@ staging and repeat the real owner and agent checks before
 attesting that exact release. Production itself must remain
 untouched until both acceptance and independent backup gates
 are genuinely complete.
+
+## Checkpoint 39: exact staged restore checks and stage-only signed-action destination
+
+The isolated staging D1 full SQL export and offline local restore
+was performed successfully. This is STAGING ONLY and does not meet
+the separate encrypted production D1 backup requirement. SQL and
+temporary SQLite files were deleted.
+
+Previously 580 articles and 16 migration rows could pass the staged
+restore check even if the 580 public article slugs or migration file
+names were different. Now every restored published legacy slug is
+compared against the 580 source-controlled Markdown names, and all
+16 recorded migration names against worker/migrations. Each published
+historical article must have a source; zero orphaned source records
+are allowed. New negative tests substitute a slug while preserving
+580 rows, replace or duplicate migration names while preserving 16
+rows and introduce missing/orphaned sources; all are rejected.
+
+Real staging restore results: 580/580 original public URLs, 16/16
+original migration names, 590 source rows without missing/orphaned
+sources, 4 active publishers, 1 admin, SQLite quick_check OK and
+zero foreign key violations. Cloudflare plugin independently
+confirmed via read-only remote aggregate queries: staging 580/590/16
+with 4 writers and 1 admin, and production 580/590/11.
+No private SQL was displayed or kept on the Mac.
+
+An additional Orbit transport isolation flaw was fixed: when a
+registered stage client record's catalog or action endpoint was
+changed to production, the generic public fetch path could accept
+it as another connected-site target. For the exact registered
+orbit-haber-staging client, all catalog and signed-action requests
+must now target ONLY the isolated Haber staging Worker and paths
+/orbit-actions.json or /api/orbit-eylem, without query/hash.
+Production URLs, arbitrary hosts, unsupported paths and redirects
+are rejected before network access or cached-catalog use.
+All unrelated connected sites retain their existing fetch behavior.
+
+Orbit full verify (368 backend + 11 other tests, 856 browser
+assertions) and cross-repo synthetic signed ES256 integration
+passed. Staging Worker deployment
+42313e66-65a6-4bad-bc6f-76a32dea61b5 and real staging
+HTTP verification passed. Haber staging runtime was not redeployed
+because only local restore/CI scripts and docs changed.
+
+The real Orbit owner dashboard shows the active saved Equinox
+Haber Staging site grant and its existing Ajan erişimini aç
+control. This permission has not been enabled; the real
+confidential OAuth client pairing is still blocked pending the
+user-managed Cloudflare + Orbit stage two-step secret rotation.
+No production database backup or deployment was made.
