@@ -1652,3 +1652,81 @@ control. This permission has not been enabled; the real
 confidential OAuth client pairing is still blocked pending the
 user-managed Cloudflare + Orbit stage two-step secret rotation.
 No production database backup or deployment was made.
+
+## Checkpoint 40: dedicated encrypted R2 backup channel, owner-held recovery key
+
+Cloudflare's official connected plugin provisioned the new PRIVATE R2
+bucket haber-d1-private-backups in EEUR. A separate Cloudflare read-only
+verification confirmed that the managed r2.dev endpoint is DISABLED,
+there are ZERO custom domains, and the bucket contains ZERO objects.
+A synthetic R2 object was uploaded, retrieved and byte-compared using
+the official cf CLI because the Cloudflare connector cannot stream a
+local binary encrypted file. The synthetic object was removed afterward.
+
+The local-only code now includes:
+- technology-private-backup-crypto.mjs: AES-256-GCM authenticated binary
+  envelope HAB1 with a fresh random 96-bit nonce and an authenticated
+  environment-specific context. Modification, wrong key, truncated data
+  or changed authentication tag is rejected.
+- technology-production-backup.mjs: an explicitly opt-in read-only
+  production D1 export, strictly pinned to the existing Haber production
+  D1 UUID e2ebdbbc-9fcc-4f73-b7f2-215b87307bab and separate PRIVATE
+  R2 bucket. It first requires an existing human-managed 32-byte
+  encryption key; never generates or rotates a credential on behalf of
+  the operator. Only after the key passes the preflight will it
+  run the D1 export to a mode-0700 ephemeral directory, validate all
+  historical slugs, source records, SQLite integrity and migration
+  history, encrypt with the operator's Keychain key, upload only the
+  ciphertext, retrieve the R2 object, verify ciphertext SHA-256,
+  decrypt locally and verify the SQL SHA-256 and independently restored
+  SQL content. Temporary plaintext, encrypted scratch files and local
+  restored SQL are removed even when verification fails. CI and Git
+  contain no backup key, raw SQL or production row data.
+- Both private crypto and export workflow have synthetic red/green
+  and fail-closed tests in local quality and pre-migration CI. The real
+  opt-in script never runs as part of CI or quality.
+
+Actual CP40 run: production D1 read-only export and its private offline
+integrity checker completed, but credential provisioning was stopped
+at the Keychain stage before ciphertext upload. The noninteractive
+macOS Keychain CLI initially created an EMPTY password item instead
+of reading a safe input; that empty item was deleted, and ALL temporary
+production SQL/database files were cleaned. A subsequent platform
+security restriction blocked another attempt at low-level Keychain
+secret transfer. The tool does NOT circumvent this through a different
+CLI, API, encoding, Python bridge or browser. The implementation was
+revised to require a PREEXISTING operator-owned key BEFORE any production
+D1 read. The missing-key real CLI probe now fails with exit 1 without
+exporting again. No real encrypted backup object was uploaded.
+The production backup release attestation is STILL BLOCKED.
+
+Human operator workflow when ready:
+1. Privately generate a NEW 32-byte uniformly random key, represented as
+   64 lowercase hexadecimal characters. Do not send it in chat, terminal
+   history, CI, environment variables or any agent tool request.
+2. Through a trusted INTERACTIVE, non-automated macOS Keychain interface
+   on the Mac mini, provision a generic password item with account
+   equinox-haber, service
+   equinox-haber-production-d1-backup-aes256gcm-v1,
+   and password equal to that key.
+3. Escrow an independent copy of the recovery key in the owner's
+   password manager or separate protected recovery vault BEFORE treating
+   any backup as disaster-recoverable. A key existing solely on the
+   Mac mini does NOT survive loss of that Mac.
+4. The operator, not an agent relaying key material, runs
+   npm run backup:production:encrypted in the Haber project.
+   The script fetches/decrypts and independently verifies its own
+   encrypted R2 copy before reporting backup metadata.
+5. Independently retain another encrypted copy OUTSIDE the same
+   Cloudflare account and rehearse a restore with the escrowed key.
+   A private R2 bucket in the SAME Cloudflare account protects against
+   D1 storage loss but is not in itself fully independent from account
+   compromise or Cloudflare account deletion.
+6. ONLY after real durable, independently recoverable encrypted backup,
+   owner acceptance of the actual release commit, and genuine Orbit/Haber
+   signed-agent staging acceptance should the two human migration
+   attestations be configured. Do not set any GitHub production
+   attestation based solely on CP40 crypto tests or the empty R2 bucket.
+
+No existing production Worker, D1 schema, R2 assets, main branch,
+GitHub environment variables, or secret was changed in this checkpoint.

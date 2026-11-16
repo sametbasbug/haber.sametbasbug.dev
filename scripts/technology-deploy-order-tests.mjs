@@ -137,6 +137,8 @@ export function verifyNewsroomDeployOrder(allSteps) {
     'test:oidc-jwks',
     'test:staging-restore-safety',
     'test:staging-restore-integrity',
+    'test:private-backup-crypto',
+    'test:production-backup',
     'test:live-permalink-probe',
   ]){
     if(!localPreflightLines.has('npm run '+name)) {

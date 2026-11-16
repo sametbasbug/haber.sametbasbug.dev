@@ -64,6 +64,8 @@ jobs:
           npm run test:live-permalink-probe
           npm run test:staging-seo
           npm run test:backup-attestation
+          npm run test:private-backup-crypto
+          npm run test:production-backup
           npm run test:staging-e2e-attestation
           npm run test:staging-e2e-report
           npm run test:technology-deploy-order

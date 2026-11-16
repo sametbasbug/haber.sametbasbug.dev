@@ -678,3 +678,40 @@ Ajan erişimini aç kontrolü bulunuyor. İşaretlenmedi.
 Önce gizli istemci eşleştirmesi, ardından sahici OAuth
 ve ajan E2E testleri tamamlanacak. Staging restore,
 production için bağımsız şifreli SQL yedeği değildir.
+
+## 16 Kasım 2026 checkpoint 40: production için özel, şifreli yedek altyapısı
+
+Cloudflare eklentisiyle yeni haber-d1-private-backups R2 alanı
+oluşturuldu. Genel r2.dev erişimi kapalı, custom domain yok.
+Sentetik dosyanın yüklenmesi, geri alınması ve birebir eşleşmesi
+doğrulandı; deneme nesnesi kaldırıldı. Son Cloudflare denetiminde
+bucket BOŞ kaldı.
+
+AES-256-GCM ile 256-bit anahtarlı, her yedekte yeni nonce kullanan
+ve dosya değişikliğini reddeden şifreleme kodu hazır. Production
+D1 kimliğine kilitli yeni opt-in yedek komutu, önce özgün SQL'i
+doğrulayacak, ardından yalnız şifreli dosyayı özel R2'ye yükleyip
+GERİ İNDİRECEK, anahtarla açacak, SQLite bütünlüğünü ve SHA-256
+eşleşmesini yerelde tekrar sınayacak. Geçici SQL ve yedek dosyaları
+başarılı/başarısız bütün normal çıkışlarda siliniyor. Pozitif ve
+negatif testler release öncesi yerel test kapısına eklendi.
+
+Gerçek production'dan salt-okunur ilk SQL export+offline bütünlük
+kontrolü çalıştı. Ancak Keychain'e güvenli anahtar kurulumunun
+araç güvenliği tarafından engellenmesi nedeniyle şifreli uzak
+yedek oluşturulmadı. Boş oluşturulmuş yanlış Keychain kaydı
+ve geçici SQL tamamen temizlendi. Kod artık keychain anahtar
+mevcudiyetini production verisini okumadan ÖNCE gerektiriyor
+ve anahtarı kendisi yaratmıyor.
+
+İşlem ileride yalnız hesap sahibinin özel anahtarı macOS Keychain
+ve ayrıca bağımsız parola kasasına güvenle kaydetmesiyle devam
+edebilecek. Keychain item:
+account=equinox-haber,
+service=equinox-haber-production-d1-backup-aes256gcm-v1.
+Gizli anahtar sohbetten veya ajan araçlarından geçirilmeyecek.
+
+Aynı Cloudflare hesabındaki özel R2, ek şifreli yedek katmanıdır;
+BAĞIMSIZ harici konum + yedek anahtar kurtarma denemesi olmadan
+production release için son backup onayı verilmez. Gerçek
+imzalı ajan E2E ve OAuth istemci eşleştirme engelleri de sürüyor.
