@@ -891,3 +891,16 @@ robots noindex behavior, active and suspended real agent credentials,
 four writer roles, human admin, historic URLs and recovery rehearsal.
 A production SSR build is NOT evidence that staging canonical URLs and
 indexing are isolated. No staging resources or real credentials exist yet.
+
+Checkpoint 22 follow-up: the structural validator was also exercised
+with the ACTUAL Cloudflare Wrangler SSR deploy bundler. A temporary
+root-level JSONC file with the exact isolated Worker name, a clearly
+synthetic staging D1 UUID, distinct staging R2 bucket, staging Orbit
+issuer/audience/client and no custom domain was validated first by
+the new script, then passed a Wrangler deploy --dry-run with that
+temporary config. Wrangler explicitly listed D1 haber-site-staging,
+R2 haber-gorseller-staging and audience orbit-haber-staging; it reported
+--dry-run: exiting now. The synthetic JSONC file was removed. This
+proves compilation/config compatibility ONLY; it does not demonstrate
+real staging resources, agent credential acceptance or canonical/SEO
+noindex behavior. No production or staging resource was created or modified.
