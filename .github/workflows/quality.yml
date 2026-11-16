@@ -69,6 +69,7 @@ jobs:
           npm run test:d1-recovery
           npm run test:d1-export-integrity
           npm run test:staging-config
+          npm run test:staging-seo
           npm run test:technology-deploy-order
           npm run test:legacy-permalinks
           npm run test:orbit-release-check

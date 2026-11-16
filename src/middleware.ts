@@ -1,5 +1,5 @@
 import type { MiddlewareHandler } from 'astro';
-import { getDatabase } from '#runtime-env';
+import { getDatabase, getWorkerEnv } from '#runtime-env';
 import { oturumCereziVarMi } from './server/session';
 
 /* Kenar önbelleği.
@@ -68,7 +68,10 @@ const GIRIS_YOLLARI = ['/giris/', '/cikis'];
 const TTL_SECONDS = 60;
 const STALE_SECONDS = 300;
 
-export const onRequest: MiddlewareHandler = async (context, next) => {
+const ordinaryRequest = async (
+  context: Parameters<MiddlewareHandler>[0],
+  next: Parameters<MiddlewareHandler>[1],
+): Promise<Response> => {
 	/* Yönlendirme önbellekten önce: kaldırılan adresin eski bir kopyası
 	   önbellekte kalmış olsa bile eşine gitmeli. */
 	const yolAdi = new URL(context.request.url).pathname;
@@ -134,6 +137,44 @@ export const onRequest: MiddlewareHandler = async (context, next) => {
 
 	await cache.put(key, cacheable.clone());
 	return cacheable;
+};
+
+/** Strict staging-only search-engine protection on ALL Astro SSR responses.
+ * The build flag cannot be selected by a request and production builds do
+ * not execute this branch. Runtime credentials must independently match the
+ * staging issuer and audience, else fail closed before serving any content.
+ * Applied after Cache API lookup so a cached SSR response is covered too.
+ * Static asset protection is handled by the staging build artifact step.
+ */
+const STAGING_BUILD = import.meta.env.PUBLIC_HABER_STAGING === 'true';
+const STAGING_ORBIT_ISSUER = 'https://orbit-v6-staging.samett33710.workers.dev';
+
+export const onRequest: MiddlewareHandler = async (context, next) => {
+  if (!STAGING_BUILD) return ordinaryRequest(context, next);
+
+  let approved = false;
+  try {
+    const env = getWorkerEnv();
+    approved = env.ORBIT_AUDIENCE === 'orbit-haber-staging'
+      && env.ORBIT_ISSUER === STAGING_ORBIT_ISSUER;
+  } catch {
+    // A missing/misbound staging deployment must never render a public page.
+  }
+  if (!approved) {
+    return new Response('Staging identity is not configured', {
+      status: 503,
+      headers: { 'cache-control': 'no-store', 'x-robots-tag': 'noindex, nofollow' },
+    });
+  }
+
+  const response = await ordinaryRequest(context, next);
+  const headers = new Headers(response.headers);
+  headers.set('x-robots-tag', 'noindex, nofollow');
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
 };
 
 /** İçerik sürümü. Okunamazsa önbellek atlanır: bayat içerik sunmaktansa

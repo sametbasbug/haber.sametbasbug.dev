@@ -23,6 +23,9 @@ const {
 	type = 'website',
 } = Astro.props;
 
+// Staging is for private acceptance, never a duplicate indexed site.
+const stageBuild = import.meta.env.PUBLIC_HABER_STAGING === 'true';
+
 // SEO Hardening Logic
 const finalOgImage = ogImage && typeof ogImage === 'string' && ogImage.trim() !== ''
 	? ogImage
@@ -91,7 +94,7 @@ const fullTitle = title === publicationName ? publicationName : `${publicationNa
 		<meta name="description" content={description} />
 		<link rel="canonical" href={canonicalURL} />
 		<link rel="alternate" type="application/rss+xml" title="Equinox Haber RSS" href={rssFeedURL} />
-		<meta name="robots" content={noindex ? 'noindex, nofollow' : 'index, follow, max-image-preview:large'} />
+		<meta name="robots" content={noindex || stageBuild ? 'noindex, nofollow' : 'index, follow, max-image-preview:large'} />
 
 		<!-- Open Graph / Facebook -->
 		<meta property="og:type" content={type} />

@@ -356,3 +356,11 @@ Equinox Haber sıfırdan tasarlanmış, **Türkçe teknoloji haberciliğine odak
 - Yeni staging D1, R2, Worker, Orbit site client veya gerçek staging config HENÜZ oluşturulmadı. Dış provisioning, remote migration, secret ve deployment için ayrı onay gerekiyor. Gerçek staging kabulünde staging build canonical/noindex ve gerçek aktif/suspended ajan testleri ayrıca zorunlu.
 
 - Ayrıca gerçek Cloudflare Wrangler ile geçici saf staging JSONC dosyası oluşturulup deploy --dry-run denendi. Bundle başarılı; staging DB/R2 ve orbit-haber-staging audience görünür; Wrangler --dry-run ile sonlandı. D1 UUID'si sentetikti, geçici config silindi, canlı deploy/D1/R2 yapılmadı.
+
+## 16 Kasım 2026 checkpoint 23: staging bağlantıları ve SEO ayrımı
+
+- Gerçek ES256 iki-repo staging testi Haber API'sinin URL alanının üretim adresini döndürdüğünü RED olarak ortaya çıkardı. Yeni haber yayını, liste ve detay URL'leri artık doğrulanmış Orbit issuer ve audience ikilisine bağlı. Staging ayrı staging adresini, production üretim adresini üretir; yanlış/çapraz kimlikler reddedilir. Gerçek staging ve production signed crossrepo testleri GREEN; URL'yi eski sabite çevirme mutasyonu RED.
+- Yeni build:staging komutu ayrı ve doğrulanmış staging config zorunlu kılıyor. Site canonical ve haber adreslerini staging'e ayarlıyor; iki Astro layout noindex meta veriyor, üretilmiş robots.txt Disallow / ve _headers X-Robots-Tag noindex içeriyor. Production public/robots.txt dokunulmadan kalıyor. Staging SSR middleware gerçek staging Orbit issuer/audience kontrolünden sonra tüm yanıtları noindex işaretliyor, yanlış konfigürasyon 503.
+- 22 SEO testi quality, PR ve production ön-migration akışında; Allow / mutasyonu RED. Gerçek izole yerel Wrangler staging HTTP testinde /, /hakkimizda/, /arsiv/, /robots.txt ve sitemap 200, staging canonical/noindex/Disallow doğru. Normal production SSR ayrı yerel D1 ile yeniden sınandı: production canonical, index ve Allow / korunuyor. Geçici sunucular ve local D1 temizlendi. Canlı staging veya production değişmedi.
+
+- Çalışma anı ikinci koruma gerçek yerel HTTP ile negatif test edildi: staging build'e kasıtlı yanlış production audience verildi; yapılandırma denetleyicisi reddetti, yalnız local Worker'da denendiğinde /, /hakkimizda/, /arsiv/ 503, no-store ve noindex döndü. Production/staging uzaktaki kaynaklara erişilmedi.

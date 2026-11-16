@@ -92,6 +92,9 @@ export function verifyNewsroomDeployOrder(allSteps) {
   if(!preflight.includes('npm run test:staging-config')) {
     throw new Error('Haber staging resource-isolation tests must run before any production migration');
   }
+  if(!preflight.includes('npm run test:staging-seo')) {
+    throw new Error('Staging search-engine isolation regressions must run before migration');
+  }
   const recovery=byName('Confirm a D1 Time Travel recovery point before migrations').run;
   if(!recovery.includes('time-travel info DB --json')
     || !recovery.includes('d1-time-travel-check.mjs')
@@ -164,6 +167,8 @@ mutate(rows=>rows.find(s=>s.name==='Verify Orbit identity and Haber 2.0 contract
   rows.find(s=>s.name==='Verify Orbit identity and Haber 2.0 contracts before migration').run.replace('npm run test:backup-attestation','echo skipped'));
 mutate(rows=>rows.find(s=>s.name==='Verify Orbit identity and Haber 2.0 contracts before migration').run=
   rows.find(s=>s.name==='Verify Orbit identity and Haber 2.0 contracts before migration').run.replace('npm run test:staging-config','echo skipped'));
+mutate(rows=>rows.find(s=>s.name==='Verify Orbit identity and Haber 2.0 contracts before migration').run=
+  rows.find(s=>s.name==='Verify Orbit identity and Haber 2.0 contracts before migration').run.replace('npm run test:staging-seo','echo skipped'));
 
 mutate(rows=>rows.find(s=>s.name==='Verify the live site').run=
   rows.find(s=>s.name==='Verify the live site').run.replace(' /api/brief /api/publish',' /api/publish'));
@@ -181,4 +186,4 @@ mutate(rows=>{
   const [publisher]=rows.splice(from,1);
   rows.splice(rows.findIndex(s=>s.name==='Deploy the Worker')+1,0,publisher);
 });
-console.log('Haber release workflow: 24 positive/negative ordering and gate assertions passed');
+console.log('Haber release workflow: 25 positive/negative ordering and gate assertions passed');

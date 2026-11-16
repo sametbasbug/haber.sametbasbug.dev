@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
 import { DatabaseSync } from "node:sqlite";
 import { renderTechnologyBody } from "../src/render.ts";
-import { publishTechnologyAs, listTechnologyAs, readTechnologyAs, editTechnologyAs, setTechnologyPublicationState, replayTechnologyAdminRequest, storedArticleText } from "../src/technology-publication.ts";
+import { publishTechnologyAs, listTechnologyAs, readTechnologyAs, editTechnologyAs, setTechnologyPublicationState, replayTechnologyAdminRequest, storedArticleText, technologyNewsOrigin } from "../src/technology-publication.ts";
 import { bodyMarkdown } from "../src/index.ts";
 
 import { TECHNOLOGY_AGENTS } from "../../src/data/technologyAgents.ts";
@@ -47,6 +47,26 @@ const roundTrip = storedArticleText("Örnek teknoloji incelemesi",generated);
 assert.equal(roundTrip,"# Örnek teknoloji incelemesi\n\n"+prose);
 assert.ok(!roundTrip.includes("## Kaynaklar"),"structured sources must not be duplicated in API text");
 assert.ok(!roundTrip.includes("## Ek kaynaklar"),"secondary sources must not leak into API text");
+
+// Production and staging API URLs must agree with signed Orbit identity.
+const stagingNewsOrigin = "https://haber-site-staging.samett33710.workers.dev";
+const productionNewsOrigin = "https://haber.sametbasbug.dev";
+const stageIssuer = "https://orbit-v6-staging.samett33710.workers.dev";
+const prodIssuer = "https://orbit.sametbasbug.dev";
+assert.equal(technologyNewsOrigin({ ORBIT_ISSUER: stageIssuer, ORBIT_AUDIENCE: "orbit-haber-staging" }), stagingNewsOrigin);
+assert.equal(technologyNewsOrigin({ ORBIT_ISSUER: prodIssuer, ORBIT_AUDIENCE: "orbit-haber" }), productionNewsOrigin);
+assert.equal(technologyNewsOrigin({ ORBIT_ISSUER: "https://orbit-v6-production.samett33710.workers.dev",
+  ORBIT_AUDIENCE: "orbit-haber" }), productionNewsOrigin);
+for (const identity of [
+  { ORBIT_ISSUER: stageIssuer, ORBIT_AUDIENCE: "orbit-haber" },
+  { ORBIT_ISSUER: prodIssuer, ORBIT_AUDIENCE: "orbit-haber-staging" },
+  { ORBIT_ISSUER: stageIssuer, ORBIT_AUDIENCE: undefined },
+  { ORBIT_ISSUER: undefined, ORBIT_AUDIENCE: "orbit-haber-staging" },
+  { ORBIT_ISSUER: "https://untrusted.example", ORBIT_AUDIENCE: "orbit-haber" },
+]) {
+  assert.throws(() => technologyNewsOrigin(identity),
+    /Unrecognized Haber Orbit issuer/u,'mismatched issuer/audience must not leak production link');
+}
 
 const database = new DatabaseSync(":memory:");
 for (const file of readdirSync(new URL("../migrations/", import.meta.url)).filter((n) => n.endsWith(".sql")).sort()) {
@@ -376,7 +396,8 @@ database.exec(seedAdmin);
 database.exec(seedAdmin);
 assert.equal(database.prepare("SELECT COUNT(*) AS n FROM newsroom_administrators").get().n, 1);
 assert.equal(database.prepare("SELECT orbit_subject FROM newsroom_administrators").get().orbit_subject, "person-a");
-const issuer = "https://orbit.example.test";
+// Production issuer is public metadata; keys and network are test-only fixtures.
+const issuer = "https://orbit.sametbasbug.dev";
 const pair = await crypto.subtle.generateKey({ name: "ECDSA", namedCurve: "P-256" }, true, ["sign", "verify"]);
 const jwk = await crypto.subtle.exportKey("jwk", pair.publicKey);
 globalThis.fetch = async (url) => {
@@ -419,6 +440,8 @@ assert.equal(r.status, 200, JSON.stringify(r.body));
 assert.equal(r.body.status, "applied");
 assert.equal(r.body.output.uygulandi, true);
 assert.equal(r.body.output.yazar, "Selene AI");
+assert.ok(r.body.output.url.startsWith(productionNewsOrigin+'/'),
+  'the production signed publisher must return a production permalink');
 r = await throughOrbit("haber.yayinla", orbitArticle, `agent:${TECHNOLOGY_AGENTS[3].id}`, key);
 assert.equal(r.body.status, "replayed", "aynı logical intent iki defa yayımlanmamalı");
 r = await throughOrbit("haber.yayinla", {

@@ -14,6 +14,28 @@ import { getTechnologyAgentByActor, technologyAgentProfileUrl } from "../../src/
 const DUPLICATE_TITLE_SIMILARITY = 82;
 const MAX_LIST = 50;
 const NEWS_ORIGIN = "https://haber.sametbasbug.dev";
+const STAGING_NEWS_ORIGIN = "https://haber-site-staging.samett33710.workers.dev";
+const STAGING_ORBIT_ISSUER = "https://orbit-v6-staging.samett33710.workers.dev";
+const PROD_ORBIT_ISSUERS = new Set([
+  "https://orbit.sametbasbug.dev",
+  "https://orbit-v6-production.samett33710.workers.dev",
+]);
+/** Bind the public permalink to the verified Orbit issuer AND first-party
+ * audience. Crossed or incomplete staging/production identity fails closed.
+ */
+export function technologyNewsOrigin(env: Pick<Env, "ORBIT_ISSUER" | "ORBIT_AUDIENCE">): string {
+  const issuer = env.ORBIT_ISSUER;
+  const audience = env.ORBIT_AUDIENCE;
+  if (issuer === STAGING_ORBIT_ISSUER && audience === "orbit-haber-staging") {
+    return STAGING_NEWS_ORIGIN;
+  }
+  if ((issuer === undefined && audience === undefined)
+    || (typeof issuer === "string" && PROD_ORBIT_ISSUERS.has(issuer)
+      && audience === "orbit-haber")) {
+    return NEWS_ORIGIN;
+  }
+  throw new Error("Unrecognized Haber Orbit issuer and audience");
+}
 
 // Astro gives static pages and injected SSR endpoints priority over the
 // dynamic /[...slug] article route. A valid headline such as "İletişim"
@@ -33,8 +55,8 @@ export function isReservedTechnologyStorySlug(slug: string): boolean {
   return RESERVED_STORY_SLUGS.has(slug);
 }
 
-function articleUrl(slug: string): string {
-  return `${NEWS_ORIGIN}/${slug}/`;
+function articleUrl(slug: string, env: Env): string {
+  return `${technologyNewsOrigin(env)}/${slug}/`;
 }
 
 /** The server-generated source section is presentation, not agent copy.
@@ -214,7 +236,7 @@ export async function publishTechnologyAs(
     slug, baslik: article.baslik, kategori: article.kategori,
     yazar: identity.author, orbitActor: identity.actor,
     orbitProfil: technologyAgentProfileUrl(getTechnologyAgentByActor(identity.actor!)!.handle),
-    yayinTarihi: timestamp, url: articleUrl(slug), gorsel: null,
+    yayinTarihi: timestamp, url: articleUrl(slug, env), gorsel: null,
   };
 
   // Haber ve Orbit tekrar kaydı AYNI D1 batch içinde kesinleşir.
@@ -294,7 +316,7 @@ export async function listTechnologyAs(input: Record<string, unknown>, env: Env)
         ? technologyAgentProfileUrl(getTechnologyAgentByActor(a.orbit_actor_subject)!.handle)
         : null,
       yayinTarihi: a.pub_date,
-      url: articleUrl(a.slug),
+      url: articleUrl(a.slug, env),
     })),
     toplam: count?.total ?? 0, donen: results.length,
     limit, offset, dahaVar: offset + results.length < (count?.total ?? 0),
@@ -330,7 +352,7 @@ export async function readTechnologyAs(input: Record<string, unknown>, env: Env)
     yayinTarihi: row.pub_date, guncellemeTarihi: row.updated_date,
     metin: storedArticleText(row.title, row.body_md), kaynaklar: sources.results ?? [],
     duzeltmeler: publicCorrections,
-    url: articleUrl(row.slug),
+    url: articleUrl(row.slug, env),
   });
 }
 

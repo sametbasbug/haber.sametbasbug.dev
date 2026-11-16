@@ -904,3 +904,74 @@ R2 haber-gorseller-staging and audience orbit-haber-staging; it reported
 proves compilation/config compatibility ONLY; it does not demonstrate
 real staging resources, agent credential acceptance or canonical/SEO
 noindex behavior. No production or staging resource was created or modified.
+
+## Checkpoint 23: isolated staging SEO and signed news permalinks
+
+The real signed cross-repo staging read revealed that Haber's technology
+API was returning PRODUCTION news URLs even when the request was signed
+by the staging Orbit issuer for the staging audience. This was reproduced
+RED in the true ES256 staging list/detail test, then fixed GREEN.
+
+Now publication, list and detail URL construction is bound to the trusted
+issuer AND audience: recognized production issuer + orbit-haber returns
+https://haber.sametbasbug.dev; exact staging issuer +
+orbit-haber-staging returns
+https://haber-site-staging.samett33710.workers.dev. Unknown or crossed
+pairs fail closed instead of returning a production URL. Direct D1 unit
+fixtures that have neither binding retain the existing production default.
+A mutation restoring the old production URL for staging fails RED.
+
+The original public/robots.txt explicitly allowed crawling and listed
+production sitemaps. Reusing it in staging would index duplicate stories.
+The new explicit staging build command is:
+
+    npm run build:staging -- --config=/path/to/approved/staging.jsonc
+
+This command first runs the real staging config isolation validator,
+rejecting missing or production configuration. It then builds the normal
+SSR pipeline with the staging PUBLIC_SITE_URL, PUBLIC_NEWS_SITE_URL and
+PUBLIC_HABER_STAGING=true. TechnologyLayout and BaseLayout set noindex
+in their HTML metadata for the staging build. ONLY in the generated
+dist-ssr/client files, robots.txt becomes Disallow: / and _headers gains
+X-Robots-Tag: noindex, nofollow for static assets; the committed
+production public/robots.txt is never edited.
+
+The server middleware additionally sets noindex/nofollow X-Robots-Tag
+on SSR responses after cache lookup (including cache hits). On staging
+builds, it verifies the ACTUAL runtime Worker Orbit staging issuer and
+audience before serving; invalid/missing bindings return 503 and no-store.
+Normal production builds do not execute this branch.
+
+22 staging SEO checks are included in local quality, PR checks and the
+pre-migration CI workflow. A staging robots Allow: / mutation failed RED.
+The actual isolated staging SSR build and Cloudflare Wrangler dry-run
+passed using only synthetic, local staging D1/R2 config.
+
+The local Worker was then started against separate temporary migrated
+D1 state. Actual GET /, /hakkimizda/, /arsiv/, /robots.txt and
+/sitemap-index.xml responded 200: canonical URLs and sitemap pointed
+to staging, HTML had noindex metadata, SSR had X-Robots-Tag noindex,
+and robots.txt disallowed all.
+
+Afterwards a fresh NORMAL production SSR build was run on a separate
+temporary local D1. GET /, /hakkimizda/, /arsiv/ still returned 200
+with PRODUCTION canonical, index/follow metadata, no staging X-Robots-Tag;
+production robots.txt still allowed crawling and listed the live sitemap.
+All temporary HTTP servers, local D1 fixtures and synthetic configuration
+were stopped/removed.
+
+Robots directives are NOT security access control. Even if noindexed,
+a publicly accessible staging Worker is publicly accessible. Do not
+use real production news, identity credentials or private content in
+staging. Real staging resources and real agent-account acceptance still
+require separate user authorization, and no remote resources were changed.
+
+Checkpoint 23 additional runtime fail-closed proof: a staging SSR build
+was repeated with the safe synthetic config, but a SECOND local config
+was deliberately given the WRONG audience orbit-haber. The standalone
+staging-config validator rejected it. Launching the local Worker only
+with that deliberately invalid synthetic config (no remote D1 and no
+deployment) produced HTTP 503 on /, /hakkimizda/ and /arsiv/, with
+no-store and X-Robots-Tag noindex headers on each response. This proves
+the Worker runtime guard is independent of the pre-deployment guard.
+All temporary files and local Worker were stopped/deleted afterwards.

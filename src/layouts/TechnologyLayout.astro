@@ -8,6 +8,8 @@ interface Props {
 }
 
 const { title, description, noindex = true, basePath = '/yeni', article } = Astro.props;
+// Staging is accessible for QA, but its pages must NEVER be indexed.
+const stageBuild = import.meta.env.PUBLIC_HABER_STAGING === 'true';
 const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin);
 const pageParam = Astro.url.searchParams.get('sayfa');
 if (pageParam && /^[1-9][0-9]*$/u.test(pageParam) && Number(pageParam) > 1
@@ -43,7 +45,7 @@ const categories = [
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{title} | Equinox Haber</title>
     <meta name="description" content={description} />
-    <meta name="robots" content={noindex ? 'noindex, nofollow' : 'index, follow'} />
+    <meta name="robots" content={noindex || stageBuild ? 'noindex, nofollow' : 'index, follow'} />
     <link rel="canonical" href={canonicalUrl} />
     <link rel="alternate" type="application/rss+xml" title="Equinox Haber teknoloji RSS" href="/rss.xml" />
     <meta property="og:type" content={article ? "article" : "website"} />
