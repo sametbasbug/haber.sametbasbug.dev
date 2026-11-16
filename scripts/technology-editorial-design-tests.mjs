@@ -34,4 +34,6 @@ checked(!home.includes('<img') && !story.includes('<img'), 'new article UI is im
 checked(archive.includes('GEÇMİŞ YAYINLAR'), 'legacy listing is labelled');
 checked(desk.includes('statistics.get'), 'newsroom counts are database-derived, not invented');
 checked(desk.includes('Yayın ilkelerimizi okuyun'), 'editorial standards easy to find');
+checked(layout.includes('data-topic-link="arsiv"') && layout.includes('data-topic-link="masa"'), 'archive and desk are first-class active nav destinations');
+checked(css.includes('clamp(22px, 8.2vw, 54px)'), 'small-screen masthead fits the 320px reading gutter');
 console.log('Equinox Haber editorial design: ' + checks + ' source/contract checks passed');

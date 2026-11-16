@@ -456,3 +456,22 @@ scripts/technology-editorial-design-tests.mjs testinde tutuluyor.
 Bu değişiklikler yalnız Haber staging üzerinde doğrulanıyor; canlı üretim
 sayfası ve production D1 hiç değiştirilmedi. Orbit sponsor girişi ve gerçek
 imzalı ajan E2E kapısı ayrı olarak açık kalıyor.
+
+## 16 Kasım 2026 checkpoint 30: mobil, erişilebilirlik ve koyu tema
+
+- 320 px gerçek staging denemesinde masthead'in içerik sınırını sağdan 18 px
+  ihlal ettiği gözlendi; yazı boyutu küçültüldü ve gerçek tarayıcıda sağ/sol
+  eşit boşluklar doğrulandı.
+- Önceki controller tarihsel arşivde, yayın masasında ve tekil haberlerde
+  yanlışlıkla 'Haberler' sekmesini etkin gösteriyordu. Gerçek shipped inline
+  betiğin 11 negatif/pozitif rota regresyonu RED→GREEN yapıldı; altı gerçek
+  staging rotasının doğru/boş etkin sekmesi doğrulandı.
+- Koyu tema başlangıçta yalnız gövdenin sonundaki JavaScript'ten yükleniyor,
+  ayrıca dark sayfada tarayıcı `theme-color` meta açık renk kalıyordu. Artık
+  <head> içinde erken tercih uygulaması ve dinamik meta güncellemesi var.
+  Koyu temanın gerçek staging yenilemesinde meta `#171a19`, gövde koyu ve
+  tema düğmesi erişilebilirlik durumu doğru. Güncel paket 40 controller,
+  22 editoryal tasarım kontrolü ve 664 sayfalık build ile geçti.
+- Ayrı staging Worker güvenli config, gerçek Wrangler dry-run ve deploy
+  başarıyla güncellendi. Production'a push, merge, D1 yazımı veya deploy yok.
+  Orbit'in gerçek staging OAuth site-client/ajan erişim testi hâlâ ayrı kapı.

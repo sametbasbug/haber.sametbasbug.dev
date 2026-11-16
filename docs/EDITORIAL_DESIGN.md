@@ -50,3 +50,25 @@ legacy image persistence, canonical URL isolation, or staging noindex policy.
 contracts. `npm run quality` still runs the full code, migration, theme, SEO,
 link and static-build suite. Real staging HTTP and desktop/mobile checks
 must follow before proposing production release.
+
+## Checkpoint 30: navigation and narrow-screen polish
+
+A 320 CSS-pixel live staging check found that the original wordmark extended
+into the final 18px side gutter. The new responsive serif sizing fits within
+both gutters on narrow mobile widths. This is not merely a viewport-overflow
+check: the full masthead content box is measured.
+
+The active navigation previously marked the homepage as current on every
+non-category route. The real inline controller now distinguishes homepage,
+category, archive and historic `/sayfa/N` routes, and the newsroom. It leaves
+article and informational routes without an unrelated active item. Eleven
+VM-based route cases were demonstrated red-before/green-after, and six actual
+staging routes verified through a real browser.
+
+The theme bootstrap now runs in the document head before first paint. It
+reads a saved preference, applies the root dark/light attribute, and sets the
+browser's theme-color meta to the same palette. The existing inline controller
+keeps aria-pressed and the browser chrome in sync with manual and system
+changes. Saved preference, system fallback and denied storage have executable
+VM regression cases. Real staging confirmed a dark page background and matching
+`#171a19` meta after a forced reload.
