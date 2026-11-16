@@ -19,7 +19,7 @@ const STAGE = {
   d1_databases: [{
     binding: 'DB',
     database_name: 'haber-site-staging',
-    database_id: '12345678-1234-4234-8234-123456789abc',
+    database_id: 'a03b97fa-b08a-483e-bebf-aa10a0568fcf',
     migrations_dir: 'worker/migrations',
   }],
   r2_buckets: [{
@@ -43,6 +43,9 @@ function block(mutation, label) {
   cases++;
 }
 accept();
+const provisioned = parseWranglerJsonc(readFileSync('wrangler.staging.jsonc', 'utf8'));
+assert.equal(provisioned.d1_databases[0].database_id, STAGE.d1_databases[0].database_id);
+accept(provisioned);
 assert.equal(parseWranglerJsonc(readFileSync('wrangler.ssr.jsonc', 'utf8')).name, production.name);cases++;
 assert.throws(() => validateHaberStagingConfig(production, production));cases++;
 block(s=>{s.name=production.name},'never staging-deploy production Worker');
@@ -59,6 +62,10 @@ block(s=>{s.assets.directory='dist/client'},'SSR asset parity');
 block(s=>{s.assets.directory=production.assets.directory},'stage assets must never share the production output');
 block(s=>{s.d1_databases[0].database_id=production.d1_databases[0].database_id},'never reuse production D1 UUID');
 block(s=>{s.d1_databases[0].database_name='haber'},'never reuse production D1 name');
+block(s=>{s.d1_databases[0].database_id='378e09e4-23e9-4112-abb8-90152a302502'},
+  'never bind Orbit staging D1 instead of Haber staging D1');
+block(s=>{s.d1_databases[0].database_id='12345678-1234-4234-8234-123456789abc'},
+  'require independently provisioned Haber staging D1 identity');
 block(s=>{s.d1_databases.push({...s.d1_databases[0],binding:'EXTRA'})},'only one D1');
 block(s=>{s.d1_databases[0].database_id='00000000-0000-0000-0000-000000000000'},'reject placeholder');
 block(s=>{s.d1_databases[0].database_id='not-a-uuid'},'reject malformed UUID');

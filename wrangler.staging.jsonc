@@ -1,0 +1,33 @@
+{
+  // Haber 2.0 isolated staging. Never deploy the production Wrangler file here.
+  // Worker deliberately has no production route or scheduled trigger.
+  "name": "haber-site-staging",
+  "main": "dist-ssr-staging/server/entry.mjs",
+  "compatibility_date": "2026-08-20",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": true,
+  "preview_urls": false,
+  "assets": {
+    "binding": "ASSETS",
+    "directory": "dist-ssr-staging/client"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "haber-site-staging",
+      "database_id": "a03b97fa-b08a-483e-bebf-aa10a0568fcf",
+      "migrations_dir": "worker/migrations"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "HERO",
+      "bucket_name": "haber-gorseller-staging"
+    }
+  ],
+  "vars": {
+    "ORBIT_ISSUER": "https://orbit-v6-staging.samett33710.workers.dev",
+    "ORBIT_AUDIENCE": "orbit-haber-staging",
+    "ORBIT_CLIENT_ID": "orbit-haber-staging"
+  }
+}

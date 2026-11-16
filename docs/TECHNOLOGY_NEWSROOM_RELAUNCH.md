@@ -402,3 +402,24 @@ Equinox Haber sıfırdan tasarlanmış, **Türkçe teknoloji haberciliğine odak
   200; bilinmeyen haber 404 döndü. Beş yanıtın tümü noindex/nofollow,
   ana sayfa staging canonical, robots Disallow / içeriyordu. Yerel Worker,
   fixture ve test konfigürasyonu kapatılıp silindi.
+
+## 16 Kasım 2026 checkpoint 27: gerçek staging kaynakları hazır, dağıtım bekliyor
+
+- Kullanıcının yalnız staging altyapısı kurma onayıyla Cloudflare'da ayrı
+  `haber-site-staging` Worker kaydı (deploy edilmemiş, public route kapalı),
+  `haber-site-staging` D1 ve `haber-gorseller-staging` R2 oluşturuldu. Canlı
+  Haber/Orbit ve 580 tarihî haber etkilenmedi; staging D1'e migration veya
+  haber/test kaydı yazılmadı.
+- Haber repo köküne gerçek ve ayrı D1 UUID'siyle `wrangler.staging.jsonc`
+  eklendi. İki kaynağın production'dan bağımsızlığı Cloudflare API ile tekrar
+  doğrulandı. 54 staging konfigürasyon testi, 32 SEO testi, gerçek staging
+  SSR build ve Wrangler `--dry-run` başarılı.
+- Kritik ek koruma: önceki denetim Orbit'in staging D1 UUID'sini Haber D1
+  olarak yanlışlıkla kabul ediyordu (gerçek negatif prova). Denetim artık
+  yalnız oluşturulmuş Haber staging D1 kimliğine izin veriyor; sahte UUID
+  veya Orbit staging UUID'si testte reddediliyor. Orbit iki-repo ES256
+  fixture bu doğrulanmış kimliğe uyarlandı.
+- Orbit staging `orbit-haber-staging` site client kaydı henüz yok. Gerçek
+  client secret, kayıt, staging Worker dağıtımı, D1 migrasyonları ve canlı
+  ajan testleri ayrı yetki/kimlik aşamalarıdır. Production ve main dallarına
+  push, merge veya deploy yapılmadı.

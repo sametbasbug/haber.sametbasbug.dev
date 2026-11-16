@@ -14,6 +14,9 @@ import jsoncParser from 'jsonc-parser';
 const { parse } = jsoncParser;
 const PROD_CONFIG = new URL('../wrangler.ssr.jsonc', import.meta.url);
 const STAGING_NAME = 'haber-site-staging';
+// Independently verified Cloudflare staging D1 identity. A different valid UUID
+// could otherwise bind Orbit's staging DB and permit destructive migrations.
+const STAGING_D1_ID = 'a03b97fa-b08a-483e-bebf-aa10a0568fcf';
 const STAGING_ORBIT_ISSUER = 'https://orbit-v6-staging.samett33710.workers.dev';
 const STAGING_CLIENT_ID = 'orbit-haber-staging';
 const STAGING_R2_BUCKET = 'haber-gorseller-staging';
@@ -91,6 +94,7 @@ export function validateHaberStagingConfig(staging, production) {
     || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u.test(db.database_id)
     || /^0{8}-0{4}-0{4}-0{4}-0{12}$/u.test(db.database_id)
     || liveIds.has(db.database_id)
+    || db.database_id !== STAGING_D1_ID
     || db.migrations_dir !== 'worker/migrations') {
     reject('unverified_or_live_d1_binding');
   }

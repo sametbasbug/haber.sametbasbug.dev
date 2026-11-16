@@ -1110,3 +1110,52 @@ copy a staging build into the production output. Continue to use the
 explicit per-environment Wrangler config even when dry-running. Artifact
 isolation does NOT authorize remote provisioning, real agent credentials,
 production D1 exports, merges, deploys or staging/production data writes.
+
+## Checkpoint 27: approved staging resource provisioning (16 November 2026)
+
+The owner explicitly approved setting up isolated staging infrastructure,
+not production deployment or remote staging migrations/test writes. Cloudflare
+account inventory was independently read BEFORE creation, then the following
+resources were created in that same account and independently re-read:
+
+- Worker record `haber-site-staging`: created **without a deployed version**,
+  with workers.dev routing disabled and Preview URLs disabled. The future
+  HTTPS origin is `https://haber-site-staging.samett33710.workers.dev`.
+  It is not currently a functioning public staging service.
+- D1 database `haber-site-staging`: the verified UUID is bound exclusively in
+  the new root `wrangler.staging.jsonc`. It is different from production Haber
+  D1 and Orbit staging D1. **No migrations, seed data or SQL writes** ran.
+- R2 bucket `haber-gorseller-staging`: separate from production `haber-gorseller`;
+  no legacy images or other objects were copied/written.
+
+The committed staging Wrangler file binds ONLY those staging resources, uses
+`dist-ssr-staging` outputs, staging Orbit issuer/client, workers.dev, and has
+NO custom domain, cron, secret or production service binding. The real Cloudflare
+Worker record is dormant until a separately authorized stage deployment.
+
+An additional real security regression was demonstrated **before** hardening:
+replacing the staging D1 UUID with the existing **Orbit staging D1 UUID** was
+accepted by the former config validator. Since a stage migration could then
+write into Orbit's own D1, the validator now pins the actual independently
+provisioned Haber staging D1 UUID. The regression deliberately fails for the
+Orbit stage UUID or an arbitrary valid UUID, and the verified Haber stage
+config passes. Future intentional D1 replacement requires review, an updated
+pin, and independent Cloudflare account verification.
+
+The real staging config passed the isolation CLI and 54 configuration cases.
+`npm run build:staging -- --config=./wrangler.staging.jsonc` and the real
+`npx wrangler deploy --dry-run --config=./wrangler.staging.jsonc` passed with
+only staging bindings; 32 SEO isolation tests also passed. Dry-run did not
+upload/deploy the Worker. The Orbit signed cross-repo fixture was aligned to
+the actual stage D1 identity; in-memory ES256 tests and Orbit check passed.
+
+Still NOT authorized or performed: live staging Worker deployment, enabling
+its public workers.dev route, D1 migrations or historic/test data writes,
+credential/secret provision, or registration of the `orbit-haber-staging` client
+in Orbit's real staging D1. A read-only count verified that this client was
+not yet registered. `ORBIT_HABER_STAGING_ORIGIN` intentionally remains unset
+in the deployed Orbit staging Worker. Register the site client only via the
+approved identity flow with its own protected client secret, as
+`environment=development` with correct scope and redirect/actions/catalog
+URLs; then explicitly authorize staged deployment and acceptance tests.
+Never re-use production Haber credentials or databases in staging.
