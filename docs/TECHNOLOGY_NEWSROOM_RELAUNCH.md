@@ -493,3 +493,23 @@ Ancak `orbit-haber-staging` client hâlâ kayıtlı DEĞİL; kullanıcının ger
 Google/koşul kabulüyle owner oturumu gerekli. Staging Haber sponsor
 placeholder'ları gerçek yetkili pairwise kimliği olarak alınmamalı.
 Production'a push, merge, D1 yazımı veya deploy yapılmadı.
+
+## 16 Kasım 2026 checkpoint 33: sahici staging D1 restore denemesi ve OAuth kurtarma
+
+Gerçek `haber-site-staging` D1, Wrangler'ın **remote staging**
+binding'iyle SQL olarak dışarı aktarıldı; ayrı ve boş bir **yerel D1**
+persistence klasörüne geri yüklendi. 3.105.966 baytlık dışa aktarımda
+580 arşiv haberi, 590 kaynak ilişkisi ve 16 migration eksiksizdi.
+`PRAGMA quick_check` başarılı ve `foreign_key_check` sonucu sıfır.
+Geçici veri, SQL, log ve restore klasörleri işlem sonunda silindi.
+Bu yalnız staging provasıdır: production'ın şifreli özel yedeği,
+bağımsız restore, bookmark ve release attestation kapılarını kapatmaz.
+
+Orbit'e yalnız `platform_owner` ve geçerli CSRF ile kullanılabilen,
+eski sırrı geçersiz kılan ve mevcut pairwise kimlikleri koruyan
+istemci sırrı yenileme API'si eklendi. Gerçek yerel Worker+D1
+testleri ve tam 379 Orbit testi, cross-repo ES256, gerçek stage deploy
+ve stage HTTP doğrulaması başarılı. **Gerçek staging istemci sırrı
+eşitlenmedi**; platformun önceki hassas sır aktarımını engelleyen
+koruması atlanmadı. Dolayısıyla iki-Worker imzalı ajan kabulü hâlâ
+tamamlanmadı. Production Worker/D1 değiştirilmedi.

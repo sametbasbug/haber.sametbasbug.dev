@@ -1212,3 +1212,39 @@ backup gates are still not satisfied.
   platform-owner login and legitimate client registration, secure credential
   storage, replacing synthetic sponsor placeholders with actual stage pairwise
   subject, and then stage-only Orbit target deploy and real agent acceptance.
+
+## Checkpoint 33: real isolated staging D1 backup and restore rehearsal (16 November 2026)
+
+User-authorized staging recovery trial completed WITHOUT accessing production
+data or credentials. Executed Wrangler D1 SQL export with the exact
+`wrangler.staging.jsonc` and --remote, into a private random temporary
+directory. Export measured **3,105,966 bytes** (SHA-256
+`3ddcb945b7e5adac2a72cc447cefab46d6fc29dacb065f860b6f65bba4b302e4`).
+Imported it to a **new isolated local D1 persistence path**, not an existing
+database. No migration command or data deletion was run against a remote DB.
+
+Independent local restore and queries verified:
+- Published legacy records: exactly **580**.
+- Article-source relations: exactly **590**.
+- Preserved D1 migration records: exactly **16**.
+- Permitted staging publisher rows: 4; staging admin rows: 1. These
+  remain unlinked test placeholders, NOT genuine Orbit grants.
+- SQLite `PRAGMA quick_check`: **ok**.
+- SQLite `PRAGMA foreign_key_check`: **0 violations**.
+
+The export, local database, result logs, and scratch folder were deleted
+via an EXIT cleanup trap in the same command. No backup artifact was left
+on the Mac mini, no SQL appeared in assistant output or version control.
+This confirms the staging schema can round-trip through D1's native SQL
+export/restore and does NOT satisfy production's independent private
+encrypted full backup, signed attestation, fresh Time Travel bookmark or
+actual production restore gate.
+
+Orbit staging has registered the genuine `orbit-haber-staging` client,
+but its confidential OAuth client secret is NOT aligned to the Haber
+staging Worker; previous security policy denied transferring that value.
+Orbit feature code now includes owner-only CSRF-protected client-secret
+rotation with 379 passing verify tests, shipped ONLY to Orbit staging.
+Actual secret sync, real OAuth token exchange, true pairwise publishers,
+signed two-Worker acceptance, production backup and production release
+remain outstanding.
