@@ -21,6 +21,7 @@ import {
 } from "./index.ts";
 import { editTechnologyAs, listTechnologyAs, publishTechnologyAs, readTechnologyAs, setTechnologyPublicationState, replayTechnologyAgentRequest } from "./technology-publication.ts";
 import { authorizeAction, verifyOrbitActionToken, type Identity } from "./identity.ts";
+import { orbitHttpForEnvironment } from "./orbit-http.ts";
 
 /** Version 2: the ONLY advertised Haber actions. */
 export const OPERATIONS = [
@@ -237,10 +238,17 @@ export async function siteAction(request: Request, env: Env): Promise<Response> 
   const operationId = typeof body.operationId === "string" ? body.operationId : "";
   const input = body.input as Record<string, unknown>;
 
+  let transport: ReturnType<typeof orbitHttpForEnvironment>;
+  try {
+    transport = orbitHttpForEnvironment(env);
+  } catch {
+    return reddet(503, 'Orbit imza hizmeti yapılandırılmamış');
+  }
   const verified = await verifyOrbitActionToken(
     authorization.slice(7).trim(),
     env.ORBIT_ISSUER,
     env.ORBIT_AUDIENCE,
+    transport,
   );
   if ("error" in verified) return reddet(verified.status, verified.error);
 

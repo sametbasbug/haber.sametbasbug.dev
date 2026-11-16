@@ -85,7 +85,15 @@ export const GET: APIRoute = async ({ request }) => {
     return hata('Orbit ile giriş tamamlanamadı. Yeniden deneyin.', 502);
   }
 
-  const dogrulama = await verifyOrbitToken(idToken, config.issuer, config.clientId);
+  let verifierTransport: ReturnType<typeof orbitHttpForEnvironment>;
+  try {
+    verifierTransport = orbitHttpForEnvironment(env);
+  } catch {
+    return hata('Orbit kimlik doğrulama hizmeti yapılandırılmamış.', 503);
+  }
+  const dogrulama = await verifyOrbitToken(
+    idToken, config.issuer, config.clientId, verifierTransport,
+  );
   if ('error' in dogrulama) {
     console.error('Orbit ID token reddedildi:', dogrulama.error);
     return hata('Orbit kimliği doğrulanamadı.', dogrulama.status === 503 ? 503 : 401);

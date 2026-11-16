@@ -1334,3 +1334,64 @@ verification and the reciprocal Orbit->Haber staging action calls also
 require controlled same-account Worker networking; do not claim full
 agent E2E based only on login 303. No production Worker, domain, R2, D1
 or GitHub release was changed.
+
+## Checkpoint 35: strict staging ES256/JWKS service binding acceptance (16 November 2026)
+
+With Haber->Orbit staging discovery already proven in checkpoint 34, this
+checkpoint closes the **independent** ES256 verification path. The shared
+`worker/src/identity.ts` authenticator previously loaded
+`/.well-known/openid-configuration` and the same-origin JWKS using global
+`fetch`. On this Cloudflare account's workers.dev zone, that produced a
+same-zone Worker subrequest error even when the public issuer URL returned
+200 to a browser.
+
+`worker/src/orbit-http.ts` now owns a single exact staging transport policy:
+only `ORBIT_ISSUER=https://orbit-v6-staging.samett33710.workers.dev`,
+`orbit-haber-staging` client/audience and the declared
+`ORBIT_STAGING -> orbit-v6-staging` Service Binding can access JWKS.
+Every other origin or missing binding fails closed; production still uses
+ordinary public `fetch`. The existing `src/server/orbit.ts` login
+transport reexports this same guard instead of carrying a competing copy.
+
+The shared verifier accepts a bounded HTTP transport argument for discovery
+and JWKS without weakening ES256, `kid`, issuer, audience, expiration,
+actor or operation validation. The transport is supplied in the human ID
+token callback, legacy HTTP identity path and the signed site-action
+endpoint. JWKS responses retain existing size and timeout limits. A
+missing service binding now returns deliberate HTTP **503** before any
+D1 authorization lookup, rather than an uncaught exception or public
+fetch fallback. Unknown signing keys force a JWKS refresh as before.
+
+Regression tests use an in-memory **synthetic** P-256 signing key:
+proper short-lived agent action and human ID token succeed; wrong audience
+and action-as-ID-token fail; missing service and mismatched staging
+configuration fail closed. The test set is part of `npm run quality`.
+
+Live staging build, Wrangler dry-run and deploy succeeded, Haber staging
+version `db2c42f2-d19a-4ea0-bea6-cd4fb65e4936`. A real HTTPS POST
+to the actual staging `/api/orbit-eylem` with a freshly generated,
+cryptographically signed but **unregistered synthetic key** and a
+read-only operation returned HTTP **401** and specifically
+`token bilinmeyen bir anahtarla imzalanmış`. This proves the deployed
+Worker obtained Orbit's real stage JWKS and correctly rejected a key
+not in that set; otherwise discovery would have failed with 503. The
+synthetic token and private signing key were created only in memory, not
+printed or saved. It carried no real identity or production credential;
+no article or D1 row was written.
+
+The Orbit->Haber side is also prepared with a stage-only reverse binding
+`HABER_STAGING -> haber-site-staging` and typed, fail-closed transport,
+but the `ORBIT_HABER_STAGING_ORIGIN` variable deliberately remains
+unset until the confidential OAuth client is legitimately paired and the
+real owner consent is exercised. Existing registered client and stage D1
+are untouched. Local cross-repo ES256 integration succeeds with synthetic
+fixtures, **not** actual credential acceptance. The two staging Workers
+were deployed independently; neither production Worker was deployed.
+
+Blocking gates: securely provision a matching Haber stage OAuth client
+secret and rotate the existing Orbit stage client's digest through the
+normal owner+CSRF control; perform real Google consent and grant/pairwise
+verification; then explicitly enable fixed stage Orbit->Haber origin and
+run genuine bearer read and four-publisher/admin checks. The prior
+platform security rejection of secret transfer must not be bypassed.
+Production backup and migration attestation remain separate open gates.

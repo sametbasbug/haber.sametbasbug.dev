@@ -11,27 +11,8 @@
  * tarayıcı tarafı var.
  */
 
-// Cloudflare blocks ordinary Worker-to-Worker fetch on the same workers.dev
-// zone. In isolated staging use ONLY the exact approved Orbit service binding;
-// keep the public OIDC issuer/URLs unchanged for browser redirects and claims.
-export type OrbitHttp = (url: string, init?: RequestInit) => Promise<Response>;
-const STAGING_ISSUER = 'https://orbit-v6-staging.samett33710.workers.dev';
-export function orbitHttpForEnvironment(env: {
-  ORBIT_ISSUER?: string;
-  ORBIT_CLIENT_ID?: string;
-  ORBIT_STAGING?: { fetch: (request: Request) => Promise<Response> };
-}): OrbitHttp {
-  if (env.ORBIT_ISSUER !== STAGING_ISSUER) return (url, init) => fetch(url, init);
-  if (env.ORBIT_CLIENT_ID !== 'orbit-haber-staging' || !env.ORBIT_STAGING?.fetch) {
-    throw new Error('staging_orbit_service_binding_missing');
-  }
-  return (url, init) => {
-    if (new URL(url).origin !== STAGING_ISSUER) {
-      throw new Error('staging_oidc_target_origin_mismatch');
-    }
-    return env.ORBIT_STAGING!.fetch(new Request(url, init));
-  };
-}
+import type { OrbitHttp } from '../../worker/src/orbit-http.ts';
+export { orbitHttpForEnvironment } from '../../worker/src/orbit-http.ts';
 
 const encoder = new TextEncoder();
 

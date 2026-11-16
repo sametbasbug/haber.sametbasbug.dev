@@ -541,3 +541,31 @@ adresi ve session-state çerezi), yabancı Origin POST **403**.
 Yeni transport üç bağımsız fail-closed testle güvenceye alındı.
 İstemci sırrı uyuşmazlığı, JWKS ve ters Orbit->Haber çağrı yolu
 ayrı ve halen tamamlanmamış kabul kapılarıdır.
+
+## 16 Kasım 2026 checkpoint 35: staging JWKS ve iki yönlü Worker bağlantısı
+
+Haber'in Orbit kimlik doğrulayıcısının kullandığı JWKS keşif isteği,
+önceden global `fetch` ile çalışıyordu ve aynı `workers.dev` zone
+altında başarısız oluyordu. Artık giriş, token takası ve ES256 imza
+doğrulaması tek bir sabit Orbit staging Service Binding korumasını
+kullanıyor. Üç gerçek yerel test sentetik P-256 imzasını doğruladı,
+yanlış audience/eksik servis/başka kaynak durumlarını reddetti; eksik
+servis artık 500 yerine 503. Gerçek Haber staging Worker
+`db2c42f2-d19a-4ea0-bea6-cd4fb65e4936` olarak dağıtıldı.
+
+Gerçek staging `POST /api/orbit-eylem` testinde sahte, imzası geçerli
+ama Orbit'in JWKS'inde bulunmayan sentetik bir anahtarla gönderilen
+okuma isteği **401** ve `token bilinmeyen bir anahtarla imzalanmış`
+döndü. Böylece Haber'in Orbit staging'den JWKS çektiği ve sahte
+imzayı reddettiği canlı olarak doğrulandı; yeni haber veya D1 satırı
+üretilmedi.
+
+Orbit staging'de `HABER_STAGING -> haber-site-staging` Service Binding
+eklendi, katalog/eylem çağrıları doğru origin'e pinlendi ve başka
+bağlı sitelerin normal fetch davranışı korunuyor. Katalog önbelleği
+mevcut olsa da eksik/yanlış servis yapılandırmasıyla devam edilemiyor.
+Özel deploy-öncesi testler ve çapraz-repo gerçek ES256 testleri geçti;
+Orbit stage Worker sürümü `aa33d483-6a76-4e22-97cc-9c7753952c10`.
+`ORBIT_HABER_STAGING_ORIGIN` gerçek OAuth eşleştirmesi ve owner
+onayından önce açılmadı. **Canlı gerçek ajan e2e henüz yapılmadı.**
+Production Worker, D1, sır, yayın ve main dallarına dokunulmadı.

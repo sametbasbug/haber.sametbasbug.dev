@@ -33,6 +33,8 @@
  * vermez. Ayrı insan yönetici oturumu da ajan kimliğini taklit etmez.
  * ———————————————————————————————————————————————————————————————— */
 
+import { orbitHttpForEnvironment, type OrbitHttp } from './orbit-http.ts';
+
 export interface Identity {
   /** Orbit ID token'ındaki `sub`. Handle değil — handle geri alınabiliyor. */
   subject: string;
@@ -77,7 +79,7 @@ const ACTION_ISSUE_CLOCK_SKEW_SECONDS = 5;
  * anahtar değişiminin ilk isteğini reddetmemek için. */
 const JWKS_TTL_MS = 10 * 60 * 1000;
 
-interface JwksCache { keys: Map<string, CryptoKey>; fetchedAt: number; }
+interface JwksCache { issuer: string; keys: Map<string, CryptoKey>; fetchedAt: number; }
 let jwksCache: JwksCache | null = null;
 // Many public requests may arrive with the same unknown signing kid at once.
 // Share an in-flight discovery instead of multiplying Orbit requests per
@@ -159,14 +161,14 @@ function decodeJson(value: string): any {
   return JSON.parse(new TextDecoder().decode(base64UrlToBytes(value)));
 }
 
-async function loadJwks(issuer: string, force: boolean): Promise<Map<string, CryptoKey>> {
-  const fresh = jwksCache !== null && Date.now() - jwksCache.fetchedAt < JWKS_TTL_MS;
+async function loadJwks(issuer: string, force: boolean, transport: OrbitHttp): Promise<Map<string, CryptoKey>> {
+  const fresh = jwksCache !== null && jwksCache.issuer === issuer && Date.now() - jwksCache.fetchedAt < JWKS_TTL_MS;
   if (fresh && !force) return jwksCache!.keys;
 
   // Concurrent key misses should create ONE remote refresh. Guard the
   // cleanup with promise identity so an older caller cannot clear a newer
   // pending fetch. Each request still verifies its own signature afterwards.
-  const pending = jwksFetchInFlight ?? (jwksFetchInFlight = fetchJwks(issuer));
+  const pending = jwksFetchInFlight ?? (jwksFetchInFlight = fetchJwks(issuer, transport));
   try {
     return await pending;
   } finally {
@@ -174,11 +176,11 @@ async function loadJwks(issuer: string, force: boolean): Promise<Map<string, Cry
   }
 }
 
-async function fetchJwks(issuer: string): Promise<Map<string, CryptoKey>> {
+async function fetchJwks(issuer: string, transport: OrbitHttp): Promise<Map<string, CryptoKey>> {
   /* Keşif belgesi üzerinden gidiliyor, `jwks_uri` varsayılmıyor. Orbit bugün
    * `{issuer}/.well-known/jwks.json` yayınlıyor ama bu bir uygulama ayrıntısı;
    * keşif belgesi sözleşmenin kendisi. */
-  const discovery = await fetch(`${issuer}/.well-known/openid-configuration`, {
+  const discovery = await transport(`${issuer}/.well-known/openid-configuration`, {
     redirect: 'manual', signal: AbortSignal.timeout(OIDC_TIMEOUT_MS),
   });
   if (discovery.status !== 200) throw new Error('oidc_discovery_unavailable');
@@ -186,7 +188,7 @@ async function fetchJwks(issuer: string): Promise<Map<string, CryptoKey>> {
   if (metadata.issuer !== issuer) throw new Error('oidc_discovery_issuer_mismatch');
   const jwksUri = validatedOrbitJwksUrl(issuer, metadata.jwks_uri);
 
-  const response = await fetch(jwksUri, {
+  const response = await transport(jwksUri, {
     redirect: 'manual', signal: AbortSignal.timeout(OIDC_TIMEOUT_MS),
   });
   if (response.status !== 200) throw new Error('oidc_jwks_unavailable');
@@ -213,7 +215,7 @@ async function fetchJwks(issuer: string): Promise<Map<string, CryptoKey>> {
     );
   }
 
-  jwksCache = { keys, fetchedAt: Date.now() };
+  jwksCache = { issuer, keys, fetchedAt: Date.now() };
   return keys;
 }
 
@@ -226,6 +228,7 @@ async function verifySignedOrbitToken(
   token: string,
   issuer: string,
   audience: string,
+  transport: OrbitHttp = fetch,
 ): Promise<{ claims: any } | AuthFailure> {
   // Signed action documents contain only a short set of claims, NOT the
   // article body. Bound the total token before decoding Base64 or allocating
@@ -270,9 +273,9 @@ async function verifySignedOrbitToken(
 
   let keys: Map<string, CryptoKey>;
   try {
-    keys = await loadJwks(issuer, false);
+    keys = await loadJwks(issuer, false, transport);
     // Bilinmeyen kid: anahtar değişimi olmuş olabilir, bir kez zorla yenile.
-    if (!keys.has(header.kid)) keys = await loadJwks(issuer, true);
+    if (!keys.has(header.kid)) keys = await loadJwks(issuer, true, transport);
   } catch {
     // Discovery/JWKS failures are transient service issues, not invalid
     // user credentials. Do not leak fetch/parse exception details, URLs or
@@ -324,8 +327,9 @@ export async function verifyOrbitToken(
   token: string,
   issuer: string,
   audience: string,
+  transport: OrbitHttp = fetch,
 ): Promise<{ subject: string } | AuthFailure> {
-  const verified = await verifySignedOrbitToken(token, issuer, audience);
+  const verified = await verifySignedOrbitToken(token, issuer, audience, transport);
   if ("error" in verified) return verified;
 
   /* Eylem belgesi ID token yerine geçemez. İkisi de Orbit'in aynı site
@@ -358,8 +362,9 @@ export async function verifyOrbitActionToken(
   token: string,
   issuer: string,
   audience: string,
+  transport: OrbitHttp = fetch,
 ): Promise<OrbitAction | AuthFailure> {
-  const verified = await verifySignedOrbitToken(token, issuer, audience);
+  const verified = await verifySignedOrbitToken(token, issuer, audience, transport);
   if ("error" in verified) return verified;
   const claims = verified.claims;
 
@@ -432,6 +437,8 @@ export interface AuthEnv {
   DB: D1Database;
   ORBIT_ISSUER?: string;
   ORBIT_AUDIENCE?: string;
+  ORBIT_CLIENT_ID?: string;
+  ORBIT_STAGING?: { fetch: (request: Request) => Promise<Response> };
   /* Yalnız yerel geliştirme içindir. Üretimde tanımlı olmamalı; tanımlıysa
    * ve `ORBIT_ISSUER` yoksa aşağıdaki uyarı devreye girer. */
   DEV_PUBLISH_TOKEN?: string;
@@ -480,7 +487,17 @@ export async function authenticate(request: Request, env: AuthEnv): Promise<Auth
     if (!env.ORBIT_AUDIENCE) {
       return { ok: false, status: 503, error: "Orbit yapılandırması eksik: ORBIT_AUDIENCE tanımlı değil" };
     }
-    const verified = await verifyOrbitToken(token, env.ORBIT_ISSUER, env.ORBIT_AUDIENCE);
+    let oidcTransport: OrbitHttp;
+    try {
+      oidcTransport = orbitHttpForEnvironment(env);
+    } catch {
+      // A missing staging service binding must be a predictable 503,
+      // NEVER a global fetch fallback and never a 500 exception.
+      return { ok: false, status: 503, error: 'Orbit imza hizmeti yapılandırılmamış' };
+    }
+    const verified = await verifyOrbitToken(
+      token, env.ORBIT_ISSUER, env.ORBIT_AUDIENCE, oidcTransport,
+    );
     if ("error" in verified) return { ok: false, ...verified };
 
     const row = await env.DB.prepare(
