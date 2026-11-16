@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { test } from 'node:test';
 import {
-  assertArchiveHttp,readBoundedHtml,PRODUCTION,STAGING,EXPECTED,
+  assertArchiveHttp,readBoundedHtml,shouldContinueProbe,PRODUCTION,STAGING,EXPECTED,
 } from './technology-live-permalink-probe.mjs';
 
 const slug='orijinal-haber-baglantisi';
@@ -57,4 +57,13 @@ test('streaming body gate rejects oversized and absent bodies without allocation
   await assert.rejects(readBoundedHtml(response),/html_over_limit/u);
   assert.equal(cancelled,true,'oversized response stream cancelled promptly');
   await assert.rejects(readBoundedHtml(new Response(null)),/html_body_missing/u);
+});
+
+
+test('live HTTP probe respects global deadline and fails fast on repeated errors',()=>{
+  assert.equal(shouldContinueProbe(0,1160,false,0),true);
+  assert.equal(shouldContinueProbe(1159,1160,false,7),true);
+  assert.equal(shouldContinueProbe(1160,1160,false,0),false);
+  assert.equal(shouldContinueProbe(500,1160,true,0),false);
+  assert.equal(shouldContinueProbe(500,1160,false,8),false);
 });

@@ -1783,3 +1783,22 @@ No real encrypted production backup has been uploaded: the
 operator-managed Keychain key remains absent. No release attestation
 exists and the real Orbit owner/staging agent E2E gate is still
 blocked. No production Worker, D1 schema, main or R2 content changed.
+
+### Checkpoint 41 HTTP probe boundedness
+
+A fresh 1160-request read-only production/stage permalink probe
+became network-slow and did not finish in reasonable time. Its
+terminal process was explicitly stopped; this attempt is NOT
+a new 580/580 acceptance proof. The earlier independent
+CP36 runs remain the last fully successful live permalink
+results.
+
+To prevent runaway background readers, the opt-in HTTP probe
+now has a 120-second global AbortSignal deadline, existing
+15-second per-request deadlines, and fail-fast after 8 failed
+requests. Any incomplete total or timeout FAILS CLOSED.
+A fifth local unit test checks normal completion, threshold
+and global cancellation. It still reads only the two fixed
+public origins and performs no remote writes. On future
+slow-network conditions it must be retried rather than
+represented as having passed.

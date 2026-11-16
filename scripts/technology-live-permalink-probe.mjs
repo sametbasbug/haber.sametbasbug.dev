@@ -14,6 +14,12 @@ export const STAGING = 'https://haber-site-staging.samett33710.workers.dev';
 export const EXPECTED = 580;
 const CONCURRENCY = 12;
 const MAX_HTML_BYTES = 200 * 1024;
+const PROBE_TOTAL_BUDGET_MS = 120_000;
+const MAX_FAILURES = 8;
+
+export function shouldContinueProbe(next,total,aborted,failures){
+  return next<total && !aborted && failures<MAX_FAILURES;
+}
 
 export function assertArchiveHttp(options) {
   const { slug, base, status, contentType, bytes, canonical, xRobots, metaRobots } = options;
@@ -57,9 +63,9 @@ export async function readBoundedHtml(response) {
   return {html,bytes};
 }
 
-async function verifyOne(base,slug) {
+async function verifyOne(base,slug,globalSignal) {
   const url=base+'/'+slug+'/';
-  const response=await fetch(url,{redirect:'manual',signal:AbortSignal.timeout(15000)});
+  const response=await fetch(url,{redirect:'manual',signal:AbortSignal.any([AbortSignal.timeout(15000),globalSignal])});
   // Safety: do not consume an unexpectedly unbounded HTML body.
   const declared=response.headers.get('content-length');
   if(declared!==null && (Number(declared)>MAX_HTML_BYTES || !/^\d+$/u.test(declared))){
@@ -82,13 +88,14 @@ export async function probeAll() {
   let next=0;
   const totals={production:0,staging:0};
   const failures=[];
+  const globalSignal=AbortSignal.timeout(PROBE_TOTAL_BUDGET_MS);
   const pairs=slugs.flatMap(slug=>[[PRODUCTION,slug],[STAGING,slug]]);
   async function worker(){
-    while(next<pairs.length){
+    while(shouldContinueProbe(next,pairs.length,globalSignal.aborted,failures.length)){
       const [base,slug]=pairs[next++];
       const label=base===PRODUCTION?'production':'staging';
       try{
-        await verifyOne(base,slug);
+        await verifyOne(base,slug,globalSignal);
         totals[label]++;
       }catch(e){
         failures.push({
@@ -99,7 +106,7 @@ export async function probeAll() {
     }
   }
   await Promise.all(Array.from({length:CONCURRENCY},()=>worker()));
-  if(failures.length>0){
+  if(failures.length>0 || totals.production+totals.staging!==pairs.length){
     console.error(JSON.stringify({pass:totals,errors:failures.length,firstFailures:failures.slice(0,8)}));
     throw new Error('historical_url_http_gate_failed');
   }

@@ -740,3 +740,10 @@ Komut production D1 veya Cloudflare'a bağlanmaz.
 bağımsız yedek için şifreli dosya ve kurtarma anahtarı
 ayrı sağlayıcıda/ayrı güvenli yerde de tutulmalı.
 Gerçek production yedeği ve OAuth/ajan kabulü hâlâ yok.
+
+Checkpoint 41 sonunda canlı 1160 URL'lik yeniden kontrol
+ağ yavaşlığı nedeniyle iki dakikayı aştı ve durduruldu;
+bu koşu BAŞARILI sayılmıyor. Önceden doğrulanan CP36
+580/580 sonuçları geçerlidir. Yeniden deneme aracı artık
+120 saniye toplam süre veya 8 hata eşiğinde iptal olup
+eksik doğrulamayı kesinlikle başarısız sayacak.
