@@ -1248,3 +1248,32 @@ rotation with 379 passing verify tests, shipped ONLY to Orbit staging.
 Actual secret sync, real OAuth token exchange, true pairwise publishers,
 signed two-Worker acceptance, production backup and production release
 remain outstanding.
+
+### Repeatable staging-only export/restore command
+
+The one-time checkpoint 33 rehearsal now also has a retained, opt-in
+operator command:
+
+```sh
+npm run staging:restore-rehearsal
+```
+
+`scripts/technology-staging-restore-rehearsal.mjs` first verifies the
+**actual** staging Wrangler file against the production configuration
+using the existing 54-case resource allowlist. It accepts no dynamic
+CLI arguments, performs exactly one remote staging D1 **read/export**,
+and imports SQL only to a fresh `--local --persist-to` directory.
+It requires 580 published legacy articles, at least 590 source rows,
+16 recorded migrations, minimum staging writer/admin records, successful
+`PRAGMA quick_check`, and zero foreign-key violations. The full export,
+local restoration, and diagnostic files are removed in a `finally`
+block. Only counts, byte length and SHA-256 are printed.
+
+The command is NOT automatic inside `npm run quality` because it
+accesses an actual Cloudflare database. However
+`npm run test:staging-restore-safety` is part of the local quality
+gate: it checks fail-closed rejection of arbitrary config/production
+arguments, stage-only export and local-only restore contract, cleanup,
+and separation from the genuine production encrypted-backup attestation.
+First live run reproduced the successful 3,105,966-byte staging export
+and isolated 580/590/16 restore with no temporary files retained.

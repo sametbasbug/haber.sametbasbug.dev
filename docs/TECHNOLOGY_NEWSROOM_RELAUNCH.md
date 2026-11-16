@@ -513,3 +513,10 @@ ve stage HTTP doğrulaması başarılı. **Gerçek staging istemci sırrı
 eşitlenmedi**; platformun önceki hassas sır aktarımını engelleyen
 koruması atlanmadı. Dolayısıyla iki-Worker imzalı ajan kabulü hâlâ
 tamamlanmadı. Production Worker/D1 değiştirilmedi.
+
+Tek seferlik staging restore denemesi artık `npm run staging:restore-rehearsal`
+komutuyla tekrarlanabilir. Production Wrangler config'ine yönlendirme
+parametresi kabul edilmiyor, restore her zaman `--local` ve izole
+geçici dizinde. `npm run test:staging-restore-safety` yerel kalite
+kapısında üç pozitif/negatif koruma testi yürütüyor; gerçek Cloudflare
+export'u bilerek `npm run quality` içine girmiyor.
