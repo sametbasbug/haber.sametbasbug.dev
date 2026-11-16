@@ -73,6 +73,35 @@ block(s=>{s.env={production:{name:'haber-site'}}},'no hidden production environm
 block(s=>{s.custom_domains=true},'no custom domain');
 block(s=>{s.zone_id='fake'},'no DNS zone');
 block(s=>{s.r2_buckets[0].binding='IMAGE'},'HERO route requires its own R2 binding');
+// These were all ACCEPTED by the earlier validator despite creating
+// additional Worker access to live data, or changing static asset routing.
+block(s=>{s.d1_databases[0].preview_database_id=production.d1_databases[0].database_id},
+  'a second D1 preview ID must not silently target live data');
+block(s=>{s.r2_buckets[0].preview_bucket_name=production.r2_buckets[0].bucket_name},
+  'R2 preview must not reuse live historical media');
+block(s=>{s.services=[{binding:'PRODUCTION',service:production.name}]},
+  'no production Worker service binding');
+block(s=>{s.kv_namespaces=[{binding:'LEAK',id:'fake-kv-namespace'}]},
+  'no extra KV namespace');
+block(s=>{s.account_id='different-cloudflare-account'},
+  'no staging account scope override');
+block(s=>{s.assets.run_worker_first=false},
+  'no unreviewed static asset routing option');
+block(s=>{s.assets.not_found_handling='single-page-application'},
+  'no static asset SPA fallback masking');
+block(s=>{s.d1_databases[0].jurisdiction='eu'},
+  'no unexpected D1 binding fields');
+block(s=>{s.r2_buckets[0].jurisdiction='eu'},
+  'no unexpected R2 binding fields');
+block(s=>{s.unsafe={bindings:[{name:'PROD',type:'service'}]}},
+  'no raw unsafe bindings');
+block(s=>{s.compatibility_flags.push('unsafe_eval')},
+  'no additional compatibility flags');
+block(s=>{s.compatibility_flags.push('nodejs_compat')},
+  'no duplicate compatibility flags');
+block(s=>{s.observability={enabled:true}},
+  'no unreviewed top-level resource flags');
+
 
 const dir=mkdtempSync(join(tmpdir(),'haber-staging-config-'));
 try {
@@ -93,5 +122,15 @@ try {
   result=spawnSync(process.execPath,['scripts/technology-staging-config-check.mjs',
     '--config='+safe],{encoding:'utf8'});
   assert.notEqual(result.status,0);cases++;
+
+  // Exercise the actual CLI against an extra production Worker binding.
+  // Validation cannot be restricted to the exported helper function only.
+  writeFileSync(safe,JSON.stringify({...STAGE,
+    services:[{binding:'PRODUCTION',service:production.name}]}));
+  result=spawnSync(process.execPath,['scripts/technology-staging-config-check.mjs',
+    '--config='+safe],{encoding:'utf8'});
+  assert.notEqual(result.status,0,'CLI must reject a production Worker service binding');cases++;
+  assert.doesNotMatch(result.stderr,new RegExp(production.d1_databases[0].database_id,'u'),
+    'Do not reveal production D1 identities in failure logs');cases++;
 }finally{rmSync(dir,{recursive:true,force:true});}
 console.log('Haber staging Worker isolation:',cases,'positive/negative cases passed');

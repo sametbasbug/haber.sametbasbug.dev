@@ -4,6 +4,14 @@ import { unified } from '@astrojs/markdown-remark';
 import sitemap from '@astrojs/sitemap';
 import { fileURLToPath } from 'node:url';
 
+// Static Pages output is the production fallback. Staging SEO must be
+// built through the separate Cloudflare SSR staging pipeline, never here.
+if (process.env.PUBLIC_HABER_STAGING === 'true'
+  || (process.env.PUBLIC_SITE_URL && process.env.PUBLIC_SITE_URL !== 'https://haber.sametbasbug.dev')
+  || (process.env.PUBLIC_NEWS_SITE_URL && process.env.PUBLIC_NEWS_SITE_URL !== 'https://haber.sametbasbug.dev')) {
+  throw new Error('Haber static build BLOCKED: do not publish staging SEO or canonical URLs.');
+}
+
 // https://astro.build/config
 export default defineConfig({
   site: process.env.PUBLIC_SITE_URL || 'https://haber.sametbasbug.dev',

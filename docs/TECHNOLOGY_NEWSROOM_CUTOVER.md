@@ -975,3 +975,77 @@ deployment) produced HTTP 503 on /, /hakkimizda/ and /arsiv/, with
 no-store and X-Robots-Tag noindex headers on each response. This proves
 the Worker runtime guard is independent of the pre-deployment guard.
 All temporary files and local Worker were stopped/deleted afterwards.
+
+## Checkpoint 24: prevent hidden production resource bindings in staging JSONC
+
+A source-level negative probe found SIX distinct Wrangler staging configurations
+which the checkpoint 22 guard incorrectly ACCEPTED, despite extra bindings:
+a LIVE D1 ID in preview_database_id, the LIVE R2 name as
+preview_bucket_name, a service binding to production Haber, an extra KV
+namespace, a custom assets setting and an unexpected account_id. The
+guard checked the primary binding IDs but not the full nested objects or
+all top-level resource bindings.
+
+The new fail-closed policy now explicitly allowlists ALL staging Wrangler
+top-level fields, and every allowed D1, R2 and assets nested field. Only
+the minimum SSR Worker, isolated D1/R2 and Orbit identity declarations
+are permitted. New service, KV, queue, namespace, preview D1/R2,
+custom assets, cross-account or arbitrary observability/unsafe options
+cannot be silently added. Compatibility flags must match the approved
+production runtime list exactly, without duplicates or extra flags.
+Any future legitimate change to this minimal schema needs conscious
+review and an updated regression test first. This is intentional;
+the staging guard must not automatically accept new Wrangler features.
+
+49 positive and negative assertions now cover these fields, real
+production IDs used as sneaky preview references, extra Worker services,
+namespace, account scope, asset handling and the actual CLI invocation
+with a production service binding. Three deliberate rule removals were
+verified RED, then restored GREEN: top-level binding allowlist,
+D1 nested field allowlist and R2 nested field allowlist.
+
+A separate LOCAL Wrangler staging bundle was rebuilt using a synthetic
+staging config with the stricter validator. Against fully migrated
+isolated local D1, real HTTP probes showed noindex on all of:
+robots.txt, orbit-actions.json, favicon.svg, generated Astro CSS,
+sitemap-index.xml, sitemap-0.xml, home, about and a missing story 404.
+The FIRST quick static probe lacked D1 migrations and sitemap was 404;
+the complete migrated D1 run verified its 200 status and staging URLs.
+This is evidence of real Cloudflare local Worker/asset behavior, NOT
+evidence that live staging resources exist or are safe to provision.
+
+The validator compares with the checked-in production Wrangler resource
+IDs, not with authenticated live Cloudflare resource inventory. A
+release operator must independently verify the real production/staging
+account and D1/R2 identities before any authorized remote migration
+or deploy; passing the local validator is not proof of that inventory.
+
+Checkpoint 24 additional build-artifact release safety: before this
+correction, BOTH Astro configurations would accept the combination
+PUBLIC_HABER_STAGING=true and the production canonical Haber origins.
+This is a real risk: a future CI/shell environment variable could cause
+the live Haber site or its static rollback artifact to be built with
+staging noindex metadata while deployed at the production domain.
+
+The SSR Astro config now checks the exact tuple of
+PUBLIC_HABER_STAGING, PUBLIC_SITE_URL and PUBLIC_NEWS_SITE_URL before
+bundling: staging=true requires both URLs to equal the dedicated
+haber-site-staging workers.dev origin; a normal production build must
+have both URLs set to (or default to) https://haber.sametbasbug.dev.
+The regular static Astro config refuses a staging build flag and any
+non-production canonical/news site URL. The staging build script already
+sets the exact stage tuple and remains supported.
+
+Both GitHub production deploy build steps and both PR quality build
+steps explicitly set PUBLIC_HABER_STAGING=false. The production deploy
+ordering regression tests reject removing or reversing that flag, or
+changing the site's canonical URL on either build step. Nine real
+Astro config import scenarios are checked in test:staging-seo:
+legitimate production/static/staging combinations pass and crossed
+flag/canonical combinations fail before bundling. Removing the
+SSR or static source-level guard deliberately caused RED; restoring
+it returned the tests to GREEN.
+
+These are build-time guards, not replacements for production-only
+Cloudflare D1/R2 bindings, the release-commit independent backup gate,
+or separate staging authorization.

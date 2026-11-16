@@ -46,6 +46,37 @@ try {
   assert.match(middleware,/env.ORBIT_AUDIENCE === 'orbit-haber-staging'/u);cases++;
   assert.match(middleware,/env.ORBIT_ISSUER === STAGING_ORBIT_ISSUER/u);cases++;
 
+  // The last staging SEO release failure mode: a shell/CI variable can
+  // accidentally set PUBLIC_HABER_STAGING=true while the Worker is built
+  // for the LIVE production site. Reject crossed site/news/build roles in
+  // the real Astro configuration imports, not only in a test-side parser.
+  const prodOrigin='https://haber.sametbasbug.dev';
+  const configs=[
+    {name:'astro.config.ssr.mjs', stage:'true', site:STAGE,news:STAGE,allowed:true},
+    {name:'astro.config.ssr.mjs', stage:'false',site:prodOrigin,news:prodOrigin,allowed:true},
+    {name:'astro.config.mjs',stage:'false',site:prodOrigin,news:prodOrigin,allowed:true},
+    {name:'astro.config.ssr.mjs',stage:'true',site:prodOrigin,news:prodOrigin,allowed:false},
+    {name:'astro.config.mjs',stage:'true',site:prodOrigin,news:prodOrigin,allowed:false},
+    {name:'astro.config.ssr.mjs',stage:'false',site:STAGE,news:STAGE,allowed:false},
+    {name:'astro.config.ssr.mjs',stage:'true',site:STAGE,news:prodOrigin,allowed:false},
+    {name:'astro.config.ssr.mjs',stage:'false',site:prodOrigin,news:STAGE,allowed:false},
+    {name:'astro.config.mjs',stage:'false',site:STAGE,news:STAGE,allowed:false},
+  ];
+  for(const entry of configs){
+    const validation=spawnSync(process.execPath,[
+      '--input-type=module','-e',"import('./"+entry.name+"')",
+    ],{encoding:'utf8',timeout:10_000,env:{
+      ...process.env,PUBLIC_HABER_STAGING:entry.stage,
+      PUBLIC_SITE_URL:entry.site,PUBLIC_NEWS_SITE_URL:entry.news,
+    }});
+    if(entry.allowed) {
+      assert.equal(validation.status,0,'Expected valid build environment '+JSON.stringify(entry));
+    }else {
+      assert.notEqual(validation.status,0,'Unsafe build environment must fail closed '+JSON.stringify(entry));
+    }
+    cases++;
+  }
+
   const denied=spawnSync(process.execPath,
     ['scripts/technology-staging-build.mjs'],{encoding:'utf8'});
   assert.notEqual(denied.status,0,'staging build without approved config must be blocked');cases++;

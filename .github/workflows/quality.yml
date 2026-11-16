@@ -90,6 +90,7 @@ jobs:
       - name: Build Astro site
         env:
           PUBLIC_SITE_URL: https://haber.sametbasbug.dev
+          PUBLIC_HABER_STAGING: 'false'
           PUBLIC_NEWS_SITE_URL: https://haber.sametbasbug.dev
           PUBLIC_MAIN_SITE_URL: https://sametbasbug.dev
           PUBLIC_EQUINOX_HUB_URL: https://equinox.sametbasbug.dev
@@ -102,6 +103,7 @@ jobs:
       - name: Build production SSR Worker and validate Wrangler package
         env:
           PUBLIC_SITE_URL: https://haber.sametbasbug.dev
+          PUBLIC_HABER_STAGING: 'false'
           PUBLIC_NEWS_SITE_URL: https://haber.sametbasbug.dev
           PUBLIC_MAIN_SITE_URL: https://sametbasbug.dev
           PUBLIC_EQUINOX_HUB_URL: https://equinox.sametbasbug.dev

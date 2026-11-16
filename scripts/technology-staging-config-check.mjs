@@ -22,6 +22,15 @@ function reject(reason) {
   throw new Error('unsafe_haber_staging_config: ' + reason);
 }
 
+/** Strictly allowlist each Wrangler binding and nested option. The earlier
+ * validator checked primary D1/R2 IDs but accepted preview database IDs,
+ * preview R2 buckets, extra services and other resource bindings. These
+ * could refer to production resources even when the main IDs are staged. */
+function hasOnlyKeys(value, names) {
+  return Boolean(value && typeof value === 'object' && !Array.isArray(value)
+    && Object.keys(value).every(name => names.includes(name)));
+}
+
 export function parseWranglerJsonc(contents) {
   if (typeof contents !== 'string') reject('non_string_config');
   const errors = [];
@@ -36,6 +45,13 @@ export function validateHaberStagingConfig(staging, production) {
     || !production || typeof production !== 'object' || Array.isArray(production)) {
     reject('invalid_config_shape');
   }
+  if (!hasOnlyKeys(staging, [
+    'name', 'main', 'compatibility_date', 'compatibility_flags',
+    'workers_dev', 'preview_urls', 'assets', 'd1_databases',
+    'r2_buckets', 'vars',
+  ])) {
+    reject('unapproved_top_level_binding_or_setting');
+  }
   if (staging.name !== STAGING_NAME || staging.name === production.name) {
     reject('wrong_staging_worker_name');
   }
@@ -43,6 +59,10 @@ export function validateHaberStagingConfig(staging, production) {
     || staging.main !== production.main
     || staging.compatibility_date !== production.compatibility_date
     || !Array.isArray(staging.compatibility_flags)
+    || !Array.isArray(production.compatibility_flags)
+    || staging.compatibility_flags.length !== production.compatibility_flags.length
+    || !staging.compatibility_flags.every((flag, index) =>
+      flag === production.compatibility_flags[index])
     || !staging.compatibility_flags.includes('nodejs_compat')) {
     reject('worker_runtime_mismatch');
   }
@@ -53,7 +73,8 @@ export function validateHaberStagingConfig(staging, production) {
     || Object.hasOwn(staging, 'env')) {
     reject('stage_must_not_claim_custom_domains_or_triggers');
   }
-  if (staging.assets?.binding !== 'ASSETS'
+  if (!hasOnlyKeys(staging.assets, ['binding', 'directory'])
+    || staging.assets?.binding !== 'ASSETS'
     || staging.assets?.directory !== 'dist-ssr/client') {
     reject('wrong_ssr_assets');
   }
@@ -62,7 +83,8 @@ export function validateHaberStagingConfig(staging, production) {
   const liveNames = new Set((production.d1_databases ?? []).map(row => row.database_name));
   if (!Array.isArray(databases) || databases.length !== 1) reject('one_isolated_d1_required');
   const [db] = databases;
-  if (!db || db.binding !== 'DB' || db.database_name !== STAGING_NAME
+  if (!hasOnlyKeys(db, ['binding', 'database_name', 'database_id', 'migrations_dir'])
+    || db.binding !== 'DB' || db.database_name !== STAGING_NAME
     || liveNames.has(db.database_name)
     || typeof db.database_id !== 'string'
     || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u.test(db.database_id)
@@ -76,6 +98,7 @@ export function validateHaberStagingConfig(staging, production) {
   const buckets = staging.r2_buckets;
   const liveBuckets = new Set((production.r2_buckets ?? []).map(row => row.bucket_name));
   if (!Array.isArray(buckets) || buckets.length !== 1
+    || !hasOnlyKeys(buckets[0], ['binding', 'bucket_name'])
     || buckets[0]?.binding !== 'HERO'
     || buckets[0]?.bucket_name !== STAGING_R2_BUCKET
     || liveBuckets.has(buckets[0].bucket_name)) {

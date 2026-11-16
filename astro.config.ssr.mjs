@@ -54,8 +54,21 @@ function yayinUclari() {
   };
 }
 
+// A staging-only SEO build must NEVER be packaged with a production
+// canonical domain, and a production Worker must NEVER inherit the
+// staging noindex build flag or its site origin from a shell/CI setting.
+const PRODUCTION_ORIGIN = 'https://haber.sametbasbug.dev';
+const STAGING_ORIGIN = 'https://haber-site-staging.samett33710.workers.dev';
+const stagingBuild = process.env.PUBLIC_HABER_STAGING === 'true';
+const configuredSite = process.env.PUBLIC_SITE_URL || PRODUCTION_ORIGIN;
+const configuredNews = process.env.PUBLIC_NEWS_SITE_URL || PRODUCTION_ORIGIN;
+const expectedOrigin = stagingBuild ? STAGING_ORIGIN : PRODUCTION_ORIGIN;
+if (configuredSite !== expectedOrigin || configuredNews !== expectedOrigin) {
+  throw new Error('Haber SSR build BLOCKED: canonical site/news origins must match its environment.');
+}
+
 export default defineConfig({
-  site: process.env.PUBLIC_SITE_URL || 'https://haber.sametbasbug.dev',
+  site: configuredSite,
   // Ayrı çıktı dizini şart: iki config aynı `dist/`'i paylaşırsa biri
   // diğerinin çıktısını siler ve CI'daki statik derleme sessizce SSR
   // çıktısının üstüne yazar.

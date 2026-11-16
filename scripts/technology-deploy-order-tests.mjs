@@ -85,6 +85,14 @@ export function verifyNewsroomDeployOrder(allSteps) {
       throw new Error('Independent D1 backup release proof must come from GitHub environment variable '+name);
     }
   }
+  for(const name of ['Build the static site as a cross-check','Build the Worker']){
+    const env=byName(name)?.env;
+    if(env?.PUBLIC_HABER_STAGING!=='false'
+      || env?.PUBLIC_SITE_URL!=='https://haber.sametbasbug.dev'
+      || env?.PUBLIC_NEWS_SITE_URL!=='https://haber.sametbasbug.dev'){
+      throw new Error('Production CI must pin the production canonical and disable staging noindex');
+    }
+  }
   const preflight=byName('Verify Orbit identity and Haber 2.0 contracts before migration').run;
   if(!preflight.includes('npm run test:backup-attestation')) {
     throw new Error('Backup attestation tests must run before production migration');
@@ -170,6 +178,9 @@ mutate(rows=>rows.find(s=>s.name==='Verify Orbit identity and Haber 2.0 contract
 mutate(rows=>rows.find(s=>s.name==='Verify Orbit identity and Haber 2.0 contracts before migration').run=
   rows.find(s=>s.name==='Verify Orbit identity and Haber 2.0 contracts before migration').run.replace('npm run test:staging-seo','echo skipped'));
 
+mutate(rows=>rows.find(s=>s.name==='Build the Worker').env.PUBLIC_HABER_STAGING='true');
+mutate(rows=>rows.find(s=>s.name==='Build the static site as a cross-check').env.PUBLIC_SITE_URL='https://haber-site-staging.samett33710.workers.dev');
+
 mutate(rows=>rows.find(s=>s.name==='Verify the live site').run=
   rows.find(s=>s.name==='Verify the live site').run.replace(' /api/brief /api/publish',' /api/publish'));
 mutate(rows=>rows.find(s=>s.name==='Verify the live site').run=
@@ -186,4 +197,4 @@ mutate(rows=>{
   const [publisher]=rows.splice(from,1);
   rows.splice(rows.findIndex(s=>s.name==='Deploy the Worker')+1,0,publisher);
 });
-console.log('Haber release workflow: 25 positive/negative ordering and gate assertions passed');
+console.log('Haber release workflow: 27 positive/negative ordering and gate assertions passed');
