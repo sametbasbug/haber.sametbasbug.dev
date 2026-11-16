@@ -12,9 +12,11 @@ import {rmSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {resolve,join} from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {encryptPrivateSqlBackup,decryptPrivateSqlBackup} from './technology-private-backup-crypto.mjs';
+import {encryptPrivateSqlBackup,MAX_CIPHERTEXT_BYTES} from './technology-private-backup-crypto.mjs';
 import {readHaberProductionConfig} from './technology-staging-config-check.mjs';
 import {verifySqlExportFile} from './d1-export-integrity.mjs';
+import {verifyEncryptedSqlBackupOffline} from './technology-private-backup-recovery.mjs';
+import {readOperatorBackupKey} from './technology-private-backup-keychain.mjs';
 
 const ROOT=fileURLToPath(new URL('../',import.meta.url));
 const WRANGLER=resolve(ROOT,'node_modules/wrangler/bin/wrangler.js');
@@ -22,34 +24,12 @@ const CONFIG='./wrangler.ssr.jsonc';
 const DB_ID='e2ebdbbc-9fcc-4f73-b7f2-215b87307bab';
 const DB_NAME='haber';
 const BACKUP_BUCKET='haber-d1-private-backups';
-const KEYCHAIN_SERVICE='equinox-haber-production-d1-backup-aes256gcm-v1';
-const KEYCHAIN_ACCOUNT='equinox-haber';
 
 function runBinary(binary,args,{input,maxBuffer=24*1024*1024}={}){
   return execFileSync(binary,args,{
     cwd:ROOT,env:{...process.env,CI:'true',NO_COLOR:'1'},
     input,maxBuffer,timeout:120_000,stdio:['pipe','pipe','pipe'],
   });
-}
-function keychainSecret(){
-  // The operator must create AND separately escrow a real 32-byte random
-  // AES key in macOS Keychain through their own trusted local interface.
-  // An agent is not permitted to generate, move, retrieve or transmit it
-  // via a fallback tool. Never silently create or replace a Keychain key.
-  let current;
-  try {
-    current=runBinary('/usr/bin/security',[
-      'find-generic-password','-s',KEYCHAIN_SERVICE,
-      '-a',KEYCHAIN_ACCOUNT,'-w',
-    ],{maxBuffer:1024});
-  } catch {
-    throw new Error('operator_keychain_key_unavailable');
-  }
-  const text=current.toString('utf8').trim();
-  if(!/^[a-f0-9]{64}$/u.test(text)){
-    throw new Error('operator_keychain_key_invalid');
-  }
-  return Buffer.from(text,'hex');
 }
 function assertFixedProductionTarget(){
   const config=readHaberProductionConfig();
@@ -72,18 +52,29 @@ async function main(){
   // BEFORE the first production D1 read, require the operator-owned key.
   // If Keychain is absent/locked there is no SQL export to clean up.
   try {
-    key=keychainSecret();
+    key=readOperatorBackupKey();
   } catch {
     process.umask(previousUmask);
     throw new Error('operator_encryption_key_required_before_export');
   }
-  const dir=await mkdtemp(join(tmpdir(),'haber-production-d1-private-backup-'));
+  let dir;
+  try{
+    dir=await mkdtemp(join(tmpdir(),'haber-production-d1-private-backup-'));
+  }catch{
+    key.fill(0);
+    process.umask(previousUmask);
+    throw new Error('private_backup_scratch_unavailable');
+  }
   const removeOnExit=()=>{try{rmSync(dir,{recursive:true,force:true});}catch{}};
+  const onSignal=(number)=>{removeOnExit();process.exit(number);};
+  const onInterrupt=()=>onSignal(130);
+  const onTerminate=()=>onSignal(143);
   process.once('exit',removeOnExit);
+  process.once('SIGINT',onInterrupt);
+  process.once('SIGTERM',onTerminate);
   try{
     const raw=join(dir,'production.sql');
     const encryptedPath=join(dir,'encrypted.hab1');
-    const restored=join(dir,'offline-restore.sql');
     // Read only; SQL bytes, stdout and stderr never exposed.
     runBinary(process.execPath,[
       WRANGLER,'d1','export','DB','--remote','--config',CONFIG,
@@ -97,12 +88,16 @@ async function main(){
       throw new Error('live_database_not_at_verified_0011_baseline');
     }
     const sql=await readFile(raw);
-    const sqlSha256=createHash('sha256').update(sql).digest('hex');
-    phase='encrypt';
-    const cipher=encryptPrivateSqlBackup(sql,key);
+    let sqlSha256,cipher;
+    try{
+      sqlSha256=createHash('sha256').update(sql).digest('hex');
+      phase='encrypt';
+      cipher=encryptPrivateSqlBackup(sql,key);
+    }finally{
+      sql.fill(0);
+    }
     await writeFile(encryptedPath,cipher,{mode:0o600,flag:'wx'});
     const encryptedSha256=createHash('sha256').update(cipher).digest('hex');
-    sql.fill(0);
     const now=new Date().toISOString().replace(/[:.]/gu,'-');
     const objectKey='production-d1/'+now+'-'+encryptedSha256.slice(0,16)+'.hab1';
     phase='upload_encrypted';
@@ -117,18 +112,14 @@ async function main(){
     const remote=runBinary('/opt/homebrew/bin/cf',[
       'r2','objects','get',objectKey,'--bucket-name',BACKUP_BUCKET,
       '--quiet',
-    ]);
+    ],{maxBuffer:MAX_CIPHERTEXT_BYTES+1024*1024});
     if(!timingSafeEqual(createHash('sha256').update(remote).digest(),
       Buffer.from(encryptedSha256,'hex')))
       throw new Error('r2_ciphertext_roundtrip_digest_mismatch');
     phase='offsite_decrypt_restore';
-    const plaintext=decryptPrivateSqlBackup(remote,key);
-    const restoredSha=createHash('sha256').update(plaintext).digest('hex');
-    if(restoredSha!==sqlSha256)throw new Error('remote_backup_sql_sha_mismatch');
-    await writeFile(restored,plaintext,{mode:0o600,flag:'wx'});
-    plaintext.fill(0);
-    const verified=verifySqlExportFile(restored);
-    if(verified.published!==580 || verified.sourceCount!==590
+    const verified=await verifyEncryptedSqlBackupOffline(remote,key);
+    if(verified.sqlSha256!==sqlSha256
+      ||verified.published!==580 || verified.sourceCount!==590
       ||verified.migrationLevel!=='historical-era') {
       throw new Error('remote_backup_offline_restore_integrity_failed');
     }
@@ -147,9 +138,16 @@ async function main(){
     process.exitCode=1;
   }finally{
     key?.fill(0);
-    await rm(dir,{recursive:true,force:true});
-    process.removeListener('exit',removeOnExit);
-    process.umask(previousUmask);
+    let cleaned=false;
+    try{
+      await rm(dir,{recursive:true,force:true});
+      cleaned=true;
+    }finally{
+      if(cleaned)process.removeListener('exit',removeOnExit);
+      process.removeListener('SIGINT',onInterrupt);
+      process.removeListener('SIGTERM',onTerminate);
+      process.umask(previousUmask);
+    }
   }
 }
 main().catch(()=>{

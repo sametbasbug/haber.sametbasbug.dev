@@ -1730,3 +1730,56 @@ Human operator workflow when ready:
 
 No existing production Worker, D1 schema, R2 assets, main branch,
 GitHub environment variables, or secret was changed in this checkpoint.
+
+## Checkpoint 41: real R2 encrypted rehearsal and independent offline verifier
+
+Optional command: npm run preflight:backup-r2-synthetic
+
+Only 580 PUBLIC historical slugs, 590 SYNTHETIC sources, 11 genuine
+migration names and an ephemeral TEST encryption key are used. The
+test generated private HAB1 ciphertext, uploaded it to the private
+Haber R2 under checks/, retrieved the object, compared ciphertext
+hash, decrypted and independently checked all 580 slugs, all
+sources, SQLite integrity and migration history. The REAL network
+roundtrip and restore passed twice. Temporary SQL and R2 test
+objects were removed; private bucket post-run audit showed empty.
+No production data, OAuth credentials or real recovery keys entered
+the test. The remote synthetic test is OPT-IN, not part of quality.
+
+The production backup now reuses the exact independently testable
+offline recovery function. It authenticates the ciphertext and
+uses a private, automatically removed SQL file to verify actual
+data contents. Four negative recovery cases reject changed tags,
+wrong keys, missing original article sources and wrong migrations.
+
+A separate owner-only offline recovery command was added:
+
+    npm run backup:verify:local -- --verify-hab1 '/secure/outside-repo/backup.hab1'
+
+It uses an ALREADY EXISTING owner-managed macOS Keychain key and
+ONLY local ciphertext. It never calls Cloudflare or production D1,
+never reveals SQL, file paths or secret values and never changes
+the original backup. Its four negative test cases are part of
+local quality and the production pre-migration test suite.
+The shared Keychain module only READS a pre-existing item.
+No key was generated, copied or fetched by any tool in CP41.
+
+Future owner-run retrieval of the REAL encrypted object:
+
+    umask 077
+    cf r2 objects get '<real-object-key>' --bucket-name haber-d1-private-backups --quiet > '/secure/outside-repo/backup.hab1'
+
+The owner must also store a copy of the ciphertext outside the
+SAME Cloudflare account, escrow the key in a separate private vault,
+and reproduce the offline restoration on a second trusted machine
+for genuine independence. Private R2 in the same account is NOT
+sufficient disaster independence.
+
+Fixed the production R2 binary retrieval buffer to support the
+full verified 128 MiB limit, zeroed plaintext in error cases and
+strengthened scratch cleanup after setup/signal failure.
+
+No real encrypted production backup has been uploaded: the
+operator-managed Keychain key remains absent. No release attestation
+exists and the real Orbit owner/staging agent E2E gate is still
+blocked. No production Worker, D1 schema, main or R2 content changed.

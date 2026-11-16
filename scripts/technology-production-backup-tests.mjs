@@ -10,7 +10,7 @@ test('fixed production D1 identity, dedicated encrypted-only R2, and no remote D
   assert.match(code,/const BACKUP_BUCKET='haber-d1-private-backups'/u);
   assert.match(code,/config.name!=='haber-site'/u);
   assert.match(code,/verifySqlExportFile\(raw\)/u);
-  assert.match(code,/verifySqlExportFile\(restored\)/u);
+  assert.match(code,/verifyEncryptedSqlBackupOffline\(remote,key\)/u);
   assert.match(code,/--output',raw,'--skip-confirmation'/u);
   assert.doesNotMatch(code,/'d1','execute'|'d1','migrations'|'d1','import'/u);
 });
@@ -24,8 +24,10 @@ test('CLI rejects all extra arguments before remote operations',()=>{
   }
 });
 test('private Keychain, 0700 scratch, best-effort exit cleanup, no release attestation',()=>{
-  assert.match(code,/KEYCHAIN_SERVICE='equinox-haber-production-d1-backup-aes256gcm-v1'/u);
-  assert.ok(code.indexOf('key=keychainSecret()')<code.indexOf('runBinary(process.execPath,['),
+  const keySource=readFileSync('scripts/technology-private-backup-keychain.mjs','utf8');
+  assert.match(keySource,/BACKUP_KEYCHAIN_SERVICE='equinox-haber-production-d1-backup-aes256gcm-v1'/u);
+  assert.doesNotMatch(keySource,/add-generic-password|update-generic-password/u);
+  assert.ok(code.indexOf('key=readOperatorBackupKey()')<code.indexOf('runBinary(process.execPath,['),
     'operator Keychain availability MUST be required BEFORE live D1 export');
   assert.ok(!code.includes('add-generic-password'),
     'agent must never silently create or replace the operator encryption key');
@@ -33,7 +35,8 @@ test('private Keychain, 0700 scratch, best-effort exit cleanup, no release attes
   assert.match(code,/process.umask\(0o077\)/u);
   assert.match(code,/await rm\(dir,\{recursive:true,force:true\}\)/u);
   assert.match(code,/sql.fill\(0\)/u);
-  assert.match(code,/plaintext.fill\(0\)/u);
+  assert.match(code,/verifyEncryptedSqlBackupOffline\(remote,key\)/u);
+  assert.match(readFileSync('scripts/technology-private-backup-recovery.mjs','utf8'),/plaintext.fill\(0\)/u);
   assert.match(code,/key\?\.fill\(0\)/u);
   assert.ok(!code.includes('HABER_D1_BACKUP_VERIFIED_RELEASE_SHA'));
 });

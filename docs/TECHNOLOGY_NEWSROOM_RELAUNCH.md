@@ -715,3 +715,28 @@ Aynı Cloudflare hesabındaki özel R2, ek şifreli yedek katmanıdır;
 BAĞIMSIZ harici konum + yedek anahtar kurtarma denemesi olmadan
 production release için son backup onayı verilmez. Gerçek
 imzalı ajan E2E ve OAuth istemci eşleştirme engelleri de sürüyor.
+
+## 16 Kasım 2026 checkpoint 41: şifreli R2 uçtan uca prova
+
+580 kamuya açık orijinal haber slug'ı, 590 sentetik kaynak ve
+11 migration adıyla hazırlanan sahte SQL, test anahtarıyla
+AES-256-GCM şifrelendi. Özel Haber R2'ye yükleme, gerçek
+HTTP indirme, hash karşılaştırması, şifre çözme ve SQLite
+restore+slug/source/migration doğrulaması İKİ KEZ geçti.
+Deneme nesnesi ve tüm geçici dosyalar silindi. Gerçek
+production SQL veya hesap sırrı kullanılmadı.
+
+Aynı çevrimdışı restore verifier artık production yedek
+akışının da zorunlu kontrolüdür. Eksik haber kaynağı,
+yanlış migration, bozuk ciphertext ve yanlış anahtarı
+reddeder. Anahtarın kullanıcı tarafından önceden macOS
+Keychain'e ve ayrıca bağımsız kasaya yerleştirilmesi
+bekleniyor. Yeni yerel kurtarma komutu:
+
+    npm run backup:verify:local -- --verify-hab1 /guvenli/yedek.hab1
+
+Komut production D1 veya Cloudflare'a bağlanmaz.
+Özel R2 aynı Cloudflare hesabında olduğundan, gerçek
+bağımsız yedek için şifreli dosya ve kurtarma anahtarı
+ayrı sağlayıcıda/ayrı güvenli yerde de tutulmalı.
+Gerçek production yedeği ve OAuth/ajan kabulü hâlâ yok.

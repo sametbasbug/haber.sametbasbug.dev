@@ -138,6 +138,9 @@ export function verifyNewsroomDeployOrder(allSteps) {
     'test:staging-restore-safety',
     'test:staging-restore-integrity',
     'test:private-backup-crypto',
+    'test:backup-recovery',
+    'test:backup-r2-smoke',
+    'test:backup-local-verify',
     'test:production-backup',
     'test:live-permalink-probe',
   ]){
