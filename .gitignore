@@ -41,6 +41,7 @@ src/content/equinoxHaber/_drafts/
 
 # SSR derleme çıktısı
 dist-ssr/
+dist-ssr-staging/
 
 # wrangler yerel durumu ve derleme artıkları
 .wrangler/

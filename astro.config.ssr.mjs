@@ -72,7 +72,9 @@ export default defineConfig({
   // Ayrı çıktı dizini şart: iki config aynı `dist/`'i paylaşırsa biri
   // diğerinin çıktısını siler ve CI'daki statik derleme sessizce SSR
   // çıktısının üstüne yazar.
-  outDir: './dist-ssr',
+  // Never place a staging bundle at the production Wrangler entrypoint.
+  // A raw production Wrangler command must not pick up staging noindex.
+  outDir: stagingBuild ? './dist-ssr-staging' : './dist-ssr',
 
   output: 'server',
   adapter: cloudflare(),

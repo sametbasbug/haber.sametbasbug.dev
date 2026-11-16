@@ -15,7 +15,7 @@ import {
   validateHaberStagingConfig,
 } from './technology-staging-config-check.mjs';
 
-const OUT = new URL('../dist-ssr/client/', import.meta.url);
+const OUT = new URL('../dist-ssr-staging/client/', import.meta.url);
 
 export function finalizeStagingAssets(root, stageOrigin) {
   if (stageOrigin !== 'https://haber-site-staging.samett33710.workers.dev') {

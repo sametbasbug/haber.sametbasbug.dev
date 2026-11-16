@@ -373,3 +373,32 @@ Equinox Haber sıfırdan tasarlanmış, **Türkçe teknoloji haberciliğine odak
 - Denetim, repodaki üretim config ile kıyaslar; canlı Cloudflare resource inventory kanıtı değildir. Gerçek staging açılmadan önce ayrı yetkili operatör canlı hesap/D1/R2 kimliklerini de kontrol etmeli. Üretim veya gerçek staging kaynaklarına bu turda dokunulmadı.
 
 - CP24 ek bulgusu: PUBLIC_HABER_STAGING=true bayrağı üretim PUBLIC_SITE_URL ile kullanıldığında SSR ve statik Astro config daha önce derlemeyi hatalı kabul ediyordu. Artık SSR staging bayrağı yalnız iki URL de staging adresiyse, production bayrağı yalnız production URL'leriyse geçer. Statik Pages derlemesi staging bayrağını ve staging URL'lerini reddeder. GitHub'ın dört production build adımında bayrak açıkça false. 9 gerçek config import senaryosu ve 2 negatif koruma mutasyonu RED/GREEN; deployment ordering regresyonu bunları CI YAML'ında da denetliyor. Bu kontrol gerçek D1/R2 izolasyonu ve backup onayının yerine geçmez.
+
+## 16 Kasım 2026 checkpoint 25: staging/production derleme paketleri ayrıldı
+
+- Gerçek yerel negatif prova, staging noindex/Disallow paketi `dist-ssr/`
+  içindeyken production Wrangler dry-run'ının bunu production DB/R2 binding'leriyle
+  KABUL ETTİĞİNİ gösterdi. Yalnız `--dry-run` kullanıldı, uzakta deploy yok.
+- SSR Astro staging paketi artık `dist-ssr-staging/`, production paketi
+  `dist-ssr/` altında. Staging config doğrulayıcısı farklı `main` ve
+  `assets.directory` alanlarını zorunlu kılıyor; build:staging noindex
+  dosyalarını yalnız stage çıktısında değiştiriyor. İkisi `.gitignore` içinde.
+- Yalnız staging çıktısı varken üretim Wrangler dry-run giriş dosyasını
+  bulamadığı için BLOKLANDI. Gerçek stage Wrangler dry-run sahte ayrı
+  D1/R2/audience ile başarılı. Üretim ayrıca derlendiğinde iki çıktı ayrı
+  kalıyor, stage dosyalarının SHA-256 değerleri değişmiyor, prod robots
+  `Allow: /`, staging robots `Disallow: /` davranışı korunuyor.
+- Regresyonlarda 51 staging config, 32 SEO/config import testi ve gerçek
+  Orbit ES256 staging cross-repo fixture doğrulandı. Astro outDir ve
+  staging Wrangler entry korumalarının her biri yerelde kaldırılıp RED,
+  geri alınarak GREEN kanıtlandı. Gerçek staging JSONC, göreli Wrangler
+  yolları nedeniyle repo kökünden kullanılmalı; `/tmp` içindeki config
+  gerçek bundler'ın dosya yollarını farklı çözdüğünden uygun değil.
+- Canlı staging kaynakları, production backup/deploy ve gerçek ajan
+  credential kabulü hâlâ açık/onay gerektiren adımlar; hiçbir uzaktaki
+  sisteme yazılmadı.
+- Ayrı staging klasörüyle yeniden oluşturulan gerçek yerel Wrangler D1
+  üzerinde `/`, `/robots.txt`, `/orbit-actions.json`, `/sitemap-index.xml`
+  200; bilinmeyen haber 404 döndü. Beş yanıtın tümü noindex/nofollow,
+  ana sayfa staging canonical, robots Disallow / içeriyordu. Yerel Worker,
+  fixture ve test konfigürasyonu kapatılıp silindi.

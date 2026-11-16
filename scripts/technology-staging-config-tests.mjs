@@ -10,12 +10,12 @@ import {
 const production = readHaberProductionConfig();
 const STAGE = {
   name: 'haber-site-staging',
-  main: production.main,
+  main: 'dist-ssr-staging/server/entry.mjs',
   compatibility_date: production.compatibility_date,
   compatibility_flags: ['nodejs_compat'],
   workers_dev: true,
   preview_urls: false,
-  assets: { binding: 'ASSETS', directory: 'dist-ssr/client' },
+  assets: { binding: 'ASSETS', directory: 'dist-ssr-staging/client' },
   d1_databases: [{
     binding: 'DB',
     database_name: 'haber-site-staging',
@@ -48,6 +48,7 @@ assert.throws(() => validateHaberStagingConfig(production, production));cases++;
 block(s=>{s.name=production.name},'never staging-deploy production Worker');
 block(s=>{s.name='haber-api-staging'},'no mismatched staging hostname');
 block(s=>{s.main='src/worker/index.ts'},'must use SSR entry');
+block(s=>{s.main=production.main},'staging Worker must not read the production bundle');
 block(s=>{s.compatibility_date='2000-01-01'},'runtime compatibility date');
 block(s=>{s.workers_dev=false},'workers.dev disabled');
 block(s=>{s.preview_urls=true},'preview URLs disabled');
@@ -55,6 +56,7 @@ block(s=>{s.routes=[{pattern:'haber.sametbasbug.dev',custom_domain:true}]},'neve
 block(s=>{s.route='haber.sametbasbug.dev/*'},'no wildcard production route');
 block(s=>{s.triggers={crons:['* * * * *']}},'no scheduled stage publishing');
 block(s=>{s.assets.directory='dist/client'},'SSR asset parity');
+block(s=>{s.assets.directory=production.assets.directory},'stage assets must never share the production output');
 block(s=>{s.d1_databases[0].database_id=production.d1_databases[0].database_id},'never reuse production D1 UUID');
 block(s=>{s.d1_databases[0].database_name='haber'},'never reuse production D1 name');
 block(s=>{s.d1_databases.push({...s.d1_databases[0],binding:'EXTRA'})},'only one D1');

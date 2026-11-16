@@ -847,9 +847,12 @@ now pinned as a direct dev dependency). It fails closed unless:
 - Worker name is EXACTLY haber-site-staging. This yields the ONLY approved
   staging URL https://haber-site-staging.samett33710.workers.dev, and it
   must match the Orbit staging target.
-- The SSR entry, compatibility date, nodejs_compat flag, ASSETS binding
-  and directory match production. workers_dev=true, preview_urls=false.
-  No custom domains, routes, zone bindings, cron or env overrides.
+- Runtime compatibility date, nodejs_compat and ASSETS binding match
+  production, but staging output paths MUST differ (checkpoint 25):
+  `dist-ssr-staging/server/entry.mjs` and `dist-ssr-staging/client`, instead
+  of production `dist-ssr/server/entry.mjs` and `dist-ssr/client`.
+  workers_dev=true, preview_urls=false. No custom domains, routes, zone
+  bindings, cron or env overrides.
 - Exactly ONE isolated staging D1, binding DB, name haber-site-staging
   with a non-placeholder valid UUID different from production D1, and
   worker/migrations as the schema source.
@@ -879,11 +882,22 @@ create a separate Haber staging Worker, D1 and R2 bucket, prepare the
 approved staging config with its real, distinct D1 UUID, then perform
 the read-only guard:
 
-    node scripts/technology-staging-config-check.mjs --config=/path/to/approved/staging.jsonc
+    node scripts/technology-staging-config-check.mjs --config=./wrangler.staging.jsonc
 
-The operator must separately build SSR with staging-appropriate public
-canonical URLs and run a Wrangler dry-run against that exact staging
-config. None of this grants permission to run a real deploy, remote D1
+The approved staging JSONC should live at the repository root, with that
+path explicitly supplied to BOTH the staging build and Wrangler. Wrangler
+resolves relative `main` and `assets.directory` against the CONFIG file's
+directory, not the shell's working directory; a `/tmp` config can pass the
+structural validator and build but fail Wrangler bundling. Example LOCAL
+only, with a previously reviewed root-level config and separately verified
+isolated resource IDs:
+
+    npm run build:staging -- --config=./wrangler.staging.jsonc
+    npx wrangler deploy --dry-run --config=./wrangler.staging.jsonc
+
+Do not run these against real remote resources without separate approval.
+The operator must build staging SSR with staging-only canonical URLs and
+noindex, and dry-run the exact isolated staging configuration. None of this grants permission to run a real deploy, remote D1
 migration, secret setup, site-client creation, or live publish.
 
 Real staging acceptance additionally requires staging-only sign-in,
@@ -1049,3 +1063,50 @@ it returned the tests to GREEN.
 These are build-time guards, not replacements for production-only
 Cloudflare D1/R2 bindings, the release-commit independent backup gate,
 or separate staging authorization.
+
+## Checkpoint 25: physical staging/production build artifact isolation
+
+A REAL local negative probe exposed a remaining deployment hazard despite
+checkpoint 24's strict build flags: a completed `npm run build:staging`
+placed the STAGING bundle inside the SAME `dist-ssr/` directory used by the
+PRODUCTION Wrangler config. `npx wrangler deploy --dry-run --config
+wrangler.ssr.jsonc` then SUCCEEDED and prepared the stage noindex/Disallow
+assets alongside production D1/R2 bindings. No live deployment occurred.
+
+The actual SSR Astro config now uses separate output directories, selected
+at build time: staging builds to `dist-ssr-staging/`, production builds to
+`dist-ssr/`. The staging JSONC validator requires its own `main` and
+`assets.directory` to point to staging output and rejects the production
+paths. `build:staging` finalizes robots.txt and `_headers` ONLY inside the
+staging output. The shared production main/binding config is unchanged.
+Both output directories are ignored by Git. Orbit's local cross-repository
+staging test fixture follows the same contract; the Orbit runtime API did
+not change.
+
+Actual local Wrangler evidence with clearly synthetic staging D1 UUID:
+- With ONLY the staging bundle, the validated staging config passed a real
+  Wrangler dry-run, binding staging D1/R2 and stage audience. The raw
+  production Wrangler dry-run now FAILED because its distinct production
+  entry file did not exist, instead of silently packaging staging files.
+- After a separate production SSR build, both outputs coexisted. The
+  staging entry and robots SHA-256 hashes were unchanged; production robots
+  still said `Allow: /` while staging said `Disallow: /`. Production
+  Wrangler dry-run succeeded with the actual production bindings, but ONLY
+  its own production artifact. Both tests used `--dry-run`, no deployment.
+- With the separated staging entry, a NEW fully migrated local Wrangler
+  D1 and real local `wrangler dev` HTTP responded 200 for `/`,
+  `/robots.txt`, `/orbit-actions.json` and `/sitemap-index.xml`; an unknown
+  story returned 404. All five carried `X-Robots-Tag: noindex, nofollow`;
+  home contained the stage canonical origin and robots disallowed `/`.
+  Local server and D1 were removed afterwards.
+- 51 staging config and 32 staging SEO regression tests pass. The latter
+  imports real Astro configs and asserts their concrete output directories.
+  Deliberately removing the Astro staging output distinction caused RED,
+  then restore GREEN; weakening the staging Wrangler entry check also
+  caused RED, then restore GREEN.
+
+Operational rule: do not alter a staging config to point at `dist-ssr/` or
+copy a staging build into the production output. Continue to use the
+explicit per-environment Wrangler config even when dry-running. Artifact
+isolation does NOT authorize remote provisioning, real agent credentials,
+production D1 exports, merges, deploys or staging/production data writes.

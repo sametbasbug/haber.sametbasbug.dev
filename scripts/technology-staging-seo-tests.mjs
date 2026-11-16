@@ -40,6 +40,8 @@ try {
     assert.match(layout,/PUBLIC_HABER_STAGING === 'true'/u);cases++;
     assert.match(layout,/noindex \|\| stageBuild/u);cases++;
   }
+  const astroSSR=readFileSync(new URL('../astro.config.ssr.mjs',import.meta.url),'utf8');
+  assert.match(astroSSR,/outDir: stagingBuild \? '.\/dist-ssr-staging' : '.\/dist-ssr'/u);cases++;
   const middleware=readFileSync(new URL('../src/middleware.ts',import.meta.url),'utf8');
   assert.match(middleware,/PUBLIC_HABER_STAGING === 'true'/u);cases++;
   assert.match(middleware,/x-robots-tag', 'noindex, nofollow'/u);cases++;
@@ -63,8 +65,15 @@ try {
     {name:'astro.config.mjs',stage:'false',site:STAGE,news:STAGE,allowed:false},
   ];
   for(const entry of configs){
+    const expectedOutDir=entry.name==='astro.config.ssr.mjs'
+      ? (entry.stage==='true' ? './dist-ssr-staging' : './dist-ssr')
+      : undefined;
+    // Execute the actual Astro configuration, not just a source regex:
+    // a staging build may never emit to production's Wrangler entrypoint.
+    const verifyImport="import config from './"+entry.name+"';"
+      +(expectedOutDir ? 'if(config.outDir!=='+JSON.stringify(expectedOutDir)+') process.exit(42);' : '');
     const validation=spawnSync(process.execPath,[
-      '--input-type=module','-e',"import('./"+entry.name+"')",
+      '--input-type=module','-e',verifyImport,
     ],{encoding:'utf8',timeout:10_000,env:{
       ...process.env,PUBLIC_HABER_STAGING:entry.stage,
       PUBLIC_SITE_URL:entry.site,PUBLIC_NEWS_SITE_URL:entry.news,

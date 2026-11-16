@@ -55,8 +55,8 @@ export function validateHaberStagingConfig(staging, production) {
   if (staging.name !== STAGING_NAME || staging.name === production.name) {
     reject('wrong_staging_worker_name');
   }
-  if (staging.main !== 'dist-ssr/server/entry.mjs'
-    || staging.main !== production.main
+  if (staging.main !== 'dist-ssr-staging/server/entry.mjs'
+    || production.main !== 'dist-ssr/server/entry.mjs'
     || staging.compatibility_date !== production.compatibility_date
     || !Array.isArray(staging.compatibility_flags)
     || !Array.isArray(production.compatibility_flags)
@@ -75,7 +75,8 @@ export function validateHaberStagingConfig(staging, production) {
   }
   if (!hasOnlyKeys(staging.assets, ['binding', 'directory'])
     || staging.assets?.binding !== 'ASSETS'
-    || staging.assets?.directory !== 'dist-ssr/client') {
+    || staging.assets?.directory !== 'dist-ssr-staging/client'
+    || production.assets?.directory !== 'dist-ssr/client') {
     reject('wrong_ssr_assets');
   }
   const databases = staging.d1_databases;
