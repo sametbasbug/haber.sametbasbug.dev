@@ -339,3 +339,12 @@ Equinox Haber sıfırdan tasarlanmış, **Türkçe teknoloji haberciliğine odak
 - GitHub production environment değişkenleri ve operatör adımları docs/TECHNOLOGY_NEWSROOM_CUTOVER.md'de açıklanıyor. Main'e ilk merge sonrası workflow bilinçli biçimde durabilir; gerçek main SHA için onay girildikten sonra elle tekrar çalıştırılmalıdır. Bu aşamada canlı D1 yedeği alınmadı, üretim verisi değiştirilmedi.
 
 - Gerçek migration klasörüne geçici 0017 test dosyası eklenerek üretim preflight CLI'si sınandı: 0016 tamamlanmış ve bekleyen migration yokken backup_required=false, yerel 0017 dosyası eklenince backup_required=true. Geçici SQL dosyası ve sonuçlar silindi. Gerçek üretim D1'e erişilmedi.
+
+## 16 Kasım 2026 yirmi birinci checkpoint: Orbit staging hedef izolasyonu
+
+- Orbit'in yerel Haber 2.0 feature dalında readHaberAsOrbitAgent için fail-closed staging hedef ayrımı yapıldı. Production hâlâ sabit haber.sametbasbug.dev ve orbit-haber site client'ına bağlı. Sadece ORBIT_ENVIRONMENT=staging, bilinen staging issuer ve açıkça doğrulanmış aynı Cloudflare hesabının haber-...-staging.samett33710.workers.dev HTTPS origin'i varsa ayrı orbit-haber-staging client ID kullanılır. Kullanıcı/ajan isteği hedef seçemez; local/test/eksik/yanlış staging konfigürasyonu production'a fallback yapmaz.
+- Gerçek ES256 imzalı staging issuer/audience ve iki repo arasında gerçek Haber siteAction doğrulayıcısıyla 3 staging okuma, kaynak URL'leri, gizli site grant'e ihtiyaç duymayan ajan, bilinmeyen 404, DB write yok ve production'a ağ isteği yokluğu izole bellekte sınandı. Üç kasıtlı güvenlik mutasyonu RED, restore GREEN. Production imzalı altı-okuma testi değişmeden geçti.
+- BU CANLI STAGING DEĞİLDİR. Haber staging Worker/D1 ve staging site client hâlâ açılmadı, wrangler.staging.jsonc'a hedef konmadı, gerçek ajan bearer ile kabul yapılmadı. Dış kaynak/credential/deploy için ayrıca açık yetki gereklidir.
+
+- Ek staging kayıt detayı: Orbit site-client declaration environment şeması staging değerini desteklemiyor, staging client ayrı orbit-haber-staging kimliğiyle development olarak kayıt edilecek. Redirect URI, openid scope, action ve katalog adresleri ayrı staging origin'iyle eşleşmeli; gerçek kayıt henüz yok.
+- Üretim kodunda da bilinen üretim Orbit issuer kontrolü eklendi. Yanlışlıkla ORBIT_ENVIRONMENT=production yazılmış olsa bile staging issuer'ı ile production Haber'e imzalı token gitmesi 503 ile engelleniyor. Canlı/dark-launch üretim issuer seçenekleri destekleniyor.

@@ -778,3 +778,56 @@ and the SAME CLI emitted backup_required=true without changes to the D1
 aggregate. The temporary file and output were removed. This confirms
 the new-migration detection works through the real directory-reading
 code path, not only through mocked arrays. No remote D1 was accessed.
+
+## Checkpoint 21: local staging-only Orbit Haber target is now implemented
+
+The Orbit feature branch now contains an explicit fail-closed target selector
+for first-party grant-free Haber reads. Production remains a HARDCODED
+https://haber.sametbasbug.dev site client `orbit-haber`, regardless of any
+staging variable. Only an Orbit Worker running with ORBIT_ENVIRONMENT=staging
+AND the exact known Orbit staging issuer may use a separate target.
+
+The optional ORBIT_HABER_STAGING_ORIGIN environment variable has NO default,
+and is intentionally NOT set in the current Orbit staging Wrangler config.
+When provided later by an approved operator, it must be an HTTPS origin
+without path, query, userinfo, fragment or port, with hostname matching
+haber-...-staging.samett33710.workers.dev. It produces the fixed client ID
+`orbit-haber-staging` and its two canonical first-party action/catalogue
+endpoints. The isolated staging D1 client record must match ALL of these
+values exactly. Missing/invalid staging configuration, wrong Orbit issuer,
+wrong/unregistered/disabled client or a user-supplied alternate URL all
+fail CLOSED before sending a signed document. No staging token may fall
+back to production Haber. Local/test environments also cannot silently
+invoke the production read bridge.
+
+Local evidence: seven destination/read tests, isolated REAL ES256 staging
+handoff and a two-repo in-memory full Haber siteAction integration, which
+verified staging issuer, different audience, unsigned writes prohibited,
+source URLs, empty-feed logic and unknown-article 404. The production
+cross-repo signed integration continues to pass. Three deliberate
+mutations weakening staging issuer, environment isolation and separate
+site-client identity all failed RED as expected; restored GREEN.
+
+IMPORTANT: this prepares the *code* for future staging. It does NOT
+provision or deploy a separate Haber staging Worker/D1, register a real
+staging site client, grant real staging bearer credentials or complete
+live two-Worker acceptance. Those are explicitly approval-gated external
+steps. The private D1 backup and production release approvals remain
+separate requirements. The previous checkpoint 19 staging architecture
+checklist remains applicable for actual resource provisioning.
+
+Checkpoint 21 staging registration details: Orbit's site-client declaration
+schema supports environment=development or environment=production but NOT
+the literal environment=staging. The separately provisioned staging Haber
+site client should use environment=development, clientId=orbit-haber-staging,
+its approved staging HTTPS siteUrl/redirect URI and an openid authorization
+scope, with the action and catalogue addresses explicitly registered as
+the matching staging endpoints. Its registration, grants and site metadata
+are NOT yet present in real staging D1.
+
+The Orbit production Haber bridge also checks the known production issuer
+independently of the generic deployment config validator. A staging-signed
+document cannot be pointed at production Haber merely by mislabeling
+ORBIT_ENVIRONMENT=production. Approved production Orbit live/dark-launch
+issuer origins remain supported. Missing or invalid issuer/target means
+503 and no signed HTTP request.
