@@ -22,7 +22,7 @@ const files = readdirSync(new URL('../migrations/',import.meta.url))
   .filter(name=>/^\d{4}_.+\.sql$/u.test(name)).sort();
 const before=files.filter(name=>Number(name.slice(0,4))<=11);
 const after=files.filter(name=>Number(name.slice(0,4))>=12);
-assert.ok(before.length>=11 && after.length===5,'expected old and future migration sets');
+assert.ok(before.length>=11 && after.length===6,'expected old and future migration sets');
 
 const tmp=mkdtempSync(join(tmpdir(),'haber-recovery-test-'));
 const fixture=join(tmp,'historical-archive.sql');
@@ -66,6 +66,8 @@ try {
     db.exec(readFileSync(new URL('../migrations/'+migration,import.meta.url),'utf8'));
   }
   assert.equal(db.prepare("SELECT COUNT(*) AS n FROM sqlite_master WHERE name='newsroom_administrators'").get().n,1);
+  assert.equal(db.prepare("SELECT COUNT(*) AS n FROM articles WHERE publication_era='legacy'").get().n,0,
+    'retired archive must not be resurrected on the live site');
   assert.ok(db.prepare("PRAGMA table_info(articles)").all().some(row=>row.name==='publication_era'));
 
   db.exec(`INSERT INTO articles
@@ -96,7 +98,7 @@ try {
   assert.deepEqual(restored.prepare('PRAGMA foreign_key_check').all(),[]);
   assert.equal(db.prepare('PRAGMA integrity_check').get().integrity_check,'ok');
   console.log('Local D1 recovery rehearsal PASS: 580 historical published articles, sources/tags preserved,');
-  console.log('pre-0012 schema restored after partial or full 0012-0016; synthetic new-era story absent.');
+  console.log('pre-0012 schema restored after partial or full 0012-0017; synthetic new-era story absent.');
   console.log('This does NOT perform or prove Cloudflare production Time Travel restoration.');
 } finally {
   restored?.close();

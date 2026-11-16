@@ -9,7 +9,7 @@ import { getWithdrawal, kaldirilanSayfasi } from '../data/withdrawals';
 /** Older URLs are preserved one-for-one. New articles use the same
  * canonical root slug path, never a /yeni/ preview URL. */
 export async function getStaticPaths() {
-  const entries = await getPublishedEquinoxHaber();
+  const entries = await getPublishedEquinoxHaber({ publicationEra: 'technology' });
   return entries.map((entry) => ({ params: { slug: entry.id } }));
 }
 

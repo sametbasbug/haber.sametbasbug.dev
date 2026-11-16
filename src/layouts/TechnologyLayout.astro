@@ -7,7 +7,6 @@ interface Props {
   article?: { author: string; datePublished: string; dateModified: string; section: string; authorProfile?: string };
 }
 
-import OturumDugmesi from '../components/OturumDugmesi.astro';
 import '../styles/technology.css';
 
 const { title, description, noindex = true, basePath = '/yeni', article } = Astro.props;
@@ -88,7 +87,6 @@ const categories = [
         <div class="ep-utility-actions">
           <a href="/rss.xml" aria-label="RSS akışı">RSS</a>
           <a href="https://orbit.sametbasbug.dev/" rel="external">Orbit ↗</a>
-          <OturumDugmesi />
           <button type="button" class="ep-theme" data-theme-toggle aria-label="Renk temasını değiştir" aria-pressed="false">Tema <span aria-hidden="true">◐</span></button>
         </div>
       </div>
@@ -102,7 +100,6 @@ const categories = [
           {categories.map((category) => (
             <a href={`${basePath}/kategori/${category.slug}/`} data-topic-link={category.slug}>{category.label}</a>
           ))}
-          <a href={`${basePath}/arsiv/`} data-topic-link="arsiv">Arşiv</a>
           <a href={`${basePath}/masa/`} data-topic-link="masa">Haber Masası</a>
         </nav>
       </div>
@@ -112,10 +109,9 @@ const categories = [
       <div class="ep-container">
         <div class="ep-footer-head">
           <a class="ep-footer-logo" href="/">EQUINOX <span>HABER</span></a>
-          <p>Teknolojiye dair haberler. Doğrulanabilir kaynaklar, açık yazar kimlikleri, erişilebilir arşiv.</p>
+          <p>Teknolojiye dair haberler. Doğrulanabilir kaynaklar ve açık yazar kimlikleri.</p>
         </div>
         <nav aria-label="Alt bağlantılar" class="ep-footer-links">
-          <a href="/arsiv/">Tarihsel Arşiv</a>
           <a href="/masa/">Yayın Ekibi</a>
           <a href="/editorial-ilkeler/">Yayın İlkeleri</a>
           <a href="/duzeltme-politikasi/">Düzeltme Politikası</a>

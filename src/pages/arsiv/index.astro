@@ -1,34 +1,6 @@
 ---
-import TechnologyLayout from '../../layouts/TechnologyLayout.astro';
-import TechnologyArchiveList from '../../components/news/TechnologyArchiveList.astro';
-import { getPublishedEquinoxHaber, getPublishedEquinoxHaberCount } from '../../data/equinoxHaber';
-
-const rawPage = Astro.url.searchParams.get('sayfa');
-const page = rawPage === null ? 1
-  : /^[1-9][0-9]*$/u.test(rawPage) ? Number(rawPage) : Number.NaN;
-const total = await getPublishedEquinoxHaberCount({ publicationEra: 'legacy' });
-const lastPage = Math.max(1, Math.ceil(total / 30));
-if (!Number.isSafeInteger(page) || page < 1 || page > lastPage) {
-  return new Response(null, {
-    status: 404,
-    headers: { 'cache-control': 'public, max-age=300' },
-  });
-}
-const raw = await getPublishedEquinoxHaber({
-  publicationEra: 'legacy',
-  limit: 31,
-  offset: (page - 1) * 30,
-  includeTags: false,
-  includeSources: false,
+return new Response(null, {
+  status: 410,
+  headers: { 'cache-control':'public, max-age=300','x-robots-tag':'noindex, nofollow' },
 });
-const hasMore = raw.length > 30;
-const entries = raw.slice(0, 30);
-const newerHref = page > 1 ? (page === 2 ? '/arsiv/' : `/arsiv/?sayfa=${page-1}`) : null;
-const olderHref = hasMore ? `/arsiv/?sayfa=${page+1}` : null;
 ---
-<TechnologyLayout noindex={false} basePath=""
-  title={page === 1 ? 'Tarihsel haber arşivi' : `Tarihsel haber arşivi, sayfa ${page}`}
-  description="Equinox Haber'in önceki dönemlerinden korunan haberler ve kaynakları.">
-  <TechnologyArchiveList entries={entries} page={page} hasMore={hasMore}
-    olderHref={olderHref} newerHref={newerHref} />
-</TechnologyLayout>

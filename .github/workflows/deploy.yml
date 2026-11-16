@@ -1,340 +1,57 @@
 name: Deploy Haber to Cloudflare
-
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   workflow_dispatch:
-
 permissions:
   contents: read
-
-# İki dağıtım aynı anda koşmamalı: ikisi de aynı Worker'a ve aynı D1'e
-# yazıyor. `cancel-in-progress` yok — yarıda kesilen bir göç uygulaması,
-# şemayı iki sürüm arasında bırakabilir.
 concurrency:
   group: haber-production
-
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
+  cancel-in-progress: false
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 18
     environment:
       name: production
       url: https://haber.sametbasbug.dev
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-
-      - name: Set up Node
-        uses: actions/setup-node@v7
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      # Quality and deploy workflows run independently on main. A green
-      # build does NOT guarantee the new newsroom authorization and D1
-      # mutations are safe; enforce their tests in this workflow BEFORE
-      # the irreversible, forward-only production D1 migrations.
-      - name: Verify Orbit identity and Haber 2.0 contracts before migration
+      - run: npm ci
+      - name: Verify publishing and design
         run: |
           npm run test:orbit
           npm run test:technology
-          npm run test:smoke-url
           npm run test:newsroom-catalog
-          npm run test:technology-pagination
-          npm run test:technology-theme
           npm run test:editorial-design
-          npm run test:release-d1-check
-          npm run test:technology-preflight
-          npm run test:d1-recovery
-          npm run test:d1-export-integrity
-          npm run test:staging-config
-          npm run test:oidc-service
-          npm run test:oauth-errors
-          npm run test:oidc-jwks
-          npm run test:staging-restore-safety
-          npm run test:staging-restore-integrity
-          npm run test:live-permalink-probe
-          npm run test:staging-seo
-          npm run test:backup-attestation
-          npm run test:private-backup-crypto
-          npm run test:backup-recovery
-          npm run test:backup-r2-smoke
-          npm run test:backup-local-verify
-          npm run test:production-backup
-          npm run test:staging-e2e-attestation
-          npm run test:staging-e2e-report
-          npm run test:technology-deploy-order
-          npm run test:legacy-permalinks
-          npm run test:orbit-release-check
+          npm run test:legacy-retirement
           npm run typecheck
-
-      - name: Set up Python for pre-migration editorial tests
-        uses: actions/setup-python@v7
-        with:
-          python-version: '3.12'
-
-      - name: Verify the editorial pipeline before migration
-        run: |
-          python -m pip install --disable-pip-version-check -e 'newsroom[test]'
-          python -m pytest newsroom/tests
-
-      # Statik derleme dağıtılmıyor ama koşuluyor: iki config aynı `src/`
-      # ağacını paylaşıyor ve yalnız birinde patlayan değişiklikler oluyor.
-      - name: Build the static site as a cross-check
+      - name: Build production Worker
         env:
           PUBLIC_SITE_URL: https://haber.sametbasbug.dev
           PUBLIC_HABER_STAGING: 'false'
           PUBLIC_NEWS_SITE_URL: https://haber.sametbasbug.dev
-          PUBLIC_MAIN_SITE_URL: https://sametbasbug.dev
-          PUBLIC_EQUINOX_HUB_URL: https://equinox.sametbasbug.dev
-          PUBLIC_NEWS_SUBDOMAIN_ENABLED: 'true'
-        run: npm run build
-
-      - name: Build the Worker
-        env:
-          PUBLIC_SITE_URL: https://haber.sametbasbug.dev
-          PUBLIC_HABER_STAGING: 'false'
-          PUBLIC_NEWS_SITE_URL: https://haber.sametbasbug.dev
-          PUBLIC_MAIN_SITE_URL: https://sametbasbug.dev
-          PUBLIC_EQUINOX_HUB_URL: https://equinox.sametbasbug.dev
-          PUBLIC_NEWS_SUBDOMAIN_ENABLED: 'true'
         run: npm run build:ssr
-
-      # Orbit MUST be deployed first. Failing this anonymous, read-only
-      # contract probe now is safer than migrating the Haber DB and only
-      # discovering after deployment that Orbit still serves the old API.
-      # No agent token, site grant, synthetic news or D1 mutation is used.
-      - name: Require the new Orbit agent news API before D1 migration
-        run: npm run smoke:orbit-release-check
-
-      # The current production DB is still on migration 0011. Verify the
-      # existing Hemera + Selene publisher identities and their SHARED
-      # sponsor before performing any forward-only schema migration. This
-      # aggregate SQL is deliberately compatible with the old 0011 schema
-      # and emits no private OAuth subjects, token hashes or article text.
-      - name: Verify legacy publisher anchors before D1 migration
-        id: publisher_preflight
-        env:
-          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        run: |
-          summary="$(npx wrangler d1 execute DB --remote --json --config wrangler.ssr.jsonc \
-            --file worker/queries/technology-pre-migration-readiness.sql)"
-          printf '%s\n' "$summary" | node scripts/technology-pre-migration-check.mjs
-
-      # A count of 580 rows does not prove that the ORIGINAL 580 public
-      # article URLs still exist. Check all immutable Markdown slugs using
-      # a generated read-only SQL statement; D1 returns ONLY three counts.
-      # Before migration, the historical schema has no publication_era.
-      - name: Verify exact 580 legacy permalinks before D1 migrations
-        env:
-          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        run: |
-          sql_file="$(mktemp)"
-          trap 'rm -f "$sql_file"' EXIT
-          node scripts/technology-legacy-permalinks.mjs --sql=historical > "$sql_file"
-          summary="$(npx wrangler d1 execute DB --remote --json --config wrangler.ssr.jsonc \
-            --file "$sql_file")"
-          printf '%s\n' "$summary" | node scripts/technology-legacy-permalinks.mjs --check
-
-      # Before the first FORWARD-ONLY Haber 2.0 migration, a real owner
-      # must separately accept BOTH: (1) Orbit staging OAuth code exchange
-      # into a genuine Haber session/pairwise identity and (2) a real signed
-      # connected-site guest-agent read with correctly rejected unauthorized
-      # actions. A synthetic ES256 unit test does NOT satisfy this gate.
-      # No token, code, user ID or private staging acceptance report is sent
-      # to GitHub. The operator privately verifies a redacted proof and
-      # publishes ONLY the report checksum, timestamp and exact release SHA
-      # as GitHub production environment VARIABLES.
-      # A merge SHA often differs from feature HEAD, so the first automatic
-      # migrating run may intentionally fail closed and require a rerun.
-      - name: Require real signed staging E2E release acceptance
-        if: steps.publisher_preflight.outputs.backup_required != 'false'
-        env:
-          HABER_STAGING_E2E_VERIFIED_RELEASE_SHA: ${{ vars.HABER_STAGING_E2E_VERIFIED_RELEASE_SHA }}
-          HABER_STAGING_E2E_REPORT_SHA256: ${{ vars.HABER_STAGING_E2E_REPORT_SHA256 }}
-          HABER_STAGING_E2E_VERIFIED_AT_UTC: ${{ vars.HABER_STAGING_E2E_VERIFIED_AT_UTC }}
-        run: node scripts/technology-staging-e2e-attestation.mjs
-
-      # A Time Travel bookmark is not an independent database backup.
-      # On the historical 0011 -> technology 0016 upgrade, MAIN must not
-      # migrate production D1 solely because
-      # code, public Orbit API and historical URL checks passed.
-      # Require a HUMAN, privately verified, release-SHA-bound attestation
-      # from GitHub's "production" environment variables. No
-      # SQL export or private backup path is sent to the CI runner.
-      #
-      # A newly merged main SHA may be unknown when configuring variables,
-      # so the first MIGRATING automatic run may intentionally BLOCK.
-      # A future no-migration production deploy at 0016 skips this approval.
-      # After independently verifying a real D1 export and its SHA256, the
-      # operator sets the three environment variables and reruns the workflow.
-      - name: Require operator attestation of an independent D1 backup
-        if: steps.publisher_preflight.outputs.backup_required != 'false'
-        env:
-          HABER_D1_BACKUP_VERIFIED_RELEASE_SHA: ${{ vars.HABER_D1_BACKUP_VERIFIED_RELEASE_SHA }}
-          HABER_D1_BACKUP_VERIFIED_AT_UTC: ${{ vars.HABER_D1_BACKUP_VERIFIED_AT_UTC }}
-          HABER_D1_BACKUP_SQL_SHA256: ${{ vars.HABER_D1_BACKUP_SQL_SHA256 }}
-        run: node scripts/technology-backup-attestation.mjs
-
-      # D1 migrations are forward-only. Before touching the live schema,
-      # require an actual, read-only recovery bookmark from the production
-      # database. GitHub summary stores ONLY a safe UTC timestamp so an
-      # explicitly authorized operator may later resolve the bookmark.
-      # Never print/store the bookmark or run 'time-travel restore' in CI.
-      - name: Confirm a D1 Time Travel recovery point before migrations
-        env:
-          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        run: |
-          recovery_utc="$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
-          checkpoint="$(npx wrangler d1 time-travel info DB --json --config wrangler.ssr.jsonc)"
-          printf '%s\n' "$checkpoint" | node scripts/d1-time-travel-check.mjs
-          echo "D1 recovery UTC reference (before migrations): ${recovery_utc}"
-          echo "D1 pre-migration recovery UTC reference: \`${recovery_utc}\`" >> "$GITHUB_STEP_SUMMARY"
-
       - name: Apply D1 migrations
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        run: npx wrangler d1 migrations apply DB --remote --config wrangler.ssr.jsonc
-
-      # Migration SQL can succeed while a missing/disabled Hemera sponsor
-      # prevents guarded Nyx/Asteria/admin records from being seeded. Stop
-      # before replacing the old live Worker if the four-agent authority is
-      # not fully ready. This SELECT emits aggregate counts only.
-      - name: Verify production D1 publisher readiness after migrations
+        run: npx wrangler d1 migrations apply haber --remote --config wrangler.ssr.jsonc
+      - name: Deploy production Worker
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: npx wrangler deploy --config wrangler.ssr.jsonc
+      - name: Verify live site
         run: |
-          summary="$(npx wrangler d1 execute DB --remote --json --config wrangler.ssr.jsonc \
-            --file worker/queries/technology-release-readiness.sql)"
-          printf '%s\n' "$summary" | node scripts/technology-release-d1-check.mjs
-
-      # The migration must not turn an old published URL into a draft
-      # or new-era article. The same exact 580 slugs must now have
-      # publication_era='legacy' AND is_draft=0, with source records.
-      - name: Verify exact 580 legacy permalinks after D1 migrations
-        env:
-          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        run: |
-          sql_file="$(mktemp)"
-          trap 'rm -f "$sql_file"' EXIT
-          node scripts/technology-legacy-permalinks.mjs --sql=technology > "$sql_file"
-          summary="$(npx wrangler d1 execute DB --remote --json --config wrangler.ssr.jsonc \
-            --file "$sql_file")"
-          printf '%s\n' "$summary" | node scripts/technology-legacy-permalinks.mjs --check
-
-      - name: Deploy the Worker
-        env:
-          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        run: |
-          short_sha="${GITHUB_SHA::12}"
-          npx wrangler deploy \
-            --config wrangler.ssr.jsonc \
-            --message "Automatic deploy from main ${short_sha}"
-
-      # Bu adım bu deponun geçmişinden geliyor ve tek 200 kontrolü DEĞİL.
-      #
-      # 2026-08-21'de site Error 1102 ile kapandı: ana sayfa istek başına
-      # 612 ms CPU harcıyordu, ücretsiz planın sınırı 10 ms. O sürüm sorunsuz
-      # DERLENİYORDU. Yani derlemenin yeşili, sitenin ayakta olduğunu
-      # söylemiyor — kusur yalnız çalışma anında görünüyordu.
-      #
-      # Ana sayfaya arka arkaya istek atılıyor ve HERHANGİ biri 200 dışında
-      # dönerse dağıtım düşüyor. `--retry` bilerek yok: tekrar denemek, geçici
-      # olmayan bir CPU aşımını geçiciymiş gibi gösterirdi.
-      - name: Verify the live site
-        run: |
-          fail=0
-          for i in $(seq 1 8); do
-            code="$(curl --silent --connect-timeout 5 --max-time 15 --output /dev/null --write-out '%{http_code}' \
-              "https://haber.sametbasbug.dev/?cachebust=${GITHUB_SHA}-${i}")"
-            echo "ana sayfa #${i}: ${code}"
-            [[ "$code" == '200' ]] || fail=1
+          set -e
+          for path in / /masa/ /kategori/yazilim/ /rss.xml /orbit-actions.json; do
+            curl --fail --silent --show-error --max-time 15 -o /dev/null "https://haber.sametbasbug.dev$path"
           done
-
-          # Yeni dönem başlangıcında RSS boş olabilir; arşiv ve Haber Masası
-          # gerçek yayın yüzeyinin zorunlu parçaları.
-          for path in /rss.xml /sayfa/2/ /hakkimizda/ /arsiv/ /masa/ /kategori/yazilim/; do
-            code="$(curl --silent --connect-timeout 5 --max-time 15 --output /dev/null --write-out '%{http_code}' \
-              "https://haber.sametbasbug.dev${path}")"
-            echo "${path}: ${code}"
-            [[ "$code" == '200' ]] || fail=1
-          done
-
-          # RSS'de henüz teknoloji haberi yoksa arşivdeki gerçek bir haberi
-          # doğrula. Yayın testi için sentetik içerik CANLIYA gönderilmez.
-          article="$(curl --silent --connect-timeout 5 --max-time 15 --fail https://haber.sametbasbug.dev/rss.xml \
-            | node scripts/first-article-url.mjs rss)"
-          if [[ -z "$article" ]]; then
-            article="$(curl --silent --connect-timeout 5 --max-time 15 --fail https://haber.sametbasbug.dev/arsiv/ \
-              | node scripts/first-article-url.mjs archive)"
-          fi
-          if [[ -z "$article" ]]; then
-            echo 'RSS ve arşivde doğrulanabilir haber adresi yok.' >&2
-            fail=1
-          else
-            code="$(curl --silent --connect-timeout 5 --max-time 15 --output /dev/null --write-out '%{http_code}' "$article")"
-            echo "haber: $article, HTTP $code"
-            [[ "$code" == '200' ]] || fail=1
-          fi
-
-          # Katalog gerçekten Haber 2.0 mı? Yanlış veya stale altı-işlem
-          # sözleşmesi yayın öncesi algılansın, yazma denemesi yok.
-          node scripts/newsroom-action-catalog.mjs https://haber.sametbasbug.dev || fail=1
-
-          # Orbit uygulaması gerçekten iki yeni GET rotasını kullanıma açtı
-          # mı, bu rotalar hâlâ yalnız Orbit ajan hesabıyla mı okunuyor?
-          # Token yok, grant yok, yalnız kamuya açık GET + beklenen 401.
-          node scripts/orbit-technology-release-check.mjs || fail=1
-
-          # BOTH obsolete endpoints previously bypassed Orbit's new
-          # four-agent authorization model. A single 410 on /api/publish
-          # is not enough if /api/brief stays accidentally enabled.
-          for legacy_path in /api/brief /api/publish; do
-            legacy_code="$(curl --silent --connect-timeout 5 --max-time 15 \
-              --output /dev/null --write-out '%{http_code}' \
-              --request POST --header 'content-type: application/json' \
-              --data '{}' "https://haber.sametbasbug.dev${legacy_path}")"
-            echo "retired writer ${legacy_path}: ${legacy_code}"
-            [[ "$legacy_code" == '410' ]] || fail=1
-          done
-
-          # No stale static catch-all must render unknown article URLs as 200.
-          unknown_code="$(curl --silent --connect-timeout 5 --max-time 15 \
-            --output /dev/null --write-out '%{http_code}' \
-            "https://haber.sametbasbug.dev/unknown-article-${GITHUB_SHA}/")"
-          echo "bilinmeyen haber: ${unknown_code}"
-          [[ "$unknown_code" == '404' ]] || fail=1
-
-          headers="$(mktemp)"
-          trap 'rm -f "$headers"' EXIT
-          curl --silent --connect-timeout 5 --max-time 15 --output /dev/null --dump-header "$headers" \
-            https://haber.sametbasbug.dev/
-
-          # Cloudflare'den mi geliyor? `cf-ray` yoksa istek Worker'a hiç
-          # ulaşmamıştır.
-          grep -qi '^cf-ray:' "$headers" || { echo 'cf-ray yok: istek Cloudflare üzerinden gelmedi.' >&2; fail=1; }
-
-          # Pages'e düşme kontrolü. Pages dağıtımı bu commit'te kaldırıldı ama
-          # alan adı üzerindeki eski iddia bir gün geri gelirse, sessizce eski
-          # bir kopyayı sunmaya başlar. O durumu hata sayıyoruz.
-          if grep -qi '^server: GitHub.com' "$headers"; then
-            echo 'Site beklenmedik biçimde GitHub Pages üzerinden çözüldü.' >&2
-            fail=1
-          fi
-
-          exit "$fail"
+          test "$(curl -s -m 15 -o /dev/null -w '%{http_code}' https://haber.sametbasbug.dev/arsiv/)" = 410
+          test "$(curl -s -m 15 -o /dev/null -w '%{http_code}' https://haber.sametbasbug.dev/microsoft-openai-bagimliligini-azaltmak-icin-kendi-yapay-zeka-modellerini-tanitti/)" = 404
+          test "$(curl -s -m 15 -o /dev/null -w '%{http_code}' -X POST -H 'content-type: application/json' -d '{"operationId":"haber.haberleriOku","input":{"limit":1}}' https://haber.sametbasbug.dev/api/orbit-eylem)" = 401

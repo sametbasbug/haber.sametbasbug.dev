@@ -95,11 +95,11 @@ button { font: inherit; }
   font-size: 11px;
 }
 .ep-theme span { font-size: 15px; padding-left: 4px; vertical-align: -1px; }
-.ep-masthead { text-align: center; padding-block: 31px 25px; }
+.ep-masthead { text-align: center; padding-block: 22px 18px; }
 .ep-wordmark {
   display: inline-block;
   color: var(--tb-ink);
-  font: 700 clamp(39px, 5.3vw, 78px) / 1 Georgia, 'Times New Roman', serif;
+  font: 700 clamp(32px, 4vw, 52px) / 1.05 Georgia, 'Times New Roman', serif;
   letter-spacing: -.067em;
   text-decoration: none;
   white-space: nowrap;
@@ -152,7 +152,7 @@ button { font: inherit; }
   .ep-utility { min-height: 39px; grid-template-columns: 1fr auto; font-size: 10px; }
   .ep-utility-label { display: none; }
   .ep-utility-actions { gap: 10px; }
-  .ep-masthead { padding-block: 25px 20px; }
+  .ep-masthead { padding-block: 20px 15px; }
   .ep-wordmark { font-size: clamp(22px, 8.2vw, 54px); }
   .ep-masthead-caption { margin-top: 10px; font-size: 8px; }
   .ep-nav { min-height: 43px; }

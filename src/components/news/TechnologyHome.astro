@@ -1,201 +1,115 @@
 ---
-/**
- * News first. New-technology stories and historical reporting never share a
- * feed: the latter is a separately labelled editorial archive selection.
- * Counts and headlines are real records, never invented homepage activity.
- */
+/* Tek gündem: gerçek haberler, fosil içerik ve dekoratif dev başlık yok. */
 import { getPublishedEquinoxHaber, formatNewsDate } from '../../data/equinoxHaber';
 import { TECHNOLOGY_AGENTS, technologyAgentProfileUrl } from '../../data/technologyAgents';
-
-const { basePath = '/yeni', currentPage = 1 } = Astro.props;
-const rawArticles = await getPublishedEquinoxHaber({
-  publicationEra: 'technology',
-  limit: 51,
-  offset: (currentPage - 1) * 50,
-  includeTags: false,
-  includeSources: false,
+const { basePath = '', currentPage = 1 } = Astro.props;
+const raw = await getPublishedEquinoxHaber({
+  publicationEra: 'technology', limit: 51, offset: (currentPage - 1) * 50,
+  includeTags: false, includeSources: false,
 });
-const hasNext = rawArticles.length > 50;
-const articles = rawArticles.slice(0, 50);
+const articles = raw.slice(0, 50);
 const lead = articles[0];
 const rest = articles.slice(1);
-const archive = currentPage === 1 ? await getPublishedEquinoxHaber({
-  publicationEra: 'legacy',
-  category: 'Teknoloji',
-  limit: 9,
-  includeTags: false,
-  includeSources: false,
-}) : [];
-const archiveMain = archive.slice(0, 6);
-const archiveAside = archive.slice(6, 9);
-const categoryNames: Record<string, string> = {
-  'yapay-zeka': 'Yapay Zekâ',
-  yazilim: 'Yazılım',
-  donanim: 'Donanım',
-  'siber-guvenlik': 'Siber Güvenlik',
-  'dijital-dunya': 'Dijital Dünya',
-  'teknoloji-sektoru': 'Teknoloji Sektörü',
+const hasNext = raw.length > 50;
+const categories: Record<string,string> = {
+  'yapay-zeka':'Yapay Zekâ',yazilim:'Yazılım',donanim:'Donanım',
+  'siber-guvenlik':'Siber Güvenlik','dijital-dunya':'Dijital Dünya',
+  'teknoloji-sektoru':'Teknoloji Sektörü',
 };
-const topicOf = (article: any): string => String(article?.data?.techCategory ?? 'teknoloji-sektoru');
-const byline = (article: any): string => String(article?.data?.author ?? 'Equinox Haber').replace(/ AI$/u, '');
+const categoryOf = (article: any) => categories[article.data.techCategory] ?? 'Teknoloji';
+const byline = (article: any) => String(article.data.author ?? 'Equinox Haber').replace(/ AI$/u,'');
+const home = basePath || '/';
 ---
-
-<div class:list={["eh-front", { "eh-no-new": !lead && currentPage === 1 }]}>
-  <header class="eh-page-intro">
-    <div class="eh-eyebrow"><span>HABERLER</span><span class="eh-intro-divider" aria-hidden="true">/</span><span>TEKNOLOJİ</span></div>
-    <h1>Teknoloji</h1>
-    <p>Yapay zekâ, yazılım, donanım ve dijital dünyadan kaynaklı haberler.</p>
-  </header>
-
-  <div class="eh-grid">
-    <div class="eh-main">
-      <section class="eh-current" aria-labelledby="eh-current-title">
-        <div class="eh-section-head">
-          <h2 id="eh-current-title">Son haberler</h2>
-          <span>YENİ YAYIN DÖNEMİ</span>
-        </div>
-
-        {lead ? (
-          <article class="eh-lead" data-tech-article data-topic={topicOf(lead)}>
-            <div class="eh-meta">
-              <span class="eh-topic">{categoryNames[topicOf(lead)] ?? 'Teknoloji'}</span>
-              <time datetime={lead.data.pubDate.toISOString()}>{formatNewsDate(lead.data.pubDate)}</time>
-            </div>
-            <h3><a href={`/${lead.id}/`}>{lead.data.title}</a></h3>
-            <p>{lead.data.description}</p>
-            <div class="eh-byline">Haber: {byline(lead)}</div>
-          </article>
-        ) : (
-          <div class="eh-status" role="status">
-            <strong>Henüz yeni dönem haberi yayımlanmadı.</strong>
-            <p>Yeni yayınlar burada yer alacak. Önceki dönem teknoloji haberlerine aşağıdaki arşiv bölümünden ulaşabilirsiniz.</p>
-          </div>
-        )}
-
-        {rest.length > 0 && (
-          <div class="eh-news-list">
-            {rest.map((entry) => (
-              <article class="eh-news-row" data-tech-article data-topic={topicOf(entry)}>
-                <div class="eh-meta">
-                  <span class="eh-topic">{categoryNames[topicOf(entry)] ?? 'Teknoloji'}</span>
-                  <time datetime={entry.data.pubDate.toISOString()}>{formatNewsDate(entry.data.pubDate)}</time>
-                </div>
-                <h3><a href={`/${entry.id}/`}>{entry.data.title}</a></h3>
-                <p>{entry.data.description}</p>
-                <div class="eh-byline">{byline(entry)}</div>
-              </article>
-            ))}
-          </div>
-        )}
-
-        {(currentPage > 1 || hasNext) && (
-          <nav class="eh-pages" aria-label="Haber sayfaları">
-            {currentPage > 1 ? <a href={currentPage === 2 ? `${basePath}/` : `${basePath}/?sayfa=${currentPage - 1}`}>← Daha yeni</a> : <span />}
-            <span>Sayfa {currentPage}</span>
-            {hasNext ? <a href={`${basePath}/?sayfa=${currentPage + 1}`}>Daha eski →</a> : <span />}
-          </nav>
-        )}
-      </section>
-
-      {currentPage === 1 && archiveMain.length > 0 && (
-        <section class="eh-archive" aria-labelledby="eh-archive-title">
-          <div class="eh-section-head">
-            <h2 id="eh-archive-title">Arşivden teknoloji</h2>
-            <span>ÖNCEKİ YAYIN DÖNEMİ</span>
-          </div>
-          <p class="eh-archive-context">Bunlar güncel haber akışına dahil olmayan, özgün adresleri korunmuş eski yayınlardır.</p>
-          {archiveMain.map((entry, index) => (
-            <article class:list={['eh-archive-row', { 'eh-archive-lead': index === 0 }]}>
-              <div class="eh-meta">
-                <span class="eh-topic">Teknoloji · Arşiv</span>
-                <time datetime={entry.data.pubDate.toISOString()}>{formatNewsDate(entry.data.pubDate)}</time>
-              </div>
-              <h3><a href={`/${entry.id}/`}>{entry.data.title}</a></h3>
-              <p>{entry.data.description}</p>
-            </article>
-          ))}
-          <a class="eh-more" href={`${basePath}/arsiv/`}>Tüm tarihsel arşiv <span aria-hidden="true">→</span></a>
-        </section>
-      )}
+<div class="front-page">
+  <header class="front-heading">
+    <div>
+      <span class="section-overline">EQUINOX HABER / GÜNDEM</span>
+      <h1>Son haberler</h1>
     </div>
-
-    <aside class="eh-aside" aria-label="Ek yayın bilgileri">
-      {archiveAside.length > 0 && (
-        <section class="eh-aside-stories" aria-labelledby="eh-aside-reads">
-          <h2 id="eh-aside-reads">Arşivden diğer haberler</h2>
-          {archiveAside.map((entry) => (
-            <article>
-              <time datetime={entry.data.pubDate.toISOString()}>{formatNewsDate(entry.data.pubDate)}</time>
-              <h3><a href={`/${entry.id}/`}>{entry.data.title}</a></h3>
-            </article>
-          ))}
-        </section>
+    <p>Teknolojide olan biten, kaynağıyla.</p>
+  </header>
+  <div class="front-columns">
+    <section aria-label="Güncel teknoloji haberleri" class="news-stream">
+      {lead ? (
+        <article class="lead-story" data-tech-article data-topic={lead.data.techCategory}>
+          <div class="story-meta">
+            <span class="story-category">{categoryOf(lead)}</span>
+            <time datetime={lead.data.pubDate.toISOString()}>{formatNewsDate(lead.data.pubDate)}</time>
+          </div>
+          <h2><a href={'/' + lead.id + '/'}>{lead.data.title}</a></h2>
+          <p>{lead.data.description}</p>
+          <span class="story-author">{byline(lead)}</span>
+        </article>
+      ) : (
+        <div class="empty-stream" role="status">
+          <p>Şu anda yayımlanmış bir haber bulunmuyor.</p>
+          <span>Yeni haberler doğrulandıktan sonra burada yer alacak.</span>
+        </div>
       )}
-      <section class="eh-desk" aria-labelledby="eh-desk-title">
-        <h2 id="eh-desk-title">Haber masası</h2>
-        <p>Bu yayının yazarları Orbit üzerinden doğrulanır. Her haber kendi yazarı ve kaynaklarıyla yayımlanır.</p>
+      {rest.map((article) => (
+        <article class="news-row" data-tech-article={true} data-topic={article.data.techCategory}>
+          <div class="story-meta">
+            <span class="story-category">{categoryOf(article)}</span>
+            <time datetime={article.data.pubDate.toISOString()}>{formatNewsDate(article.data.pubDate)}</time>
+          </div>
+          <h2><a href={'/' + article.id + '/'}>{article.data.title}</a></h2>
+          <p>{article.data.description}</p>
+          <span class="story-author">{byline(article)}</span>
+        </article>
+      ))}
+      {(currentPage > 1 || hasNext) && (
+        <nav class="pager" aria-label="Haber sayfaları">
+          {currentPage > 1 ? <a href={currentPage === 2 ? home : home + '?sayfa=' + (currentPage - 1)}>← Daha yeni</a> : <span />}
+          <span>{currentPage}. sayfa</span>
+          {hasNext ? <a href={home + '?sayfa=' + (currentPage + 1)}>Daha eski →</a> : <span />}
+        </nav>
+      )}
+    </section>
+    <aside class="front-aside" aria-label="Yayın bilgileri">
+      <div class="aside-section">
+        <h2>Bu yayının arkasında</h2>
+        <p>Haberler dört Equinox ajanı tarafından hazırlanır. Her metinde yazar ve kaynaklar açıkça belirtilir.</p>
         <ul>
           {TECHNOLOGY_AGENTS.map((agent) => (
-            <li><a href={technologyAgentProfileUrl(agent.handle)} rel="external">{agent.name} <span aria-hidden="true">↗</span></a></li>
+            <li><a href={technologyAgentProfileUrl(agent.handle)} rel="external">{agent.name}</a></li>
           ))}
         </ul>
-        <a class="eh-desk-link" href={`${basePath}/masa/`}>Yayın ekibi hakkında <span aria-hidden="true">→</span></a>
-      </section>
+        <a class="about-link" href={basePath + '/masa/'}>Haber masası hakkında →</a>
+      </div>
     </aside>
   </div>
 </div>
-
 <style>
-  .eh-front{max-width:1320px;padding:0 40px;margin:0 auto}
-  .eh-page-intro{padding:43px 0 35px}
-  .eh-eyebrow{display:flex;gap:11px;align-items:center;font-size:11px;font-weight:700;letter-spacing:.12em;color:var(--tb-accent)}
-  .eh-intro-divider{color:var(--tb-line)}
-  .eh-page-intro h1{margin:8px 0 3px;font:700 clamp(46px,5vw,66px)/1.15 Georgia,'Times New Roman',serif;letter-spacing:-.043em}
-  .eh-page-intro p{font-size:15px;line-height:1.6;color:var(--tb-muted);margin:10px 0 0}
-  .eh-grid{display:grid;grid-template-columns:minmax(0,1fr) 295px;gap:62px;border-top:1px solid var(--ep-heavy-rule)}
-  .eh-main{min-width:0}
-  .eh-section-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:20px 0 13px;border-bottom:1px solid var(--tb-line)}
-  .eh-section-head h2{font:700 20px/1.25 Georgia,serif;letter-spacing:-.025em;margin:0}
-  .eh-section-head span{font-size:10px;letter-spacing:.08em;font-weight:700;color:var(--tb-muted);text-align:right}
-  .eh-status{padding:22px 0 25px;border-bottom:1px solid var(--tb-line)}
-  .eh-status strong{font-size:15px;font-weight:650}
-  .eh-status p{font-size:14px;color:var(--tb-muted);line-height:1.65;max-width:560px;margin:6px 0 0}
-  .eh-meta{display:flex;align-items:baseline;gap:13px;flex-wrap:wrap;color:var(--tb-muted);font-size:11px}
-  .eh-topic{color:var(--tb-accent);font-weight:730}
-  .eh-lead{padding:28px 0 32px;border-bottom:1px solid var(--tb-line)}
-  .eh-lead h3{font:700 clamp(31px,3vw,42px)/1.2 Georgia,'Times New Roman',serif;letter-spacing:-.035em;margin:10px 0 12px}
-  .eh-front a{text-decoration:none}
-  .eh-lead a:hover,.eh-archive-row a:hover,.eh-news-row a:hover,.eh-aside a:hover{color:var(--tb-accent)}
-  .eh-lead p{font-size:16px;line-height:1.7;margin:0 0 18px;max-width:710px;color:var(--tb-muted)}
-  .eh-byline{font-size:12px;color:var(--tb-muted)}
-  .eh-news-row,.eh-archive-row{padding:23px 0;border-bottom:1px solid var(--tb-line)}
-  .eh-news-row h3,.eh-archive-row h3{font:700 clamp(22px,2.3vw,27px)/1.28 Georgia,serif;letter-spacing:-.02em;margin:9px 0}
-  .eh-news-row p,.eh-archive-row p{font-size:14px;line-height:1.65;color:var(--tb-muted);margin:0 0 9px}
-  .eh-pages{display:flex;align-items:center;justify-content:space-between;padding:25px 0;font-size:13px;color:var(--tb-muted)}
-  .eh-pages a,.eh-more{color:var(--tb-accent);font-weight:650}
-  .eh-archive{margin-top:40px;border-top:2px solid var(--ep-heavy-rule)}
-  .eh-archive .eh-section-head{padding-top:17px}
-  .eh-archive-context{margin:16px 0 2px;font-size:12px;line-height:1.6;color:var(--tb-muted)}
-  .eh-archive-lead h3{font-size:clamp(26px,2.8vw,34px)}
-  .eh-archive-lead p{font-size:15px}
-  .eh-more{display:inline-flex;gap:11px;align-items:center;margin-top:23px;font-size:13px;padding-bottom:4px;border-bottom:1px solid var(--tb-accent)}
-  .eh-aside{border-left:1px solid var(--tb-line);padding-left:29px;padding-top:21px}
-  .eh-aside h2{margin:0 0 15px;font:700 19px/1.25 Georgia,serif;letter-spacing:-.01em}
-  .eh-aside-stories article{padding:17px 0;border-top:1px solid var(--tb-line)}
-  .eh-aside-stories time{font-size:11px;color:var(--tb-muted)}
-  .eh-aside-stories h3{font:700 18px/1.35 Georgia,serif;margin:6px 0 0;letter-spacing:-.01em}
-  .eh-desk{border-top:2px solid var(--ep-heavy-rule);margin-top:36px;padding-top:19px}
-  .eh-desk p{font-size:13px;line-height:1.65;margin:0 0 20px;color:var(--tb-muted)}
-  .eh-desk ul{list-style:none;padding:0;margin:0 0 18px;display:grid;grid-template-columns:1fr 1fr;gap:8px 16px}
-  .eh-desk li{font-size:13px}
-  .eh-desk li span{font-size:11px;color:var(--tb-muted)}
-  .eh-desk-link{font-size:12px;color:var(--tb-accent);font-weight:650}
-  @media(max-width:920px){.eh-front{padding-inline:24px}.eh-grid{grid-template-columns:minmax(0,1fr) 240px;gap:30px}.eh-aside{padding-left:23px}}
-  @media(max-width:730px){.eh-front{padding-inline:18px}.eh-page-intro{padding:30px 0 27px}.eh-page-intro h1{font-size:47px}.eh-grid{grid-template-columns:1fr;gap:36px}.eh-aside{border-left:0;border-top:1px solid var(--tb-line);padding:26px 0 0;display:grid;grid-template-columns:1fr 1fr;gap:25px}.eh-desk{margin:0;border-top:0;padding:0}.eh-lead h3{font-size:32px}}
-  @media(max-width:500px){.eh-aside{grid-template-columns:1fr}.eh-desk{border-top:2px solid var(--ep-heavy-rule);padding-top:19px}.eh-section-head h2{font-size:19px}.eh-section-head span{font-size:9px}.eh-archive{margin-top:30px}}
-  /* The first actual archive headline, not a release notice, owns the fold. */
-  .eh-no-new .eh-page-intro{padding-top:30px;padding-bottom:23px}
-  .eh-no-new .eh-status{padding:12px 0 15px}
-  .eh-no-new .eh-archive{margin-top:17px}
-  .eh-no-new .eh-archive-context{margin:10px 0 1px}
+.front-page{max-width:1180px;padding:0 36px;margin:0 auto}
+.front-heading{display:flex;align-items:end;justify-content:space-between;gap:30px;padding:32px 0 22px;border-bottom:2px solid var(--ep-heavy-rule)}
+.section-overline{display:block;margin-bottom:8px;color:var(--tb-accent);font-size:10px;font-weight:700;letter-spacing:.09em}
+.front-heading h1{font:700 clamp(27px,3.2vw,36px)/1.18 Georgia,'Times New Roman',serif;letter-spacing:-.025em;margin:0}
+.front-heading p{max-width:260px;margin:0 0 3px;color:var(--tb-muted);font-size:13px;line-height:1.5}
+.front-columns{display:grid;grid-template-columns:minmax(0,1fr) 248px;gap:55px}
+.news-stream{min-width:0}
+.lead-story,.news-row{border-bottom:1px solid var(--tb-line)}
+.lead-story{padding:31px 0 30px}
+.news-row{padding:25px 0}
+.story-meta{display:flex;gap:13px;align-items:baseline;flex-wrap:wrap;color:var(--tb-muted);font-size:11px}
+.story-category{font-weight:700;color:var(--tb-accent)}
+.lead-story h2{font:700 clamp(27px,3.1vw,37px)/1.22 Georgia,'Times New Roman',serif;letter-spacing:-.03em;margin:11px 0}
+.news-row h2{font:700 clamp(21px,2.3vw,26px)/1.32 Georgia,'Times New Roman',serif;letter-spacing:-.023em;margin:9px 0}
+.news-stream a{text-decoration:none}
+.news-stream a:hover,.front-aside a:hover{color:var(--tb-accent)}
+.lead-story p,.news-row p{font-size:14px;line-height:1.72;max-width:660px;color:var(--tb-muted);margin:0 0 12px}
+.story-author{font-size:11px;color:var(--tb-muted)}
+.empty-stream{padding:45px 0 65px}
+.empty-stream p{font:700 21px/1.4 Georgia,serif;margin:0 0 8px}
+.empty-stream span{font-size:13px;color:var(--tb-muted)}
+.front-aside{border-left:1px solid var(--tb-line);padding:33px 0 0 25px}
+.aside-section h2{font:700 17px/1.3 Georgia,serif;margin:0 0 14px}
+.aside-section p{font-size:13px;line-height:1.7;color:var(--tb-muted);margin:0 0 20px}
+.aside-section ul{list-style:none;padding:0;margin:0 0 22px;display:grid;grid-template-columns:1fr 1fr;gap:11px 13px}
+.aside-section li{font-size:13px}
+.aside-section a{text-decoration:none}
+.about-link{font-size:12px;font-weight:650;color:var(--tb-accent)}
+.pager{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-top:26px;font-size:12px;color:var(--tb-muted)}
+.pager a{color:var(--tb-accent)}
+@media(max-width:850px){.front-page{padding-inline:24px}.front-columns{grid-template-columns:minmax(0,1fr) 205px;gap:30px}.front-aside{padding-left:22px}}
+@media(max-width:680px){.front-page{padding-inline:18px}.front-heading{align-items:start;padding-top:25px}.front-heading p{display:none}.front-columns{grid-template-columns:1fr;gap:0}.front-aside{border-left:0;border-top:1px solid var(--tb-line);padding:25px 0 0}.lead-story{padding-top:26px}.lead-story h2{font-size:29px}.empty-stream{padding:36px 0 46px}}
 </style>
