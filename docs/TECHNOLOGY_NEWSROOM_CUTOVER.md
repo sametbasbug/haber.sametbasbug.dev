@@ -1507,3 +1507,98 @@ backup attestation and Time Travel checks remain required.
 
 No CI workflow actually ran on GitHub, no production D1
 migration or production Worker deployment occurred.
+
+## Checkpoint 38: genuine staging E2E is mandatory before production migrations
+
+The forward-only production D1 migration now requires TWO distinct, fresh,
+release-commit-bound operator attestations BEFORE any production D1 write:
+the independent encrypted full production D1 SQL export and restore proof,
+AND a REAL Haber+Orbit staging signed-agent E2E acceptance. Both steps
+use the existing fail-closed backup_required condition. The first run on
+a new main merge may legitimately block, requiring the human to confirm
+the actual release SHA and rerun. No-migration maintenance releases skip
+the human migration-only attestations, but still run local safety tests.
+
+A genuine staging acceptance requires an actual Orbit authorization-code
+exchange into a verified Haber staging session with the correct pairwise
+identity; explicit owner grant of agent access; a REAL Orbit-signed
+guest-agent Haber read across the two staging Workers; denied unsigned
+requests, wrong audience and unapproved writes; verification of the
+four authorizing publisher roles and one site administrator; stage
+noindex, and proof that production was never modified. A synthetic
+ES256 unit test or public HTTP 200 is NOT sufficient.
+
+Only after all checks have actually passed, the authorized human retains
+a PRIVATE and fully REDACTED checklist JSON outside Git, CI and chat.
+The exact schema has:
+- schema: fixed text haber-staging-e2e-v1
+- releaseSha: the real target main SHA, 40 lowercase hex characters
+- haberWorkerVersion, orbitWorkerVersion: verified staging deployed UUIDs
+- verifiedAt: UTC, format YYYY-MM-DDTHH:mm:ssZ
+- checks: precisely these boolean keys, all true ONLY after observing
+  the real outcome:
+  ownerConsentRecorded, oauthCodeExchangedForTokens,
+  pairwiseHaberSessionVerified, ownerAgentAccessExplicitlyEnabled,
+  realOrbitSignedGuestReadSucceeded, unsignedReadRejected,
+  wrongAudienceRejected, unapprovedWriteRejected,
+  fourPublishersStageAuthorizationsVerified,
+  administratorStageAuthorizationVerified, stagingNoindexVerified,
+  noProductionWrites.
+
+No subject, account ID, grant, authorization code, bearer, client
+secret, cookie or personal data belongs in the report. After TRUE
+staging acceptance, the operator can run
+npm run preflight:staging-e2e-report with the private JSON on stdin.
+This local-only script rejects incomplete, false, extra or
+unredacted fields and prints ONLY a deterministic SHA-256 digest,
+without saving or displaying the report itself.
+
+The operator then sets THREE GitHub production environment variables:
+HABER_STAGING_E2E_VERIFIED_RELEASE_SHA = exact release SHA;
+HABER_STAGING_E2E_REPORT_SHA256 = local digest;
+HABER_STAGING_E2E_VERIFIED_AT_UTC = actual UTC verification time.
+The migration must begin within three hours of that verification.
+The release gate rejects missing, stale, future or wrong-SHA claims.
+Never set or copy real credentials into these variables.
+
+This is an OPERATOR ATTESTATION, not remote cryptographic proof:
+a checksum of a self-reported checklist does not independently
+establish that real OAuth or signed agent calls took place. The
+authorized human must actually verify the real staging behavior
+and privately retain the evidence. Never create a synthetic passing
+report or reuse it after a code, role or Worker version change.
+
+CURRENT: the confidential stage client secret is still mismatched,
+owner token exchange and agent-access acceptance have NOT passed,
+and no actual operator report or GitHub attestation was generated.
+Production main, Worker, D1 and R2 remain unchanged.
+
+### Live read-only validation and exact-release boundary (checkpoint 38)
+
+A fresh Cloudflare connector SELECT of ONLY aggregate migration
+metadata for production Haber D1 confirmed 11 migrations applied,
+latest 0011_article_withdrawals.sql. Thus the pending
+technology 0012-0016 migration is real and BOTH human gates will
+be triggered on its production transition. No production article,
+identity or secret values were queried.
+
+A nine-route public-only HTTP snapshot confirmed both homepages
+return 200; staging archive /arsiv/ returns 200 and production
+/arsiv/ remains 404 under the deliberately old live Worker;
+both unknown article URLs return 404; both robots.txt return 200,
+and Haber staging has noindex and Disallow-all while production
+remains indexable. Orbit staging homepage also returns 200 and
+noindex. The production archive 404 is an expected pre-cutover
+version difference, not a production outage; the original 580
+article permalinks were separately verified 580/580 in CP36.
+
+For an honest staging E2E attestation, the operator must verify
+that the staged Haber and Orbit Worker versions correspond to
+the actual candidate release source, including any relevant
+post-merge changes. Merely writing the new main SHA into a
+previous feature-head report is NOT acceptable. If the main
+merge commit differs, deploy the intended code to isolated
+staging and repeat the real owner and agent checks before
+attesting that exact release. Production itself must remain
+untouched until both acceptance and independent backup gates
+are genuinely complete.

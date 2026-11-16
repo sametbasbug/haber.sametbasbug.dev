@@ -619,3 +619,37 @@ provası ve SQL export otomatik çalıştırılmıyor.
 Production release, gerçek staging OAuth/ajan E2E ve
 bağımsız şifreli full D1 backup/restore olmadan hâlâ
 engellidir. Production'a push, merge, deploy yok.
+
+## 16 Kasım 2026 checkpoint 38: staging kabulü olmadan production D1 migration yapılamaz
+
+Production D1'e ileri yönlü migration uygulanmadan önce artık
+iki ayrı insan onayı gerekir: doğrulanmış bağımsız, şifreli tam
+production D1 yedeği ve gerçek Orbit+Haber staging OAuth/ajan
+uçtan uca kabul testi. Staging onayı, hedef main SHA'ya bağlı
+olmalı ve üç saatten eski olamaz. Eksik, farklı release'a
+ait veya süresi geçmiş onay göçü durdurur.
+
+Sahip, gerçek OAuth code->token değişimi, eşleşmiş pairwise
+Haber oturumu, açık ajan erişim izni, Orbit imzalı gerçek
+misafir okuması, yanlış imza/yetki redleri ve dört yayıncı
+ile bir yönetici doğrulamasını önce fiilen tamamlamalı.
+Yalnız bu noktada özel ve redakte edilmiş durum raporu
+hazırlanabilir. npm run preflight:staging-e2e-report
+yerel aracı eksik, yanlış veya gizli alanlı raporu reddeder
+ve özel raporun yalnız SHA-256 izini üretir. Kanıtın
+kendisi, kimlikler ve sırlar CI'ye aktarılmaz.
+
+Bu özetin kendi başına başarı kanıtı olmadığı,
+gerçek insan onayının zorunlu olduğu ve mevcut OAuth
+sırrı uyuşmazlığının sürdüğü kayda geçirildi. Production'a
+push, deploy, SQL yazımı veya şifre değişikliği yapılmadı.
+
+Production Haber D1 şeması yalnız toplu, salt-okunur sorguyla
+yeniden doğrulandı: 11 migration, sonuncusu
+0011_article_withdrawals.sql. Bu nedenle gerçek Haber 2.0
+göçünde iki insan onayı da zorunlu olacak. Canlı HTTP'de
+staging /arsiv/ 200, eski production /arsiv/ 404 beklenen
+versiyon farkı; eski 580 haberin bozulduğu anlamına gelmiyor.
+Yeni ana SHA, staging'de gerçekten sınanan kodla eşleşmeden
+onaylanmamalı; birleştirme sonrası sürüm değişirse izole
+staging yeniden test edilmeli.

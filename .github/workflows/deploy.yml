@@ -63,6 +63,8 @@ jobs:
           npm run test:live-permalink-probe
           npm run test:staging-seo
           npm run test:backup-attestation
+          npm run test:staging-e2e-attestation
+          npm run test:staging-e2e-report
           npm run test:technology-deploy-order
           npm run test:legacy-permalinks
           npm run test:orbit-release-check
@@ -137,6 +139,25 @@ jobs:
           summary="$(npx wrangler d1 execute DB --remote --json --config wrangler.ssr.jsonc \
             --file "$sql_file")"
           printf '%s\n' "$summary" | node scripts/technology-legacy-permalinks.mjs --check
+
+      # Before the first FORWARD-ONLY Haber 2.0 migration, a real owner
+      # must separately accept BOTH: (1) Orbit staging OAuth code exchange
+      # into a genuine Haber session/pairwise identity and (2) a real signed
+      # connected-site guest-agent read with correctly rejected unauthorized
+      # actions. A synthetic ES256 unit test does NOT satisfy this gate.
+      # No token, code, user ID or private staging acceptance report is sent
+      # to GitHub. The operator privately verifies a redacted proof and
+      # publishes ONLY the report checksum, timestamp and exact release SHA
+      # as GitHub production environment VARIABLES.
+      # A merge SHA often differs from feature HEAD, so the first automatic
+      # migrating run may intentionally fail closed and require a rerun.
+      - name: Require real signed staging E2E release acceptance
+        if: steps.publisher_preflight.outputs.backup_required != 'false'
+        env:
+          HABER_STAGING_E2E_VERIFIED_RELEASE_SHA: ${{ vars.HABER_STAGING_E2E_VERIFIED_RELEASE_SHA }}
+          HABER_STAGING_E2E_REPORT_SHA256: ${{ vars.HABER_STAGING_E2E_REPORT_SHA256 }}
+          HABER_STAGING_E2E_VERIFIED_AT_UTC: ${{ vars.HABER_STAGING_E2E_VERIFIED_AT_UTC }}
+        run: node scripts/technology-staging-e2e-attestation.mjs
 
       # A Time Travel bookmark is not an independent database backup.
       # On the historical 0011 -> technology 0016 upgrade, MAIN must not

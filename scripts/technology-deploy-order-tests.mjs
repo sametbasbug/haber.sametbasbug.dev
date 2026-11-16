@@ -22,6 +22,7 @@ const required=[
   'Require the new Orbit agent news API before D1 migration',
   'Verify legacy publisher anchors before D1 migration',
   'Verify exact 580 legacy permalinks before D1 migrations',
+  'Require real signed staging E2E release acceptance',
   'Require operator attestation of an independent D1 backup',
   'Confirm a D1 Time Travel recovery point before migrations',
   'Apply D1 migrations',
@@ -69,6 +70,20 @@ export function verifyNewsroomDeployOrder(allSteps) {
     || !preflightStep.run.includes('technology-pre-migration-check.mjs')) {
     throw new Error('Read-only D1 preflight must publish migration-pending state');
   }
+  const e2e=byName('Require real signed staging E2E release acceptance');
+  if(e2e.if!=="steps.publisher_preflight.outputs.backup_required != 'false'"
+    || e2e.run!=='node scripts/technology-staging-e2e-attestation.mjs') {
+    throw new Error('Real signed staging acceptance must block migrations whenever a backup is required');
+  }
+  for(const name of [
+    'HABER_STAGING_E2E_VERIFIED_RELEASE_SHA',
+    'HABER_STAGING_E2E_REPORT_SHA256',
+    'HABER_STAGING_E2E_VERIFIED_AT_UTC',
+  ]) {
+    if(e2e.env?.[name] !== ('$'+'{{ vars.'+name+' }}')) {
+      throw new Error('Staging E2E proof must come from GitHub production environment variable '+name);
+    }
+  }
   const backup=byName('Require operator attestation of an independent D1 backup');
   if(backup.if!=="steps.publisher_preflight.outputs.backup_required != 'false'") {
     throw new Error('Missing preflight output must require backup, not skip the gate');
@@ -94,6 +109,14 @@ export function verifyNewsroomDeployOrder(allSteps) {
     }
   }
   const preflight=byName('Verify Orbit identity and Haber 2.0 contracts before migration').run;
+  for(const cmd of [
+    'npm run test:staging-e2e-attestation',
+    'npm run test:staging-e2e-report',
+  ]){
+    if(!preflight.split('\n').some(line=>line.trim()===cmd)) {
+      throw new Error('Real staging E2E proof regression must run before migrations: '+cmd);
+    }
+  }
   if(!preflight.includes('npm run test:backup-attestation')) {
     throw new Error('Backup attestation tests must run before production migration');
   }
@@ -163,10 +186,12 @@ export function verifyNewsroomDeployOrder(allSteps) {
 }
 
 assert.equal(verifyNewsroomDeployOrder(steps),true);
+let verifiedCases=1;
 function mutate(fn){
   const clone=structuredClone(steps);
   fn(clone);
   assert.throws(()=>verifyNewsroomDeployOrder(clone));
+  verifiedCases++;
 }
 mutate(rows=>rows.splice(rows.findIndex(s=>s.name===required[3]),1));
 mutate(rows=>rows.find(s=>s.name===required[3]).run='echo no-op');
@@ -180,6 +205,21 @@ mutate(rows=>{
 });
 mutate(rows=>rows.find(s=>s.name==='Confirm a D1 Time Travel recovery point before migrations').run='echo skipped');
 mutate(rows=>rows.find(s=>s.name==='Verify production D1 publisher readiness after migrations').run='echo healthy');
+mutate(rows=>rows.splice(rows.findIndex(s=>s.name==='Require real signed staging E2E release acceptance'),1));
+mutate(rows=>rows.find(s=>s.name==='Require real signed staging E2E release acceptance').run='echo skipped');
+mutate(rows=>rows.find(s=>s.name==='Require real signed staging E2E release acceptance').if="steps.publisher_preflight.outputs.backup_required == 'true'");
+mutate(rows=>rows.find(s=>s.name==='Require real signed staging E2E release acceptance').env.HABER_STAGING_E2E_VERIFIED_RELEASE_SHA='not-github-var');
+mutate(rows=>rows.find(s=>s.name==='Require real signed staging E2E release acceptance').env.HABER_STAGING_E2E_REPORT_SHA256='not-github-var');
+mutate(rows=>rows.find(s=>s.name==='Require real signed staging E2E release acceptance').env.HABER_STAGING_E2E_VERIFIED_AT_UTC='not-github-var');
+mutate(rows=>{
+  const from=rows.findIndex(s=>s.name==='Require real signed staging E2E release acceptance');
+  const [gate]=rows.splice(from,1);
+  rows.splice(rows.findIndex(s=>s.name==='Apply D1 migrations')+1,0,gate);
+});
+mutate(rows=>rows.find(s=>s.name==='Verify Orbit identity and Haber 2.0 contracts before migration').run=
+  rows.find(s=>s.name==='Verify Orbit identity and Haber 2.0 contracts before migration').run.replace('npm run test:staging-e2e-attestation','echo skipped'));
+mutate(rows=>rows.find(s=>s.name==='Verify Orbit identity and Haber 2.0 contracts before migration').run=
+  rows.find(s=>s.name==='Verify Orbit identity and Haber 2.0 contracts before migration').run.replace('npm run test:staging-e2e-report','echo skipped'));
 mutate(rows=>rows.splice(rows.findIndex(s=>s.name==='Require operator attestation of an independent D1 backup'),1));
 mutate(rows=>rows.find(s=>s.name==='Require operator attestation of an independent D1 backup').run='echo approved');
 mutate(rows=>rows.find(s=>s.name==='Require operator attestation of an independent D1 backup').if="steps.publisher_preflight.outputs.backup_required == 'true'");
@@ -240,4 +280,4 @@ mutate(rows=>{
   const [publisher]=rows.splice(from,1);
   rows.splice(rows.findIndex(s=>s.name==='Deploy the Worker')+1,0,publisher);
 });
-console.log('Haber release workflow: 27 positive/negative ordering and gate assertions passed');
+console.log('Haber release workflow: '+verifiedCases+' positive/negative ordering and gate assertions passed');
