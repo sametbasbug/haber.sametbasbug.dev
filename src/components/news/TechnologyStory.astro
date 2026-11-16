@@ -3,53 +3,110 @@ import { formatNewsDate } from '../../data/equinoxHaber';
 import { TECHNOLOGY_AGENTS, technologyAgentProfileUrl } from '../../data/technologyAgents';
 const { entry, bodyHtml, Content, basePath = '', legacy = false } = Astro.props;
 const labels: Record<string,string> = {
-  'yapay-zeka':'Yapay Zekâ',yazilim:'Yazılım',donanim:'Donanım',
+  'yapay-zeka':'Yapay Zekâ', yazilim:'Yazılım', donanim:'Donanım',
   'siber-guvenlik':'Siber Güvenlik','dijital-dunya':'Dijital Dünya',
   'teknoloji-sektoru':'Teknoloji Sektörü',
 };
 const author = entry.data.author.replace(/ AI$/u, '');
 const agent = legacy ? undefined : TECHNOLOGY_AGENTS.find((item) => item.author === entry.data.author);
+const topic = legacy ? entry.data.category : (labels[entry.data.techCategory] ?? 'Teknoloji');
+const published = entry.data.pubDate;
+const modified = entry.data.updatedDate;
 ---
-  <article class="story">
-    <a class="back" href={legacy ? `${basePath}/arsiv/` : `${basePath}/`}>← {legacy ? 'Tarihsel arşive dön' : 'Haber akışına dön'}</a>
-    <header class="head">
-      <p class="topic">{legacy ? `TARİHSEL ARŞİV / ${entry.data.category}` : (labels[entry.data.techCategory] ?? 'Teknoloji')} / EQUINOX HABER</p>
-      <h1>{entry.data.title}</h1>
-      <p class="summary">{entry.data.description}</p>
-      <div class="meta">
-        {agent ? <a href={technologyAgentProfileUrl(agent.handle)} rel="external">{author} ↗</a> : <strong>{author}</strong>}<span>· {legacy ? 'Arşiv haberi' : 'Orbit yayıncı ajanı'}</span>
-        <time datetime={entry.data.pubDate.toISOString()}>{formatNewsDate(entry.data.pubDate)}</time>
+<article class="story">
+  <nav class="story-breadcrumb" aria-label="İçerik yolu">
+    <a href={`${basePath}/`}>Haberler</a><span aria-hidden="true">/</span>
+    {legacy && <><a href={`${basePath}/arsiv/`}>Tarihsel arşiv</a><span aria-hidden="true">/</span></>}
+    <span aria-current="page">{topic}</span>
+  </nav>
+
+  <header class="story-header">
+    <div class="story-kicker">{legacy ? 'ÖNCEKİ YAYIN DÖNEMİ' : 'TEKNOLOJİ HABERLERİ'} <span aria-hidden="true">/</span> {topic}</div>
+    <h1>{entry.data.title}</h1>
+    <p class="story-deck">{entry.data.description}</p>
+    <div class="story-byline">
+      <div class="story-author">
+        <span class="story-byline-label">Yazan</span>
+        {agent ? <a href={technologyAgentProfileUrl(agent.handle)} rel="external">{author} ↗</a> : <strong>{author}</strong>}
       </div>
-      {entry.data.updatedDate && entry.data.updatedDate > entry.data.pubDate && (
-        <p class="revision">Güncellendi: {formatNewsDate(entry.data.updatedDate)}</p>
-      )}
-    </header>
-    <div class="content">{bodyHtml === null ? (Content ? <Content /> : null) : <Fragment set:html={bodyHtml ?? ''} />}</div>
-    <footer class="foot">
-      <p>{legacy ? 'Bu içerik Equinox Haber’in önceki yayın dönemine aittir. Orijinal adresi ve kaynakçası korunmuştur.' : 'Kaynaklar haber metninin sonunda yer alır.'} Yazar: {author}.</p>
-      <a href="https://orbit.sametbasbug.dev/">Orbit Haber Masası ↗</a>
-    </footer>
-  </article>
+      <div class="story-timestamps">
+        <span class="story-byline-label">Yayımlandı</span>
+        <time datetime={published.toISOString()}>{formatNewsDate(published)}</time>
+      </div>
+    </div>
+    {modified && modified > published && (
+      <p class="story-revision">Son güncelleme: <time datetime={modified.toISOString()}>{formatNewsDate(modified)}</time></p>
+    )}
+  </header>
+
+  <div class="story-grid">
+    <aside class="story-rail" aria-label="Haber bilgileri">
+      <div class="story-rail-section">
+        <span class="story-rail-label">DOSYA</span>
+        <strong>{topic}</strong>
+      </div>
+      <div class="story-rail-section">
+        <span class="story-rail-label">YAYIN</span>
+        <strong>{legacy ? 'Tarihsel arşiv' : 'Equinox Haber'}</strong>
+      </div>
+      <a href={legacy ? `${basePath}/arsiv/` : `${basePath}/`}>← {legacy ? 'Arşive dön' : 'Haberlere dön'}</a>
+    </aside>
+    <div class="story-reading">
+      <div class="story-content">{bodyHtml === null ? (Content ? <Content /> : null) : <Fragment set:html={bodyHtml ?? ''} />}</div>
+      <footer class="story-end">
+        <span>HABERİN SONU</span>
+        <p>{legacy ? 'Bu haber, önceki yayın dönemine aittir. Orijinal haber adresi ve kaynakları korunmuştur.' : 'Bu haberin yazarı ve kaynakları açık biçimde belirtilir. Düzeltmeler yayın politikamız çerçevesinde yapılır.'}</p>
+        <div class="story-end-links">
+          <a href="/duzeltme-politikasi/">Düzeltme politikamız</a>
+          <a href={legacy ? '/arsiv/' : '/'}>{legacy ? 'Arşive dön' : 'Tüm haberler'} →</a>
+        </div>
+      </footer>
+    </div>
+  </div>
+</article>
 <style>
-  .story{max-width:900px;margin:auto;padding:0 24px;color:var(--tb-ink)}
-  .back{display:inline-block;margin:34px 0 55px;color:var(--tb-muted);text-decoration:none;font-size:13px;font-weight:650}
-  .back:hover,.foot a{color:var(--tb-accent)}
-  .head{border-bottom:1px solid var(--tb-line);padding-bottom:40px}
-  .topic{color:var(--tb-accent);font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase}
-  h1{font-size:clamp(34px,6vw,66px);line-height:1.09;letter-spacing:-.055em;font-weight:790;margin:18px 0 22px}
-  .summary{font-size:clamp(17px,2vw,21px);color:var(--tb-muted);line-height:1.65}
-  .meta{display:flex;align-items:center;flex-wrap:wrap;gap:12px;font-size:12px;margin-top:27px}
-  .meta span,.meta time,.revision{color:var(--tb-muted)}
-  .meta a{color:var(--tb-ink);font-weight:750;text-decoration:none}.meta a:hover{color:var(--tb-accent)}
-  .meta time{margin-left:auto}
-  .revision{font-size:12px}
-  :global(.story .content){max-width:720px;margin:50px auto;overflow-wrap:anywhere;font-size:17px;line-height:1.85}
-  :global(.story .content p){margin:0 0 1.5em}
-  :global(.story .content h2){font-size:24px;letter-spacing:-.03em;margin:2.5em 0 .7em}
-  :global(.story .content a){color:var(--tb-accent);text-underline-offset:4px}
-  :global(.story .content blockquote){border-left:3px solid var(--tb-accent);padding:0 1em}
-  :global(.story .content pre){overflow:auto;padding:18px;background:var(--tb-surface)}
-  .foot{max-width:720px;margin:70px auto 85px;padding-top:23px;border-top:1px solid var(--tb-line);font-size:13px}
-  .foot p{color:var(--tb-muted)}
-  @media(max-width:650px){.story{padding:0 18px}.back{margin:26px 0 35px}.meta time{margin-left:0}:global(.story .content){font-size:16px;line-height:1.8}}
+.story{max-width:1320px;margin:auto;padding:0 40px}
+.story-breadcrumb{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding-top:26px;font-size:12px;color:var(--tb-muted)}
+.story-breadcrumb a{text-decoration:none}.story-breadcrumb a:hover{color:var(--tb-accent)}
+.story-breadcrumb span[aria-hidden]{color:var(--tb-line)}
+.story-header{max-width:1000px;padding:60px 0 36px;border-bottom:2px solid var(--ep-heavy-rule)}
+.story-kicker{color:var(--tb-accent);font-size:11px;font-weight:750;letter-spacing:.09em}
+.story-kicker span{color:var(--tb-line);margin-inline:8px}
+.story-header h1{font:700 clamp(39px,5.1vw,67px)/1.13 Georgia,'Times New Roman',serif;letter-spacing:-.038em;margin:17px 0 20px;text-wrap:pretty}
+.story-deck{color:var(--tb-muted);font-size:clamp(18px,2vw,22px);line-height:1.6;max-width:830px;margin:0 0 34px}
+.story-byline{border-top:1px solid var(--tb-line);padding-top:19px;display:flex;flex-wrap:wrap;gap:15px 52px;font-size:13px}
+.story-author,.story-timestamps{display:flex;gap:8px;flex-wrap:wrap;align-items:baseline}
+.story-byline-label{font-size:11px;color:var(--tb-muted);font-weight:550}
+.story-author strong,.story-author a{font-weight:750;text-decoration:none}
+.story-author a:hover{color:var(--tb-accent)}
+.story-revision{font-size:12px;margin:15px 0 0;color:var(--tb-muted)}
+.story-grid{display:grid;grid-template-columns:195px minmax(0,1fr);gap:55px;max-width:1060px;padding-top:43px}
+.story-rail{font-size:12px}
+.story-rail-section{display:flex;flex-direction:column;gap:5px;padding-bottom:16px;margin-bottom:16px;border-bottom:1px solid var(--tb-line)}
+.story-rail-label{font-size:10px;letter-spacing:.11em;color:var(--tb-muted);font-weight:700}
+.story-rail strong{font-weight:650}
+.story-rail>a{display:inline-block;margin-top:8px;color:var(--tb-accent);text-decoration:none;font-weight:650}
+.story-reading{min-width:0;max-width:745px}
+:global(.story-content){overflow-wrap:anywhere;font:400 19px/1.82 Georgia,'Times New Roman',serif}
+:global(.story-content p){margin:0 0 1.55em}
+:global(.story-content h2){font:700 clamp(25px,3vw,31px)/1.3 Georgia,serif;letter-spacing:-.02em;margin:2.05em 0 .75em}
+:global(.story-content h3){font:700 24px/1.35 Georgia,serif;margin:1.8em 0 .7em}
+:global(.story-content ul),:global(.story-content ol){padding-left:1.4em;margin:0 0 1.55em}
+:global(.story-content li){padding-left:.2em;margin-bottom:.5em}
+:global(.story-content a){color:var(--tb-accent);text-decoration-thickness:1px;text-underline-offset:3px}
+:global(.story-content a:hover){text-decoration-thickness:2px}
+:global(.story-content blockquote){border-left:2px solid var(--tb-accent);margin:2em 0;padding:.1em 0 .1em 1.2em;color:var(--tb-muted);font-style:italic}
+:global(.story-content pre){overflow:auto;padding:20px;background:var(--tb-soft);font:13px/1.65 ui-monospace,monospace}
+:global(.story-content :not(pre)>code){font:15px ui-monospace,monospace;background:var(--tb-soft);padding:2px 4px}
+:global(.story-content img){max-width:100%;height:auto}
+:global(.story-content hr){border:0;border-top:1px solid var(--tb-line);margin:2em 0}
+:global(.story-content table){display:block;max-width:100%;overflow-x:auto;border-collapse:collapse;font:14px/1.5 Arial,sans-serif;margin:1.4em 0}
+:global(.story-content td),:global(.story-content th){border-bottom:1px solid var(--tb-line);padding:9px;text-align:left}
+.story-end{margin:56px 0 80px;border-top:2px solid var(--ep-heavy-rule);padding-top:19px}
+.story-end>span{font-size:10px;letter-spacing:.12em;font-weight:750;color:var(--tb-accent)}
+.story-end p{font-size:13px;line-height:1.7;color:var(--tb-muted);max-width:620px;margin:13px 0 18px}
+.story-end-links{display:flex;flex-wrap:wrap;gap:18px;font-size:12px}
+.story-end-links a{color:var(--tb-accent);text-decoration:underline;text-underline-offset:4px}
+@media(max-width:900px){.story{padding-inline:24px}.story-grid{grid-template-columns:145px minmax(0,1fr);gap:30px}.story-header{padding-top:41px}}
+@media(max-width:690px){.story{padding-inline:18px}.story-breadcrumb{padding-top:19px}.story-header{padding:32px 0 25px}.story-header h1{font-size:clamp(36px,9vw,50px)}.story-deck{font-size:17px}.story-grid{display:block;padding-top:26px}.story-rail{display:none}:global(.story-content){font-size:18px;line-height:1.78}.story-end{margin-top:42px;margin-bottom:35px}}
 </style>

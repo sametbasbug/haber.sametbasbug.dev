@@ -1,6 +1,5 @@
 ---
 import { formatNewsDate } from '../../data/equinoxHaber';
-
 interface Props {
   entries: any[];
   page: number;
@@ -11,50 +10,55 @@ interface Props {
 const { entries, page, hasMore, olderHref = null, newerHref = null } = Astro.props;
 ---
 <div class="archive">
-  <a class="back" href="/">← Güncel teknoloji haberleri</a>
-  <header>
-    <span>GEÇMİŞ YAYINLAR / ARŞİV</span>
-    <h1>Haber <em>arşivi.</em></h1>
-    <p>Equinox Haber'in teknolojiye odaklanmadan önce yayımladığı içerikler. Eski haberlerin adresleri ve kaynakları korunmaktadır; bu liste güncel teknoloji akışına dahil değildir.</p>
+  <nav class="archive-crumb" aria-label="İçerik yolu"><a href="/">Haberler</a><span aria-hidden="true">/</span><span aria-current="page">Arşiv</span></nav>
+  <header class="archive-intro">
+    <div class="archive-kicker">GEÇMİŞ YAYINLAR</div>
+    <h1>Tarihsel arşiv</h1>
+    <p>Equinox Haber’in önceki yayın döneminde yayımlanan haberler. İçerikler özgün adresleri ve kaynaklarıyla korunur; güncel teknoloji akışından ayrı tutulur.</p>
   </header>
+  <div class="archive-heading"><h2>Arşiv kayıtları</h2><span>Sayfa {page}</span></div>
   <div class="archive-list">
-    {entries.length === 0 && <p class="empty">Bu sayfada arşiv haberi bulunmuyor.</p>}
+    {entries.length === 0 && <p class="archive-empty">Bu sayfada arşiv haberi bulunmuyor.</p>}
     {entries.map((entry) => (
       <article>
-        <div class="meta"><span>{entry.data.category}</span><time datetime={entry.data.pubDate.toISOString()}>{formatNewsDate(entry.data.pubDate)}</time></div>
-        <h2><a href={`/${entry.id}/`}>{entry.data.title}</a></h2>
+        <div class="archive-meta">
+          <span>{entry.data.category}</span>
+          <time datetime={entry.data.pubDate.toISOString()}>{formatNewsDate(entry.data.pubDate)}</time>
+        </div>
+        <h3><a href={`/${entry.id}/`}>{entry.data.title}</a></h3>
         <p>{entry.data.description}</p>
       </article>
     ))}
   </div>
   {(page > 1 || hasMore) && (
-    <nav class="pager" aria-label="Arşiv sayfaları">
+    <nav class="archive-pager" aria-label="Arşiv sayfaları">
       {newerHref ? <a href={newerHref}>← Daha yeni</a> : <span />}
       <span>Sayfa {page}</span>
       {hasMore && olderHref ? <a href={olderHref}>Daha eski →</a> : <span />}
     </nav>
   )}
 </div>
-
 <style>
-  .archive{max-width:1080px;margin:auto;padding:0 32px}
-  .back{display:inline-block;margin:31px 0 42px;color:var(--tb-muted);font-size:13px;font-weight:650;text-decoration:none}
-  .back:hover{color:var(--tb-accent)}
-  header{border-bottom:1px solid var(--tb-line);padding-bottom:34px}
-  header>span{color:var(--tb-accent);font-size:11px;font-weight:800;letter-spacing:.1em}
-  header h1{font-size:clamp(39px,6vw,74px);font-weight:800;letter-spacing:-.06em;margin:15px 0;line-height:1.1}
-  header h1 em{font-style:normal;color:var(--tb-accent)}
-  header p{font-size:15px;color:var(--tb-muted);max-width:720px;line-height:1.7}
-  .archive-list{max-width:800px}
-  article{border-bottom:1px solid var(--tb-line);padding:23px 0}
-  .meta{display:flex;gap:15px;color:var(--tb-muted);font-size:11px;font-weight:650}
-  .meta span{color:var(--tb-accent);font-weight:800;text-transform:uppercase}
-  article h2{font-size:clamp(21px,2.7vw,27px);letter-spacing:-.035em;line-height:1.28;margin:10px 0}
-  article h2 a{color:var(--tb-ink);text-decoration:none}
-  article h2 a:hover{color:var(--tb-accent)}
-  article p{color:var(--tb-muted);font-size:14px;line-height:1.65;margin:0}
-  .empty{padding:60px 0;color:var(--tb-muted)}
-  .pager{display:flex;align-items:center;justify-content:space-between;padding:27px 0;gap:15px;font-size:13px;color:var(--tb-muted)}
-  .pager a{color:var(--tb-accent);font-weight:750}
-  @media(max-width:650px){.archive{padding:0 18px}.back{margin:24px 0 30px}}
+.archive{max-width:1320px;margin:auto;padding:0 40px}
+.archive-crumb{display:flex;align-items:center;gap:10px;margin:25px 0 36px;color:var(--tb-muted);font-size:12px}
+.archive-crumb a{text-decoration:none}.archive-crumb a:hover{color:var(--tb-accent)}
+.archive-crumb span[aria-hidden]{color:var(--tb-line)}
+.archive-intro{border-bottom:2px solid var(--ep-heavy-rule);padding-bottom:36px}
+.archive-kicker{font-size:11px;letter-spacing:.12em;font-weight:700;color:var(--tb-accent)}
+.archive-intro h1{font:700 clamp(44px,5vw,66px)/1.15 Georgia,serif;letter-spacing:-.035em;margin:12px 0}
+.archive-intro p{font-size:15px;line-height:1.75;color:var(--tb-muted);max-width:760px;margin:0}
+.archive-heading{display:flex;align-items:baseline;justify-content:space-between;max-width:860px;gap:15px;padding:25px 0 14px;border-bottom:1px solid var(--tb-line)}
+.archive-heading h2{font:700 22px Georgia,serif;margin:0}.archive-heading span{font-size:12px;color:var(--tb-muted)}
+.archive-list{max-width:860px}
+.archive-list article{border-bottom:1px solid var(--tb-line);padding:23px 0}
+.archive-meta{display:flex;gap:14px;flex-wrap:wrap;color:var(--tb-muted);font-size:11px}
+.archive-meta span{color:var(--tb-accent);font-weight:700}
+.archive-list h3{font:700 clamp(23px,2.6vw,30px)/1.25 Georgia,serif;letter-spacing:-.022em;margin:9px 0}
+.archive-list h3 a{text-decoration:none}.archive-list h3 a:hover{color:var(--tb-accent)}
+.archive-list article p{color:var(--tb-muted);font-size:14px;line-height:1.65;margin:0}
+.archive-empty{padding:50px 0;color:var(--tb-muted)}
+.archive-pager{max-width:860px;display:flex;align-items:center;justify-content:space-between;gap:15px;padding:25px 0;font-size:13px;color:var(--tb-muted)}
+.archive-pager a{color:var(--tb-accent);font-weight:650}
+@media(max-width:900px){.archive{padding:0 24px}}
+@media(max-width:620px){.archive{padding:0 18px}.archive-crumb{margin:20px 0 24px}.archive-intro{padding-bottom:27px}.archive-intro h1{font-size:43px}}
 </style>

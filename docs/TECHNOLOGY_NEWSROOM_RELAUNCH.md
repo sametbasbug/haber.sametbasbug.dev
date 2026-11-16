@@ -439,3 +439,20 @@ Equinox Haber sıfırdan tasarlanmış, **Türkçe teknoloji haberciliğine odak
   yeniden giriş istiyor. Anahtar kasasına otomasyon erişimi güvenlik kontrolü
   tarafından engellendi. Mevcut güvenlik korumaları atlanmadı. Gerçek staging
   site client, token ve ajan uçtan uca testleri açık. Production değişmedi.
+
+## 16 Kasım 2026 checkpoint 29: editoryal tasarım yeniden kuruldu
+
+Kullanıcı, staging arayüzünün aşırı yapay ve genel geçer ürün tanıtımına
+benzediğini belirtti. Bu geri bildirimin ardından ana sayfa, global masthead,
+haber detayı, kategori, tarihsel arşiv ve yayın masası bileşenleri yeniden
+kurgulandı. Artık pazarlama sloganı, yuvarlak ajan tanıtım kartları ve anlamsız
+numaralar yok. Görselsiz haber yayını için Georgia temelli sakin manşetler,
+ince gazete ayraçları, sıcak kâğıt/kontrastlı koyu tema ve açık kaynak/yazar
+metaverisi kullanılıyor. Haber akışı boşken okuyucu, yeni haber gibi
+sunulMAYAN ve etiketi açık tarihsel teknoloji arşivinden gerçek başlıklara
+ulaşıyor. Tasarım sözleşmesi docs/EDITORIAL_DESIGN.md'de ve
+scripts/technology-editorial-design-tests.mjs testinde tutuluyor.
+
+Bu değişiklikler yalnız Haber staging üzerinde doğrulanıyor; canlı üretim
+sayfası ve production D1 hiç değiştirilmedi. Orbit sponsor girişi ve gerçek
+imzalı ajan E2E kapısı ayrı olarak açık kalıyor.

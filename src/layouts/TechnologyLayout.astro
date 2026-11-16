@@ -7,7 +7,12 @@ interface Props {
   article?: { author: string; datePublished: string; dateModified: string; section: string; authorProfile?: string };
 }
 
+import '../styles/technology.css';
+
 const { title, description, noindex = true, basePath = '/yeni', article } = Astro.props;
+const editionDate = new Intl.DateTimeFormat('tr-TR', {
+  timeZone: 'Europe/Istanbul', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+}).format(new Date());
 // Staging is accessible for QA, but its pages must NEVER be indexed.
 const stageBuild = import.meta.env.PUBLIC_HABER_STAGING === 'true';
 const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin);
@@ -47,54 +52,59 @@ const categories = [
     <meta name="description" content={description} />
     <meta name="robots" content={noindex || stageBuild ? 'noindex, nofollow' : 'index, follow'} />
     <link rel="canonical" href={canonicalUrl} />
-    <link rel="alternate" type="application/rss+xml" title="Equinox Haber teknoloji RSS" href="/rss.xml" />
-    <meta property="og:type" content={article ? "article" : "website"} />
+    <link rel="alternate" type="application/rss+xml" title="Equinox Haber RSS" href="/rss.xml" />
+    <meta property="og:type" content={article ? 'article' : 'website'} />
     {article && <meta property="article:published_time" content={article.datePublished} />}
     {article && <meta property="article:modified_time" content={article.dateModified} />}
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
-    <meta name="theme-color" content="#f7f7f3" />
+    <meta name="theme-color" content="#fbfaf7" />
     {structuredData && <script is:inline type="application/ld+json" set:html={structuredData} />}
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   </head>
   <body>
     <a href="#ana-icerik" class="tb-skip">Ana içeriğe geç</a>
-    <header class="tb-header">
-      <div class="tb-header-inner">
-        <a class="tb-brand" href={`${basePath}/`} aria-label="Equinox Haber ana sayfa">
-          <span class="tb-brand-mark" aria-hidden="true">E<span>.</span></span>
-          <span class="tb-brand-name">EQUINOX<span>HABER</span></span>
-        </a>
-        <nav class="tb-header-actions" aria-label="Üst bağlantılar">
-          <a href={`${basePath}/masa/`}>Haber masası</a>
-          <a href="https://orbit.sametbasbug.dev/" rel="external" class="tb-orbit">Orbit <span aria-hidden="true">↗</span></a>
-          <button type="button" class="tb-theme" data-theme-toggle aria-label="Renk temasını değiştir" aria-pressed="false">
-            <span aria-hidden="true">◐</span>
-          </button>
-        </nav>
+    <header class="ep-header">
+      <div class="ep-utility ep-container">
+        <time class="ep-edition-date">{editionDate}</time>
+        <span class="ep-utility-label">Bağımsız teknoloji yayını</span>
+        <div class="ep-utility-actions">
+          <a href="/rss.xml" aria-label="RSS akışı">RSS</a>
+          <a href="https://orbit.sametbasbug.dev/" rel="external">Orbit ↗</a>
+          <button type="button" class="ep-theme" data-theme-toggle aria-label="Renk temasını değiştir" aria-pressed="false">Tema <span aria-hidden="true">◐</span></button>
+        </div>
       </div>
-      <div class="tb-subnav">
-        <nav aria-label="Teknoloji kategorileri" class="tb-category-nav">
-          <a href={`${basePath}/`} data-topic-link="tumu">Tümü</a>
+      <div class="ep-masthead ep-container">
+        <a class="ep-wordmark" href={`${basePath}/`} aria-label="Equinox Haber ana sayfa">EQUINOX <span>HABER</span></a>
+        <div class="ep-masthead-caption">HABERİN KAYNAĞINA YAKIN</div>
+      </div>
+      <div class="ep-nav-band">
+        <nav class="ep-nav ep-container" aria-label="Ana gezinme">
+          <a class="ep-nav-first" href={`${basePath}/`} data-topic-link="tumu">Haberler</a>
           {categories.map((category) => (
             <a href={`${basePath}/kategori/${category.slug}/`} data-topic-link={category.slug}>{category.label}</a>
           ))}
+          <a href={`${basePath}/arsiv/`}>Arşiv</a>
+          <a href={`${basePath}/masa/`}>Haber Masası</a>
         </nav>
       </div>
     </header>
-    <main id="ana-icerik">
-      <slot />
-    </main>
-    <footer class="tb-footer">
-      <div class="tb-footer-inner">
-        <span class="tb-footer-brand">EQUINOX HABER<span class="tb-pulse">●</span></span>
-        <p>Kaynaklı teknoloji haberciliği. Orbit ajanlarının haber masası.</p>
-        <div class="tb-footer-links">
-          <a href="https://orbit.sametbasbug.dev/">Equinox Orbit</a>
-          <a href="/hakkimizda/">Hakkımızda</a>
-          <a href={`${basePath}/arsiv/`}>Tarihsel arşiv</a>
+    <main id="ana-icerik"><slot /></main>
+    <footer class="ep-footer">
+      <div class="ep-container">
+        <div class="ep-footer-head">
+          <a class="ep-footer-logo" href="/">EQUINOX <span>HABER</span></a>
+          <p>Teknolojiye dair haberler. Doğrulanabilir kaynaklar, açık yazar kimlikleri, erişilebilir arşiv.</p>
         </div>
-        <small>© {new Date().getFullYear()} Equinox Haber</small>
+        <nav aria-label="Alt bağlantılar" class="ep-footer-links">
+          <a href="/arsiv/">Tarihsel Arşiv</a>
+          <a href="/masa/">Yayın Ekibi</a>
+          <a href="/editorial-ilkeler/">Yayın İlkeleri</a>
+          <a href="/duzeltme-politikasi/">Düzeltme Politikası</a>
+          <a href="/hakkimizda/">Hakkımızda</a>
+          <a href="/iletisim/">İletişim</a>
+        </nav>
+        <div class="ep-footer-bottom"><small>© {new Date().getFullYear()} Equinox Haber</small><small>Bir Equinox yayını.</small></div>
       </div>
     </footer>
 
@@ -131,82 +141,3 @@ const categories = [
     </script>
   </body>
 </html>
-
-<style is:global>
-  :root {
-    color-scheme: light;
-    --tb-bg: #f7f7f3;
-    --tb-surface: #fffefa;
-    --tb-ink: #182123;
-    --tb-muted: #596569;
-    --tb-line: #d9dddc;
-    --tb-accent: #394bbd;
-    --tb-on-accent: #fff;
-    --tb-soft: #eceffc;
-  }
-  :root[data-tb-theme='dark'] {
-    color-scheme: dark;
-    --tb-bg: #101518;
-    --tb-surface: #171f21;
-    --tb-ink: #e7eeed;
-    --tb-muted: #a1adac;
-    --tb-line: #313d40;
-    --tb-accent: #acb8ff;
-    --tb-on-accent: #101518;
-    --tb-soft: #222b45;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-tb-theme='light']) {
-      color-scheme: dark;
-      --tb-bg: #101518;
-      --tb-surface: #171f21;
-      --tb-ink: #e7eeed;
-      --tb-muted: #a1adac;
-      --tb-line: #313d40;
-      --tb-accent: #acb8ff;
-      --tb-on-accent: #101518;
-      --tb-soft: #222b45;
-    }
-  }
-  *, *::before, *::after { box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
-  body { margin: 0; background: var(--tb-bg); color: var(--tb-ink); font-family: Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif; line-height: 1.55; font-size: 16px; }
-  a { color: inherit; }
-  button { font: inherit; }
-  :focus-visible { outline: 3px solid var(--tb-accent); outline-offset: 4px; }
-  .tb-skip { position: absolute; left: 16px; top: -80px; z-index: 100; background: var(--tb-ink); color: var(--tb-bg); padding: 10px 16px; border-radius: 4px; }
-  .tb-skip:focus { top: 12px; }
-  .tb-header { background: var(--tb-surface); border-bottom: 1px solid var(--tb-line); }
-  .tb-header-inner { max-width: 1240px; padding: 23px 32px; margin: auto; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
-  .tb-brand { display: inline-flex; align-items: center; gap: 13px; text-decoration: none; }
-  .tb-brand-mark { display: inline-flex; justify-content: center; align-items: center; font-weight: 900; letter-spacing: -0.13em; font-size: 36px; width: 49px; height: 45px; color: #fff; background: #2e3a3d; border-radius: 9px; padding-right: 7px; }
-  .tb-brand-mark span { color: #a8baff; }
-  .tb-brand-name { display: flex; flex-direction: column; font-size: 15px; line-height: 1.1; letter-spacing: 0.065em; font-weight: 850; }
-  .tb-brand-name span { color: var(--tb-accent); letter-spacing: 0.19em; font-size: 12px; margin-top: 4px; }
-  .tb-header-actions { display: flex; align-items: center; gap: 24px; }
-  .tb-header-actions a { text-decoration: none; font-size: 13px; font-weight: 650; }
-  .tb-header-actions a:hover { color: var(--tb-accent); }
-  .tb-orbit { padding: 10px 14px; background: var(--tb-soft); color: var(--tb-accent); border-radius: 7px; }
-  .tb-theme { background: transparent; color: var(--tb-ink); border: 1px solid var(--tb-line); border-radius: 7px; width: 39px; height: 39px; cursor: pointer; }
-  .tb-subnav { border-top: 1px solid var(--tb-line); }
-  .tb-category-nav { max-width: 1240px; margin: auto; padding: 0 32px; display: flex; gap: 30px; white-space: nowrap; overflow-x: auto; scrollbar-width: thin; }
-  .tb-category-nav a { padding: 14px 0; color: var(--tb-muted); font-size: 13px; text-decoration: none; font-weight: 650; border-bottom: 2px solid transparent; }
-  .tb-category-nav a:hover, .tb-category-nav a[aria-current='page'] { color: var(--tb-ink); border-color: var(--tb-accent); }
-  .tb-footer { margin-top: 92px; border-top: 1px solid var(--tb-line); background: var(--tb-surface); }
-  .tb-footer-inner { max-width: 1240px; padding: 38px 32px 55px; margin: auto; }
-  .tb-footer-brand { font-size: 14px; font-weight: 900; letter-spacing: 0.07em; }
-  .tb-pulse { color: var(--tb-accent); font-size: 9px; margin-left: 6px; vertical-align: 2px; }
-  .tb-footer p { max-width: 500px; font-size: 13px; color: var(--tb-muted); }
-  .tb-footer-links { display: flex; gap: 22px; flex-wrap: wrap; margin: 22px 0; font-size: 13px; }
-  .tb-footer-links a:hover { color: var(--tb-accent); }
-  .tb-footer small { color: var(--tb-muted); font-size: 12px; }
-  @media (max-width: 650px) {
-    .tb-header-inner { padding: 17px 18px; gap: 10px; }
-    .tb-header-actions { gap: 9px; }
-    .tb-header-actions > a:first-child { display: none; }
-    .tb-orbit { padding: 8px 10px; }
-    .tb-category-nav { padding: 0 18px; gap: 22px; }
-    .tb-footer-inner { padding: 30px 18px; }
-  }
-  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
-</style>
