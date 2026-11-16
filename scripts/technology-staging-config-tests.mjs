@@ -1,0 +1,97 @@
+import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
+import { readFileSync, mkdtempSync, writeFileSync, rmSync } from 'node:fs';
+import { join, resolve } from 'node:path';
+import { tmpdir } from 'node:os';
+import {
+  parseWranglerJsonc, validateHaberStagingConfig, readHaberProductionConfig,
+} from './technology-staging-config-check.mjs';
+
+const production = readHaberProductionConfig();
+const STAGE = {
+  name: 'haber-site-staging',
+  main: production.main,
+  compatibility_date: production.compatibility_date,
+  compatibility_flags: ['nodejs_compat'],
+  workers_dev: true,
+  preview_urls: false,
+  assets: { binding: 'ASSETS', directory: 'dist-ssr/client' },
+  d1_databases: [{
+    binding: 'DB',
+    database_name: 'haber-site-staging',
+    database_id: '12345678-1234-4234-8234-123456789abc',
+    migrations_dir: 'worker/migrations',
+  }],
+  r2_buckets: [{
+    binding: 'HERO', bucket_name: 'haber-gorseller-staging',
+  }],
+  vars: {
+    ORBIT_ISSUER: 'https://orbit-v6-staging.samett33710.workers.dev',
+    ORBIT_AUDIENCE: 'orbit-haber-staging',
+    ORBIT_CLIENT_ID: 'orbit-haber-staging',
+  },
+};
+let cases=0;
+function accept(stage=STAGE) {
+  assert.equal(validateHaberStagingConfig(stage, production).clientId, 'orbit-haber-staging');
+  cases++;
+}
+function block(mutation, label) {
+  const stage = structuredClone(STAGE);
+  mutation(stage);
+  assert.throws(() => validateHaberStagingConfig(stage, production), /unsafe_haber_staging_config/u, label);
+  cases++;
+}
+accept();
+assert.equal(parseWranglerJsonc(readFileSync('wrangler.ssr.jsonc', 'utf8')).name, production.name);cases++;
+assert.throws(() => validateHaberStagingConfig(production, production));cases++;
+block(s=>{s.name=production.name},'never staging-deploy production Worker');
+block(s=>{s.name='haber-api-staging'},'no mismatched staging hostname');
+block(s=>{s.main='src/worker/index.ts'},'must use SSR entry');
+block(s=>{s.compatibility_date='2000-01-01'},'runtime compatibility date');
+block(s=>{s.workers_dev=false},'workers.dev disabled');
+block(s=>{s.preview_urls=true},'preview URLs disabled');
+block(s=>{s.routes=[{pattern:'haber.sametbasbug.dev',custom_domain:true}]},'never claim production hostname');
+block(s=>{s.route='haber.sametbasbug.dev/*'},'no wildcard production route');
+block(s=>{s.triggers={crons:['* * * * *']}},'no scheduled stage publishing');
+block(s=>{s.assets.directory='dist/client'},'SSR asset parity');
+block(s=>{s.d1_databases[0].database_id=production.d1_databases[0].database_id},'never reuse production D1 UUID');
+block(s=>{s.d1_databases[0].database_name='haber'},'never reuse production D1 name');
+block(s=>{s.d1_databases.push({...s.d1_databases[0],binding:'EXTRA'})},'only one D1');
+block(s=>{s.d1_databases[0].database_id='00000000-0000-0000-0000-000000000000'},'reject placeholder');
+block(s=>{s.d1_databases[0].database_id='not-a-uuid'},'reject malformed UUID');
+block(s=>{s.d1_databases[0].migrations_dir='migrations'},'must share real migration schema');
+block(s=>{s.r2_buckets[0].bucket_name=production.r2_buckets[0].bucket_name},'never reuse production image bucket');
+block(s=>{s.r2_buckets=[]},'missing R2 must not crash legacy image route');
+block(s=>{s.vars.ORBIT_ISSUER='https://orbit.sametbasbug.dev'},'never trust production Orbit issuer');
+block(s=>{s.vars.ORBIT_AUDIENCE='orbit-haber'},'never accept production audience');
+block(s=>{s.vars.ORBIT_CLIENT_ID='orbit-haber'},'never use production auth client');
+block(s=>{s.vars.ORBIT_CLIENT_SECRET='example-secret'},'never inline browser client secret');
+block(s=>{s.vars.ENABLE_LEGACY_NEWS_ACTIONS='1'},'never enable legacy publisher');
+block(s=>{s.vars.ORBIT_SITE_TOKEN_PEPPER_V1='placeholder'},'no inline token key');
+block(s=>{s.env={production:{name:'haber-site'}}},'no hidden production environment');
+block(s=>{s.custom_domains=true},'no custom domain');
+block(s=>{s.zone_id='fake'},'no DNS zone');
+block(s=>{s.r2_buckets[0].binding='IMAGE'},'HERO route requires its own R2 binding');
+
+const dir=mkdtempSync(join(tmpdir(),'haber-staging-config-'));
+try {
+  const safe=join(dir,'staging.jsonc');
+  writeFileSync(safe,JSON.stringify(STAGE));
+  let result=spawnSync(process.execPath,['scripts/technology-staging-config-check.mjs',
+    '--config='+safe],{encoding:'utf8'});
+  assert.equal(result.status,0,result.stderr);
+  assert.match(result.stdout,/passes isolation checks/u);cases++;
+  result=spawnSync(process.execPath,['scripts/technology-staging-config-check.mjs',
+    '--config='+resolve('wrangler.ssr.jsonc')],{encoding:'utf8'});
+  assert.notEqual(result.status,0);cases++;
+  assert.doesNotMatch(result.stderr,new RegExp(production.d1_databases[0].database_id,'u'),
+    'Do not echo live D1 identifiers');
+  writeFileSync(safe,JSON.stringify({...STAGE,
+    d1_databases:[{...STAGE.d1_databases[0],
+      database_id:production.d1_databases[0].database_id}]}));
+  result=spawnSync(process.execPath,['scripts/technology-staging-config-check.mjs',
+    '--config='+safe],{encoding:'utf8'});
+  assert.notEqual(result.status,0);cases++;
+}finally{rmSync(dir,{recursive:true,force:true});}
+console.log('Haber staging Worker isolation:',cases,'positive/negative cases passed');

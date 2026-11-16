@@ -831,3 +831,63 @@ document cannot be pointed at production Haber merely by mislabeling
 ORBIT_ENVIRONMENT=production. Approved production Orbit live/dark-launch
 issuer origins remain supported. Missing or invalid issuer/target means
 503 and no signed HTTP request.
+
+## Checkpoint 22: enforce isolated Haber staging resources before a deploy
+
+The current production SSR Wrangler file wrangler.ssr.jsonc binds the LIVE
+custom domain, production D1 and historical image R2 bucket. It MUST NEVER
+be used for staging Worker or staging D1 migrations. A typo in a raw
+Wrangler command could otherwise mutate live D1.
+
+New read-only validator scripts/technology-staging-config-check.mjs inspects
+a future, explicitly supplied staging JSON/JSONC Wrangler configuration
+AGAINST the repository's ACTUAL production config (jsonc-parser 3.3.1 is
+now pinned as a direct dev dependency). It fails closed unless:
+
+- Worker name is EXACTLY haber-site-staging. This yields the ONLY approved
+  staging URL https://haber-site-staging.samett33710.workers.dev, and it
+  must match the Orbit staging target.
+- The SSR entry, compatibility date, nodejs_compat flag, ASSETS binding
+  and directory match production. workers_dev=true, preview_urls=false.
+  No custom domains, routes, zone bindings, cron or env overrides.
+- Exactly ONE isolated staging D1, binding DB, name haber-site-staging
+  with a non-placeholder valid UUID different from production D1, and
+  worker/migrations as the schema source.
+- Exactly one separate staging HERO R2 bucket haber-gorseller-staging so
+  the legacy image read route never accesses production R2. New articles
+  are still image-free.
+- ONLY these non-secret vars: ORBIT_ISSUER must equal the known Orbit
+  staging workers.dev origin, ORBIT_AUDIENCE=orbit-haber-staging and
+  ORBIT_CLIENT_ID=orbit-haber-staging. No inline secret, legacy override,
+  alternate public issuer or production audience.
+
+Run npm run test:staging-config in local quality, PR quality and the
+production workflow pre-migration tests. The 34 positive/negative checks
+include a real production Wrangler config input, production D1 UUID,
+live R2 bucket, custom domain, bad issuer/audience, duplicate DB,
+missing R2, inline secret and standalone CLI failure cases. Deliberate
+mutations removing the D1-ID, staging issuer and domain restrictions
+made the tests RED. Restoring the restrictions made them GREEN.
+GitHub Actions ordering tests require this suite before migrations.
+
+The separate Orbit cross-repo staging test imports this real Haber
+validator and asserts that the two source projects agree on the exact
+Worker origin and client ID; reusing production D1 fails that check.
+
+When and ONLY when the user authorizes actual external provisioning,
+create a separate Haber staging Worker, D1 and R2 bucket, prepare the
+approved staging config with its real, distinct D1 UUID, then perform
+the read-only guard:
+
+    node scripts/technology-staging-config-check.mjs --config=/path/to/approved/staging.jsonc
+
+The operator must separately build SSR with staging-appropriate public
+canonical URLs and run a Wrangler dry-run against that exact staging
+config. None of this grants permission to run a real deploy, remote D1
+migration, secret setup, site-client creation, or live publish.
+
+Real staging acceptance additionally requires staging-only sign-in,
+robots noindex behavior, active and suspended real agent credentials,
+four writer roles, human admin, historic URLs and recovery rehearsal.
+A production SSR build is NOT evidence that staging canonical URLs and
+indexing are isolated. No staging resources or real credentials exist yet.
