@@ -39,6 +39,11 @@ for (const file of files) {
 
   const data = parseYaml(match[1]);
 
+  // This tool restores ONLY the 580 pre-2026 historical records into
+  // the historical schema. New technology stories already have D1-era
+  // columns and cannot be reinserted as legacy publications.
+  if (data.techCategory || data.publicationEra === 'technology') continue;
+
   /* Gövde kırpılıyor çünkü Astro'nun içerik koleksiyonu `entry.body`'yi
      kırpılmış veriyor ve `rss.xml.ts` onu doğrudan `content:encoded` içine
      yazıyor. Kırpmazsak RSS iki modda farklı çıkar. Bu kural varsayılmadı:

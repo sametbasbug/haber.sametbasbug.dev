@@ -11,7 +11,7 @@
  *   node scripts/technology-legacy-permalinks.mjs --sql=technology > /tmp/post.sql
  *   node scripts/technology-legacy-permalinks.mjs --check < wrangler-result.json
  */
-import {readdirSync} from 'node:fs';
+import {readdirSync,readFileSync} from 'node:fs';
 import {pathToFileURL} from 'node:url';
 
 const EXPECTED_ARCHIVE_COUNT=580;
@@ -19,7 +19,10 @@ const SLUG_RE=/^[a-z0-9]+(?:-[a-z0-9]+)*$/u;
 
 export function canonicalLegacySlugs() {
   const files=readdirSync(new URL('../src/content/equinoxHaber/',import.meta.url))
-    .filter(name=>name.endsWith('.md'));
+    .filter(name=>name.endsWith('.md')
+      && !/^techCategory:/mu.test(readFileSync(
+        new URL('../src/content/equinoxHaber/'+name,import.meta.url),'utf8'
+      )));
   const slugs=files.map(file=>file.slice(0,-3)).sort();
   if(slugs.length!==EXPECTED_ARCHIVE_COUNT
     || slugs.some(slug=>!SLUG_RE.test(slug))

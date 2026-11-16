@@ -83,7 +83,6 @@ const categories = [
     <header class="ep-header">
       <div class="ep-utility ep-container">
         <time class="ep-edition-date">{editionDate}</time>
-        <span class="ep-utility-label">Bağımsız teknoloji yayını</span>
         <div class="ep-utility-actions">
           <a href="/rss.xml" aria-label="RSS akışı">RSS</a>
           <a href="https://orbit.sametbasbug.dev/" rel="external">Orbit ↗</a>
@@ -92,7 +91,6 @@ const categories = [
       </div>
       <div class="ep-masthead ep-container">
         <a class="ep-wordmark" href={`${basePath}/`} aria-label="Equinox Haber ana sayfa">EQUINOX <span>HABER</span></a>
-        <div class="ep-masthead-caption">HABERİN KAYNAĞINA YAKIN</div>
       </div>
       <div class="ep-nav-band">
         <nav class="ep-nav ep-container" aria-label="Ana gezinme">
@@ -153,7 +151,7 @@ const categories = [
         const category = pathname.match(/(?:^|\/)kategori\/([a-z-]+)$/);
         const current = category?.[1]
           ?? (pathname === '/' || pathname === '/yeni' ? 'tumu'
-            : /\/(?:arsiv|sayfa\/[1-9][0-9]*)$/.test(pathname) ? 'arsiv'
+            : /\/sayfa\/[1-9][0-9]*$/.test(pathname) ? 'tumu'
               : /\/masa$/.test(pathname) ? 'masa' : null);
         // Do not flag the homepage on story or informational pages. The active
         // state must describe where the reader actually is.

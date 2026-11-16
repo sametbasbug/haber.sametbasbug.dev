@@ -151,7 +151,10 @@ export function verifySqlExportFile(path) {
     db.exec(readFileSync(path,'utf8'));
     const canonicalArchive=new URL('../src/content/equinoxHaber/',import.meta.url);
     const slugs=readdirSync(canonicalArchive)
-      .filter(file=>file.endsWith('.md'))
+      .filter(file=>file.endsWith('.md')
+        && !/^techCategory:/mu.test(readFileSync(
+          new URL('../src/content/equinoxHaber/'+file,import.meta.url),'utf8'
+        )))
       .map(file=>file.slice(0,-3));
     const expectedMigrations=readdirSync(new URL('../worker/migrations/',import.meta.url))
       .filter(name=>/^\d{4}_.+\.sql$/u.test(name)).sort();

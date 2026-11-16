@@ -17,8 +17,14 @@ check(!home.includes('<img'),'editorial frontend remains text-first');
 check(layout.includes('ep-wordmark'),'publication masthead retained');
 check(!layout.includes('OturumDugmesi'),'reader navigation has no OAuth consent dependency');
 check(!layout.includes('data-topic-link="arsiv"'),'removed historical navigation');
-check(css.includes('clamp(32px, 4vw, 52px)'),'masthead no longer oversized');
+check(css.includes('clamp(30px, 3.1vw, 43px)'),'masthead remains restrained');
 check(layout.includes('data-theme-toggle'),'accessible theme retained');
 check(article.includes("publicationEra: 'technology'"),'static public routes exclude old stories');
 check(archive.includes('status: 410'),'legacy archive is gone');
+console.log('Equinox Haber editorial design: '+count+' checks passed');
+
+check(!layout.includes('HABERİN KAYNAĞINA YAKIN'),'no promotional masthead slogan');
+check(!layout.includes('Bağımsız teknoloji yayını'),'no redundant utility slogan');
+check(!home.includes('EQUINOX HABER / GÜNDEM'),'no repeated masthead in homepage');
+check(home.includes('<h2>Yayıncılar</h2>'),'clear sidebar editorial identity');
 console.log('Equinox Haber editorial design: '+count+' checks passed');

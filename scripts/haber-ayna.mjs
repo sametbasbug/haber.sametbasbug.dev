@@ -8,7 +8,7 @@
  *   - statik derleme (acil fren) güncel içerikle çalışır,
  *   - içerik değişiklikleri sürüm geçmişinde okunabilir kalır.
  *
- * Ayna TAM yansımadır: D1'de olmayan haberin dosyası silinir. Tek yönlüdür,
+ * Güncel teknoloji haberleri tam yansıtılır; eski dosyalar yalnız\n * çevrimdışı kurtarma kaynağı olarak korunur. Tek yönlüdür,
  * D1'den markdown'a. Ters yön (markdown -> D1) migrate-archive'ın işi.
  *
  * Başarı ölçütü: içerik değişmediyse betiği koşmak çalışma ağacını
@@ -80,6 +80,11 @@ function markdownUret(a, etiketler, kaynaklar) {
   s.push(`tags: [${etiketler.map(q).join(", ")}]`);
   s.push(`author: ${q(a.author)}`);
   s.push(`category: ${q(a.category)}`);
+  if (a.publication_era === "technology") {
+    if (!a.tech_category) throw new Error("teknoloji haberi kategorisiz");
+    s.push('publicationEra: "technology"');
+    s.push("techCategory: " + q(a.tech_category));
+  }
   s.push(`breaking: ${a.breaking ? "true" : "false"}`);
   if (a.editor_pick) s.push("editorPick: true");
   s.push("sources:");
@@ -99,7 +104,8 @@ const ADIM = 60;
 for (let off = 0; off < toplam; off += ADIM) {
   makaleler.push(...sorgula(
     "SELECT slug,title,description,category,author,body_md,hero_image,hero_alt," +
-    "pub_date,updated_date,is_draft,breaking,editor_pick,auto_glossary_links " +
+    "pub_date,updated_date,is_draft,breaking,editor_pick,auto_glossary_links," +
+    "publication_era,tech_category " +
     `FROM articles ORDER BY slug LIMIT ${ADIM} OFFSET ${off}`));
 }
 const etiketSatir = sorgula("SELECT slug,tag FROM article_tags ORDER BY slug,position");
@@ -132,7 +138,12 @@ for (const a of makaleler) {
   yazilan++;
 }
 
-const fazla = readdirSync(DIZIN).filter((f) => f.endsWith(".md") && !beklenen.has(f));
+const fazla = readdirSync(DIZIN).filter((f) => {
+  if (!f.endsWith(".md") || beklenen.has(f)) return false;
+  // Historical sources are offline fixtures, not live/current publications.
+  const old = readFileSync(join(DIZIN, f), "utf8");
+  return /^techCategory:/mu.test(old);
+});
 for (const f of fazla) { if (!KURU) unlinkSync(join(DIZIN, f)); console.log(`  silindi: ${f}`); }
 
 console.log(`\nD1: ${toplam} haber · yazılan ${yazilan} · değişmeyen ${degismeyen} · silinen ${fazla.length}${KURU ? "  (KURU ÇALIŞMA)" : ""}`);

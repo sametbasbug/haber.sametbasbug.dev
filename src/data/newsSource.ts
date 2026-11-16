@@ -28,10 +28,11 @@ export interface PublishedOptions {
 }
 
 export async function getPublished(options: PublishedOptions = {}): Promise<any[]> {
-	// Statik koleksiyon eski dönem arşivini taşır. Yeni dönem yalnız D1'de üretilir.
-	if (options.publicationEra === "technology" || options.techCategory) return [];
+	// Statik acil durum görünümü yalnız güncel teknoloji haberlerini sunar.
+	// Eski 580 dosya sadece Git'te çevrimdışı kurtarma için durur.
+	if (options.publicationEra === "legacy") return [];
 	let entries = (await getCollection('equinoxHaber'))
-		.filter((entry) => !entry.data.isDraft)
+		.filter((entry) => !entry.data.isDraft && !!entry.data.techCategory)
 		.sort((a, b) => {
 			const dateOrder = b.data.pubDate.valueOf() - a.data.pubDate.valueOf();
 			return dateOrder || a.id.localeCompare(b.id);
@@ -39,6 +40,9 @@ export async function getPublished(options: PublishedOptions = {}): Promise<any[
 
 	if (options.category) {
 		entries = entries.filter((entry) => entry.data.category === options.category);
+	}
+	if (options.techCategory) {
+		entries = entries.filter((entry) => entry.data.techCategory === options.techCategory);
 	}
 	if (options.since) {
 		const since = options.since instanceof Date ? options.since : new Date(options.since);

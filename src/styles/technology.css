@@ -60,7 +60,7 @@ button { font: inherit; }
 .ep-utility {
   min-height: 42px;
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: 1fr auto;
   align-items: center;
   gap: 12px;
   border-bottom: 1px solid var(--tb-line);
@@ -69,20 +69,11 @@ button { font: inherit; }
   font-weight: 550;
 }
 .ep-edition-date { text-transform: capitalize; }
-.ep-utility-label { text-align: center; letter-spacing: .025em; }
 .ep-utility-actions {
   display: flex;
   align-items: center;
   justify-content: flex-end;
   gap: 18px;
-  /* The shared, session-aware Orbit control predates the newspaper theme.
-   * Map its existing semantic tokens instead of duplicating auth UI or
-   * changing the legacy publication's stylesheet. */
-  --news-border: var(--tb-line);
-  --news-panel: var(--tb-bg);
-  --news-muted-strong: var(--tb-muted);
-  --news-text: var(--tb-ink);
-  --news-accent: var(--tb-accent);
 }
 .ep-utility-actions a { text-decoration: none; }
 .ep-utility-actions a:hover, .ep-footer a:hover { color: var(--tb-accent); }
@@ -95,24 +86,17 @@ button { font: inherit; }
   font-size: 11px;
 }
 .ep-theme span { font-size: 15px; padding-left: 4px; vertical-align: -1px; }
-.ep-masthead { text-align: center; padding-block: 22px 18px; }
+.ep-masthead { text-align: left; padding-block: 18px 17px; }
 .ep-wordmark {
   display: inline-block;
   color: var(--tb-ink);
-  font: 700 clamp(32px, 4vw, 52px) / 1.05 Georgia, 'Times New Roman', serif;
-  letter-spacing: -.067em;
+  font: 700 clamp(30px, 3.1vw, 43px) / 1.05 Georgia, 'Times New Roman', serif;
+  letter-spacing: -.052em;
   text-decoration: none;
   white-space: nowrap;
 }
 .ep-wordmark span { color: var(--tb-accent); }
-.ep-masthead-caption {
-  color: var(--tb-muted);
-  letter-spacing: .235em;
-  font-size: 9px;
-  margin-top: 13px;
-  font-weight: 750;
-}
-.ep-nav-band { border-block: 3px double var(--ep-heavy-rule); }
+.ep-nav-band { border-top: 1px solid var(--tb-line); border-bottom: 2px solid var(--ep-heavy-rule); }
 .ep-nav {
   display: flex;
   justify-content: space-between;
@@ -135,7 +119,7 @@ button { font: inherit; }
   padding: 10px 0 8px;
 }
 .ep-nav a:hover, .ep-nav a[aria-current='page'] { border-color: var(--tb-accent); color: var(--tb-accent); }
-.ep-footer { margin-top: 100px; border-top: 3px double var(--ep-heavy-rule); padding-block: 39px 29px; }
+.ep-footer { margin-top: 76px; border-top: 2px solid var(--ep-heavy-rule); padding-block: 32px 29px; }
 .ep-footer-head { display: flex; justify-content: space-between; align-items: start; gap: 35px; padding-bottom: 36px; }
 .ep-footer-logo { font: 700 29px / 1 Georgia, serif; letter-spacing: -.05em; text-decoration: none; }
 .ep-footer-logo span { color: var(--tb-accent); }
@@ -150,20 +134,17 @@ button { font: inherit; }
 @media(max-width: 620px) {
   .ep-container { padding-inline: 18px; }
   .ep-utility { min-height: 39px; grid-template-columns: 1fr auto; font-size: 10px; }
-  .ep-utility-label { display: none; }
   .ep-utility-actions { gap: 10px; }
-  .ep-masthead { padding-block: 20px 15px; }
-  .ep-wordmark { font-size: clamp(22px, 8.2vw, 54px); }
-  .ep-masthead-caption { margin-top: 10px; font-size: 8px; }
+  .ep-masthead { padding-block: 15px 13px; }
+  .ep-wordmark { font-size: clamp(24px, 7.2vw, 35px); }
   .ep-nav { min-height: 43px; }
   .ep-nav a { font-size: 12px; }
   .ep-footer { margin-top: 70px; }
   .ep-footer-head { display: block; }
   .ep-footer-head p { margin-top: 17px; }
 }
-/* On a 320px phone, prioritize the actual account control and the theme;
- * RSS and the external Orbit homepage remain optional links at larger sizes.
- * Keep the edition date in view, and leave the primary nav untouched. */
+/* Preserve the date and theme control on narrow phones; secondary
+ * external links are reachable elsewhere without crowding the header. */
 @media (max-width: 400px) {
   .ep-utility-actions > a { display: none; }
 }

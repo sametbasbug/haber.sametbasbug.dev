@@ -13,5 +13,14 @@ test('reader surfaces exclude retired news',()=>{
   assert.ok(read('src/pages/yeni/arsiv/index.astro').includes('status: 410'));
 });
 test('580 original source files remain available offline',()=>{
-  assert.equal(readdirSync('src/content/equinoxHaber').filter(x=>x.endsWith('.md')).length,580);
+  const files=readdirSync('src/content/equinoxHaber').filter(x=>x.endsWith('.md'));
+  const historical=files.filter(x=>!/^techCategory:/mu.test(read('src/content/equinoxHaber/'+x)));
+  assert.equal(historical.length,580);
+  assert.equal(files.length-historical.length,3);
+});
+
+test('static emergency renderer excludes the old 580 stories',()=>{
+  const code=read('src/data/newsSource.ts');
+  assert.match(code,/publicationEra === "legacy"/u);
+  assert.match(code,/entry\.data\.techCategory/u);
 });

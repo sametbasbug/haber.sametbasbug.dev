@@ -15,6 +15,11 @@ const equinoxHaber = defineCollection({
     tags: z.array(z.string()).optional(),
     author: z.string().optional(),
     category: z.enum(['Siyaset', 'Ekonomi', 'Teknoloji', 'Bilim']).optional(),
+    publicationEra: z.enum(['legacy','technology']).optional(),
+    techCategory: z.enum([
+      'yapay-zeka','yazilim','donanim',
+      'siber-guvenlik','dijital-dunya','teknoloji-sektoru',
+    ]).optional(),
     breaking: z.boolean().optional(),
     editorPick: z.boolean().optional(),
     sources: z.array(z.object({
