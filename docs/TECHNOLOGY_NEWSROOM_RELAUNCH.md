@@ -475,3 +475,21 @@ imzalı ajan E2E kapısı ayrı olarak açık kalıyor.
 - Ayrı staging Worker güvenli config, gerçek Wrangler dry-run ve deploy
   başarıyla güncellendi. Production'a push, merge, D1 yazımı veya deploy yok.
   Orbit'in gerçek staging OAuth site-client/ajan erişim testi hâlâ ayrı kapı.
+
+## 16 Kasım 2026 checkpoint 31: Orbit staging kayıt yolu düzeltildi
+
+Orbit'in gerçek `POST /v1/site-clients` kayıt yolu katalog ve eylem
+adreslerini kabul etmiyordu. D1 tablosundaki sütunlar var olsa bile API
+bunları reddettiği için gerçek Haber ajan okuma/yazma köprüsü açılamazdı.
+Orbit feature branch'inde çift alan, güvenli URL kontrolü ve atomik
+saklama eklendi; gerçek yerel Worker+D1 RED→GREEN testi yapıldı.
+Eski siteler için opsiyonellik korundu.
+
+Orbit staging D1'de eksik 0044/0045 migration'ları yalnız staging'e
+uygulandı; gerçek staging Worker yeni kodla dağıtıldı. 364 backend +
+11 diğer test, cross-repo ES256 ve staging HTTP verify başarılı.
+Cloudflare staging Google/OIDC/site-client signing secret'ları tanımlı.
+Ancak `orbit-haber-staging` client hâlâ kayıtlı DEĞİL; kullanıcının gerçek
+Google/koşul kabulüyle owner oturumu gerekli. Staging Haber sponsor
+placeholder'ları gerçek yetkili pairwise kimliği olarak alınmamalı.
+Production'a push, merge, D1 yazımı veya deploy yapılmadı.
