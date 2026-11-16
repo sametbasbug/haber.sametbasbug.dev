@@ -50,11 +50,17 @@ jobs:
           npm run test:newsroom-catalog
           npm run test:technology-pagination
           npm run test:technology-theme
+          npm run test:editorial-design
           npm run test:release-d1-check
           npm run test:technology-preflight
           npm run test:d1-recovery
           npm run test:d1-export-integrity
           npm run test:staging-config
+          npm run test:oidc-service
+          npm run test:oauth-errors
+          npm run test:oidc-jwks
+          npm run test:staging-restore-safety
+          npm run test:live-permalink-probe
           npm run test:staging-seo
           npm run test:backup-attestation
           npm run test:technology-deploy-order

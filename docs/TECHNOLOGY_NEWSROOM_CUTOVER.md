@@ -1466,3 +1466,44 @@ Orbit-to-Haber staging origin be enabled, stage agent_access
 explicitly approved and real signed guest reads / writer grants /
 admin checks performed. Production full encrypted D1 backup,
 independent restore and release attestation remain blocked.
+
+## Checkpoint 37: owner-operated stage secret UI and CI regression parity
+
+Orbit staging now includes a first-party client-secret
+recovery form under /dashboard/platform/ for platform_owner
+on the exact orbit-v6-staging.samett33710.workers.dev host.
+The form is hidden on production, localhost and for normal
+members. It handles only the EXISTING orbit-haber-staging
+client and uses the existing owner-session/CSRF protected
+rotation API over same-origin HTTPS POST. It requires an
+explicit confirmation that the same newly generated secret
+was ALREADY deployed to the haber-site-staging Worker via
+the official Cloudflare Variables and Secrets interface.
+The form clears its password input, never persists it
+in browser storage, and never displays it in a URL, log,
+response or notification. Four local tests guard host/role
+isolation, input checks, exact endpoint, and no exposure.
+Actual stage owner browser showed the form on desktop
+and at 320px with no horizontal overflow. No actual
+client secret was entered, generated, copied or rotated.
+The token exchange remains BLOCKED until the authorized
+human-owned two-step process is completed.
+
+Haber production deployment uses an explicit pre-migration
+test list separate from npm run quality. Newer safeguards
+had not been copied into that independent list, leaving
+a gap ahead of forward-only D1 migrations. The workflow
+now explicitly requires six LOCAL security test scripts
+before migration: editorial design, OIDC service
+transport, OAuth callback errors, ES256 JWKS, stage D1
+restore safety, and live permalink probe contract tests.
+The actual 1160-request public HTTP probe and remote stage
+D1 export/restore remain deliberately opt-in and do not
+run in production pre-migration CI. Mutation tests verify
+that removing or commenting out any of the six gates
+BLOCKS release, and also reject accidental remote-probe
+injection. Existing independent encrypted production D1
+backup attestation and Time Travel checks remain required.
+
+No CI workflow actually ran on GitHub, no production D1
+migration or production Worker deployment occurred.

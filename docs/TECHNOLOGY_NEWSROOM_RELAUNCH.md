@@ -598,3 +598,24 @@ secret yönetiminden yeni sırrı Haber staging'e yazması, sonra
 Orbit staging'in yetkili CSRF rotation uç noktasından aynı değere
 geçmesi gerekir. Platformun engellediği gizli veri aktarımı
 başka araçla dolanılmadı. Üretime kod veya veri yazılmadı.
+
+## 16 Kasım 2026 checkpoint 37: staging sır yönetimi ve production CI
+
+Orbit staging platform sahibine özel /dashboard/platform/
+sayfasında **Bağlı site erişimini onar** formu eklendi.
+Yalnız mevcut orbit-haber-staging kaydını, gerçek sahibi
+tarafından Cloudflare haber-site-staging Worker'a önceden
+dağıtılmış yeni ORBIT_CLIENT_SECRET değeriyle yenileyebilir.
+Gerçek sır yaratılmadı, okunmadı veya taşınmadı. Form
+mevcut CSRF ve owner yetki API'sini kullanır; production
+ve üye hesabına gösterilmez.
+
+Haber production deploy workflow'u, normal quality
+paketinde bulunan ama bağımsız pre-migration listesinde
+olmayan altı yerel güvenlik testini D1 migration ÖNCESİ
+zorunlu kılıyor. Silinmiş/yorumlanmış testlere dair
+negatif release testleri de eklendi. Uzaktaki 1160 URL
+provası ve SQL export otomatik çalıştırılmıyor.
+Production release, gerçek staging OAuth/ajan E2E ve
+bağımsız şifreli full D1 backup/restore olmadan hâlâ
+engellidir. Production'a push, merge, deploy yok.

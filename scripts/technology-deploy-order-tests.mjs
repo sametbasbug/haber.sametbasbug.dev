@@ -103,6 +103,27 @@ export function verifyNewsroomDeployOrder(allSteps) {
   if(!preflight.includes('npm run test:staging-seo')) {
     throw new Error('Staging search-engine isolation regressions must run before migration');
   }
+  // Production runs a separate quality gate from the normal PR workflow.
+  // Guard each new local-only security test with an exact shell command
+  // line: a commented-out or partial command must not satisfy this.
+  const localPreflightLines=new Set(preflight.split('\n').map(s=>s.trim()));
+  for(const name of [
+    'test:editorial-design',
+    'test:oidc-service',
+    'test:oauth-errors',
+    'test:oidc-jwks',
+    'test:staging-restore-safety',
+    'test:live-permalink-probe',
+  ]){
+    if(!localPreflightLines.has('npm run '+name)) {
+      throw new Error('Production pre-migration security test missing: '+name);
+    }
+  }
+  if(localPreflightLines.has('npm run preflight:live-permalinks')
+    || localPreflightLines.has('npm run staging:restore-rehearsal')) {
+    throw new Error('Expensive remote probes must not be injected into the pre-migration local-only gate');
+  }
+
   const recovery=byName('Confirm a D1 Time Travel recovery point before migrations').run;
   if(!recovery.includes('time-travel info DB --json')
     || !recovery.includes('d1-time-travel-check.mjs')
@@ -181,6 +202,28 @@ mutate(rows=>rows.find(s=>s.name==='Verify Orbit identity and Haber 2.0 contract
 mutate(rows=>rows.find(s=>s.name==='Build the Worker').env.PUBLIC_HABER_STAGING='true');
 mutate(rows=>rows.find(s=>s.name==='Build the static site as a cross-check').env.PUBLIC_SITE_URL='https://haber-site-staging.samett33710.workers.dev');
 
+for(const name of [
+  'test:editorial-design',
+  'test:oidc-service',
+  'test:oauth-errors',
+  'test:oidc-jwks',
+  'test:staging-restore-safety',
+  'test:live-permalink-probe',
+]){
+  mutate(rows=>{
+    const preflight=rows.find(s=>s.name==='Verify Orbit identity and Haber 2.0 contracts before migration');
+    preflight.run=preflight.run.replace('npm run '+name,'echo skipped');
+  });
+}
+mutate(rows=>{
+  const preflight=rows.find(s=>s.name==='Verify Orbit identity and Haber 2.0 contracts before migration');
+  preflight.run+='\n# npm run test:oidc-jwks';
+  preflight.run=preflight.run.replace('npm run test:oidc-jwks\n','echo skipped\n');
+});
+mutate(rows=>{
+  const preflight=rows.find(s=>s.name==='Verify Orbit identity and Haber 2.0 contracts before migration');
+  preflight.run+='\nnpm run preflight:live-permalinks';
+});
 mutate(rows=>rows.find(s=>s.name==='Verify the live site').run=
   rows.find(s=>s.name==='Verify the live site').run.replace(' /api/brief /api/publish',' /api/publish'));
 mutate(rows=>rows.find(s=>s.name==='Verify the live site').run=
