@@ -423,3 +423,19 @@ Equinox Haber sıfırdan tasarlanmış, **Türkçe teknoloji haberciliğine odak
   client secret, kayıt, staging Worker dağıtımı, D1 migrasyonları ve canlı
   ajan testleri ayrı yetki/kimlik aşamalarıdır. Production ve main dallarına
   push, merge veya deploy yapılmadı.
+
+## 16 Kasım 2026 checkpoint 28: staging Worker canlı, Orbit kimliği bekliyor
+
+- Haber staging D1 üzerinde 0001-0011 migration çalıştırıldı, Git'teki 580
+  tarihî haber ve 590 kaynak yalnız staging'e aktarıldı. Yalnız staging için
+  gerçek Orbit sponsoruna bağlanmayan geçici iki yayıncı satırı oluşturuldu,
+  ardından 0012-0016 migration'lar tamamlandı. Bunlar gerçek ajan kabulü
+  sayılmaz; yeni dönemin canlı yayın kaydı oluşturulmadı.
+- Haber staging Worker gerçek Cloudflare'da ayrı D1/R2 bağlı biçimde dağıtıldı;
+  public workers.dev adresi etkin, robots.txt Disallow /, bütün sayfalarda
+  X-Robots-Tag noindex. 580 eski haber URL'sinin **580/580** tamamı HTTP 200,
+  staging canonical ve noindex kontrolünden geçti. Bilinmeyen haber 404.
+- Orbit staging hesabında `platform_owner` oturumu yok; tarayıcı Google ile
+  yeniden giriş istiyor. Anahtar kasasına otomasyon erişimi güvenlik kontrolü
+  tarafından engellendi. Mevcut güvenlik korumaları atlanmadı. Gerçek staging
+  site client, token ve ajan uçtan uca testleri açık. Production değişmedi.

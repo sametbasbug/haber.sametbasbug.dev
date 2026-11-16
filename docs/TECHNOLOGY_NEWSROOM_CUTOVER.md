@@ -1159,3 +1159,56 @@ approved identity flow with its own protected client secret, as
 `environment=development` with correct scope and redirect/actions/catalog
 URLs; then explicitly authorize staged deployment and acceptance tests.
 Never re-use production Haber credentials or databases in staging.
+
+## Checkpoint 28: isolated live staging deployment and 580 URL acceptance (16 November 2026)
+
+The owner broadened authorization to staging deploy, remote migrations, test
+records and coordinated release work. **Production was NOT touched:** the
+required signed real-agent staging acceptance and independent production D1
+backup gates are still not satisfied.
+
+- The verified Haber staging D1 first received real migrations **0001-0011**
+  through the explicit staging Wrangler config. The 0012-0016 files were
+  temporarily moved *within the same local volume* for this intentional
+  two-phase migration and restored in `finally`; there are no missing files.
+  An initial cross-device temporary move failed before any migrations and
+  was retried with same-volume cleanup.
+- The Git archive of exactly **580 real historical Markdown records** was
+  converted with `worker/tools/migrate-archive.mjs` and imported only into
+  `haber-site-staging` D1. Read-only verification: 580 published articles,
+  590 source rows, 11 migrations. Temporary SQL file removed immediately.
+- The staging D1 was seeded with **staging-only unlinked Hemera and Selene
+  publisher sponsor placeholders**. These are deliberately NOT live Orbit
+  pairwise subjects and must be replaced through real authenticated staging
+  identity setup before claiming a true writer/admin authorization test.
+  Actual migrations **0012-0016** then succeeded, producing 16 recorded
+  migrations, 580 legacy published articles, four permitted staging writer
+  rows and one inactive-in-practice placeholder admin row. No fake story was
+  ever written to production or even published to staging.
+- Built with `npm run build:staging -- --config=./wrangler.staging.jsonc`,
+  validated the isolation guard and performed a real Wrangler dry-run; then
+  DEPLOYED explicitly with `npx wrangler deploy --config=./wrangler.staging.jsonc`.
+  Public staging URL is now:
+  `https://haber-site-staging.samett33710.workers.dev`.
+  Site serves HTTP 200 homepage, archive, about page, robots, action
+  catalog and sitemap; unknown story 404. All tested responses have
+  `X-Robots-Tag: noindex, nofollow` and robots Disallow `/`.
+- An independent 12-way bounded live HTTP check of ALL 580 exact archived
+  Markdown filename permalinks verified **580/580 HTTP 200**, staging
+  canonical in each body and `X-Robots-Tag: noindex` on each response,
+  zero failures.
+- Orbit staging client registration remains **BLOCKED**: attempts to use
+  credential/Keychain material via an automation tool hit a security control,
+  so no raw secret was printed or stored. The supported `POST /v1/site-clients`
+  route requires a `platform_owner` logged-in session and CSRF. The user's
+  existing Chrome staging Orbit session redirected to the Google sign-in
+  page (no authenticated sponsor session). Never bypass the platform-owner
+  gate or invent a real pairwise subject. `orbit-haber-staging` remains
+  unregistered, and `ORBIT_HABER_STAGING_ORIGIN` remains intentionally unset.
+- Therefore **live signed Orbit-to-Haber read/author-write acceptance is NOT
+  complete**, nor are real browser admin acceptance and production release.
+  The synthetic local two-repo ES256 tests from previous checkpoints remain
+  valid but are not a substitute. Next authorized step requires staging Orbit
+  platform-owner login and legitimate client registration, secure credential
+  storage, replacing synthetic sponsor placeholders with actual stage pairwise
+  subject, and then stage-only Orbit target deploy and real agent acceptance.
