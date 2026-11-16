@@ -1,0 +1,84 @@
+---
+/* Error page never receives the authorization code or PKCE state. */
+export const prerender = false;
+import TechnologyLayout from '../../layouts/TechnologyLayout.astro';
+import { LOGIN_ERRORS, loginErrorKind } from '../orbit-login-error';
+
+const reason = LOGIN_ERRORS[loginErrorKind(Astro.url.searchParams.get('tur'))];
+Astro.response.status = reason.status;
+Astro.response.headers.set('cache-control', 'private, no-store');
+Astro.response.headers.set('referrer-policy', 'no-referrer');
+Astro.response.headers.set('x-robots-tag', 'noindex, nofollow');
+---
+<TechnologyLayout
+  title={reason.title}
+  description="Orbit giriş akışı güvenli biçimde tamamlanamadı."
+  kicker="Hesap"
+  noindex={true}
+>
+  <section class="orbit-error" aria-labelledby="orbit-error-heading">
+    <p class="orbit-error-category">ORBIT / HESAP BAĞLANTISI</p>
+    <h1 id="orbit-error-heading">{reason.title}</h1>
+    <p class="orbit-error-lead">{reason.message}</p>
+    <div class="orbit-error-links">
+      <a class="orbit-error-primary" href="/">Haber akışına dön</a>
+      <a class="orbit-error-secondary" href="/masa/">Haber masasını incele</a>
+    </div>
+    <p class="orbit-error-note">Bu hata haberleri okumayı etkilemez. Giriş bilgilerin bu sayfada gösterilmez.</p>
+  </section>
+</TechnologyLayout>
+<style>
+  .orbit-error {
+    max-width: 760px;
+    margin: clamp(56px, 10vh, 128px) auto clamp(75px, 13vh, 150px);
+    padding: 30px 0 38px;
+    border-top: 3px double var(--ep-heavy-rule);
+    border-bottom: 1px solid var(--tb-line);
+  }
+  .orbit-error-category {
+    font-size: 11px;
+    font-weight: 750;
+    letter-spacing: .16em;
+    color: var(--tb-accent);
+  }
+  .orbit-error h1 {
+    margin: 19px 0 16px;
+    max-width: 19ch;
+    font: 600 clamp(34px, 5vw, 58px)/1.11 Georgia, 'Times New Roman', serif;
+    letter-spacing: -.045em;
+  }
+  .orbit-error-lead {
+    max-width: 52ch;
+    color: var(--tb-muted);
+    font-size: clamp(16px, 1.8vw, 19px);
+    line-height: 1.65;
+  }
+  .orbit-error-links {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px 24px;
+    margin-top: 30px;
+    font-size: 14px;
+    font-weight: 700;
+  }
+  .orbit-error-primary {
+    color: var(--tb-on-accent);
+    background: var(--tb-accent);
+    padding: 11px 19px;
+    text-decoration: none;
+  }
+  .orbit-error-primary:hover { filter: brightness(.92); }
+  .orbit-error-secondary {
+    color: var(--tb-ink);
+    text-underline-offset: 4px;
+  }
+  .orbit-error-note {
+    color: var(--tb-muted);
+    font-size: 12px;
+    margin-top: 48px;
+  }
+  @media (max-width: 480px) {
+    .orbit-error { margin-block: 50px 80px; }
+  }
+</style>

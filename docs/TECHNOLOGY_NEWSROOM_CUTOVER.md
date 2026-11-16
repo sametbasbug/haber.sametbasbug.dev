@@ -1395,3 +1395,74 @@ verification; then explicitly enable fixed stage Orbit->Haber origin and
 run genuine bearer read and four-publisher/admin checks. The prior
 platform security rejection of secret transfer must not be bypassed.
 Production backup and migration attestation remain separate open gates.
+
+## Checkpoint 36: real Orbit owner consent, safe OAuth error, full HTTP archive gate (16 Nov 2026)
+
+The existing Orbit staging platform-owner Chrome session completed the
+Haber staging consent screen with only openid/profile scopes. Orbit
+returned a real one-time authorization code to the Haber staging
+callback, but the confidential token exchange failed. This confirms
+the OAuth authorization side works; it DOES NOT prove the client
+secret matches, ID token verification works, a Haber session exists
+or any real agent has authorization. No OAuth code, token, pairwise
+subject or secret was printed, saved or copied to a repository.
+
+Aggregate-only, read-only Cloudflare API query against Orbit staging
+D1 378e09e4-23e9-4112-abb8-90152a302502 found exactly:
+1 active orbit-haber-staging site client, 1 unrevoked client grant,
+0 grants with agent_access_at enabled, and 1 recent authorization
+code. No row identifiers, secrets, code digests or private data
+were returned. Consent survived the token exchange failure, but
+AGENT ACCESS IS STILL CLOSED.
+
+The failure exposed a UX/security bug: callback errors were unstyled
+raw HTML while the address bar retained a one-use authorization
+code and state. The callback now redirects HTTP 303 to the allowlisted
+non-sensitive /giris/hata/?tur=... route on EVERY error, deletes the
+PKCE-flow cookie, and sets private/no-store, noindex and
+Referrer-Policy no-referrer. The dedicated Astro error page uses
+TechnologyLayout, editorial typography and two normal navigation
+links, returns the correct 400/401/502/503 status and never displays
+the incoming code/state or upstream token response body. Callback
+logging no longer includes upstream free-form error strings.
+The browser's previously sensitive callback history entry was
+cleared locally. Three new safety regressions are in quality.
+Stage Worker version 5f4be92b-5bd7-4c2e-adbf-d63f2db4ec9c passed
+real HTTP 303->400/502, cookie clearing, noindex and no-referrer;
+Chrome at 320px showed no horizontal overflow.
+
+A new opt-in, READ-ONLY npm command preflight:live-permalinks GETs
+exactly the 580 tracked public archive URLs on BOTH fixed production
+and staging origins (1160 checks), validates HTTP200, exact original
+permalink and canonical for each site, bounded-stream HTML size,
+staging header+meta noindex, and production indexability. It
+accepts no caller-supplied URL or host, does not access D1 directly,
+and is intentionally NOT in the default quality gate because it
+makes 1160 remote requests. Four local safety tests ARE included.
+Real HTTP checks passed twice: production 580/580; staging 580/580.
+No published article, production Worker, D1, R2 or private backup
+was changed.
+
+### Remaining hard OAuth credential-pairing gate
+
+The two old client secret values cannot safely be recovered:
+Haber staging's Worker secret is intentionally write-only and
+Orbit staging stores only a peppered digest. Never circumvent the
+previous platform prohibition on tool-mediated secret transfer.
+A supported, user-mediated owner workflow is to generate a fresh,
+high-entropy secret in a secure password manager; deploy it ONLY
+to haber-site-staging as ORBIT_CLIENT_SECRET using the official
+Cloudflare Workers Settings > Variables and Secrets interface;
+THEN rotate the existing orbit-haber-staging registration via
+Orbit staging's platform_owner + CSRF-protected
+POST /v1/site-clients/orbit-haber-staging/rotate-secret with that
+same value. Do not put the secret in chat, a terminal command or
+history, Git, telemetry, Task Capsule or a test fixture.
+No such real secret provisioning or rotation was done here.
+
+Only after a successful fresh OAuth code-to-token exchange and a
+real verified pairwise Haber session should the fixed, isolated
+Orbit-to-Haber staging origin be enabled, stage agent_access
+explicitly approved and real signed guest reads / writer grants /
+admin checks performed. Production full encrypted D1 backup,
+independent restore and release attestation remain blocked.

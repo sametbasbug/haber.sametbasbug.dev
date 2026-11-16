@@ -569,3 +569,32 @@ Orbit stage Worker sürümü `aa33d483-6a76-4e22-97cc-9c7753952c10`.
 `ORBIT_HABER_STAGING_ORIGIN` gerçek OAuth eşleştirmesi ve owner
 onayından önce açılmadı. **Canlı gerçek ajan e2e henüz yapılmadı.**
 Production Worker, D1, sır, yayın ve main dallarına dokunulmadı.
+
+## 16 Kasım 2026 checkpoint 36: gerçek owner izni, OAuth hata temizliği, 580 URL
+
+Gerçek sahip oturumuyla Haber staging için Orbit'ten yalnız
+openid/profile izni onaylandı ve authorization code Haber callback'ine
+geri döndü. Kodun token'a çevrilmesi başarısız; mevcut confidential
+client secret uyuşmazlığı çözülmedi. Orbit staging D1 salt-okunur,
+yalnız toplu sayım sonucu: 1 aktif site client, 1 aktif owner grant,
+0 ajan erişimi ve 1 yakın tarihli code kaydı. Özel veri okunmadı.
+
+Callback hata ekranı artık kod/state taşıyan URL'de ham HTML olarak
+kalmaz: PKCE çerezini silen no-referrer/no-store 303 ile güvenli
+/giris/hata/ sayfasına geçer. Editoryal görünüm, doğru 400/401/502/503
+HTTP durumları, noindex ve 320px mobil taşmama testi geçti. Üç yeni
+regresyon genel kalite kapısına eklendi, staging'de gerçek HTTP test
+yapıldı. Günlüklerde upstream serbest hata gövdesi de yazılmıyor.
+
+Yeni isteğe bağlı preflight:live-permalinks komutu 580 gerçek
+Markdown slug'ının hem production hem staging adreslerini HTTP GET
+ile doğrular: 200, doğru canonical, sınırlı HTML, staging noindex ve
+production indekslenebilirlik. 1160 adreslik gerçek kontrol iki
+bağımsız kez geçti: 580/580 production + 580/580 staging. Dört
+yerel güvenlik testi quality'ye dahil, uzak 1160 istek bilerek değil.
+
+İleri aşama için yalnız hesap sahibinin Cloudflare resmî Worker
+secret yönetiminden yeni sırrı Haber staging'e yazması, sonra
+Orbit staging'in yetkili CSRF rotation uç noktasından aynı değere
+geçmesi gerekir. Platformun engellediği gizli veri aktarımı
+başka araçla dolanılmadı. Üretime kod veya veri yazılmadı.

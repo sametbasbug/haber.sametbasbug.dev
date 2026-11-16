@@ -17,31 +17,21 @@ import type { APIRoute } from 'astro';
 import { getDatabase, getWorkerEnv } from '#runtime-env';
 import { verifyOrbitToken } from '../../../worker/src/identity';
 import { claimsOku, exchangeCode, orbitHttpForEnvironment } from '../orbit';
+import { loginErrorRedirect } from '../orbit-login-error';
 import { girisCereziSil, girisDurumuOku, okuyucuYazVeAl, oturumAc } from '../session';
 
 export const prerender = false;
 
-function hata(mesaj: string, status = 400): Response {
-  /* Sayfa gövdesi sade tutuluyor ve Orbit'in hata metni buraya BASILMIYOR:
-   * karşı tarafın yazdığı metni kendi sayfamıza koymak, oraya yazılan her
-   * şeyi bize yazdırmaktır. Ayrıntı günlüğe gidiyor, ekrana değil. */
-  return new Response(
-    `<!doctype html><meta charset="utf-8"><title>Giriş tamamlanamadı</title>`
-    + `<p>${mesaj}</p><p><a href="/">Ana sayfaya dön</a></p>`,
-    { status, headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' } },
-  );
-}
-
 export const GET: APIRoute = async ({ request }) => {
   const env = getWorkerEnv();
   const db = getDatabase();
+  const temizle = girisCereziSil(request);
   if (!env.ORBIT_ISSUER || !env.ORBIT_CLIENT_ID || !env.ORBIT_CLIENT_SECRET || !db) {
-    return hata('Orbit girişi bu ortamda yapılandırılmamış.', 503);
+    return loginErrorRedirect('config', temizle);
   }
 
   const url = new URL(request.url);
   const durum = girisDurumuOku(request);
-  const temizle = girisCereziSil(request);
 
   /* Orbit hata döndüyse kod hiç gelmiyor. Kullanıcı onay ekranında
    * "reddet" demiş olabilir; bu bir arıza değil. */
@@ -49,18 +39,18 @@ export const GET: APIRoute = async ({ request }) => {
   if (orbitHatasi) {
     return new Response(null, {
       status: 303,
-      headers: { location: '/', 'set-cookie': temizle, 'cache-control': 'no-store' },
+      headers: { location: '/', 'set-cookie': temizle, 'cache-control': 'no-store', 'referrer-policy': 'no-referrer' },
     });
   }
 
   const code = url.searchParams.get('code');
   const state = url.searchParams.get('state');
-  if (!code || !state) return hata('Orbit dönüşü eksik parametre taşıyor.');
-  if (!durum) return hata('Giriş akışı zaman aşımına uğradı. Yeniden deneyin.');
+  if (!code || !state) return loginErrorRedirect('params', temizle);
+  if (!durum) return loginErrorRedirect('expired', temizle);
 
   /* Sabit süreli değil çünkü `state` gizli bir anahtar değil, tek kullanımlık
    * bir eşleşme etiketi; sızıntı riski taşıdığı bir alan yok. */
-  if (state !== durum.state) return hata('Giriş akışı eşleşmedi. Yeniden deneyin.');
+  if (state !== durum.state) return loginErrorRedirect('state', temizle);
 
   const config = {
     issuer: env.ORBIT_ISSUER,
@@ -81,29 +71,29 @@ export const GET: APIRoute = async ({ request }) => {
     });
     idToken = tokens.id_token;
   } catch (sebep) {
-    console.error('Orbit token takası başarısız:', String(sebep));
-    return hata('Orbit ile giriş tamamlanamadı. Yeniden deneyin.', 502);
+    console.error('Orbit token takası başarısız:', sebep instanceof Error ? sebep.name : 'unknown_error');
+    return loginErrorRedirect('token', temizle);
   }
 
   let verifierTransport: ReturnType<typeof orbitHttpForEnvironment>;
   try {
     verifierTransport = orbitHttpForEnvironment(env);
   } catch {
-    return hata('Orbit kimlik doğrulama hizmeti yapılandırılmamış.', 503);
+    return loginErrorRedirect('identityUnavailable', temizle);
   }
   const dogrulama = await verifyOrbitToken(
     idToken, config.issuer, config.clientId, verifierTransport,
   );
   if ('error' in dogrulama) {
     console.error('Orbit ID token reddedildi:', dogrulama.error);
-    return hata('Orbit kimliği doğrulanamadı.', dogrulama.status === 503 ? 503 : 401);
+    return loginErrorRedirect(dogrulama.status === 503 ? 'identityUnavailable' : 'verification', temizle);
   }
 
   /* `nonce` kontrolü `verifyOrbitToken`ın kapsamında değil: o fonksiyon
    * yayın ucu için yazıldı ve orada tarayıcı akışı yok. Burada gerekiyor. */
   const iddialar = claimsOku(idToken);
-  if (!iddialar) return hata('Orbit kimliği okunamadı.', 401);
-  if (iddialar.nonce !== durum.nonce) return hata('Orbit kimliği bu giriş için verilmemiş.', 401);
+  if (!iddialar) return loginErrorRedirect('verification', temizle);
+  if (iddialar.nonce !== durum.nonce) return loginErrorRedirect('verification', temizle);
 
   const simdi = Date.now();
   const okuyucu = await okuyucuYazVeAl(

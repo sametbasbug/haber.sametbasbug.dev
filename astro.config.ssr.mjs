@@ -29,6 +29,7 @@ function yayinUclari() {
            derlemede oturum diye bir şey yok. */
         injectRoute({ pattern: '/giris/orbit', entrypoint: './src/server/routes/giris.ts' });
         injectRoute({ pattern: '/giris/orbit/donus', entrypoint: './src/server/routes/giris-donus.ts' });
+        injectRoute({ pattern: '/giris/hata', entrypoint: './src/server/routes/giris-hata.astro' });
         injectRoute({ pattern: '/cikis', entrypoint: './src/server/routes/cikis.ts' });
 
         injectRoute({ pattern: '/api/brief', entrypoint: './src/server/routes/brief.ts' });
