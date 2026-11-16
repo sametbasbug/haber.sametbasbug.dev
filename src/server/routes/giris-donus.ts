@@ -16,7 +16,7 @@
 import type { APIRoute } from 'astro';
 import { getDatabase, getWorkerEnv } from '#runtime-env';
 import { verifyOrbitToken } from '../../../worker/src/identity';
-import { claimsOku, exchangeCode } from '../orbit';
+import { claimsOku, exchangeCode, orbitHttpForEnvironment } from '../orbit';
 import { girisCereziSil, girisDurumuOku, okuyucuYazVeAl, oturumAc } from '../session';
 
 export const prerender = false;
@@ -75,6 +75,9 @@ export const GET: APIRoute = async ({ request }) => {
       code,
       verifier: durum.verifier,
       redirectUri: `${url.origin}/giris/orbit/donus`,
+      transport: orbitHttpForEnvironment(env as typeof env & {
+        ORBIT_STAGING?: { fetch: (request: Request) => Promise<Response> };
+      }),
     });
     idToken = tokens.id_token;
   } catch (sebep) {

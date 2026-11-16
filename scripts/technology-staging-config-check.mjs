@@ -51,7 +51,7 @@ export function validateHaberStagingConfig(staging, production) {
   if (!hasOnlyKeys(staging, [
     'name', 'main', 'compatibility_date', 'compatibility_flags',
     'workers_dev', 'preview_urls', 'assets', 'd1_databases',
-    'r2_buckets', 'vars',
+    'r2_buckets', 'services', 'vars',
   ])) {
     reject('unapproved_top_level_binding_or_setting');
   }
@@ -81,6 +81,15 @@ export function validateHaberStagingConfig(staging, production) {
     || staging.assets?.directory !== 'dist-ssr-staging/client'
     || production.assets?.directory !== 'dist-ssr/client') {
     reject('wrong_ssr_assets');
+  }
+  // Same-zone workers.dev fetch returns 404. A service binding is mandatory
+  // for staging OIDC discovery, token exchange and signing key reads, but a
+  // binding to ANY production or arbitrary Worker is unsafe.
+  if (!Array.isArray(staging.services) || staging.services.length !== 1
+    || !hasOnlyKeys(staging.services[0], ['binding', 'service'])
+    || staging.services[0].binding !== 'ORBIT_STAGING'
+    || staging.services[0].service !== 'orbit-v6-staging') {
+    reject('unverified_or_production_orbit_service_binding');
   }
   const databases = staging.d1_databases;
   const liveIds = new Set((production.d1_databases ?? []).map(row => row.database_id));

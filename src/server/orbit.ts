@@ -11,6 +11,28 @@
  * tarayıcı tarafı var.
  */
 
+// Cloudflare blocks ordinary Worker-to-Worker fetch on the same workers.dev
+// zone. In isolated staging use ONLY the exact approved Orbit service binding;
+// keep the public OIDC issuer/URLs unchanged for browser redirects and claims.
+export type OrbitHttp = (url: string, init?: RequestInit) => Promise<Response>;
+const STAGING_ISSUER = 'https://orbit-v6-staging.samett33710.workers.dev';
+export function orbitHttpForEnvironment(env: {
+  ORBIT_ISSUER?: string;
+  ORBIT_CLIENT_ID?: string;
+  ORBIT_STAGING?: { fetch: (request: Request) => Promise<Response> };
+}): OrbitHttp {
+  if (env.ORBIT_ISSUER !== STAGING_ISSUER) return (url, init) => fetch(url, init);
+  if (env.ORBIT_CLIENT_ID !== 'orbit-haber-staging' || !env.ORBIT_STAGING?.fetch) {
+    throw new Error('staging_orbit_service_binding_missing');
+  }
+  return (url, init) => {
+    if (new URL(url).origin !== STAGING_ISSUER) {
+      throw new Error('staging_oidc_target_origin_mismatch');
+    }
+    return env.ORBIT_STAGING!.fetch(new Request(url, init));
+  };
+}
+
 const encoder = new TextEncoder();
 
 export interface OrbitConfig {
@@ -30,11 +52,11 @@ interface Discovery {
 const DISCOVERY_TTL_MS = 10 * 60 * 1000;
 let discoveryCache: { value: Discovery; fetchedAt: number } | null = null;
 
-export async function discover(issuer: string): Promise<Discovery> {
+export async function discover(issuer: string, transport: OrbitHttp = fetch): Promise<Discovery> {
   if (discoveryCache && Date.now() - discoveryCache.fetchedAt < DISCOVERY_TTL_MS) {
     return discoveryCache.value;
   }
-  const response = await fetch(`${issuer}/.well-known/openid-configuration`);
+  const response = await transport(`${issuer}/.well-known/openid-configuration`);
   if (!response.ok) throw new Error(`Orbit keşif belgesi alınamadı: ${response.status}`);
   const value = (await response.json()) as Discovery;
   if (!value.authorization_endpoint || !value.token_endpoint) {
@@ -75,8 +97,9 @@ export async function authorizeUrl(options: {
   nonce: string;
   challenge: string;
   scopes: readonly string[];
+  transport?: OrbitHttp;
 }): Promise<string> {
-  const { authorization_endpoint } = await discover(options.config.issuer);
+  const { authorization_endpoint } = await discover(options.config.issuer, options.transport);
   const url = new URL(authorization_endpoint);
   url.searchParams.set('response_type', 'code');
   url.searchParams.set('client_id', options.config.clientId);
@@ -101,8 +124,9 @@ export async function exchangeCode(options: {
   code: string;
   verifier: string;
   redirectUri: string;
+  transport?: OrbitHttp;
 }): Promise<TokenResponse> {
-  const { token_endpoint } = await discover(options.config.issuer);
+  const { token_endpoint } = await discover(options.config.issuer, options.transport);
   const body = new URLSearchParams({
     grant_type: 'authorization_code',
     code: options.code,
@@ -117,7 +141,7 @@ export async function exchangeCode(options: {
     `${encodeURIComponent(options.config.clientId)}:${encodeURIComponent(options.config.clientSecret)}`,
   );
 
-  const response = await fetch(token_endpoint, {
+  const response = await (options.transport ?? fetch)(token_endpoint, {
     method: 'POST',
     headers: {
       'content-type': 'application/x-www-form-urlencoded',

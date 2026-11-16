@@ -22,6 +22,7 @@ const STAGE = {
     database_id: 'a03b97fa-b08a-483e-bebf-aa10a0568fcf',
     migrations_dir: 'worker/migrations',
   }],
+  services: [{ binding: 'ORBIT_STAGING', service: 'orbit-v6-staging' }],
   r2_buckets: [{
     binding: 'HERO', bucket_name: 'haber-gorseller-staging',
   }],
@@ -96,6 +97,14 @@ block(s=>{s.account_id='different-cloudflare-account'},
   'no staging account scope override');
 block(s=>{s.assets.run_worker_first=false},
   'no unreviewed static asset routing option');
+block(s=>{s.services=[]},'staging OIDC requires one specific service');
+block(s=>{s.services[0].service=production.name},
+  'staging may never call production Haber as a service');
+block(s=>{s.services[0].service='orbit-v6-production'},
+  'staging may never call production Orbit as a service');
+block(s=>{s.services[0].binding='ORBIT'},'stage service binding identity fixed');
+block(s=>{s.services.push({binding:'EXTRA',service:'orbit-v6-production'})},
+  'multiple services must not bypass allowlist');
 block(s=>{s.assets.not_found_handling='single-page-application'},
   'no static asset SPA fallback masking');
 block(s=>{s.d1_databases[0].jurisdiction='eu'},

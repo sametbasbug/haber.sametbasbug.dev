@@ -24,6 +24,11 @@ checked(home.includes('href={`/${entry.id}/`}'), 'real archive article permalink
 
 // Newspaper masthead and longform reading; no images in new editorial components.
 checked(layout.includes('ep-wordmark'), 'typographic publication masthead');
+checked(layout.includes("import OturumDugmesi from '../components/OturumDugmesi.astro'"), 'reuse trusted Orbit session form in editorial layout');
+checked(layout.includes('<OturumDugmesi />'), 'reader can access the connected-site OAuth consent flow from homepage');
+checked(css.includes('--news-border: var(--tb-line)'), 'legacy login control inherits editorial theme tokens');
+checked(css.includes('.ep-utility-actions > a'), 'narrow mobile hides only secondary links, not login');
+
 checked(layout.includes('data-theme-toggle'), 'theme and accessibility controller retained');
 checked(css.includes("Georgia, 'Times New Roman', serif"), 'book-like serif masthead');
 checked(css.includes('[data-tb-theme=\'dark\']'), 'dark theme palette');

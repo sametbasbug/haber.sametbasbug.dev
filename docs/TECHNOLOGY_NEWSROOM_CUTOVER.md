@@ -1277,3 +1277,60 @@ arguments, stage-only export and local-only restore contract, cleanup,
 and separation from the genuine production encrypted-backup attestation.
 First live run reproduced the successful 3,105,966-byte staging export
 and isolated 580/590/16 restore with no temporary files retained.
+
+## Checkpoint 34: staging OIDC Worker-to-Worker transport (16 November 2026)
+
+The editorial redesign accidentally omitted the shared `OturumDugmesi`
+component; the original session-aware, SameSite-Lax, CSRF-checked POST
+entry point remained available on the server but no visitor could invoke
+it. Reused that existing component in the masthead and mapped the legacy
+theme variables to the newspaper tokens. At 320 CSS px the date, account
+button and dark-mode control fit inside the gutters with no horizontal
+overflow. The login form remains POST with `data-astro-reload`; there is
+no new cookie implementation or unauthenticated account shortcut.
+
+An actual user-browser login attempt then exposed a second error:
+`POST /giris/orbit` returned a **blank 404** with a same-origin Origin
+header, while `GET /giris/orbit` returned the correct 405. All other
+staging POST endpoints continued to return their expected 303/401/410,
+proving this was not generic method routing. A real isolated local
+Wrangler Worker with a **fake test-only** secret returned the expected
+303 for the exact POST. Direct external requests to Orbit staging OIDC
+discovery returned 200.
+
+Root cause: Workers on the same account's `workers.dev` Cloudflare
+zone cannot use an ordinary `fetch` from one Worker to another. A
+temporary `assets.run_worker_first=true` experiment did not resolve
+the issue and was **reverted**. The supported fix is a staging-only
+Cloudflare **Service Binding** to the known
+`orbit-v6-staging` Worker. The config validator now demands exactly
+one `ORBIT_STAGING` binding to that precise name, rejecting production,
+arbitrary and additional bindings (59 positive/negative tests).
+Production Wrangler is unchanged.
+
+`orbitHttpForEnvironment` accepts only the exact staging issuer and
+`orbit-haber-staging` audience, fails closed if its binding is absent,
+and refuses to send even discovery or token requests to a different
+origin. The generic OIDC client accepts an injected transport; the
+production issuer continues to use ordinary public `fetch`. Three
+executable tests cover missing binding, off-origin denial, actual
+discovery/token exchange using a synthetic service and non-staging
+behaviour.
+
+Real stage-only Worker build, Wrangler dry-run and deployment succeeded.
+**Remote HTTP after deployment:**
+- GET `/giris/orbit` => 405.
+- Same-origin POST `/giris/orbit` => **303**, Location hostname
+  `orbit-v6-staging.samett33710.workers.dev`, path
+  `/v1/oauth/authorize`, and the expected state cookie.
+- Cross-origin POST `/giris/orbit` => **403** (origin CSRF protection).
+- All responses from the routed staging paths remain noindex.
+
+**Still blocked:** Haber staging's existing OAuth client secret does not
+match the registered Orbit staging client. Thus the POST token exchange
+will reject the client until a legitimate, safely controlled rotation and
+Worker secret provision. Later-stage JWKS retrieval for action signature
+verification and the reciprocal Orbit->Haber staging action calls also
+require controlled same-account Worker networking; do not claim full
+agent E2E based only on login 303. No production Worker, domain, R2, D1
+or GitHub release was changed.

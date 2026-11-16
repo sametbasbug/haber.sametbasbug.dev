@@ -19,6 +19,11 @@
       "migrations_dir": "worker/migrations"
     }
   ],
+  // Worker-to-Worker requests on the same workers.dev zone cannot use
+  // ordinary public fetch. Only the exact isolated Orbit staging Worker.
+  "services": [
+    { "binding": "ORBIT_STAGING", "service": "orbit-v6-staging" }
+  ],
   "r2_buckets": [
     {
       "binding": "HERO",

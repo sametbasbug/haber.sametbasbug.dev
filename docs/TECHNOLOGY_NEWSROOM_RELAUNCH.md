@@ -520,3 +520,24 @@ parametresi kabul edilmiyor, restore her zaman `--local` ve izole
 geçici dizinde. `npm run test:staging-restore-safety` yerel kalite
 kapısında üç pozitif/negatif koruma testi yürütüyor; gerçek Cloudflare
 export'u bilerek `npm run quality` içine girmiyor.
+
+## 16 Kasım 2026 checkpoint 34: kaybolan giriş düğmesi ve workers.dev engeli
+
+Yeni editoryal layout'ta oturum düğmesinin unutulduğu gerçek Chrome
+denetiminde bulundu. Eski oturum-aware `OturumDugmesi` yeniden
+bağlandı, kendi güvenlik/çerez davranışı korundu, mobil 320px'te tema
+ve giriş düğmesi taşmadan ölçüldü. Canlı staging'de normal kaynaklı
+`POST /giris/orbit` 404 dönerken aynı yerel test Worker'ı 303 verdi;
+diğer POST uçları sağlıklıydı. Sorun Cloudflare'ın aynı workers.dev
+zone'undaki iki Worker'ın birbirini normal fetch ile çağırmamasıydı.
+Statik asset router değişikliği işe yaramadı ve geri alındı.
+
+Yalnız Haber staging'de `ORBIT_STAGING -> orbit-v6-staging` Service
+Binding eklendi; doğrulayıcı production veya rastgele başka servis
+bağlanmasını reddediyor. OIDC discovery ve token takası yalnız
+staging issuer için bu bağlantıdan gidiyor. Gerçek staging HTTP
+doğrulaması: GET 405, aynı-Origin POST **303** (doğru Orbit authorize
+adresi ve session-state çerezi), yabancı Origin POST **403**.
+Yeni transport üç bağımsız fail-closed testle güvenceye alındı.
+İstemci sırrı uyuşmazlığı, JWKS ve ters Orbit->Haber çağrı yolu
+ayrı ve halen tamamlanmamış kabul kapılarıdır.

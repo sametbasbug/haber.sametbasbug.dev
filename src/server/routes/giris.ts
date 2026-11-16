@@ -14,7 +14,7 @@
  */
 import type { APIRoute } from 'astro';
 import { getWorkerEnv } from '#runtime-env';
-import { authorizeUrl, pkce, randomToken } from '../orbit';
+import { authorizeUrl, orbitHttpForEnvironment, pkce, randomToken } from '../orbit';
 import { donusYolunuTemizle, girisCerezi } from '../session';
 
 export const prerender = false;
@@ -58,6 +58,9 @@ export const POST: APIRoute = async ({ request }) => {
     nonce,
     challenge,
     scopes: SCOPES,
+    transport: orbitHttpForEnvironment(env as typeof env & {
+      ORBIT_STAGING?: { fetch: (request: Request) => Promise<Response> };
+    }),
   });
 
   return new Response(null, {

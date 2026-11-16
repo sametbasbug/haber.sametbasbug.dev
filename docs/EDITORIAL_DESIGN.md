@@ -72,3 +72,14 @@ keeps aria-pressed and the browser chrome in sync with manual and system
 changes. Saved preference, system fallback and denied storage have executable
 VM regression cases. Real staging confirmed a dark page background and matching
 `#171a19` meta after a forced reload.
+
+## Checkpoint 34: readable identity control
+
+The shared `OturumDugmesi` form is retained in the compact newspaper
+utility strip; it was lost when the original hero/header was rewritten.
+It reads the reader session only if the browser supplies a session
+cookie; anonymous requests do not hit D1 for session UI. The form
+continues to use the real origin-protected POST route, not a synthetic
+login link. The existing element maps to the publication's palette,
+and mobile readers can reach account and theme controls without
+overflow. RSS and the external Orbit link yield space under 400px.

@@ -70,7 +70,20 @@ button { font: inherit; }
 }
 .ep-edition-date { text-transform: capitalize; }
 .ep-utility-label { text-align: center; letter-spacing: .025em; }
-.ep-utility-actions { display: flex; align-items: center; justify-content: flex-end; gap: 20px; }
+.ep-utility-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 18px;
+  /* The shared, session-aware Orbit control predates the newspaper theme.
+   * Map its existing semantic tokens instead of duplicating auth UI or
+   * changing the legacy publication's stylesheet. */
+  --news-border: var(--tb-line);
+  --news-panel: var(--tb-bg);
+  --news-muted-strong: var(--tb-muted);
+  --news-text: var(--tb-ink);
+  --news-accent: var(--tb-accent);
+}
 .ep-utility-actions a { text-decoration: none; }
 .ep-utility-actions a:hover, .ep-footer a:hover { color: var(--tb-accent); }
 .ep-theme {
@@ -138,7 +151,7 @@ button { font: inherit; }
   .ep-container { padding-inline: 18px; }
   .ep-utility { min-height: 39px; grid-template-columns: 1fr auto; font-size: 10px; }
   .ep-utility-label { display: none; }
-  .ep-utility-actions { gap: 13px; }
+  .ep-utility-actions { gap: 10px; }
   .ep-masthead { padding-block: 25px 20px; }
   .ep-wordmark { font-size: clamp(22px, 8.2vw, 54px); }
   .ep-masthead-caption { margin-top: 10px; font-size: 8px; }
@@ -147,5 +160,11 @@ button { font: inherit; }
   .ep-footer { margin-top: 70px; }
   .ep-footer-head { display: block; }
   .ep-footer-head p { margin-top: 17px; }
+}
+/* On a 320px phone, prioritize the actual account control and the theme;
+ * RSS and the external Orbit homepage remain optional links at larger sizes.
+ * Keep the edition date in view, and leave the primary nav untouched. */
+@media (max-width: 400px) {
+  .ep-utility-actions > a { display: none; }
 }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
