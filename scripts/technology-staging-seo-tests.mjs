@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdtempSync, writeFileSync, readFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, writeFileSync, readFileSync, symlinkSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { spawnSync } from 'node:child_process';
@@ -25,6 +25,20 @@ try {
   assert.throws(()=>finalizeStagingAssets(dir,'https://evil.example'));cases++;
   assert.throws(()=>finalizeStagingAssets(dir,STAGE),
     /requires explicit review/u,'never silently duplicate robots headers');cases++;
+  // A substituted symlink must never redirect the staging static-policy write.
+  const victim=join(dir,'unrelated-production-policy.txt');
+  writeFileSync(victim,'DO NOT MODIFY');
+  rmSync(robots);
+  symlinkSync(victim,robots);
+  assert.throws(()=>finalizeStagingAssets(dir,STAGE));cases++;
+  assert.equal(readFileSync(victim,'utf8'),'DO NOT MODIFY');cases++;
+  rmSync(robots);
+  writeFileSync(robots,'User-agent: *\\nAllow: /\\n');
+  rmSync(headers);
+  symlinkSync(victim,headers);
+  assert.throws(()=>finalizeStagingAssets(dir,STAGE));cases++;
+  assert.equal(readFileSync(victim,'utf8'),'DO NOT MODIFY');cases++;
+  rmSync(headers);
   rmSync(robots);
   assert.throws(()=>finalizeStagingAssets(dir,STAGE),/missing source robots/u);cases++;
 

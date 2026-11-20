@@ -36,6 +36,10 @@ test('only absolute, existing regular ciphertext outside repo is a valid local i
     const link=join(dir,'symlink.hab1');
     symlinkSync(good,link);
     assert.throws(()=>validatePrivateOfflineBackupPath(link,lstatSync(link)));
+    const subprocess=spawnSync(process.execPath,[tool,'--verify-hab1',link],
+      {encoding:'utf8',timeout:5000});
+    assert.equal(subprocess.status,1,'O_NOFOLLOW must reject symlinked encrypted backups');
+    assert.equal(subprocess.stdout,'');
     assert.throws(()=>validatePrivateOfflineBackupPath(dir,lstatSync(dir)));
     assert.throws(()=>validatePrivateOfflineBackupPath(good,{
       isFile:()=>true,isSymbolicLink:()=>false,size:0,

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
-import { writeFileSync, mkdtempSync, existsSync, rmSync, readdirSync } from 'node:fs';
+import { writeFileSync, mkdtempSync, existsSync, symlinkSync, rmSync, readdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { verifySqlExportFile } from './d1-export-integrity.mjs';
@@ -80,6 +80,9 @@ try{
   writeFileSync(sql,`ATTACH DATABASE '${sideEffect}' AS external; CREATE TABLE external.unsafe(v INTEGER);`);
   assert.throws(()=>verifySqlExportFile(sql));
   assert.equal(existsSync(sideEffect),false,'SQL export verification must not write external disk files');
+  const link=join(temp,'redirected.sql');
+  symlinkSync(sql,link);
+  assert.throws(()=>verifySqlExportFile(link),'symlinked backup must never be opened');
 } finally {rmSync(temp,{recursive:true,force:true});}
 assert.throws(()=>verifyExportedNewsDatabase(fakeDb(),{minimumPublished:0}));
 console.log('D1 export integrity unit tests: 14 historical, corruption, migration, permalink and filesystem safety scenarios passed');

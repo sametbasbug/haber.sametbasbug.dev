@@ -6,7 +6,8 @@
  * and deleted. Requires an existing operator-owned macOS Keychain key.
  * Run from a trusted terminal, with a backup copied outside the repository.
  */
-import {lstat,readFile} from 'node:fs/promises';
+import {open} from 'node:fs/promises';
+import {constants} from 'node:fs';
 import {isAbsolute,extname,resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {MAX_CIPHERTEXT_BYTES} from './technology-private-backup-crypto.mjs';
@@ -31,12 +32,15 @@ async function main(){
     throw new Error('explicit_offline_backup_path_required');
   }
   const path=process.argv[3];
-  const info=await lstat(path);
-  validatePrivateOfflineBackupPath(path,info);
-  let key;
+  let file, key;
+  // Single descriptor anchors validation and read to the SAME inode.
+  // O_NOFOLLOW rejects symlink substitution; O_NONBLOCK avoids FIFO hangs.
+
   try{
+    file=await open(path,constants.O_RDONLY|constants.O_NOFOLLOW|constants.O_NONBLOCK);
+    validatePrivateOfflineBackupPath(path,await file.stat());
     key=readOperatorBackupKey();
-    const encrypted=await readFile(path);
+    const encrypted=await file.readFile();
     const restored=await verifyEncryptedSqlBackupOffline(encrypted,key);
     console.log(JSON.stringify({
       status:'independent_offline_backup_verified',
@@ -49,6 +53,7 @@ async function main(){
     }));
   }finally{
     key?.fill(0);
+    await file?.close();
   }
 }
 if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)){

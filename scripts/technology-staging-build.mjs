@@ -6,7 +6,7 @@
  * Production build and source public/robots.txt remain untouched.
  */
 import { spawnSync } from 'node:child_process';
-import { readFileSync, writeFileSync, existsSync } from 'node:fs';
+import {readFileSync,openSync,closeSync,fstatSync,ftruncateSync,writeSync,constants} from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
@@ -22,24 +22,46 @@ export function finalizeStagingAssets(root, stageOrigin) {
     throw new Error('Unexpected Haber staging site origin');
   }
   const robots = resolve(root, 'robots.txt');
-  if (!existsSync(robots)) {
-    throw new Error('Staging build missing source robots.txt');
+  const robotPolicy = 'User-agent: *\nDisallow: /\n';
+  // Open the existing file ONCE without following symlinks. Validation,
+  // truncation and replacement all target the same inode.
+  let robotsFd;
+  try {
+    robotsFd=openSync(robots,constants.O_RDWR|constants.O_NOFOLLOW|constants.O_NONBLOCK);
+  } catch(error) {
+    if(error.code==='ENOENT') throw new Error('Staging build missing source robots.txt');
+    throw error;
   }
-  // Cloudflare serves public/robots.txt as a static asset before middleware.
-  // Replace ONLY the built copy. The live source remains Allow:/.
-  writeFileSync(robots, 'User-agent: *\nDisallow: /\n', 'utf8');
+  try {
+    if(!fstatSync(robotsFd).isFile()) throw new Error('Staging robots.txt must be a regular file');
+    ftruncateSync(robotsFd,0);
+    if(writeSync(robotsFd,robotPolicy,0,'utf8')!==Buffer.byteLength(robotPolicy)){
+      throw new Error('Failed to completely write staging robots policy');
+    }
+  }finally{
+    closeSync(robotsFd);
+  }
 
-  // Static assets and cached prerendered pages can bypass SSR middleware.
-  // Cloudflare Workers static assets support _headers in the asset root.
   const headers = resolve(root, '_headers');
-  const existing = existsSync(headers) ? readFileSync(headers, 'utf8') : '';
-  const block = '\n/*\n  X-Robots-Tag: noindex, nofollow\n';
-  if (existing.includes('X-Robots-Tag:')) {
-    throw new Error('Existing staging _headers robot policy requires explicit review');
+  const headersFd=openSync(headers,
+    constants.O_RDWR|constants.O_CREAT|constants.O_NOFOLLOW|constants.O_NONBLOCK,0o644);
+  let resultHeaders;
+  try {
+    if(!fstatSync(headersFd).isFile())throw new Error('Staging _headers must be a regular file');
+    const existing=readFileSync(headersFd,'utf8');
+    const block='\n/*\n  X-Robots-Tag: noindex, nofollow\n';
+    if(existing.includes('X-Robots-Tag:')){
+      throw new Error('Existing staging _headers robot policy requires explicit review');
+    }
+    resultHeaders=existing.trimEnd()+block;
+    ftruncateSync(headersFd,0);
+    if(writeSync(headersFd,resultHeaders,0,'utf8')!==Buffer.byteLength(resultHeaders)){
+      throw new Error('Failed to completely write staging headers');
+    }
+  }finally{
+    closeSync(headersFd);
   }
-  writeFileSync(headers, existing.trimEnd() + block, 'utf8');
-
-  return { robots: readFileSync(robots, 'utf8'), headers: readFileSync(headers, 'utf8') };
+  return {robots:robotPolicy,headers:resultHeaders};
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

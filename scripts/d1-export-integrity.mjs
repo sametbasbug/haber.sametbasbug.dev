@@ -8,7 +8,7 @@
  * Only counts and PASS/FAIL appear on stdout/stderr. The caller alone owns
  * protecting and deleting the sensitive export.
  */
-import { readFileSync, statSync, readdirSync } from 'node:fs';
+import { readFileSync, openSync, closeSync, fstatSync, readdirSync, constants } from 'node:fs';
 import { DatabaseSync, constants as SQLite } from 'node:sqlite';
 import { pathToFileURL } from 'node:url';
 
@@ -132,7 +132,11 @@ export function verifyExportedNewsDatabase(db, options={}) {
 export function verifySqlExportFile(path) {
   // The export is sensitive and intentionally never printed. Reasonable cap
   // protects the verification process from accidental huge copies.
-  const stats=statSync(path);
+  // Validation and SQL read must use the same opened inode.
+  // Do not follow substituted symlinks or block on a FIFO.
+  const fd=openSync(path,constants.O_RDONLY|constants.O_NOFOLLOW|constants.O_NONBLOCK);
+  try {
+  const stats=fstatSync(fd);
   if (!stats.isFile() || stats.size===0 || stats.size>128*1024*1024) {
     throw new Error('Backup file size is invalid for this release');
   }
@@ -148,7 +152,7 @@ export function verifySqlExportFile(path) {
     return SQLite.SQLITE_OK;
   });
   try {
-    db.exec(readFileSync(path,'utf8'));
+    db.exec(readFileSync(fd,'utf8'));
     const canonicalArchive=new URL('../src/content/equinoxHaber/',import.meta.url);
     const slugs=readdirSync(canonicalArchive)
       .filter(file=>file.endsWith('.md')
@@ -163,6 +167,9 @@ export function verifySqlExportFile(path) {
     });
   } finally {
     db.close();
+  }
+  } finally {
+    closeSync(fd);
   }
 }
 

@@ -64,11 +64,11 @@ test('CLI fails closed and never prints a rejected report or private content',()
 
 test('duplicate JSON fields and comment syntax cannot override a failed human checkbox',()=>{
   const source=JSON.stringify(report);
-  const duplicate=source.replace('"oauthCodeExchangedForTokens":true',
+  const duplicate=source.replaceAll('"oauthCodeExchangedForTokens":true',
     '"oauthCodeExchangedForTokens":false,"oauthCodeExchangedForTokens":true');
   assert.throws(()=>parseStagingOperatorReport(duplicate),/duplicate_or_invalid_key/u);
   assert.throws(()=>parseStagingOperatorReport(
-    source.replace('"schema":"haber-staging-e2e-v1"',
+    source.replaceAll('"schema":"haber-staging-e2e-v1"',
       '"schema":"incorrect","schema":"haber-staging-e2e-v1"'),
   ),/duplicate_or_invalid_key/u);
   assert.throws(()=>parseStagingOperatorReport(source.replace('{','{/*comment*/')),

@@ -102,10 +102,10 @@ ui.click();
 assert.equal(ui.attrs.get('aria-pressed'),'false');checks++;
 
 // The same shipped inline controller also selects the primary navigation.
-// A story is not the homepage, a historical /sayfa/N page is the archive,
+// A story is not the homepage, and retired archive URLs must be unselected,
 // and the Orbit newsroom must not mark the news feed as active.
 function activeNavigation(pathname) {
-  const nav = ['tumu', 'yapay-zeka', 'yazilim', 'donanim', 'arsiv', 'masa'].map((value) => {
+  const nav = ['tumu', 'yapay-zeka', 'yazilim', 'donanim', 'masa'].map((value) => {
     const attrs = new Map();
     return {
       value,
@@ -132,9 +132,9 @@ for (const [path, expected] of [
   ['/yeni/', 'tumu'],
   ['/kategori/yapay-zeka/', 'yapay-zeka'],
   ['/yeni/kategori/yazilim/', 'yazilim'],
-  ['/arsiv/', 'arsiv'],
-  ['/yeni/arsiv/', 'arsiv'],
-  ['/sayfa/2/', 'arsiv'],
+  ['/arsiv/', null],
+  ['/yeni/arsiv/', null],
+  ['/sayfa/2/', 'tumu'],
   ['/masa/', 'masa'],
   ['/yeni/masa/', 'masa'],
   ['/avrupada-klima-talebi-sicak-hava-dalgalariyla-yeniden-gundemde/', null],

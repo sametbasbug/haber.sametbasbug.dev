@@ -1,289 +1,113 @@
 /**
- * Prevent changes to GitHub Actions from silently bypassing Haber 2.0's
- * coordinated Orbit-first release and recovery gates.
- *
- * The YAML itself is the tested source of truth. Mutation cases below prove
- * the test fails when someone reorders/removes a critical gate.
+ * Guard the ACTUAL simplified production deployment contract after retirement
+ * of staging and the live 580-article archive.
+ * Real release gates still require identity, editorial rules, remote migration,
+ * custom SSR deploy and the public/unsigned endpoint HTTP checks.
  */
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import YAML from 'yaml';
 
-const workflow=YAML.parseDocument(readFileSync(
-  new URL('../.github/workflows/deploy.yml',import.meta.url),'utf8'),
+const doc=YAML.parseDocument(
+  readFileSync(new URL('../.github/workflows/deploy.yml',import.meta.url),'utf8'),
   {uniqueKeys:true},
 );
-assert.deepEqual(workflow.errors,[],'GitHub deploy workflow YAML must parse');
-const steps=workflow.toJS().jobs.deploy.steps;
+assert.deepEqual(doc.errors,[],'Deploy workflow YAML must parse');
+const workflow=doc.toJS();
+const steps=workflow.jobs.deploy.steps;
 const required=[
-  'Verify Orbit identity and Haber 2.0 contracts before migration',
-  'Verify the editorial pipeline before migration',
-  'Build the Worker',
-  'Require the new Orbit agent news API before D1 migration',
-  'Verify legacy publisher anchors before D1 migration',
-  'Verify exact 580 legacy permalinks before D1 migrations',
-  'Require real signed staging E2E release acceptance',
-  'Require operator attestation of an independent D1 backup',
-  'Confirm a D1 Time Travel recovery point before migrations',
+  'Verify publishing and design',
+  'Build production Worker',
   'Apply D1 migrations',
-  'Verify production D1 publisher readiness after migrations',
-  'Verify exact 580 legacy permalinks after D1 migrations',
-  'Deploy the Worker',
-  'Verify the live site',
+  'Deploy production Worker',
+  'Verify live site',
 ];
-export function verifyNewsroomDeployOrder(allSteps) {
+const ACCOUNT_VAR='$'+'{{ vars.CLOUDFLARE_ACCOUNT_ID }}';
+const TOKEN_SECRET='$'+'{{ secrets.CLOUDFLARE_API_TOKEN }}';
+
+export function verifyNewsroomDeployOrder(allSteps){
+  if(!Array.isArray(allSteps))throw Error('Missing production steps');
   const names=allSteps.map(step=>step.name);
   for(const name of required){
-    if(names.indexOf(name)<0 || names.indexOf(name)!==names.lastIndexOf(name)){
-      throw new Error('Missing or duplicated deployment gate: '+name);
+    if(names.indexOf(name)<0||names.indexOf(name)!==names.lastIndexOf(name)){
+      throw Error('Missing or duplicate production gate: '+name);
     }
   }
-  const positions=required.map(name=>names.indexOf(name));
-  if(positions.some((position,index)=>index>0 && position<=positions[index-1])) {
-    throw new Error('Unsafe order of production deployment safety gates');
+  const indexes=required.map(name=>names.indexOf(name));
+  if(indexes.some((value,i)=>i>0&&value<=indexes[i-1])){
+    throw Error('Unsafe production release ordering');
   }
-  const byName=name=>allSteps[names.indexOf(name)];
-  if(!byName('Require the new Orbit agent news API before D1 migration')
-    .run.includes('smoke:orbit-release-check')) {
-    throw new Error('Pre-migration Orbit readiness probe is missing');
-  }
-  const legacy=byName('Verify legacy publisher anchors before D1 migration').run;
-  if(!legacy.includes('technology-pre-migration-readiness.sql')
-    || !legacy.includes('technology-pre-migration-check.mjs')
-    || !legacy.includes('d1 execute DB --remote --json')){
-    throw new Error('Read-only existing publisher preflight must precede migrations');
-  }
-  for(const [name,mode] of [
-    ['Verify exact 580 legacy permalinks before D1 migrations','historical'],
-    ['Verify exact 580 legacy permalinks after D1 migrations','technology'],
+  const step=name=>allSteps[names.indexOf(name)];
+  const preflight=new Set(step('Verify publishing and design').run.split('\n').map(s=>s.trim()));
+  for(const command of [
+    'npm run test:orbit','npm run test:technology',
+    'npm run test:newsroom-catalog','npm run test:editorial-design',
+    'npm run test:legacy-retirement','npm run typecheck',
   ]){
-    const run=byName(name).run;
-    if(!run.includes('technology-legacy-permalinks.mjs --sql='+mode)
-      || !run.includes('technology-legacy-permalinks.mjs --check')
-      || !run.includes('d1 execute DB --remote --json')
-      || !run.includes('trap') || !run.includes('rm -f')){
-      throw new Error('Exact 580-URL release safety gate is missing or unsafe: '+name);
+    if(!preflight.has(command))throw Error('Missing preflight: '+command);
+  }
+  const build=step('Build production Worker');
+  if(build.run.trim()!=='npm run build:ssr')throw Error('Non-SSR deployment');
+  for(const key of ['PUBLIC_SITE_URL','PUBLIC_NEWS_SITE_URL']){
+    if(build.env?.[key]!=='https://haber.sametbasbug.dev'){
+      throw Error('Production origin mismatched');
     }
   }
-  const preflightStep=byName('Verify legacy publisher anchors before D1 migration');
-  if(preflightStep.id!=='publisher_preflight'
-    || !preflightStep.run.includes('technology-pre-migration-check.mjs')) {
-    throw new Error('Read-only D1 preflight must publish migration-pending state');
-  }
-  const e2e=byName('Require real signed staging E2E release acceptance');
-  if(e2e.if!=="steps.publisher_preflight.outputs.backup_required != 'false'"
-    || e2e.run!=='node scripts/technology-staging-e2e-attestation.mjs') {
-    throw new Error('Real signed staging acceptance must block migrations whenever a backup is required');
-  }
-  for(const name of [
-    'HABER_STAGING_E2E_VERIFIED_RELEASE_SHA',
-    'HABER_STAGING_E2E_REPORT_SHA256',
-    'HABER_STAGING_E2E_VERIFIED_AT_UTC',
-  ]) {
-    if(e2e.env?.[name] !== ('$'+'{{ vars.'+name+' }}')) {
-      throw new Error('Staging E2E proof must come from GitHub production environment variable '+name);
-    }
-  }
-  const backup=byName('Require operator attestation of an independent D1 backup');
-  if(backup.if!=="steps.publisher_preflight.outputs.backup_required != 'false'") {
-    throw new Error('Missing preflight output must require backup, not skip the gate');
-  }
-  if(!backup.run.includes('node scripts/technology-backup-attestation.mjs')) {
-    throw new Error('Independent D1 backup attestation must be mandatory before migration');
-  }
-  for(const name of [
-    'HABER_D1_BACKUP_VERIFIED_RELEASE_SHA',
-    'HABER_D1_BACKUP_VERIFIED_AT_UTC',
-    'HABER_D1_BACKUP_SQL_SHA256',
+  if(build.env?.PUBLIC_HABER_STAGING!=='false')throw Error('Staging noindex in production');
+  for(const [name,command] of [
+    ['Apply D1 migrations','npx wrangler d1 migrations apply haber --remote --config wrangler.ssr.jsonc'],
+    ['Deploy production Worker','npx wrangler deploy --config wrangler.ssr.jsonc'],
   ]){
-    if(backup.env?.[name]!==('$'+'{{ vars.'+name+' }}')){
-      throw new Error('Independent D1 backup release proof must come from GitHub environment variable '+name);
+    const action=step(name);
+    if(action.run.trim()!==command||
+       action.env?.CLOUDFLARE_ACCOUNT_ID!==ACCOUNT_VAR||
+       action.env?.CLOUDFLARE_API_TOKEN!==TOKEN_SECRET){
+      throw Error('Unsafe production deploy command or secret binding: '+name);
     }
   }
-  for(const name of ['Build the static site as a cross-check','Build the Worker']){
-    const env=byName(name)?.env;
-    if(env?.PUBLIC_HABER_STAGING!=='false'
-      || env?.PUBLIC_SITE_URL!=='https://haber.sametbasbug.dev'
-      || env?.PUBLIC_NEWS_SITE_URL!=='https://haber.sametbasbug.dev'){
-      throw new Error('Production CI must pin the production canonical and disable staging noindex');
-    }
-  }
-  const preflight=byName('Verify Orbit identity and Haber 2.0 contracts before migration').run;
-  for(const cmd of [
-    'npm run test:staging-e2e-attestation',
-    'npm run test:staging-e2e-report',
+  const live=step('Verify live site').run;
+  for(const requiredFragment of [
+    'set -e','/orbit-actions.json','/rss.xml','--max-time 15',
+    '/arsiv/','= 410',
+    '/microsoft-openai-bagimliligini-azaltmak-icin-kendi-yapay-zeka-modellerini-tanitti/','= 404',
+    'https://haber.sametbasbug.dev/api/orbit-eylem','= 401',
   ]){
-    if(!preflight.split('\n').some(line=>line.trim()===cmd)) {
-      throw new Error('Real staging E2E proof regression must run before migrations: '+cmd);
-    }
+    if(!live.includes(requiredFragment))throw Error('Missing live HTTP gate: '+requiredFragment);
   }
-  if(!preflight.includes('npm run test:backup-attestation')) {
-    throw new Error('Backup attestation tests must run before production migration');
-  }
-  if(!preflight.includes('npm run test:staging-config')) {
-    throw new Error('Haber staging resource-isolation tests must run before any production migration');
-  }
-  if(!preflight.includes('npm run test:staging-seo')) {
-    throw new Error('Staging search-engine isolation regressions must run before migration');
-  }
-  // Production runs a separate quality gate from the normal PR workflow.
-  // Guard each new local-only security test with an exact shell command
-  // line: a commented-out or partial command must not satisfy this.
-  const localPreflightLines=new Set(preflight.split('\n').map(s=>s.trim()));
-  for(const name of [
-    'test:editorial-design',
-    'test:oidc-service',
-    'test:oauth-errors',
-    'test:oidc-jwks',
-    'test:staging-restore-safety',
-    'test:staging-restore-integrity',
-    'test:private-backup-crypto',
-    'test:backup-recovery',
-    'test:backup-r2-smoke',
-    'test:backup-local-verify',
-    'test:production-backup',
-    'test:live-permalink-probe',
-  ]){
-    if(!localPreflightLines.has('npm run '+name)) {
-      throw new Error('Production pre-migration security test missing: '+name);
-    }
-  }
-  if(localPreflightLines.has('npm run preflight:live-permalinks')
-    || localPreflightLines.has('npm run staging:restore-rehearsal')) {
-    throw new Error('Expensive remote probes must not be injected into the pre-migration local-only gate');
-  }
-
-  const recovery=byName('Confirm a D1 Time Travel recovery point before migrations').run;
-  if(!recovery.includes('time-travel info DB --json')
-    || !recovery.includes('d1-time-travel-check.mjs')
-    || /time-travel restore/u.test(recovery)) {
-    throw new Error('Pre-migration D1 recovery point must be read-only');
-  }
-  const migration=byName('Apply D1 migrations').run;
-  if(!migration.includes('d1 migrations apply DB --remote')
-    || !migration.includes('wrangler.ssr.jsonc')) {
-    throw new Error('Production D1 migrations must use the known remote binding');
-  }
-  const publisher=byName('Verify production D1 publisher readiness after migrations').run;
-  if(!publisher.includes('technology-release-readiness.sql')
-    || !publisher.includes('technology-release-d1-check.mjs')){
-    throw new Error('D1 publisher authority gate is missing');
-  }
-  const deploy=byName('Deploy the Worker').run;
-  if(!deploy.includes('wrangler deploy')
-    || !deploy.includes('--config wrangler.ssr.jsonc')
-    || !deploy.includes('--message')) {
-    throw new Error('The production SSR Worker deploy step is missing or incorrect');
-  }
-  const live=byName('Verify the live site').run;
-  if(!live.includes('orbit-technology-release-check.mjs')
-    || !live.includes('newsroom-action-catalog.mjs')) {
-    throw new Error('Post-deployment dual-service acceptance is missing');
-  }
-  if(!live.includes('for legacy_path in /api/brief /api/publish')
-    || !live.includes(`"$legacy_code" == '410'`)
-    || !live.includes('unknown-article-')
-    || !live.includes(`"$unknown_code" == '404'`)
-    || !live.includes('--max-time 15')
-    || !live.includes('--connect-timeout 5')) {
-    throw new Error('Post-deployment legacy writer and 404 checks are incomplete');
+  if(live.includes('orbit-v6-staging')||live.includes('haber-site-staging')){
+    throw Error('Retired staging cannot gate production');
   }
   return true;
 }
-
+assert.equal(workflow.jobs.deploy.environment?.name,'production');
+assert.equal(workflow.concurrency?.['cancel-in-progress'],false);
 assert.equal(verifyNewsroomDeployOrder(steps),true);
-let verifiedCases=1;
-function mutate(fn){
-  const clone=structuredClone(steps);
-  fn(clone);
-  assert.throws(()=>verifyNewsroomDeployOrder(clone));
-  verifiedCases++;
-}
-mutate(rows=>rows.splice(rows.findIndex(s=>s.name===required[3]),1));
-mutate(rows=>rows.find(s=>s.name===required[3]).run='echo no-op');
-mutate(rows=>rows.find(s=>s.name===required[4]).run='echo skipped');
-mutate(rows=>rows.find(s=>s.name==='Verify exact 580 legacy permalinks before D1 migrations').run='echo skipped');
-mutate(rows=>rows.find(s=>s.name==='Verify exact 580 legacy permalinks after D1 migrations').run='echo skipped');
-mutate(rows=>{
-  const pos=rows.findIndex(s=>s.name==='Verify exact 580 legacy permalinks after D1 migrations');
-  const [gate]=rows.splice(pos,1);
-  rows.splice(rows.findIndex(s=>s.name==='Apply D1 migrations'),0,gate);
-});
-mutate(rows=>rows.find(s=>s.name==='Confirm a D1 Time Travel recovery point before migrations').run='echo skipped');
-mutate(rows=>rows.find(s=>s.name==='Verify production D1 publisher readiness after migrations').run='echo healthy');
-mutate(rows=>rows.splice(rows.findIndex(s=>s.name==='Require real signed staging E2E release acceptance'),1));
-mutate(rows=>rows.find(s=>s.name==='Require real signed staging E2E release acceptance').run='echo skipped');
-mutate(rows=>rows.find(s=>s.name==='Require real signed staging E2E release acceptance').if="steps.publisher_preflight.outputs.backup_required == 'true'");
-mutate(rows=>rows.find(s=>s.name==='Require real signed staging E2E release acceptance').env.HABER_STAGING_E2E_VERIFIED_RELEASE_SHA='not-github-var');
-mutate(rows=>rows.find(s=>s.name==='Require real signed staging E2E release acceptance').env.HABER_STAGING_E2E_REPORT_SHA256='not-github-var');
-mutate(rows=>rows.find(s=>s.name==='Require real signed staging E2E release acceptance').env.HABER_STAGING_E2E_VERIFIED_AT_UTC='not-github-var');
-mutate(rows=>{
-  const from=rows.findIndex(s=>s.name==='Require real signed staging E2E release acceptance');
-  const [gate]=rows.splice(from,1);
-  rows.splice(rows.findIndex(s=>s.name==='Apply D1 migrations')+1,0,gate);
-});
-mutate(rows=>rows.find(s=>s.name==='Verify Orbit identity and Haber 2.0 contracts before migration').run=
-  rows.find(s=>s.name==='Verify Orbit identity and Haber 2.0 contracts before migration').run.replace('npm run test:staging-e2e-attestation','echo skipped'));
-mutate(rows=>rows.find(s=>s.name==='Verify Orbit identity and Haber 2.0 contracts before migration').run=
-  rows.find(s=>s.name==='Verify Orbit identity and Haber 2.0 contracts before migration').run.replace('npm run test:staging-e2e-report','echo skipped'));
-mutate(rows=>rows.splice(rows.findIndex(s=>s.name==='Require operator attestation of an independent D1 backup'),1));
-mutate(rows=>rows.find(s=>s.name==='Require operator attestation of an independent D1 backup').run='echo approved');
-mutate(rows=>rows.find(s=>s.name==='Require operator attestation of an independent D1 backup').if="steps.publisher_preflight.outputs.backup_required == 'true'");
-mutate(rows=>rows.find(s=>s.name==='Verify legacy publisher anchors before D1 migration').id='wrong-id');
-mutate(rows=>rows.find(s=>s.name==='Require operator attestation of an independent D1 backup').env.HABER_D1_BACKUP_SQL_SHA256='not-a-github-var');
-mutate(rows=>rows.find(s=>s.name==='Require operator attestation of an independent D1 backup').env.HABER_D1_BACKUP_VERIFIED_AT_UTC='not-a-github-var');
-mutate(rows=>rows.find(s=>s.name==='Require operator attestation of an independent D1 backup').env.HABER_D1_BACKUP_VERIFIED_RELEASE_SHA='not-a-github-var');
-mutate(rows=>{
-  const from=rows.findIndex(s=>s.name==='Require operator attestation of an independent D1 backup');
-  const [backup]=rows.splice(from,1);
-  rows.splice(rows.findIndex(s=>s.name==='Apply D1 migrations')+1,0,backup);
-});
-mutate(rows=>rows.find(s=>s.name==='Verify Orbit identity and Haber 2.0 contracts before migration').run=
-  rows.find(s=>s.name==='Verify Orbit identity and Haber 2.0 contracts before migration').run.replace('npm run test:backup-attestation','echo skipped'));
-mutate(rows=>rows.find(s=>s.name==='Verify Orbit identity and Haber 2.0 contracts before migration').run=
-  rows.find(s=>s.name==='Verify Orbit identity and Haber 2.0 contracts before migration').run.replace('npm run test:staging-config','echo skipped'));
-mutate(rows=>rows.find(s=>s.name==='Verify Orbit identity and Haber 2.0 contracts before migration').run=
-  rows.find(s=>s.name==='Verify Orbit identity and Haber 2.0 contracts before migration').run.replace('npm run test:staging-seo','echo skipped'));
 
-mutate(rows=>rows.find(s=>s.name==='Build the Worker').env.PUBLIC_HABER_STAGING='true');
-mutate(rows=>rows.find(s=>s.name==='Build the static site as a cross-check').env.PUBLIC_SITE_URL='https://haber-site-staging.samett33710.workers.dev');
-
-for(const name of [
-  'test:editorial-design',
-  'test:oidc-service',
-  'test:oauth-errors',
-  'test:oidc-jwks',
-  'test:staging-restore-safety',
-  'test:live-permalink-probe',
-]){
-  mutate(rows=>{
-    const preflight=rows.find(s=>s.name==='Verify Orbit identity and Haber 2.0 contracts before migration');
-    preflight.run=preflight.run.replace('npm run '+name,'echo skipped');
-  });
+let cases=1;
+function mutate(change){
+  const copy=structuredClone(steps);
+  change(copy);
+  assert.throws(()=>verifyNewsroomDeployOrder(copy));
+  cases++;
 }
-mutate(rows=>{
-  const preflight=rows.find(s=>s.name==='Verify Orbit identity and Haber 2.0 contracts before migration');
-  preflight.run+='\n# npm run test:oidc-jwks';
-  preflight.run=preflight.run.replace('npm run test:oidc-jwks\n','echo skipped\n');
+mutate(s=>s.splice(s.findIndex(x=>x.name==='Verify publishing and design'),1));
+mutate(s=>s.find(x=>x.name==='Build production Worker').run='npm run build');
+mutate(s=>s.find(x=>x.name==='Build production Worker').env.PUBLIC_HABER_STAGING='true');
+mutate(s=>s.find(x=>x.name==='Build production Worker').env.PUBLIC_SITE_URL='https://example.invalid');
+mutate(s=>s.find(x=>x.name==='Apply D1 migrations').run='npx wrangler d1 migrations apply haber --local');
+mutate(s=>s.find(x=>x.name==='Deploy production Worker').run='npx wrangler deploy');
+mutate(s=>s.find(x=>x.name==='Apply D1 migrations').env.CLOUDFLARE_API_TOKEN='untrusted');
+mutate(s=>s.find(x=>x.name==='Deploy production Worker').env.CLOUDFLARE_ACCOUNT_ID='untrusted');
+mutate(s=>s.find(x=>x.name==='Verify publishing and design').run='echo success');
+mutate(s=>s.find(x=>x.name==='Verify publishing and design').run=
+  s.find(x=>x.name==='Verify publishing and design').run.replace('npm run test:legacy-retirement','echo skipped'));
+mutate(s=>s.find(x=>x.name==='Verify live site').run='echo success');
+mutate(s=>s.find(x=>x.name==='Verify live site').run=
+  s.find(x=>x.name==='Verify live site').run.replace('= 401','= 200'));
+mutate(s=>{
+  const index=s.findIndex(x=>x.name==='Deploy production Worker');
+  const [value]=s.splice(index,1);
+  s.splice(s.findIndex(x=>x.name==='Apply D1 migrations'),0,value);
 });
-mutate(rows=>{
-  const preflight=rows.find(s=>s.name==='Verify Orbit identity and Haber 2.0 contracts before migration');
-  preflight.run+='\nnpm run preflight:live-permalinks';
-});
-mutate(rows=>rows.find(s=>s.name==='Verify the live site').run=
-  rows.find(s=>s.name==='Verify the live site').run.replace(' /api/brief /api/publish',' /api/publish'));
-mutate(rows=>rows.find(s=>s.name==='Verify the live site').run=
-  rows.find(s=>s.name==='Verify the live site').run.replace('unknown-article-','known-article-'));
-mutate(rows=>rows.find(s=>s.name==='Verify the live site').run=
-  rows.find(s=>s.name==='Verify the live site').run.replaceAll('--max-time 15',''));
-mutate(rows=>{
-  const from=rows.findIndex(s=>s.name==='Apply D1 migrations');
-  const [migration]=rows.splice(from,1);
-  rows.splice(rows.findIndex(s=>s.name==='Require the new Orbit agent news API before D1 migration'),0,migration);
-});
-mutate(rows=>{
-  const from=rows.findIndex(s=>s.name==='Verify production D1 publisher readiness after migrations');
-  const [publisher]=rows.splice(from,1);
-  rows.splice(rows.findIndex(s=>s.name==='Deploy the Worker')+1,0,publisher);
-});
-console.log('Haber release workflow: '+verifiedCases+' positive/negative ordering and gate assertions passed');
+mutate(s=>s.push(structuredClone(s.find(x=>x.name==='Verify live site'))));
+console.log('Haber production deployment order: '+cases+' cases passed');
