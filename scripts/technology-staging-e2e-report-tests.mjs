@@ -71,7 +71,9 @@ test('duplicate JSON fields and comment syntax cannot override a failed human ch
     source.replaceAll('"schema":"haber-staging-e2e-v1"',
       '"schema":"incorrect","schema":"haber-staging-e2e-v1"'),
   ),/duplicate_or_invalid_key/u);
-  assert.throws(()=>parseStagingOperatorReport(source.replace('{','{/*comment*/')),
+  assert.ok(source.startsWith('{'));
+  const invalidCommentedJson='{/*comment*/'+source.slice(1);
+  assert.throws(()=>parseStagingOperatorReport(invalidCommentedJson),
     /invalid_json/u);
   assert.equal(parseStagingOperatorReport(source).schema,'haber-staging-e2e-v1');
 });
