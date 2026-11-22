@@ -17,6 +17,6 @@
     "rehype-sanitize": "6.0.0"
   },
   "devDependencies": {
-    "wrangler": "^4.162.0"
+    "wrangler": "^4.165.0"
   }
 }
